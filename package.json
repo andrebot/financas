@@ -1,0 +1,29 @@
+{
+  "name": "financas",
+  "version": "1.0.0",
+  "description": "Application to take care of you finances",
+  "main": "index.js",
+  "engines": {
+    "node": "7.9.0"
+  },
+  "scripts": {
+    "start": "electron src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ficances",
+    "node",
+    "electron",
+    "react",
+    "mongo"
+  ],
+  "author": "André Almeida (andrebot_almeida@hotmail.com)",
+  "license": "ISC",
+  "dependencies": {
+    "electron": "1.7.10",
+    "jquery": "3.2.1",
+    "materialize-css": "0.100.2",
+    "react": "16.2.0",
+    "react-dom": "16.2.0"
+  }
+}
