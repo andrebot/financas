@@ -7,7 +7,8 @@
     "node": "7.9.0"
   },
   "scripts": {
-    "start": "electron src/index.js",
+    "start": "electron dist/src/index.js",
+    "dev": "webpack --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -20,10 +21,22 @@
   "author": "André Almeida (andrebot_almeida@hotmail.com)",
   "license": "ISC",
   "dependencies": {
-    "electron": "1.7.10",
-    "jquery": "3.2.1",
-    "materialize-css": "0.100.2",
+    "electron": "^1.8.2",
+    "prop-types": "^15.6.0",
     "react": "16.2.0",
-    "react-dom": "16.2.0"
+    "react-dom": "16.2.0",
+    "react-redux": "^5.0.6",
+    "redux": "^3.7.2"
+  },
+  "devDependencies": {
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-preset-react": "^6.24.1",
+    "chai": "^4.1.2",
+    "copy-webpack-plugin": "^4.4.1",
+    "mocha": "^5.0.0",
+    "sinon": "^4.2.2",
+    "webpack": "^3.10.0",
+    "webpack-shell-plugin": "^0.5.0"
   }
 }
