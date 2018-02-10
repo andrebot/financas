@@ -1,6 +1,7 @@
 const webpack = require('webpack');
-const webpackShellPlugin = require('webpack-shell-plugin');
 const copyWebpackPlugin = require('copy-webpack-plugin');
+const webpackShellPlugin = require('webpack-shell-plugin');
+const extractTextPlugin = require('extract-text-webpack-plugin');
 
 module.exports = {
   entry: {
@@ -18,6 +19,17 @@ module.exports = {
       query: {
         presets: ['react']
       }
+    },{
+      test: /\.styl$/,
+      loader: extractTextPlugin.extract({
+        fallback: { loader: 'style-loader' },
+        use: [
+          'css-loader',
+          {
+            loader: 'stylus-loader'
+          }
+        ]
+      })
     }]
   },
   plugins: [
@@ -26,13 +38,14 @@ module.exports = {
       filename: './dist/src/windows/vendors.js',
       minChunks: Infinity
     }),
+    new extractTextPlugin('./[name].css'),
     new webpackShellPlugin({
       onBuildEnd: ['npm start']
     }),
     new copyWebpackPlugin([{
       from: './src/**/*',
       to: './dist',
-      ignore: ['*.jsx']
+      ignore: ['*.jsx', '*.styl']
     }])
   ]
 }
