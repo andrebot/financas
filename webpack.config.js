@@ -21,6 +21,7 @@ module.exports = {
       }
     },{
       test: /\.styl$/,
+      exclude: /\*.tff/,
       loader: extractTextPlugin.extract({
         fallback: { loader: 'style-loader' },
         use: [

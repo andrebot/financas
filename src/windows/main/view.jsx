@@ -6,7 +6,7 @@ import mainCss from './main.styl';
 
 const App = () => (
   <div>
-    <h1>Ola, porra</h1>,
+    <h1>Ola, porra</h1>
     <RaisedButton label="opa"/>
   </div>
 )
