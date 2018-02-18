@@ -1,13 +1,19 @@
 import React from 'react';
-import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
-import RaisedButton from 'material-ui/RaisedButton';
 import { render } from 'react-dom';
-import MainMenu from '../components/mainMenu/mainMenu.jsx';
+import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
+import { Tabs, Tab } from 'material-ui/Tabs';
 import mainCss from './main.styl';
 
 const App = () => (
   <div>
-    <MainMenu />
+    <Tabs>
+      <Tab label="Summary">
+        Oi
+      </Tab>
+      <Tab label="Details">
+        Ola
+      </Tab>
+    </Tabs>
   </div>
 )
 
