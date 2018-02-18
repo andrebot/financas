@@ -2,16 +2,16 @@ import React from 'react';
 import { render } from 'react-dom';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import { Tabs, Tab } from 'material-ui/Tabs';
-import mainCss from './main.styl';
+import SummaryTab from './summaryTab/summaryTab.jsx';
 
 const App = () => (
   <div>
     <Tabs>
       <Tab label="Summary">
-        Oi
+        <SummaryTab />
       </Tab>
       <Tab label="Details">
-        Ola
+        Ol
       </Tab>
     </Tabs>
   </div>
