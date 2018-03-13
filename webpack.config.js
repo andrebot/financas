@@ -27,6 +27,7 @@ module.exports = function (env) {
   return {
     entry: {
       './dist/src/windows/main/view': './src/windows/main/view.jsx',
+      './dist/src/windows/createBank/view': './src/windows/createBank/view.jsx',
       vendor: ['react', 'react-dom', 'prop-types', 'redux', 'react-redux']
     },
     output: {
