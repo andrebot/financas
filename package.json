@@ -22,8 +22,10 @@
   "author": "André Almeida (andrebot_almeida@hotmail.com)",
   "license": "ISC",
   "dependencies": {
-    "electron": "^1.8.2",
+    "export-config": "^1.0.0",
+    "express": "^4.16.3",
     "material-ui": "^0.20.0",
+    "mongoose": "^5.0.10",
     "prop-types": "^15.6.0",
     "react": "16.2.0",
     "react-dom": "16.2.0",
