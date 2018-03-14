@@ -24,14 +24,15 @@
   "dependencies": {
     "export-config": "^1.0.0",
     "express": "^4.16.3",
-    "material-ui": "^0.20.0",
     "mongoose": "^5.0.10",
     "prop-types": "^15.6.0",
     "react": "16.2.0",
     "react-dom": "16.2.0",
     "react-redux": "^5.0.6",
     "recharts": "^1.0.0-beta.10",
-    "redux": "^3.7.2"
+    "redux": "^3.7.2",
+    "semantic-ui-css": "^2.3.0",
+    "semantic-ui-react": "^0.78.3"
   },
   "devDependencies": {
     "babel-core": "^6.26.0",
