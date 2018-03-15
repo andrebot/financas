@@ -2,7 +2,10 @@ const exportConfig = require('export-config');
 
 const MongooseConfig = {
   default: {
-    URL: 'mongodb://localhost/financas'
+    URL: 'mongodb://localhost/financas',
+    modelConfig: {
+      HASH_ROUNDS: 10
+    }
   }
 };
 
