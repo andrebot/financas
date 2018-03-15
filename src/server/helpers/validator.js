@@ -4,12 +4,14 @@ const largeTextRegExp = /^[a-zA-Z0-9\u00C0-\u00FF\-\_\\\s\.\,\#\!\*\+\:\;\@\(\)\
 const nameRegExp = /^[a-zA-Z0-9\u00C0-\u00FF\-\s]*$/;
 const weekDayRegExp = /^(monday|tuesday|wednesday|thursday|friday)$/;
 const timeRepeatingValueRegExp = /^(year|month|week|day)$/;
+const creditCardNumberRegExp = /^[0-9]{16}$/;
 
 const Validator = {
   isWeekDay,
   isNameValid,
   isEmailValid,
   isLargeTextValid,
+  isCreditCardNumber,
   isTimeRepeatingValue
 };
 
@@ -31,6 +33,10 @@ function isWeekDay(weekDay) {
 
 function isTimeRepeatingValue(value) {
   return timeRepeatingValueRegExp.test(value);
+}
+
+function isCreditCardNumber(number) {
+  return creditCardNumberRegExp.test(number);
 }
 
 module.exports = Validator;
