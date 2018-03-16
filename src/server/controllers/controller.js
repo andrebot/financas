@@ -25,7 +25,7 @@ function Factory(model) {
     getById: getById(model, modelName),
     create: create(model, modelName),
     update: update(model, modelName),
-    remove: remove(mode, modelName)
+    remove: remove(model, modelName)
   }
 }
 
@@ -103,7 +103,7 @@ function listAll(model, modelName) {
 /**
  * Create a controller function which fetch a single document by ID.
  * 
- * @param {MongooseModel} mode Mongoose model to be used
+ * @param {MongooseModel} model Mongoose model to be used
  * @param {String} modelName model's name
  * @returns controller to handle a getById call to fetch a single document
  */

@@ -2,7 +2,10 @@ const exportConfig = require('export-config');
 
 const Logger = {
   default: {
-    LOGE_LEVEL: 'info'
+    LOG_LEVEL: 'info'
+  },
+  test: {
+    LOG_LEVEL: 'silent'
   }
 }
 
