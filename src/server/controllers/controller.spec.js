@@ -22,7 +22,9 @@ describe('Controller', function () {
 
     this.expressMocks = {
       request: {},
-      response: {}
+      response: {
+        status: sinon.stub().returnsThis()
+      }
     }
 
     this.controller = Controller(this.fakeModel);
@@ -35,13 +37,33 @@ describe('Controller', function () {
     this.fakePromise.then.callsArgWith(0, { dummyData, _id: 1 });
 
     request.body = { dummyData };
-    response.json = (result) => {
+    response.json = result => {
       this.fakeCalls.save.should.have.been.calledOnce;
       this.fakePromise.then.should.have.been.calledOnce;
+      this.fakePromise.catch.should.have.not.been.called;
 
       result.should.be.an('Object');
       result.should.have.property('data');
       result.data.should.exist;
+
+      done();
+    };
+
+    this.controller.create(request, response);
+  });
+
+  it('should send the client an error if any goes wrong in the database while saving', function(done) {
+    const { request, response } = this.expressMocks;
+    const dummyData = 'hey';
+
+    this.fakePromise.catch.callsArgWith(0, new Error('Dumb error'));
+    request.body = { dummyData };
+    response.send = message => {
+      this.fakeCalls.save.should.have.been.calledOnce;
+      this.fakePromise.catch.should.have.been.calledOnce;
+
+      message.should.be.a('String');
+      message.should.not.be.empty;
 
       done();
     };
