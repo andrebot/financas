@@ -52,7 +52,7 @@ describe('Controller', function () {
     this.controller.create(request, response);
   });
 
-  it('should send the client an error if any goes wrong in the database while saving', function(done) {
+  it('should send the client an error if anything goes wrong in the database while saving', function(done) {
     const { request, response } = this.expressMocks;
     const dummyData = 'hey';
 
@@ -69,5 +69,13 @@ describe('Controller', function () {
     };
 
     this.controller.create(request, response);
+  });
+
+  it('should send the client an error if the info provided does not match', function(done) {
+    const { request, response } = this.expressMocks;
+
+    this.controller.create(request, response);
+
+    done();
   });
 });
