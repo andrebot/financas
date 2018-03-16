@@ -7,7 +7,8 @@ function Factory(model) {
     listAll: listAll(model, modelName),
     getById: getById(model, modelName),
     create: create(model, modelName),
-    update: update(model, modelName)
+    update: update(model, modelName),
+    remove: remove(mode, modelName)
   }
 }
 
@@ -106,6 +107,7 @@ function getById(model, modelName) {
  * 
  * @param {MongooseModel} model Mongoose model to be used
  * @param {String} modelName model's name
+ * @returns controller to handle a update call to update a single document
  */
 function update(model, modelName) {
   return function (request, response) {
@@ -116,6 +118,35 @@ function update(model, modelName) {
 
       response.json({ data: updatedDocument });
     }).catch(handleErrorFromDB(response, modelName, `There was an error updating the document ${documentId}`));
+  }
+}
+
+/**
+ * Create a controller which delete a single document by ID
+ * 
+ * @param {MongooseModel} model Mongoose model to be used
+ * @param {String} modelName model's name
+ * @returns @returns controller to handle a delete call to remove a single document
+ */
+function remove(model, modelName) {
+  return function (request, response) {
+    const documentId = request.params.id;
+
+    model.findOneAndRemove(documentId).then(function (deletedDocument) {
+      const result = {
+        data: {}
+      };
+
+      if (deletedDocument) {
+        Logger.info(`${modelName}: Document #${documentId} was deleted successfully`);
+
+        result.data = deletedDocument;
+      } else {
+        Logger.info(`${modelName}: No document was found with #${documentId}`);
+      }
+
+      response.json(result);
+    }).catch(handleErrorFromDB(response, modelName, `There was an error trying to delete document #${documentId}`));
   }
 }
 
