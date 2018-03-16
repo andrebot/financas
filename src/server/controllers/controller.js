@@ -6,16 +6,17 @@ function Factory(model) {
   return {
     listAll: listAll(model, modelName),
     getById: getById(model, modelName),
-    create: create(model, modelName)
+    create: create(model, modelName),
+    update: update(model, modelName)
   }
 }
 
 /**
  * Creates a function to handle all DB errors
  * 
- * @param {ExpressResponse} response 
- * @param {String} modelName 
- * @param {String} message 
+ * @param {ExpressResponse} response express response object
+ * @param {String} modelName Model's name
+ * @param {String} message Message to be printed in the log and sent to client
  * @returns error handler for DB error
  */
 function handleErrorFromDB(response, modelName, message) {
@@ -38,8 +39,9 @@ function handleErrorFromDB(response, modelName, message) {
 /**
  * Creates a controller function which saves the payload as a new model
  * 
- * @param {MongooseModel} model 
- * @param {String} modelName 
+ * @param {MongooseModel} model Mongoose model to be used
+ * @param {String} modelName model's name
+ * @returns controller which creates a new document for the model provided
  */
 function create(model, modelName) {
   return function (request, response) {
@@ -55,7 +57,8 @@ function create(model, modelName) {
 /**
  * Create a controller function which lists all documents from a collection.
  * 
- * @param {MongooseModel} model 
+ * @param {MongooseModel} model Mongoose model to be used
+ * @param {String} modelName model's name
  * @returns controller to handle a get call to list all documents
  */
 function listAll(model, modelName) {
@@ -82,11 +85,11 @@ function listAll(model, modelName) {
 /**
  * Create a controller function which fetch a single document by ID.
  * 
- * @param {MongooseModel} mode 
- * @param {String} modelName 
+ * @param {MongooseModel} mode Mongoose model to be used
+ * @param {String} modelName model's name
  * @returns controller to handle a getById call to fetch a single document
  */
-function getById(mode, modelName) {
+function getById(model, modelName) {
   return function (request, response) {
     const documentId = request.params.id;
 
@@ -95,6 +98,24 @@ function getById(mode, modelName) {
 
       response.json({ data: document });
     }).catch(handleErrorFromDB(response, modelName, `There was an error fetching document #${documentId}`));
+  }
+}
+
+/**
+ * Create a controller which update a document by its ID
+ * 
+ * @param {MongooseModel} model Mongoose model to be used
+ * @param {String} modelName model's name
+ */
+function update(model, modelName) {
+  return function (request, response) {
+    const documentId = request.params.id;
+
+    model.findByIdAndUpdate(documentId, request.body).then(function (updatedDocument) {
+      Logger.info(`${modelName}: Document #${documentId} updated successfully`);
+
+      response.json({ data: updatedDocument });
+    }).catch(handleErrorFromDB(response, modelName, `There was an error updating the document ${documentId}`));
   }
 }
 
