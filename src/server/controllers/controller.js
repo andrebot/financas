@@ -24,7 +24,7 @@ function handleErrorFromDB(response, modelName, message) {
   return function (dbError) {
     const errors =  dbError.errors;
 
-    Logger.error(`${modelName}: ${message}`);
+    Logger.error(`${modelName}Controller: ${message}`);
     Logger.error(dbError);
 
     if (errors && errors.constructor === Array && errors.length > 0) {
@@ -48,7 +48,7 @@ function create(model, modelName) {
   return function (request, response) {
     const newModel = new model(request.body);
     newModel.save().then(function (savedModel) {
-      Logger.info(`${modelName}: Model saved successfully. #${savedModel._id}`);
+      Logger.info(`${modelName}Controller: Model saved successfully. #${savedModel._id}`);
 
       response.json({ data: savedModel });
     }).catch(handleErrorFromDB(response, modelName, 'There was an error saving this model'));
@@ -71,11 +71,11 @@ function listAll(model, modelName) {
       };
 
       if (documents && documents.length > 0) {
-        Logger.info(`${modelName}: Returning ${numberOfDocuments} documents`);
+        Logger.info(`${modelName}Controller: Returning ${numberOfDocuments} documents`);
 
         result.data = documents;
       } else {
-        Logger.info(`${modelName}: no documents were found`);
+        Logger.info(`${modelName}Controller: no documents were found`);
       }
 
       response.json(result);
@@ -95,7 +95,7 @@ function getById(model, modelName) {
     const documentId = request.params.id;
 
     model.findById(documentId).then(function (document) {
-      Logger.info(`${modelName}: Document #${documentId} was fetched`);
+      Logger.info(`${modelName}Controller: Document #${documentId} was fetched`);
 
       response.json({ data: document });
     }).catch(handleErrorFromDB(response, modelName, `There was an error fetching document #${documentId}`));
@@ -114,7 +114,7 @@ function update(model, modelName) {
     const documentId = request.params.id;
 
     model.findByIdAndUpdate(documentId, request.body).then(function (updatedDocument) {
-      Logger.info(`${modelName}: Document #${documentId} updated successfully`);
+      Logger.info(`${modelName}Controller: Document #${documentId} updated successfully`);
 
       response.json({ data: updatedDocument });
     }).catch(handleErrorFromDB(response, modelName, `There was an error updating the document ${documentId}`));
@@ -138,11 +138,11 @@ function remove(model, modelName) {
       };
 
       if (deletedDocument) {
-        Logger.info(`${modelName}: Document #${documentId} was deleted successfully`);
+        Logger.info(`${modelName}Controller: Document #${documentId} was deleted successfully`);
 
         result.data = deletedDocument;
       } else {
-        Logger.info(`${modelName}: No document was found with #${documentId}`);
+        Logger.info(`${modelName}Controller: No document was found with #${documentId}`);
       }
 
       response.json(result);
