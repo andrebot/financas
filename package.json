@@ -10,7 +10,7 @@
     "start": "node src/server/",
     "dev": "webpack --watch --env=dev",
     "build": "webpack",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test:backend": "mocha -w --file src/tests/imports.js src/server/**/*.spec.js"
   },
   "keywords": [
     "ficances",
