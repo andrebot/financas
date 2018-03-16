@@ -5,6 +5,7 @@ function Factory(model) {
 
   return {
     listAll: listAll(model, modelName),
+    getById: getById(model, modelName),
     create: create(model, modelName)
   }
 }
@@ -74,7 +75,26 @@ function listAll(model, modelName) {
       }
 
       response.json(result);
-    }).catch(handleErrorFromDB(response, modelName, 'There was an error fetching all documents for this model'))
+    }).catch(handleErrorFromDB(response, modelName, 'There was an error fetching all documents for this model'));
+  }
+}
+
+/**
+ * Create a controller function which fetch a single document by ID.
+ * 
+ * @param {MongooseModel} mode 
+ * @param {String} modelName 
+ * @returns controller to handle a getById call to fetch a single document
+ */
+function getById(mode, modelName) {
+  return function (request, response) {
+    const documentId = request.params.id;
+
+    model.findById(documentId).then(function (document) {
+      Logger.info(`${modelName}: Document #${documentId} was fetched`);
+
+      response.json({ data: document });
+    }).catch(handleErrorFromDB(response, modelName, `There was an error fetching document #${documentId}`));
   }
 }
 
