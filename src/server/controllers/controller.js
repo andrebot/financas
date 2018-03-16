@@ -1,8 +1,11 @@
 const Logger = require('../helpers/logger');
 
 function Factory(model) {
+  const modelName = model.collection.name;
+
   return {
-    listAll: listAll(model)
+    listAll: listAll(model, modelName),
+    create: create(model, modelName)
   }
 }
 
@@ -32,14 +35,29 @@ function handleErrorFromDB(response, modelName, message) {
 }
 
 /**
- * List all documents from an collection.
+ * Creates a controller function which saves the payload as a new model
+ * 
+ * @param {MongooseModel} model 
+ * @param {String} modelName 
+ */
+function create(model, modelName) {
+  return function (request, response) {
+    const newModel = new model(request.body);
+    newModel.save().then(function (savedModel) {
+      Logger.info(`${modelName}: Model saved successfully. #${savedModel._id}`);
+
+      response.json({ data: savedModel });
+    }).catch(handleErrorFromDB(response, modelName, 'There was an error saving this model'));
+  }
+}
+
+/**
+ * Create a controller function which lists all documents from a collection.
  * 
  * @param {MongooseModel} model 
  * @returns controller to handle a get call to list all documents
  */
-function listAll(model) {
-  const modelName = model.collection.name;
-
+function listAll(model, modelName) {
   return function (request, response) {
     model.find({}).then(function(documents) {
       const numberOfDocuments = documents.length;
