@@ -1,5 +1,22 @@
 const Logger = require('../helpers/logger');
 
+/**
+ * Abstract controller which defines the base actions of a controller which access mongoose models
+ * 
+ * @typedef {Object} AbstractController
+ * @property {Function} listAll list all documents of the given model
+ * @property {Function} getById get a document by id of the given model
+ * @property {Function} create create a document with the given model
+ * @property {Function} update update a document by id with the given model
+ * @property {Function} remove remove a document by id with the given model
+ */
+
+/**
+ * Factory function to create a Controller object from the given model
+ * 
+ * @param {MongooseModel} model Mongoose model to be used by this controller
+ * @returns {AbstractController}
+ */
 function Factory(model) {
   const modelName = model.collection.name;
 
