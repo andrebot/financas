@@ -1,4 +1,9 @@
 const Logger = require('../helpers/logger');
+const mongoose = require('mongoose');
+const DocumentNotFoundError = mongoose.Error.DocumentNotFoundError;
+const CastError = mongoose.Error.CastError;
+const ValidationError = mongoose.Error.ValidationError;
+const ValidatorError = mongoose.Error.ValidatorError;
 
 /**
  * Abstract controller which defines the base actions of a controller which access mongoose models
@@ -44,13 +49,23 @@ function handleErrorFromDB(response, modelName, message) {
     Logger.error(`${modelName}Controller: ${message}`);
     Logger.error(dbError);
 
-    if (errors && errors.constructor === Array && errors.length > 0) {
-      errors.forEach(function (error) {
-        Logger.error(error);
-      });
+    // TODO: This is wrong, errors is an array
+    // if (errors && errors.constructor === Array && errors.length > 0) {
+    //   errors.forEach(function (error) {
+    //     Logger.error(error);
+    //   });
+    // }
+
+    if ( dbError instanceof CastError
+      || dbError instanceof ValidationError
+      || dbError instanceof ValidatorError
+    ) {
+      response.status(404);
+    } else {
+      response.status(500);
     }
 
-    response.status(500).send(message);
+    response.send(`${message}. Type: ${dbError.name}. ${dbError.message}`);
   }
 }
 
