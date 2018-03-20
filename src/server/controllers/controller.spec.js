@@ -221,7 +221,28 @@ describe('Controller', function () {
       this.controller.getById(request, response);
     });
 
-    it('should return empty if no document is found');
+    it('should return empty if no document is found', function (done) {
+      const { request, response } = this.expressMocks;
+
+      request.params = {
+        id: 1 
+      };
+
+      this.fakePromise.then.callsArgWith(0, null);
+
+      response.json = result => {
+
+        result.should.exist;
+        result.should.be.an('object');
+        result.should.own.property('data');
+        result.data.should.be.an('object');
+
+        done();
+      };
+
+      this.controller.getById(request, response);
+    });
+
     it('should send a 404 error to client if no id is provided');
     it('should send a 500 error to the client if there is any error with the database while retrieving');
   });

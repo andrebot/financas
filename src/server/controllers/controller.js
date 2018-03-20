@@ -141,7 +141,7 @@ function getById(model, modelName) {
     model.findById(documentId).then(function (document) {
       Logger.info(`${modelName}Controller: Document #${documentId} was fetched`);
 
-      response.json({ data: document });
+      response.json({ data: document || {} });
     }).catch(handleErrorFromDB(response, modelName, `There was an error fetching document #${documentId}`));
   }
 }
