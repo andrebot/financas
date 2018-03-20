@@ -141,5 +141,25 @@ describe('Controller', function () {
 
       this.controller.listAll(request, response);
     });
+
+    it('should send the client an error if anything goes wrong in the database while listing', function (done) {
+      const { request, response } = this.expressMocks;
+
+      this.fakePromise.catch.callsArgWith(0, new Error('Dumb error'));
+
+      response.send = message => {
+        this.fakeCalls.save.should.have.been.calledOnce;
+        this.fakePromise.catch.should.have.been.calledOnce;
+
+        response.status.should.have.been.calledWith(500);
+
+        message.should.be.a('String');
+        message.should.not.be.empty;
+
+        done();
+      };
+
+      this.controller.create(request, response);
+    });
   });
 });
