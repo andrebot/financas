@@ -63,19 +63,23 @@ describe('Controller', function () {
       this.controller.create(request, response);
     });
 
-    it('should send the client an error if anything goes wrong in the database while saving', function(done) {
+    it('should send a 500 error to the client if anything goes wrong in the database while saving', function(done) {
       const { request, response } = this.expressMocks;
       const dummyData = 'hey';
+      const dumbError = new Error('Dumb error');
 
-      this.fakePromise.catch.callsArgWith(0, new Error('Dumb error'));
+      this.fakePromise.catch.callsArgWith(0, dumbError);
       request.body = { dummyData };
       response.send = message => {
         this.fakeCalls.save.should.have.been.calledOnce;
         this.fakePromise.catch.should.have.been.calledOnce;
 
         response.status.should.have.been.calledWith(500);
-        message.should.be.a('String');
+        message.should.exist;
         message.should.not.be.empty;
+        message.should.be.a('String');
+        message.should.include('Type:');
+        message.should.include(dumbError.name);
 
         done();
       };
@@ -83,7 +87,7 @@ describe('Controller', function () {
       this.controller.create(request, response);
     });
 
-    it('should send a 404 error if the info provided does not match', function(done) {
+    it('should send a 404 error if the info provided does not match the document\'s schema', function(done) {
       const { request, response } = this.expressMocks;
 
       throwNewError = mongoose.Error.ValidationError;
@@ -91,11 +95,35 @@ describe('Controller', function () {
       response.send = message => {
         this.fakeCalls.save.should.have.not.been.called;
         this.fakePromise.catch.should.have.not.been.called;
+
+        response.status.should.have.been.calledWith(404);
+        message.should.exist;
+        message.should.not.be.empty;
+        message.should.be.an('string');
+        message.should.include('Type:');
+        message.should.include('ValidationError');
+
+        done();
+      }
+
+      this.controller.create(request, response);
+    });
+
+    it('should send a 404 error if the info provided is with wrong types', function(done) {
+      const { request, response } = this.expressMocks;
+
+      throwNewError = mongoose.Error.CastError;
+
+      response.send = message => {
+        this.fakeCalls.save.should.have.not.been.called;
+        this.fakePromise.catch.should.have.not.been.called;
   
         response.status.should.have.been.calledWith(404);
         message.should.exist;
-        message.should.be.an('string');
         message.should.not.be.empty;
+        message.should.be.an('string');
+        message.should.include('Type:');
+        message.should.include('CastError');
 
         done();
       }
@@ -155,8 +183,11 @@ describe('Controller', function () {
 
         response.status.should.have.been.calledWith(500);
 
-        message.should.be.a('String');
+        message.should.exist;
         message.should.not.be.empty;
+        message.should.be.a('String');
+        message.should.include('Type:');
+        message.should.include('Error');
 
         done();
       };
