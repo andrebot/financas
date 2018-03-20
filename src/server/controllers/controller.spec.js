@@ -122,5 +122,24 @@ describe('Controller', function () {
 
       this.controller.listAll(request, response);
     });
+
+    it('should return an empty array if no document is found', function (done) {
+      const { request, response } = this.expressMocks;
+      const dummyResult = [];
+
+      this.fakePromise.then.callsArgWith(0, dummyResult);
+
+      response.json = result => {
+        result.should.exist;
+        result.should.be.an('object');
+        result.should.own.property('data');
+        result.data.should.be.an('array');
+        result.data.should.be.empty;
+
+        done();
+      };
+
+      this.controller.listAll(request, response);
+    });
   });
 });
