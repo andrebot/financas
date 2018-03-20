@@ -137,12 +137,17 @@ function listAll(model, modelName) {
 function getById(model, modelName) {
   return function (request, response) {
     const documentId = request.params.id;
+    const errorHandler = handleErrorFromDB(response, modelName, `There was an error fetching document #${documentId}`);
+
+    if (!documentId) {
+      return errorHandler(new ValidationError('No ID was provided'));
+    }
 
     model.findById(documentId).then(function (document) {
       Logger.info(`${modelName}Controller: Document #${documentId} was fetched`);
 
       response.json({ data: document || {} });
-    }).catch(handleErrorFromDB(response, modelName, `There was an error fetching document #${documentId}`));
+    }).catch(errorHandler);
   }
 }
 

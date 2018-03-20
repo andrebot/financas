@@ -279,5 +279,29 @@ describe('Controller', function () {
 
       this.controller.getById(request, response);
     });
+
+    it('should send a 404 error to the client id there is no id provided', function (done) {
+      const { request, response } = this.expressMocks;
+
+      request.params = {};
+
+      this.fakePromise.catch.callsArgWith(0, new Error('Dumb error'));
+
+      response.send = message => {
+        this.fakeCalls.findById.should.have.not.been.called;
+
+        response.status.should.have.been.calledWith(404);
+
+        message.should.exist;
+        message.should.not.be.empty;
+        message.should.be.a('String');
+        message.should.include('Type:');
+        message.should.include('Error');
+
+        done();
+      };
+
+      this.controller.getById(request, response);
+    })
   });
 });
