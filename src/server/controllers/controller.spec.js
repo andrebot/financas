@@ -72,6 +72,7 @@ describe('Controller', function () {
         this.fakeCalls.save.should.have.been.calledOnce;
         this.fakePromise.catch.should.have.been.calledOnce;
 
+        response.status.should.have.been.calledWith(500);
         message.should.be.a('String');
         message.should.not.be.empty;
 
