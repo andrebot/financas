@@ -13,7 +13,8 @@ describe('Controller', function () {
 
     const fakeCalls = {
       save: sinon.stub().returns(fakePromise),
-      find: sinon.stub().returns(fakePromise)
+      find: sinon.stub().returns(fakePromise),
+      findById: sinon.stub().returns(fakePromise)
     };
 
     this.fakeCalls = fakeCalls;
@@ -28,6 +29,7 @@ describe('Controller', function () {
     };
     this.fakeModel.collection = { name: 'TestFake' };
     this.fakeModel.find = fakeCalls.find;
+    this.fakeModel.findById = fakeCalls.findById;
 
     this.expressMocks = {
       request: {},
@@ -197,9 +199,30 @@ describe('Controller', function () {
   });
 
   describe('get by id', function () {
-    it('should get an document by id');
+    it('should get an document by id', function (done) {
+      const { request, response } = this.expressMocks;
+
+      request.params = {
+        id: 1 
+      };
+
+      this.fakePromise.then.callsArgWith(0, {test: 'dummy'});
+
+      response.json = result => {
+
+        result.should.exist;
+        result.should.be.an('object');
+        result.should.own.property('data');
+        result.data.should.be.an('object');
+
+        done();
+      };
+
+      this.controller.getById(request, response);
+    });
+
     it('should return empty if no document is found');
-    it('should send an error to client if no id is provided')
-    it('should send a 500 error to the client if there is any error with the database while retrieving')
+    it('should send a 404 error to client if no id is provided');
+    it('should send a 500 error to the client if there is any error with the database while retrieving');
   });
 });
