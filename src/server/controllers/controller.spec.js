@@ -2,6 +2,8 @@ const Controller = require('./controller');
 const sinon = require('sinon');
 
 describe('Controller', function () {
+  let throwNewError = false;
+
   beforeEach(function () {
     const fakePromise = {
       then: sinon.stub().returnsThis(),
@@ -17,6 +19,10 @@ describe('Controller', function () {
 
     this.fakeModel = function () {
       this.save = fakeCalls.save;
+
+      if (throwNewError) {
+        throw new Error('This is a creation error');
+      }
     };
     this.fakeModel.collection = { name: 'TestFake' };
 
@@ -28,6 +34,7 @@ describe('Controller', function () {
     }
 
     this.controller = Controller(this.fakeModel);
+    throwNewError = false;
   });
 
   it('should save successfully a generic model', function (done) {
@@ -74,8 +81,20 @@ describe('Controller', function () {
   it('should send the client an error if the info provided does not match', function(done) {
     const { request, response } = this.expressMocks;
 
-    this.controller.create(request, response);
+    throwNewError = true;
 
-    done();
+    response.send = message => {
+      this.fakeCalls.save.should.have.not.been.called;
+      this.fakePromise.catch.should.have.not.been.called;
+
+      response.status.should.have.been.calledWith(500);
+      message.should.exist;
+      message.should.be.an('string');
+      message.should.not.be.empty;
+
+      done();
+    }
+
+    this.controller.create(request, response);
   });
 });

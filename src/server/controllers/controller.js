@@ -63,12 +63,18 @@ function handleErrorFromDB(response, modelName, message) {
  */
 function create(model, modelName) {
   return function (request, response) {
-    const newModel = new model(request.body);
-    newModel.save().then(function (savedModel) {
-      Logger.info(`${modelName}Controller: Model saved successfully. #${savedModel._id}`);
+    const errorHandler = handleErrorFromDB(response, modelName, 'There was an error saving this model');
 
-      response.json({ data: savedModel });
-    }).catch(handleErrorFromDB(response, modelName, 'There was an error saving this model'));
+    try {
+      const newModel = new model(request.body);
+      newModel.save().then(function (savedModel) {
+        Logger.info(`${modelName}Controller: Model saved successfully. #${savedModel._id}`);
+
+        response.json({ data: savedModel });
+      }).catch(errorHandler);
+    } catch (error) {
+      errorHandler(error);
+    }
   }
 }
 
