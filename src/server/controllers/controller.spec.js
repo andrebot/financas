@@ -142,6 +142,9 @@ describe('Controller', function () {
       this.fakePromise.then.callsArgWith(0, dummyResult);
 
       response.json = result => {
+        this.fakeCalls.find.should.have.been.calledOnce;
+        this.fakePromise.then.should.have.been.calledOnce;
+
         result.should.exist;
         result.should.be.an('object');
         result.should.own.property('data');
@@ -162,6 +165,9 @@ describe('Controller', function () {
       this.fakePromise.then.callsArgWith(0, dummyResult);
 
       response.json = result => {
+        this.fakeCalls.find.should.have.been.calledOnce;
+        this.fakePromise.then.should.have.been.calledOnce;
+
         result.should.exist;
         result.should.be.an('object');
         result.should.own.property('data');
@@ -180,7 +186,7 @@ describe('Controller', function () {
       this.fakePromise.catch.callsArgWith(0, new Error('Dumb error'));
 
       response.send = message => {
-        this.fakeCalls.save.should.have.been.calledOnce;
+        this.fakeCalls.find.should.have.been.calledOnce;
         this.fakePromise.catch.should.have.been.calledOnce;
 
         response.status.should.have.been.calledWith(500);
@@ -194,7 +200,7 @@ describe('Controller', function () {
         done();
       };
 
-      this.controller.create(request, response);
+      this.controller.listAll(request, response);
     });
   });
 
@@ -209,6 +215,8 @@ describe('Controller', function () {
       this.fakePromise.then.callsArgWith(0, {test: 'dummy'});
 
       response.json = result => {
+        this.fakeCalls.findById.should.have.been.calledOnce;
+        this.fakePromise.then.should.have.been.calledOnce;
 
         result.should.exist;
         result.should.be.an('object');
@@ -231,6 +239,8 @@ describe('Controller', function () {
       this.fakePromise.then.callsArgWith(0, null);
 
       response.json = result => {
+        this.fakeCalls.findById.should.have.been.calledOnce;
+        this.fakePromise.then.should.have.been.calledOnce;
 
         result.should.exist;
         result.should.be.an('object');
@@ -243,7 +253,31 @@ describe('Controller', function () {
       this.controller.getById(request, response);
     });
 
-    it('should send a 404 error to client if no id is provided');
-    it('should send a 500 error to the client if there is any error with the database while retrieving');
+    it('should send a 500 error to the client if there is any error with the database while retrieving', function (done) {
+      const { request, response } = this.expressMocks;
+
+      request.params = {
+        id: 1 
+      };
+
+      this.fakePromise.catch.callsArgWith(0, new Error('Dumb error'));
+
+      response.send = message => {
+        this.fakeCalls.findById.should.have.been.calledOnce;
+        this.fakePromise.catch.should.have.been.calledOnce;
+
+        response.status.should.have.been.calledWith(500);
+
+        message.should.exist;
+        message.should.not.be.empty;
+        message.should.be.a('String');
+        message.should.include('Type:');
+        message.should.include('Error');
+
+        done();
+      };
+
+      this.controller.getById(request, response);
+    });
   });
 });
