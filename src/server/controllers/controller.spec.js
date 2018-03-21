@@ -310,10 +310,12 @@ describe('Controller', function () {
   describe('update', function () {
     it('should update a model successfully', function (done) {
       const { request, response } = this.expressMocks;
+      const dummyObj = { dummyData: 'hey' };
 
       request.params = { id: 1 };
+      request.body = dummyObj;
 
-      this.fakePromise.then.callsArgWith(0, { dummyData: 'hey' });
+      this.fakePromise.then.callsArgWith(0, dummyObj);
 
       response.json = result => {
         this.fakeCalls.findByIdAndUpdate.should.have.been.calledOnce;
@@ -353,7 +355,28 @@ describe('Controller', function () {
       this.controller.update(request, response);
     });
 
-    it('should send a 404 error to the client if there is no data');
+    it('should send a 404 error to the client if there is no data', function (done) {
+      const { request, response } = this.expressMocks;
+
+      request.params = { id: 1 };
+
+      response.send = message => {
+        this.fakeCalls.findByIdAndUpdate.should.have.not.been.called;
+
+        response.status.should.have.been.calledWith(404);
+
+        message.should.exist;
+        message.should.not.be.empty;
+        message.should.be.a('String');
+        message.should.include('Type:');
+        message.should.include('ValidationError');
+
+        done();
+      };
+
+      this.controller.update(request, response);
+    });
+
     it('should send a 404 error to the client if the data is not valid');
     it('should send a 500 error to the client if there is any error with the database while updating');
   });

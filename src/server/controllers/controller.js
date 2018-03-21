@@ -161,13 +161,14 @@ function getById(model, modelName) {
 function update(model, modelName) {
   return function (request, response) {
     const documentId = request.params.id;
+    const updateData = request.body;
     const errorHandler = handleErrorFromDB(response, modelName, `There was an error updating the document ${documentId}`);
 
-    if (!documentId) {
-      return errorHandler(new ValidationError('No ID was provided'));
+    if (!documentId || !updateData) {
+      return errorHandler(new ValidationError('Missing data'));
     }
 
-    model.findByIdAndUpdate(documentId, request.body).then(function (updatedDocument) {
+    model.findByIdAndUpdate(documentId, updateData).then(function (updatedDocument) {
       Logger.info(`${modelName}Controller: Document #${documentId} updated successfully`);
 
       response.json({ data: updatedDocument });
