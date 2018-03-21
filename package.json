@@ -10,7 +10,7 @@
     "start": "node src/server/",
     "dev": "webpack --watch --env=dev",
     "build": "webpack",
-    "test:backend": "NODE_ENV=test nyc --reporter=html -x 'src/**/*.spec.js' mocha -w --file tests/server/imports.js src/server/**/*.spec.js"
+    "test:backend": "NODE_ENV=test nyc --reporter=html -x 'src/**/*.spec.js' mocha --file tests/server/imports.js src/server/**/*.spec.js"
   },
   "keywords": [
     "ficances",

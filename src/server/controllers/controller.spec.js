@@ -458,6 +458,30 @@ describe('Controller', function () {
       this.controller.remove(request, response);
     });
 
+    it('should return an empty data if no document is found to delete', function (done) {
+      const { request, response } = this.expressMocks;
+
+      request.params = { id: 1 };
+
+      this.fakePromise.then.callsArgWith(0, null);
+
+      response.json = result => {
+        this.fakeCalls.findOneAndRemove.should.have.been.called;
+        this.fakePromise.then.should.have.been.called;
+
+        result.should.exist;
+        result.should.be.an('Object');
+        result.should.own.property('data');
+        result.data.should.exist;
+        result.data.should.be.an('Object');
+        result.data.should.be.empty;
+
+        done();
+      };
+
+      this.controller.remove(request, response);
+    });
+
     it('should send a 500 error to the client if there is any error with the database while removing', function(done) {
       const { request, response } = this.expressMocks;
 
