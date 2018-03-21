@@ -15,7 +15,8 @@ describe('Controller', function () {
       save: sinon.stub().returns(fakePromise),
       find: sinon.stub().returns(fakePromise),
       findById: sinon.stub().returns(fakePromise),
-      findByIdAndUpdate: sinon.stub().returns(fakePromise)
+      findByIdAndUpdate: sinon.stub().returns(fakePromise),
+      findOneAndRemove: sinon.stub().returns(fakePromise)
     };
 
     this.fakeCalls = fakeCalls;
@@ -32,6 +33,7 @@ describe('Controller', function () {
     this.fakeModel.find = fakeCalls.find;
     this.fakeModel.findById = fakeCalls.findById;
     this.fakeModel.findByIdAndUpdate = fakeCalls.findByIdAndUpdate;
+    this.fakeModel.findOneAndRemove = fakeCalls.findOneAndRemove;
 
     this.expressMocks = {
       request: {},
@@ -430,5 +432,36 @@ describe('Controller', function () {
 
       this.controller.update(request, response);
     });
+  });
+
+  describe('remove', function() {
+    it('should remove a document successfully');
+
+    it('should send a 500 error to the client if there is any error with the database while removing', function(done) {
+      const { request, response } = this.expressMocks;
+
+      request.params = { id: 1 };
+
+      this.fakePromise.catch.callsArgWith(0, new Error('Dumb error'));
+
+      response.send = message => {
+        this.fakeCalls.findOneAndRemove.should.have.been.called;
+        this.fakePromise.catch.should.have.been.called;
+
+        response.status.should.have.been.calledWith(500);
+
+        message.should.exist;
+        message.should.not.be.empty;
+        message.should.be.a('String');
+        message.should.include('Type:');
+        message.should.include('Error');
+
+        done();
+      };
+
+      this.controller.remove(request, response);
+    });
+
+    it('should send a 404 error to the client if no id is provided');
   });
 });

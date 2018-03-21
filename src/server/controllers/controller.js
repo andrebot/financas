@@ -186,6 +186,11 @@ function update(model, modelName) {
 function remove(model, modelName) {
   return function (request, response) {
     const documentId = request.params.id;
+    const errorHandler = handleErrorFromDB(response, modelName, `There was an error trying to delete document #${documentId}`);
+
+    if (!documentId) {
+      return errorHandler(new ValidationError('Missing ID'));
+    }
 
     model.findOneAndRemove(documentId).then(function (deletedDocument) {
       const result = {
@@ -201,7 +206,7 @@ function remove(model, modelName) {
       }
 
       response.json(result);
-    }).catch(handleErrorFromDB(response, modelName, `There was an error trying to delete document #${documentId}`));
+    }).catch(errorHandler);
   }
 }
 
