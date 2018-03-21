@@ -8,30 +8,30 @@ module.exports = function (env) {
   const plugins = [
     new webpack.optimize.CommonsChunkPlugin({
       name: 'vendor',
-      filename: './dist/src/windows/vendors.js',
+      filename: './src/server/public/vendors.js',
       minChunks: Infinity
     }),
     new copyWebpackPlugin([{
-      from: './src/**/*',
-      to: './dist',
+      from: './src/client/**/*',
+      to: './src/server/public',
+      flatten: true,
       ignore: ['*.jsx']
     }])
   ];
 
-  if (env) {
-    plugins.push(new webpackShellPlugin({
-      onBuildEnd: ['npm start']
-    }));
-  }
+  // if (env) {
+  //   plugins.push(new webpackShellPlugin({
+  //     onBuildEnd: ['npm start']
+  //   }));
+  // }
 
   return {
     entry: {
-      './dist/src/windows/main/view': './src/windows/main/view.jsx',
-      './dist/src/windows/createBank/view': './src/windows/createBank/view.jsx',
+      index: './src/client/index.jsx',
       vendor: ['react', 'react-dom', 'prop-types', 'redux', 'react-redux']
     },
     output: {
-      filename: '[name].js'
+      filename: './src/server/public/[name].js'
     },
     module: {
       loaders: [{
