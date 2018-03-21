@@ -161,12 +161,17 @@ function getById(model, modelName) {
 function update(model, modelName) {
   return function (request, response) {
     const documentId = request.params.id;
+    const errorHandler = handleErrorFromDB(response, modelName, `There was an error updating the document ${documentId}`);
+
+    if (!documentId) {
+      return errorHandler(new ValidationError('No ID was provided'));
+    }
 
     model.findByIdAndUpdate(documentId, request.body).then(function (updatedDocument) {
       Logger.info(`${modelName}Controller: Document #${documentId} updated successfully`);
 
       response.json({ data: updatedDocument });
-    }).catch(handleErrorFromDB(response, modelName, `There was an error updating the document ${documentId}`));
+    }).catch(errorHandler);
   }
 }
 
