@@ -14,7 +14,8 @@ describe('Controller', function () {
     const fakeCalls = {
       save: sinon.stub().returns(fakePromise),
       find: sinon.stub().returns(fakePromise),
-      findById: sinon.stub().returns(fakePromise)
+      findById: sinon.stub().returns(fakePromise),
+      findByIdAndUpdate: sinon.stub().returns(fakePromise)
     };
 
     this.fakeCalls = fakeCalls;
@@ -30,6 +31,7 @@ describe('Controller', function () {
     this.fakeModel.collection = { name: 'TestFake' };
     this.fakeModel.find = fakeCalls.find;
     this.fakeModel.findById = fakeCalls.findById;
+    this.fakeModel.findByIdAndUpdate = fakeCalls.findByIdAndUpdate;
 
     this.expressMocks = {
       request: {},
@@ -280,7 +282,7 @@ describe('Controller', function () {
       this.controller.getById(request, response);
     });
 
-    it('should send a 404 error to the client id there is no id provided', function (done) {
+    it('should send a 404 error to the client if there is no id', function (done) {
       const { request, response } = this.expressMocks;
 
       request.params = {};
@@ -302,6 +304,36 @@ describe('Controller', function () {
       };
 
       this.controller.getById(request, response);
-    })
+    });
+  });
+
+  describe('update', function () {
+    it('should update a model successfully', function (done) {
+      const { request, response } = this.expressMocks;
+
+      request.params = { id: 1 };
+
+      this.fakePromise.then.callsArgWith(0, { dummyData: 'hey' });
+
+      response.json = result => {
+        this.fakeCalls.findByIdAndUpdate.should.have.been.calledOnce;
+        this.fakePromise.then.should.have.been.calledOnce;
+
+        result.should.exist;
+        result.should.be.an('object');
+        result.should.own.property('data');
+        result.data.should.exist;
+        result.data.should.be.an('object');
+
+        done();
+      };
+
+      this.controller.update(request, response);
+    });
+
+    it('should send a 404 error to the client if there is no id');
+    it('should send a 404 error to the client if there is no data');
+    it('should send a 404 error to the client if the data is not valid');
+    it('should send a 500 error to the client if there is any error with the database while updating');
   });
 });
