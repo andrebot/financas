@@ -462,6 +462,28 @@ describe('Controller', function () {
       this.controller.remove(request, response);
     });
 
-    it('should send a 404 error to the client if no id is provided');
+    it('should send a 404 error to the client if no id is provided', function (done) {
+      const { request, response } = this.expressMocks;
+
+      request.params = { };
+
+      response.send = message => {
+        this.fakeCalls.findOneAndRemove.should.have.not.been.called;
+        this.fakePromise.then.should.have.not.been.called;
+        this.fakePromise.catch.should.have.not.been.called;
+
+        response.status.should.have.been.calledWith(404);
+
+        message.should.exist;
+        message.should.not.be.empty;
+        message.should.be.a('String');
+        message.should.include('Type:');
+        message.should.include('ValidationError');
+
+        done();
+      };
+
+      this.controller.update(request, response);
+    });
   });
 });
