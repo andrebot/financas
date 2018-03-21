@@ -102,28 +102,23 @@ function create(model, modelName) {
  */
 function listAll(model, modelName) {
   return function (request, response) {
-    const errorHandler = handleErrorFromDB(response, modelName, 'There was an error fetching all documents for this model');
 
-    try {
-      model.find({}).then(function(documents) {
-        const numberOfDocuments = documents.length;
-        const result = {
-          data: []
-        };
+    model.find({}).then(function(documents) {
+      const numberOfDocuments = documents.length;
+      const result = {
+        data: []
+      };
 
-        if (documents && documents.length > 0) {
-          Logger.info(`${modelName}Controller: Returning ${numberOfDocuments} documents`);
+      if (documents && documents.length > 0) {
+        Logger.info(`${modelName}Controller: Returning ${numberOfDocuments} documents`);
 
-          result.data = documents;
-        } else {
-          Logger.info(`${modelName}Controller: no documents were found`);
-        }
+        result.data = documents;
+      } else {
+        Logger.info(`${modelName}Controller: no documents were found`);
+      }
 
-        response.json(result);
-      }).catch(errorHandler);
-    } catch (error) {
-      errorHandler(error);
-    }
+      response.json(result);
+    }).catch(handleErrorFromDB(response, modelName, 'There was an error fetching all documents for this model'));
   }
 }
 
