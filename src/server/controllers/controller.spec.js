@@ -405,6 +405,30 @@ describe('Controller', function () {
       this.controller.update(request, response);
     });
 
-    it('should send a 500 error to the client if there is any error with the database while updating');
+    it('should send a 500 error to the client if there is any error with the database while updating', function (done) {
+      const { request, response } = this.expressMocks;
+
+      request.params = { id: 1 };
+      request.body = { dummyData: 'hey' };
+
+      this.fakePromise.catch.callsArgWith(0, new Error('Dumb error'));
+
+      response.send = message => {
+        this.fakeCalls.findByIdAndUpdate.should.have.been.calledOnce;
+        this.fakePromise.catch.should.have.been.calledOnce;
+
+        response.status.should.have.been.calledWith(500);
+
+        message.should.exist;
+        message.should.not.be.empty;
+        message.should.be.a('String');
+        message.should.include('Type:');
+        message.should.include('Error');
+
+        done();
+      };
+
+      this.controller.update(request, response);
+    });
   });
 });
