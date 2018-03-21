@@ -335,6 +335,32 @@ describe('Controller', function () {
       this.controller.update(request, response);
     });
 
+    it('should send a 500 error to the client if there is any error with the database while updating', function (done) {
+      const { request, response } = this.expressMocks;
+
+      request.params = { id: 1 };
+      request.body = { dummyData: 'hey' };
+
+      this.fakePromise.catch.callsArgWith(0, new Error('Dumb error'));
+
+      response.send = message => {
+        this.fakeCalls.findByIdAndUpdate.should.have.been.calledOnce;
+        this.fakePromise.catch.should.have.been.calledOnce;
+
+        response.status.should.have.been.calledWith(500);
+
+        message.should.exist;
+        message.should.not.be.empty;
+        message.should.be.a('String');
+        message.should.include('Type:');
+        message.should.include('Error');
+
+        done();
+      };
+
+      this.controller.update(request, response);
+    });
+
     it('should send a 404 error to the client if there is no id', function(done) {
       const { request, response } = this.expressMocks;
 
@@ -406,36 +432,31 @@ describe('Controller', function () {
 
       this.controller.update(request, response);
     });
+  });
 
-    it('should send a 500 error to the client if there is any error with the database while updating', function (done) {
+  describe('remove', function() {
+    it('should remove a document successfully', function (done) {
       const { request, response } = this.expressMocks;
 
       request.params = { id: 1 };
-      request.body = { dummyData: 'hey' };
 
-      this.fakePromise.catch.callsArgWith(0, new Error('Dumb error'));
+      this.fakePromise.then.callsArgWith(0, { dummyData: 'hey' });
 
-      response.send = message => {
-        this.fakeCalls.findByIdAndUpdate.should.have.been.calledOnce;
-        this.fakePromise.catch.should.have.been.calledOnce;
+      response.json = result => {
+        this.fakeCalls.findOneAndRemove.should.have.been.called;
+        this.fakePromise.then.should.have.been.called;
 
-        response.status.should.have.been.calledWith(500);
-
-        message.should.exist;
-        message.should.not.be.empty;
-        message.should.be.a('String');
-        message.should.include('Type:');
-        message.should.include('Error');
+        result.should.exist;
+        result.should.be.an('Object');
+        result.should.own.property('data');
+        result.data.should.exist;
+        result.data.should.be.an('Object');
 
         done();
       };
 
-      this.controller.update(request, response);
+      this.controller.remove(request, response);
     });
-  });
-
-  describe('remove', function() {
-    it('should remove a document successfully');
 
     it('should send a 500 error to the client if there is any error with the database while removing', function(done) {
       const { request, response } = this.expressMocks;
