@@ -504,7 +504,33 @@ describe('Controller', function () {
         done();
       };
 
-      this.controller.update(request, response);
+      this.controller.remove(request, response);
+    });
+
+    it('should send a 404 error to the client if the id is wrong', function (done) {
+      const { request, response } = this.expressMocks;
+
+      request.params = { id: 'wrongId' };
+
+      this.fakePromise.catch.callsArgWith(0, new mongoose.Error.CastError('Dumb error'));
+
+      response.send = message => {
+        this.fakeCalls.findOneAndRemove.should.have.been.called;
+        this.fakePromise.then.should.have.been.called;
+        this.fakePromise.catch.should.have.been.calledOnce;
+
+        response.status.should.have.been.calledWith(404);
+
+        message.should.exist;
+        message.should.not.be.empty;
+        message.should.be.a('String');
+        message.should.include('Type:');
+        message.should.include('CastError');
+
+        done();
+      };
+
+      this.controller.remove(request, response);
     });
   });
 });
