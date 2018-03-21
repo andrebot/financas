@@ -4,6 +4,7 @@ const Logger       = require('./helpers/logger');
 const serverConfig = require('../config/server');
 const database     = require('./database');
 const bankRoute    = require('./routes/bank.route');
+const billRoute    = require('./routes/bill.route');
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use(bodyParser.json());
 // = Adding routes for the API =
 // =============================
 app.use('/api/v1/bank', bankRoute);
+app.use('/api/v1/bill', billRoute);
 
 // ===============================================
 // = Connecting to Database and deploying server =
