@@ -6,6 +6,7 @@ const database        = require('./database');
 const bankRoute       = require('./routes/bank.route');
 const billRoute       = require('./routes/bill.route');
 const costCenterRoute = require('./routes/costCenter.route');
+const creditCardRoute = require('./routes/creditCard.route');
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use(bodyParser.json());
 app.use('/api/v1/bank', bankRoute);
 app.use('/api/v1/bill', billRoute);
 app.use('/api/v1/costCenter', costCenterRoute);
+app.use('/api/v1/creditCard', creditCardRoute);
 
 // ===============================================
 // = Connecting to Database and deploying server =
