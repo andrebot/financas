@@ -377,7 +377,34 @@ describe('Controller', function () {
       this.controller.update(request, response);
     });
 
-    it('should send a 404 error to the client if the data is not valid');
+    it('should send a 404 error to the client if the data is not valid', function (done) {
+      const { request, response } = this.expressMocks;
+      const dummyObj = { dummyData: 'hey' };
+
+      request.params = { id: 1 };
+      request.body = dummyObj;
+
+      this.fakePromise.catch.callsArgWith(0, new mongoose.Error.ValidationError('Dumb error'));
+
+      response.send = message => {
+        this.fakeCalls.findByIdAndUpdate.should.have.been.called;
+        this.fakePromise.then.should.have.been.called;
+        this.fakePromise.catch.should.have.been.called;
+
+        response.status.should.have.been.calledWith(404);
+
+        message.should.exist;
+        message.should.not.be.empty;
+        message.should.be.a('String');
+        message.should.include('Type:');
+        message.should.include('ValidationError');
+
+        done();
+      };
+
+      this.controller.update(request, response);
+    });
+
     it('should send a 500 error to the client if there is any error with the database while updating');
   });
 });
