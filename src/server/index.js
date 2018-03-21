@@ -36,6 +36,9 @@ app.use('/api/v1/costCenter', costCenterRoute);
 app.use('/api/v1/creditCard', creditCardRoute);
 app.use('/api/v1/transaction', transactionRoute);
 app.use('/api/v1/establishment', establishmentRoute);
+app.use('*', function(request, response) {
+  response.sendStatus(404);
+});
 
 // ===============================================
 // = Connecting to Database and deploying server =
