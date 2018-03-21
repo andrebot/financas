@@ -62,6 +62,8 @@ describe('Controller', function () {
         result.should.be.an('Object');
         result.should.have.property('data');
         result.data.should.exist;
+        result.data.should.be.an('Object');
+        result.data.should.not.be.empty;
 
         done();
       };
@@ -226,6 +228,7 @@ describe('Controller', function () {
         result.should.be.an('object');
         result.should.own.property('data');
         result.data.should.be.an('object');
+        result.data.should.not.be.empty;
 
         done();
       };
@@ -250,6 +253,7 @@ describe('Controller', function () {
         result.should.be.an('object');
         result.should.own.property('data');
         result.data.should.be.an('object');
+        result.data.should.be.empty;
 
         done();
       };
@@ -328,6 +332,7 @@ describe('Controller', function () {
         result.should.own.property('data');
         result.data.should.exist;
         result.data.should.be.an('object');
+        result.data.should.not.be.empty;
 
         done();
       };
@@ -451,6 +456,7 @@ describe('Controller', function () {
         result.should.own.property('data');
         result.data.should.exist;
         result.data.should.be.an('Object');
+        result.data.should.not.be.empty;
 
         done();
       };
