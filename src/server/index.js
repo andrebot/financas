@@ -17,7 +17,7 @@ const app = express();
 // =======================
 // = Adding static files =
 // =======================
-app.use(express.static('public'));
+app.use(express.static(`${__dirname}/public`));
 
 // ======================
 // = Adding middlewares =
