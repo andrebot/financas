@@ -28,7 +28,7 @@ module.exports = function (env) {
   return {
     entry: {
       index: './src/client/index.jsx',
-      vendor: ['react', 'react-dom', 'prop-types', 'redux', 'react-redux']
+      vendor: ['react', 'react-dom', 'prop-types', 'redux', 'react-redux', 'semantic-ui-react']
     },
     output: {
       filename: './src/server/public/[name].js'
@@ -39,7 +39,7 @@ module.exports = function (env) {
         exclude: /node_modules/,
         loader: 'babel-loader',
         query: {
-          presets: ['react']
+          presets: ['env', 'stage-2', 'react']
         }
       }]
     },

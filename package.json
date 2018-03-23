@@ -9,7 +9,7 @@
   "scripts": {
     "start": "node src/server/",
     "dev": "webpack --watch --env=dev",
-    "build": "webpack",
+    "build": "webpack --watch",
     "test:backend": "NODE_ENV=test nyc --reporter=html -x 'src/**/*.spec.js' mocha --file tests/server/imports.js src/server/**/*.spec.js"
   },
   "keywords": [
@@ -41,7 +41,9 @@
   "devDependencies": {
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.2",
+    "babel-preset-env": "^1.6.1",
     "babel-preset-react": "^6.24.1",
+    "babel-preset-stage-2": "^6.24.1",
     "chai": "^4.1.2",
     "copy-webpack-plugin": "^4.4.1",
     "mocha": "^5.0.0",
