@@ -7,7 +7,8 @@
     "node": "7.9.0"
   },
   "scripts": {
-    "start": "node src/server/",
+    "start2": "node src/server/",
+    "start": "nodemon --watch src/server src/server/index.js",
     "dev": "webpack --watch --env=dev",
     "build": "webpack --watch",
     "test:backend": "NODE_ENV=test nyc --reporter=html -x 'src/**/*.spec.js' mocha --file tests/server/imports.js src/server/**/*.spec.js"
@@ -28,6 +29,7 @@
     "export-config": "^1.0.0",
     "express": "^4.16.3",
     "mongoose": "^5.0.10",
+    "nodemon": "^1.17.2",
     "prop-types": "^15.6.0",
     "react": "16.2.0",
     "react-dom": "16.2.0",

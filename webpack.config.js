@@ -19,11 +19,11 @@ module.exports = function (env) {
     }])
   ];
 
-  // if (env) {
-  //   plugins.push(new webpackShellPlugin({
-  //     onBuildEnd: ['npm start']
-  //   }));
-  // }
+  if (env) {
+    plugins.push(new webpackShellPlugin({
+      onBuildEnd: ['npm start']
+    }));
+  }
 
   return {
     entry: {
