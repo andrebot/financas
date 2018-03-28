@@ -6,11 +6,11 @@ export default class MainMenu extends Component {
 
   handleItemClick = (e, { name }) => this.setState({ activeItem: name })
 
-  createMenuItem = (menuName) => {
+  createMenuItem = (menuName, index) => {
     const { activeItem } = this.state;
 
     return (
-      <Menu.Item name={menuName} active={activeItem === menuName} onClick={this.handleItemClick} />
+      <Menu.Item key={index} name={menuName} active={activeItem === menuName} onClick={this.handleItemClick} />
     );
   }
 
