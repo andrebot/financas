@@ -1,7 +1,7 @@
 import { changePage, CHANGE_PAGE } from './actions.jsx';
 
 const initialState = {
-  page: 'home'
+  activePage: 'home'
 };
 
 export default function menu(state = initialState, action) {
