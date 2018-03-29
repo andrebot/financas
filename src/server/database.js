@@ -1,24 +1,25 @@
 const mongoose = require('mongoose');
+const Logger = require('./helpers/logger');
 const mongoConfig = require('../config/mongoose');
 
 mongoose.Promise = Promise;
 
 function closeConnection() {
   mongoose.connection.close(() => {
-    console.log('closing connctions to database');
+    Logger.info('closing connctions to database');
     process.exit(0);
   });
 }
 
 function configEvents(callback) {
   mongoose.connection.on('error', function (error) {
-    console.log('Could no connect to mongo...');
-    console.error(error);
+    Logger.warn('Could no connect to mongo...');
+    Logger.error(error);
   }).on('disconnected', function (error) {
-    console.log('Mongo disconnected.');
+    Logger.warn('Mongo disconnected.');
 
     if (error) {
-      console.error(error);
+      Logger.error(error);
     }
   }).on('connected', function () {
     callback();
