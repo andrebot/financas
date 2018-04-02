@@ -3,12 +3,6 @@ import { connect } from 'react-redux';
 import Menu from './menu.jsx';
 import { changePage } from './actions.jsx';
 
-const mapStateToProps = state => (
-  {
-    activePage: state.menu.activePage
-  }
-);
-
 const mapDispatchToProps = (dispatch, routerProps) => (
   {
     handleItemClick: page => {
@@ -20,6 +14,6 @@ const mapDispatchToProps = (dispatch, routerProps) => (
 );
 
 export default connect(
-  mapStateToProps,
+  () => ({}),
   mapDispatchToProps
 )(Menu);
