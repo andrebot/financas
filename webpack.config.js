@@ -28,7 +28,7 @@ module.exports = function (env) {
   return {
     entry: {
       index: './src/client/index.jsx',
-      vendor: ['react', 'react-dom', 'prop-types', 'redux', 'react-redux', 'semantic-ui-react']
+      vendor: ['react', 'react-dom', 'react-router-dom', 'prop-types', 'redux', 'react-redux', 'semantic-ui-react']
     },
     output: {
       filename: './src/server/public/[name].js'
