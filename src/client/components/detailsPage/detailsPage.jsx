@@ -25,6 +25,25 @@ const createTableRow = function ({ from, to, date, value }, index) {
   );
 }
 
+const IncomeTable = (data) => {
+  return (
+    <Table basic='very'>
+      <Table.Header>
+        <Table.Row>
+          <Table.HeaderCell>Item</Table.HeaderCell>
+          <Table.HeaderCell>Date</Table.HeaderCell>
+          <Table.HeaderCell>Bank</Table.HeaderCell>
+          <Table.HeaderCell>Value</Table.HeaderCell>
+        </Table.Row>
+      </Table.Header>
+
+      <Table.Body>
+        {data.data.map(createTableRow)}
+      </Table.Body>
+    </Table>
+  )
+}
+
 const DetailsPage = () => {
   const data = [
     {
@@ -64,20 +83,7 @@ const DetailsPage = () => {
       <Grid.Row>
         <Grid.Column>
           <Segment>
-            <Table basic='very'>
-              <Table.Header>
-                <Table.Row>
-                  <Table.HeaderCell>Item</Table.HeaderCell>
-                  <Table.HeaderCell>Date</Table.HeaderCell>
-                  <Table.HeaderCell>Bank</Table.HeaderCell>
-                  <Table.HeaderCell>Value</Table.HeaderCell>
-                </Table.Row>
-              </Table.Header>
-
-              <Table.Body>
-                {data.map(createTableRow)}
-              </Table.Body>
-            </Table>
+            <IncomeTable data={data}/>
           </Segment>
         </Grid.Column>
       </Grid.Row>
