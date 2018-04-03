@@ -4,8 +4,10 @@ import PropTypes from 'prop-types';
 
 const createMenuItem = (handleItemClick, pathName) => {
   return function (menuName, index) {
+    const isHomePage = pathName === '/' && menuName === 'home';
+
     return (
-      <Menu.Item key={index} name={menuName} active={pathName.includes(menuName)} onClick={() => handleItemClick(menuName)} />
+      <Menu.Item key={index} name={menuName} active={pathName.includes(menuName) || isHomePage} onClick={() => handleItemClick(menuName)} />
     );
   };
 }
