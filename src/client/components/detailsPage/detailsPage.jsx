@@ -79,8 +79,13 @@ const DetailsPage = () => {
   ];
 
   return (
-    <Grid>
+    <Grid columns={2} padded={true}>
       <Grid.Row>
+        <Grid.Column>
+          <Segment>
+            <IncomeTable data={data}/>
+          </Segment>
+        </Grid.Column>
         <Grid.Column>
           <Segment>
             <IncomeTable data={data}/>
