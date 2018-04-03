@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React from 'react';
 import { Segment, Container, Menu } from 'semantic-ui-react';
 import PropTypes from 'prop-types';
 
@@ -28,7 +28,7 @@ const MainMenu = ({ handleItemClick, location }) => {
   )
 }
 
-MainMenu.prototype = {
+MainMenu.propTypes = {
   handleItemClick: PropTypes.func.isRequired,
   location: PropTypes.shape({
     pathname: PropTypes.string.isRequired
