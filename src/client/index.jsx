@@ -4,6 +4,7 @@ import { render } from 'react-dom';
 import { Provider } from 'react-redux';
 import { BrowserRouter, Route } from 'react-router-dom';
 import MainMenu from './components/menu/menu.container.jsx';
+import DetailsPage from './components/detailsPage/detailsPage.jsx';
 import menu from './components/menu/reducer.jsx';
 import { changePage } from './components/menu/actions.jsx';
 
@@ -17,6 +18,7 @@ render(
     <BrowserRouter>
       <div>
         <Route path='/' render={props => <MainMenu {...props} />} />
+        <Route path='/details' exact render={props => <DetailsPage />} />
       </div>
     </BrowserRouter>
   </Provider>
