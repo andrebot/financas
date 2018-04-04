@@ -25,7 +25,7 @@ const createTableRow = function ({ from, to, date, value }, index) {
   );
 }
 
-const IncomeTable = (data) => {
+const IncomeTable = ({ incomeTransactions }) => {
   return (
     <Table basic='very'>
       <Table.Header>
@@ -38,7 +38,7 @@ const IncomeTable = (data) => {
       </Table.Header>
 
       <Table.Body>
-        {data.data.map(createTableRow)}
+        {incomeTransactions.map(createTableRow)}
       </Table.Body>
     </Table>
   )
@@ -50,12 +50,12 @@ const DetailsPage = ({ incomeTransactions }) => {
       <Grid.Row>
         <Grid.Column>
           <Segment>
-            <IncomeTable data={incomeTransactions}/>
+            <IncomeTable incomeTransactions={incomeTransactions}/>
           </Segment>
         </Grid.Column>
         <Grid.Column>
           <Segment>
-            <IncomeTable data={incomeTransactions}/>
+            <IncomeTable incomeTransactions={incomeTransactions} />
           </Segment>
         </Grid.Column>
       </Grid.Row>
