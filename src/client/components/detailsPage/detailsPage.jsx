@@ -1,5 +1,5 @@
 import React from 'React';
-import Tab, { Segment, Grid, Table } from 'semantic-ui-react';
+import { Segment, Grid, Table } from 'semantic-ui-react';
 import PropTypes from 'prop-types';
 
 const createTableRow = function ({ from, to, date, value }, index) {
@@ -44,51 +44,18 @@ const IncomeTable = (data) => {
   )
 }
 
-const DetailsPage = () => {
-  const data = [
-    {
-      from: 'Dummy Bank',
-      to: 'Other Bank',
-      date: Date.now(),
-      value: 10.0000
-    },
-    {
-      from: 'Dummy Bank',
-      to: 'Other Bank',
-      date: Date.now(),
-      value: 10.0000
-    },
-    {
-      from: 'Dummy Bank',
-      to: 'Other Bank',
-      date: Date.now(),
-      value: 10.0000
-    },
-    {
-      from: 'Dummy Bank',
-      to: 'Other Bank',
-      date: Date.now(),
-      value: 10.0000
-    },
-    {
-      from: 'Dummy Bank',
-      to: 'Other Bank',
-      date: Date.now(),
-      value: 10.0000
-    },
-  ];
-
+const DetailsPage = ({ incomeTransactions }) => {
   return (
     <Grid columns={2} padded={true}>
       <Grid.Row>
         <Grid.Column>
           <Segment>
-            <IncomeTable data={data}/>
+            <IncomeTable data={incomeTransactions}/>
           </Segment>
         </Grid.Column>
         <Grid.Column>
           <Segment>
-            <IncomeTable data={data}/>
+            <IncomeTable data={incomeTransactions}/>
           </Segment>
         </Grid.Column>
       </Grid.Row>

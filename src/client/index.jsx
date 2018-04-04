@@ -4,12 +4,13 @@ import { render } from 'react-dom';
 import { Provider } from 'react-redux';
 import { BrowserRouter, Route } from 'react-router-dom';
 import MainMenu from './components/menu/menu.container.jsx';
-import DetailsPage from './components/detailsPage/detailsPage.jsx';
+import DetailsPageComp from './components/detailsPage/detailsPage.container.jsx';
 import menu from './components/menu/reducer.jsx';
-import { changePage } from './components/menu/actions.jsx';
+import detailsPage from './components/detailsPage/reducer.jsx';
 
 const app = combineReducers({
-  menu
+  menu,
+  detailsPage
 });
 const store = createStore(app);
 
@@ -18,7 +19,7 @@ render(
     <BrowserRouter>
       <div>
         <Route path='/' render={props => <MainMenu {...props} />} />
-        <Route path='/details' exact render={props => <DetailsPage />} />
+        <Route path='/details' exact render={props => <DetailsPageComp />} />
       </div>
     </BrowserRouter>
   </Provider>
