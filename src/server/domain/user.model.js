@@ -5,8 +5,8 @@ const { modelConfig } = require('../../config/mongoose');
 const Schema = mongoose.Schema;
 
 const User = new Schema({
-  name:     { type: String, required: true, match: Validator.isNameValid },
-  email:    { type: String, required: true, match: Validator.isEmailValid },
+  name:     { type: String, required: true, validate: Validator.isNameValid },
+  email:    { type: String, required: true, validate: Validator.isEmailValid },
   password: { type: String, required: true},
   photo:    { type: String }
 });
