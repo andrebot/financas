@@ -1,45 +1,19 @@
-import { LOADING_INCOME_TRANSACTIONS } from './actions.jsx';
+import { LOADING_INCOME_TRANSACTIONS, LOADED_INCOME_TRANSACTIONS } from './actions.jsx';
 
 const initialState = {
-  incomeTransactions: [
-    {
-      from: 'Dummy Bank',
-      to: 'Other Bank',
-      date: Date.now(),
-      value: 10.0000
-    },
-    {
-      from: 'Dummy Bank',
-      to: 'Other Bank',
-      date: Date.now(),
-      value: 10.0000
-    },
-    {
-      from: 'Dummy Bank',
-      to: 'Other Bank',
-      date: Date.now(),
-      value: 10.0000
-    },
-    {
-      from: 'Dummy Bank',
-      to: 'Other Bank',
-      date: Date.now(),
-      value: 10.0000
-    },
-    {
-      from: 'Dummy Bank',
-      to: 'Other Bank',
-      date: Date.now(),
-      value: 10.0000
-    },
-  ]
+  incomeTransactions: {
+    isLoading: true,
+    errors: [],
+    data: []
+  }
 };
 
 export default function detailsPage(state = initialState, action) {
   switch (action.type) {
     case LOADING_INCOME_TRANSACTIONS:
-      return Object.assign({}, state, action.status);
-      break;
+    case LOADED_INCOME_TRANSACTIONS:
+      incomeTransactions = action.incomeTransactions;
+      return Object.assign({}, state, { incomeTransactions });
     default:
       return state;
   }
