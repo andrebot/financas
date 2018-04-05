@@ -44,7 +44,9 @@ const IncomeTable = ({ incomeTransactions }) => {
   )
 }
 
-const DetailsPage = ({ incomeTransactions }) => {
+const DetailsPageContainer = ({ incomeTransactions, loadIncomeTransactions }) => {
+  loadIncomeTransactions();
+
   return (
     <Grid columns={2} padded={true}>
       <Grid.Row>
@@ -63,6 +65,6 @@ const DetailsPage = ({ incomeTransactions }) => {
   );
 };
 
-// DetailsPage.propTypes = {};
+// DetailsPageContainer.propTypes = {};
 
-export default DetailsPage;
+export default DetailsPageContainer;

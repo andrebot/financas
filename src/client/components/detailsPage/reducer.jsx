@@ -1,3 +1,5 @@
+import { LOADING_INCOME_TRANSACTIONS } from './actions.jsx';
+
 const initialState = {
   incomeTransactions: [
     {
@@ -35,6 +37,9 @@ const initialState = {
 
 export default function detailsPage(state = initialState, action) {
   switch (action.type) {
+    case LOADING_INCOME_TRANSACTIONS:
+      return Object.assign({}, state, action.status);
+      break;
     default:
       return state;
   }

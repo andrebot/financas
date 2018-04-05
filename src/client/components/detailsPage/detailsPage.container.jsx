@@ -1,6 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import DetailsPage from './detailsPage.jsx';
+import { fetchIncomeTransactions } from './actions.jsx';
+import DetailsPageContainer from './detailsPage.jsx';
 
 const mapStateToProps = state => {
   return {
@@ -8,16 +9,15 @@ const mapStateToProps = state => {
   };
 };
 
-// const mapDispatchToProps = (dispatch, routerProps) => (
-//   {
-//     handleItemClick: page => {
-//       routerProps.history.push(`/${page}`);
-
-//       dispatch(changePage(page));
-//     }
-//   }
-// );
+const mapDispatchToProps = (dispatch) => (
+  {
+    loadIncomeTransactions: () => {
+      dispatch(fetchIncomeTransactions());
+    }
+  }
+);
 
 export default connect(
-  mapStateToProps
-)(DetailsPage);
+  mapStateToProps,
+  mapDispatchToProps
+)(DetailsPageContainer);
