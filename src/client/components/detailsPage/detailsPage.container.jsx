@@ -4,8 +4,12 @@ import { fetchIncomeTransactions } from './actions.jsx';
 import DetailsPageContainer from './detailsPage.jsx';
 
 const mapStateToProps = state => {
+  const {data, errors, isLoading} = state.detailsPage.incomeTransactions;
+
   return {
-    incomeTransactions: state.detailsPage.incomeTransactions
+    incomeTransactions: data,
+    errors,
+    isLoading
   };
 };
 

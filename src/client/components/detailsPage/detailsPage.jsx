@@ -1,6 +1,7 @@
-import React from 'React';
+import React, { Component } from 'React';
 import { Segment, Grid, Table } from 'semantic-ui-react';
 import PropTypes from 'prop-types';
+import { fetchIncomeTransactions } from './actions.jsx';
 
 const createTableRow = function ({ from, to, date, value }, index) {
   const dateObj = new Date(date);
@@ -44,27 +45,54 @@ const IncomeTable = ({ incomeTransactions }) => {
   )
 }
 
-const DetailsPageContainer = ({ incomeTransactions, loadIncomeTransactions }) => {
-  loadIncomeTransactions();
+export default class DetailsPageContainer extends Component {
+  constructor(props) {
+    super(props);
+  }
 
-  return (
-    <Grid columns={2} padded={true}>
-      <Grid.Row>
-        <Grid.Column>
-          <Segment>
-            <IncomeTable incomeTransactions={incomeTransactions}/>
-          </Segment>
-        </Grid.Column>
-        <Grid.Column>
-          <Segment>
-            <IncomeTable incomeTransactions={incomeTransactions} />
-          </Segment>
-        </Grid.Column>
-      </Grid.Row>
-    </Grid>
-  );
-};
+  componentWillMount() {
+    this.props.loadIncomeTransactions();
+  }
+
+  render() {
+    const { incomeTransactions, loadIncomeTransactions } = this.props;
+
+    return (
+      <Grid columns={2} padded={true}>
+        <Grid.Row>
+          <Grid.Column>
+            <Segment>
+              <IncomeTable incomeTransactions={incomeTransactions}/>
+            </Segment>
+          </Grid.Column>
+          <Grid.Column>
+            <Segment>
+              <IncomeTable incomeTransactions={incomeTransactions} />
+            </Segment>
+          </Grid.Column>
+        </Grid.Row>
+      </Grid>
+    );
+  }
+}
+
+// const DetailsPageContainer = ({ incomeTransactions, loadIncomeTransactions }) => {
+//   return (
+//     <Grid columns={2} padded={true}>
+//       <Grid.Row>
+//         <Grid.Column>
+//           <Segment>
+//             <IncomeTable incomeTransactions={incomeTransactions}/>
+//           </Segment>
+//         </Grid.Column>
+//         <Grid.Column>
+//           <Segment>
+//             <IncomeTable incomeTransactions={incomeTransactions} />
+//           </Segment>
+//         </Grid.Column>
+//       </Grid.Row>
+//     </Grid>
+//   );
+// };
 
 // DetailsPageContainer.propTypes = {};
-
-export default DetailsPageContainer;

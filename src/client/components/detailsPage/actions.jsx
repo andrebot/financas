@@ -6,7 +6,7 @@ function loadingIncome() {
     type: LOADING_INCOME_TRANSACTIONS,
     incomeTransactions: {
       isLoading: true,
-      hasError: false
+      errors: []
     }
   };
 }
@@ -14,10 +14,10 @@ function loadingIncome() {
 export const LOADED_INCOME_TRANSACTIONS = 'LOADED_INCOME_TRANSACTIONS';
 function handleIncomeTransactionsResponse(data) {
   return {
-    type: LOADING_INCOME_TRANSACTIONS,
+    type: LOADED_INCOME_TRANSACTIONS,
     incomeTransactions: {
       isLoading: false,
-      hasError: false,
+      errors: [],
       data
     }
   };
@@ -28,7 +28,7 @@ export function fetchIncomeTransactions () {
     dispatch(loadingIncome());
 
     return axios.get('/api/v1/transaction').then(function (response) {
-      handleIncomeTransactionsResponse(response.data.data);
+      dispatch(handleIncomeTransactionsResponse(response.data.data));
     }).catch(function (error) {
       // handling error
     });

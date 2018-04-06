@@ -12,7 +12,8 @@ export default function detailsPage(state = initialState, action) {
   switch (action.type) {
     case LOADING_INCOME_TRANSACTIONS:
     case LOADED_INCOME_TRANSACTIONS:
-      incomeTransactions = action.incomeTransactions;
+      const toMergeincomeTransactions = action.incomeTransactions;
+      const incomeTransactions = Object.assign({}, state.incomeTransactions, toMergeincomeTransactions);
       return Object.assign({}, state, { incomeTransactions });
     default:
       return state;
