@@ -19,8 +19,8 @@ const createTableRow = function ({ from, to, date, value }, index) {
   return (
     <Table.Row key={index}>
       <Table.Cell>{from}</Table.Cell>
-      <Table.Cell>{to}</Table.Cell>
       <Table.Cell>{day}/{month}/{dateObj.getFullYear()}</Table.Cell>
+      <Table.Cell>{to}</Table.Cell>
       <Table.Cell>R$ {value.toFixed(2)}</Table.Cell>
     </Table.Row>
   );
@@ -76,4 +76,12 @@ export default class DetailsPage extends Component {
   }
 }
 
-// DetailsPage.propTypes = {};
+DetailsPage.propTypes = {
+  incomeTransactions: PropTypes.arrayOf(PropTypes.shape({
+    from: PropTypes.string.isRequired,
+    to: PropTypes.string.isRequired,
+    date: PropTypes.string.isRequired,
+    value: PropTypes.number.isRequired
+  })).isRequired,
+  loadIncomeTransactions: PropTypes.func.isRequired
+};
