@@ -19,10 +19,14 @@ module.exports = function (env) {
     }])
   ];
 
-  if (env) {
+  if (env === 'DEV') {
     plugins.push(new webpackShellPlugin({
       onBuildEnd: ['npm start']
     }));
+  }
+
+  if (env === 'PROD') {
+    plugins.push(new webpack.optimize.UglifyJsPlugin({minimize: true}));
   }
 
   return {

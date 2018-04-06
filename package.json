@@ -9,8 +9,8 @@
   "scripts": {
     "start2": "node src/server/",
     "start": "nodemon --watch src/server src/server/index.js",
-    "dev": "webpack --watch --env=dev",
-    "build": "webpack --watch",
+    "dev": "webpack --watch --env=DEV",
+    "build": "webpack --env=PROD",
     "test:backend": "NODE_ENV=test nyc --reporter=html -x 'src/**/*.spec.js' mocha --file tests/server/imports.js src/server/**/*.spec.js"
   },
   "keywords": [
