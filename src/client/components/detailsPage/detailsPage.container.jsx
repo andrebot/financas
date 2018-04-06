@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { fetchIncomeTransactions } from './actions.jsx';
-import DetailsPageContainer from './detailsPage.jsx';
+import DetailsPage from './detailsPage.jsx';
 
 const mapStateToProps = state => {
   const {data, errors, isLoading} = state.detailsPage.incomeTransactions;
@@ -24,4 +24,4 @@ const mapDispatchToProps = (dispatch) => (
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(DetailsPageContainer);
+)(DetailsPage);

@@ -1,4 +1,4 @@
-import React, { Component } from 'React';
+import React, { Component } from 'react';
 import { Segment, Grid, Table } from 'semantic-ui-react';
 import PropTypes from 'prop-types';
 import { fetchIncomeTransactions } from './actions.jsx';
@@ -45,7 +45,7 @@ const IncomeTable = ({ incomeTransactions }) => {
   )
 }
 
-export default class DetailsPageContainer extends Component {
+export default class DetailsPage extends Component {
   constructor(props) {
     super(props);
   }
@@ -76,23 +76,4 @@ export default class DetailsPageContainer extends Component {
   }
 }
 
-// const DetailsPageContainer = ({ incomeTransactions, loadIncomeTransactions }) => {
-//   return (
-//     <Grid columns={2} padded={true}>
-//       <Grid.Row>
-//         <Grid.Column>
-//           <Segment>
-//             <IncomeTable incomeTransactions={incomeTransactions}/>
-//           </Segment>
-//         </Grid.Column>
-//         <Grid.Column>
-//           <Segment>
-//             <IncomeTable incomeTransactions={incomeTransactions} />
-//           </Segment>
-//         </Grid.Column>
-//       </Grid.Row>
-//     </Grid>
-//   );
-// };
-
-// DetailsPageContainer.propTypes = {};
+// DetailsPage.propTypes = {};
