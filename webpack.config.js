@@ -2,8 +2,6 @@ const webpack = require('webpack');
 const copyWebpackPlugin = require('copy-webpack-plugin');
 const webpackShellPlugin = require('webpack-shell-plugin');
 
-if (process.env.WATCH) {}
-
 module.exports = function (env) {
   const plugins = [
     new webpack.optimize.CommonsChunkPlugin({
@@ -18,11 +16,13 @@ module.exports = function (env) {
       ignore: ['*.jsx']
     }])
   ];
+  let devtool = false;
 
   if (env === 'DEV') {
     plugins.push(new webpackShellPlugin({
       onBuildEnd: ['npm start']
     }));
+    devtool = 'source-map';
   }
 
   if (env === 'PROD') {
@@ -37,6 +37,7 @@ module.exports = function (env) {
     output: {
       filename: './src/server/public/[name].js'
     },
+    devtool,
     module: {
       loaders: [{
         test: /\.jsx$/,
