@@ -3,7 +3,6 @@ import { Table } from 'semantic-ui-react';
 import PropTypes from 'prop-types';
 import { formatDate, formatCurrency } from './formatHelpers.jsx';
 
-
 const formatValue = ({ value, type }) => {
   switch(type) {
     case 'Date':
@@ -15,10 +14,10 @@ const formatValue = ({ value, type }) => {
   }
 };
 
-const createTableRow = function (rows, index) {
+const createTableRow = function (columns, index) {
   return (
     <Table.Row key={index}>
-      {rows.map(row, rowIndex => <Table.Cell key={rowIndex}>{formatValue(row)}</Table.Cell>)}
+      {columns.map(column, columnIndex => <Table.Cell key={columnIndex}>{formatValue(column)}</Table.Cell>)}
     </Table.Row>
   );
 }
