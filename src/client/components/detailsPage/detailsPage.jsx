@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Segment, Grid, Loader } from 'semantic-ui-react';
+import { Segment, Grid, Loader, Header } from 'semantic-ui-react';
 import PropTypes from 'prop-types';
 import { fetchIncomeTransactions } from './actions.jsx';
 import Table from '../table/table.jsx';
@@ -37,6 +37,7 @@ export default class DetailsPage extends Component {
         <Grid.Row>
           <Grid.Column>
             <Segment>
+              <Header textAlign='center' as='h1'>Income</Header>
               {isLoading ? (
                 <Loader />
               ) : (
