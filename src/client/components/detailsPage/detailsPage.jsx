@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import { fetchIncomeTransactions } from './actions.jsx';
 import Table from '../table/table.jsx';
 
+const loadingStyle = { position: 'relative', height: '80px' };
 export default class DetailsPage extends Component {
   constructor(props) {
     super(props);
@@ -39,7 +40,7 @@ export default class DetailsPage extends Component {
             <Segment>
               <Header textAlign='center' as='h1'>Income</Header>
               {isLoading ? (
-                <Loader />
+                <div style={loadingStyle}><Loader active={true}>Fetching income...</Loader></div>
               ) : (
                 <Table headers={headers} data={tableData}/>
               )}
