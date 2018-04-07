@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Segment, Grid } from 'semantic-ui-react';
+import { Segment, Grid, Loader } from 'semantic-ui-react';
 import PropTypes from 'prop-types';
 import { fetchIncomeTransactions } from './actions.jsx';
 import Table from '../table/table.jsx';
@@ -14,7 +14,7 @@ export default class DetailsPage extends Component {
   }
 
   render() {
-    const { incomeTransactions, loadIncomeTransactions } = this.props;
+    const { incomeTransactions, isLoading, loadIncomeTransactions } = this.props;
     const headers = ['Item', 'Date', 'Bank', 'Value'];
 
     return (
@@ -22,12 +22,11 @@ export default class DetailsPage extends Component {
         <Grid.Row>
           <Grid.Column>
             <Segment>
-              <Table headers={headers} rows={incomeTransactions}/>
-            </Segment>
-          </Grid.Column>
-          <Grid.Column>
-            <Segment>
-              <Table headers={headers} rows={incomeTransactions} />
+              {isLoading ? (
+                <Loader />
+              ) : (
+                <Table headers={headers} rows={incomeTransactions}/>
+              )}
             </Segment>
           </Grid.Column>
         </Grid.Row>

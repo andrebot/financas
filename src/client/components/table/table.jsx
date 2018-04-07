@@ -25,7 +25,7 @@ const createTableRow = function ({ from, to, date, value }, index) {
   );
 }
 
-export default ({ headers, rows }) => {
+const AppTable = ({ headers, rows }) => {
   return (
     <Table basic='very'>
       <Table.Header>
@@ -41,7 +41,9 @@ export default ({ headers, rows }) => {
   )
 }
 
-Table.propTypes = {
+AppTable.propTypes = {
   headers: PropTypes.arrayOf(String).isRequired,
   rows: PropTypes.array
 }
+
+export default AppTable;
