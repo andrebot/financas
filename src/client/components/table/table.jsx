@@ -1,26 +1,24 @@
 import React from 'react';
 import { Table } from 'semantic-ui-react';
 import PropTypes from 'prop-types';
+import { formatDate, formatCurrency } from './formatHelpers.jsx';
 
-const createTableRow = function ({ from, to, date, value }, index) {
-  const dateObj = new Date(date);
-  let day = dateObj.getDate();
-  let month = dateObj.getMonth() + 1;
 
-  if (day < 10) {
-    day = `0${day}`;
+const formatValue = ({ value, type }) => {
+  switch(type) {
+    case 'Date':
+      return formatDate(value);
+    case 'Currency':
+      return formatCurrency(value);
+    default:
+      return value;
   }
+};
 
-  if (month < 10) {
-    month = `0${month}`;
-  }
-
+const createTableRow = function (rows, index) {
   return (
     <Table.Row key={index}>
-      <Table.Cell>{from}</Table.Cell>
-      <Table.Cell>{day}/{month}/{dateObj.getFullYear()}</Table.Cell>
-      <Table.Cell>{to}</Table.Cell>
-      <Table.Cell>R$ {value.toFixed(2)}</Table.Cell>
+      {rows.map(row, rowIndex => <Table.Cell key={rowIndex}>{formatValue(row)}</Table.Cell>)}
     </Table.Row>
   );
 }
@@ -43,7 +41,10 @@ const AppTable = ({ headers, rows }) => {
 
 AppTable.propTypes = {
   headers: PropTypes.arrayOf(String).isRequired,
-  rows: PropTypes.array
+  rows: PropTypes.arrayOf(PropTypes.shape({
+    value: PropTypes.any.isRequired,
+    type: PropTypes.oneOf(['Date', 'Currency'])
+  }))
 }
 
 export default AppTable;
