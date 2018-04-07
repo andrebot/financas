@@ -28,7 +28,16 @@ export function fetchIncomeTransactions () {
     dispatch(loadingIncome());
 
     return axios.get('/api/v1/transaction').then(function (response) {
-      dispatch(handleIncomeTransactionsResponse(response.data.data));
+      const incomeTransactions = response.data.data.map(income => {
+        if (income.date) {
+          income.date = new Date(income.date);
+        }
+
+        return income;
+      });
+
+
+      dispatch(handleIncomeTransactionsResponse(incomeTransactions));
     }).catch(function (error) {
       // handling error
     });

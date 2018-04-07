@@ -39,7 +39,7 @@ DetailsPage.propTypes = {
   incomeTransactions: PropTypes.arrayOf(PropTypes.shape({
     from: PropTypes.string.isRequired,
     to: PropTypes.string.isRequired,
-    date: PropTypes.string.isRequired,
+    date: PropTypes.instanceOf(Date).isRequired,
     value: PropTypes.number.isRequired
   })).isRequired,
   loadIncomeTransactions: PropTypes.func.isRequired
