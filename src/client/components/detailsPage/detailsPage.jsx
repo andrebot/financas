@@ -15,7 +15,22 @@ export default class DetailsPage extends Component {
 
   render() {
     const { incomeTransactions, isLoading, loadIncomeTransactions } = this.props;
-    const headers = ['Item', 'Date', 'Bank', 'Value'];
+    const headers = [
+      { title: 'Item', mapTo: 'name' },
+      { title: 'Date', mapTo: 'date' },
+      { title: 'Bank', mapTo: 'to' },
+      { title: 'Value', mapTo: 'value' }
+    ];
+    const tableData = incomeTransactions.map(income => {
+      const { name, to, date, value, ...remains } = income;
+
+      return {
+        name: { value: name, type: 'String' },
+        to: { value: to, type: 'String' },
+        date: { value: date, type: 'Date' },
+        value: { value, type: 'Currency' }
+      };
+    });
 
     return (
       <Grid columns={2} padded={true}>
@@ -25,7 +40,7 @@ export default class DetailsPage extends Component {
               {isLoading ? (
                 <Loader />
               ) : (
-                <Table headers={headers} rows={incomeTransactions}/>
+                <Table headers={headers} data={tableData}/>
               )}
             </Segment>
           </Grid.Column>

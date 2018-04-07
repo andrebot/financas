@@ -14,36 +14,36 @@ const formatValue = ({ value, type }) => {
   }
 };
 
-const createTableRow = function (columns, index) {
+const createTableRow = function (object, index, headers) {
   return (
     <Table.Row key={index}>
-      {columns.map(column, columnIndex => <Table.Cell key={columnIndex}>{formatValue(column)}</Table.Cell>)}
+      {headers.map(({ mapTo }, columnIndex) => <Table.Cell key={columnIndex}>{formatValue(object[mapTo])}</Table.Cell>)}
     </Table.Row>
   );
 }
 
-const AppTable = ({ headers, rows }) => {
+const AppTable = ({ headers, data }) => {
   return (
     <Table basic='very'>
       <Table.Header>
         <Table.Row>
-          {headers.map((header, index) => <Table.HeaderCell key={index}>{header}</Table.HeaderCell>)}
+          {headers.map((header, index) =><Table.HeaderCell key={index}>{header.title}</Table.HeaderCell>)}
         </Table.Row>
       </Table.Header>
 
       <Table.Body>
-        {rows.map(createTableRow)}
+        {data.map((object, index) => createTableRow(object, index, headers))}
       </Table.Body>
     </Table>
   )
 }
 
 AppTable.propTypes = {
-  headers: PropTypes.arrayOf(String).isRequired,
-  rows: PropTypes.arrayOf(PropTypes.shape({
-    value: PropTypes.any.isRequired,
-    type: PropTypes.oneOf(['Date', 'Currency'])
-  }))
-}
+  headers: PropTypes.arrayOf(PropTypes.shape({
+    title: PropTypes.string.isRequired,
+    mapTo: PropTypes.string.isRequired
+  })).isRequired,
+  data: PropTypes.array
+};
 
 export default AppTable;
