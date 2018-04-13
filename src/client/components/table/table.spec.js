@@ -1,10 +1,7 @@
 import React from 'react';
 import { mount } from 'enzyme';
 import sinon from 'sinon';
-import Chai from 'chai';
 import Table from './table.jsx';
-
-const should = Chai.should();
 
 describe('<Table />', function () {
   it('should render header and body accordingly', function () {
