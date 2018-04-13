@@ -27,7 +27,7 @@ const AppTable = ({ headers, data }) => {
     <Table basic='very'>
       <Table.Header>
         <Table.Row>
-          {headers.map((header, index) =><Table.HeaderCell key={index}>{header.title}</Table.HeaderCell>)}
+          {headers.map((header, index) => <Table.HeaderCell key={index}>{header.title}</Table.HeaderCell>)}
         </Table.Row>
       </Table.Header>
 

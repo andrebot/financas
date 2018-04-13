@@ -12,7 +12,7 @@
     "dev": "webpack --watch --env=DEV",
     "build": "webpack --env=PROD",
     "test:backend": "NODE_ENV=test nyc --reporter=html -x 'src/**/*.spec.js' mocha --file tests/server/imports.js src/server/**/*.spec.js",
-    "test:frontend": "NODE_ENV=test mocha --compilers js:babel-core/register --file tests/client/imports.js src/client/**/*.spec.js --watch"
+    "test:frontend": "NODE_ENV=test mocha --require babel-core/register --file tests/client/imports.js src/client/**/*.spec.js --watch"
   },
   "keywords": [
     "ficances",
