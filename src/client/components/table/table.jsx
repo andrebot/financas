@@ -20,12 +20,19 @@ const createTableRow = function (object, index, headers) {
       {headers.map(({ mapTo }, columnIndex) => <Table.Cell key={columnIndex}>{formatValue(object[mapTo])}</Table.Cell>)}
     </Table.Row>
   );
-}
+};
 
 const AppTable = ({ headers = [], data = [] }) => {
   const showHeader = headers.some(function (header) {
     return header.title;
   });
+  const tableBody = data.length > 0 ? (
+    data.map((object, index) => createTableRow(object, index, headers))
+  ) : (
+    <Table.Row>
+      <Table.Cell>No data to render</Table.Cell>
+    </Table.Row>
+  );
 
   return (
     <Table basic='very'>
@@ -38,11 +45,11 @@ const AppTable = ({ headers = [], data = [] }) => {
      }
 
       <Table.Body>
-        {data.map((object, index) => createTableRow(object, index, headers))}
+        {tableBody}
       </Table.Body>
     </Table>
   )
-}
+};
 
 AppTable.propTypes = {
   headers: PropTypes.arrayOf(PropTypes.shape({

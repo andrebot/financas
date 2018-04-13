@@ -7,7 +7,7 @@ import Table from './table.jsx';
 const should = Chai.should();
 
 describe('<Table />', function () {
-  it('should render two rolls, one for header and one for data', function () {
+  it('should render header and body accordingly', function () {
     const headers = [{title: 'dummy', mapTo: 'a'}];
     const data = [{ a: { value: 'dummy data', type: 'String' } }];
     const table = mount(<Table headers={headers} data={data}/>);
@@ -28,5 +28,14 @@ describe('<Table />', function () {
     table.find('tr').length.should.be.eq(1);
     table.find('td').length.should.be.eq(1);
     table.find('td').text().should.be.eq(data[0].a.value);
+  });
+
+  it('should render a no data row if no data is provided', function () {
+    const table = mount(<Table />);
+
+    table.find('th').length.should.be.eq(0);
+    table.find('tr').length.should.be.eq(1);
+    table.find('td').length.should.be.eq(1);
+    table.find('td').text().should.be.eq('No data to render');
   });
 });
