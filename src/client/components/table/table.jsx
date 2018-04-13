@@ -22,14 +22,20 @@ const createTableRow = function (object, index, headers) {
   );
 }
 
-const AppTable = ({ headers, data }) => {
+const AppTable = ({ headers = [], data = [] }) => {
+  const showHeader = headers.some(function (header) {
+    return header.title;
+  });
+
   return (
     <Table basic='very'>
-      <Table.Header>
-        <Table.Row>
-          {headers.map((header, index) => <Table.HeaderCell key={index}>{header.title}</Table.HeaderCell>)}
-        </Table.Row>
-      </Table.Header>
+     {showHeader && 
+        <Table.Header>
+          <Table.Row>
+            {headers.map((header, index) => <Table.HeaderCell key={index}>{header.title}</Table.HeaderCell>)}
+          </Table.Row>
+        </Table.Header>
+     }
 
       <Table.Body>
         {data.map((object, index) => createTableRow(object, index, headers))}

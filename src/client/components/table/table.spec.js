@@ -1,7 +1,10 @@
 import React from 'react';
 import { mount } from 'enzyme';
 import sinon from 'sinon';
+import Chai from 'chai';
 import Table from './table.jsx';
+
+const should = Chai.should();
 
 describe('<Table />', function () {
   it('should render two rolls, one for header and one for data', function () {
@@ -13,6 +16,17 @@ describe('<Table />', function () {
     table.find('th').length.should.be.eq(1);
     table.find('td').length.should.be.eq(1);
     table.find('th').text().should.be.eq(headers[0].title);
+    table.find('td').text().should.be.eq(data[0].a.value);
+  });
+
+  it('should render data without headers', function () {
+    const headers = [{ mapTo: 'a'}];
+    const data = [{ a: { value: 'dummy data', type: 'String' } }];
+    const table = mount(<Table headers={headers} data={data}/>);
+
+    table.find('th').length.should.be.eq(0);
+    table.find('tr').length.should.be.eq(1);
+    table.find('td').length.should.be.eq(1);
     table.find('td').text().should.be.eq(data[0].a.value);
   });
 });
