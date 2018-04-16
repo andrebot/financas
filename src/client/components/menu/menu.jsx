@@ -10,7 +10,7 @@ const createMenuItem = (handleItemClick, pathName) => {
       <Menu.Item key={index} name={menuName} active={pathName.includes(menuName) || isHomePage} onClick={() => handleItemClick(menuName)} />
     );
   };
-}
+};
 
 const MainMenu = ({ handleItemClick, location }) => {
   const menuItems = ['home', 'projections', 'details'];
@@ -26,13 +26,13 @@ const MainMenu = ({ handleItemClick, location }) => {
       </Segment>
     </div>
   )
-}
+};
 
 MainMenu.propTypes = {
   handleItemClick: PropTypes.func.isRequired,
   location: PropTypes.shape({
     pathname: PropTypes.string.isRequired
   })
-}
+};
 
 export default MainMenu;
