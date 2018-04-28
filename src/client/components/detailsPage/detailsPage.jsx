@@ -59,5 +59,6 @@ DetailsPage.propTypes = {
     date: PropTypes.instanceOf(Date).isRequired,
     value: PropTypes.number.isRequired
   })).isRequired,
-  loadIncomeTransactions: PropTypes.func.isRequired
+  loadIncomeTransactions: PropTypes.func.isRequired,
+  isLoading: PropTypes.bool
 };
