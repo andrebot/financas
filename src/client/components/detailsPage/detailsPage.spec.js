@@ -43,4 +43,24 @@ describe('detailsPage', function () {
 
     this.loadIncomeTransactions.should.have.been.calledOnce;
   });
+
+  it('should always render loading status template if the isLoading is true', function () {
+    const params = {
+      isLoading: true,
+      loadIncomeTransactions: this.loadIncomeTransactions,
+      incomeTransactions: [{
+        name: 'dummy',
+        to: 'dummy',
+        date: new Date(),
+        value: 312
+      }]
+    };
+
+    const page = mount(<DetailsPage {...params}/>);
+
+    page.find(Loader).length.should.be.eq(1);
+    page.find(Table).length.should.be.be.eq(0);
+
+    this.loadIncomeTransactions.should.have.been.calledOnce;
+  });
 });
