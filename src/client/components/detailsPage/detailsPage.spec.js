@@ -23,4 +23,24 @@ describe('detailsPage', function () {
 
     this.loadIncomeTransactions.should.have.been.calledOnce;
   });
+
+  it('should render the whole page if we have all data available', function () {
+    const params = {
+      isLoading: false,
+      loadIncomeTransactions: this.loadIncomeTransactions,
+      incomeTransactions: [{
+        name: 'dummy',
+        to: 'dummy',
+        date: new Date(),
+        value: 312
+      }]
+    };
+
+    const page = mount(<DetailsPage {...params}/>);
+
+    page.find(Loader).length.should.be.eq(0);
+    page.find(Table).length.should.be.be.eq(1);
+
+    this.loadIncomeTransactions.should.have.been.calledOnce;
+  });
 });
