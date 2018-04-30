@@ -1,5 +1,5 @@
 import React from 'react';
-import { Table } from 'semantic-ui-react';
+import { Table, Icon } from 'semantic-ui-react';
 import PropTypes from 'prop-types';
 import { formatDate, formatCurrency } from './formatHelpers.jsx';
 
@@ -9,6 +9,12 @@ const formatValue = ({ value, type }) => {
       return formatDate(value);
     case 'Currency':
       return formatCurrency(value);
+    case 'Boolean':
+      if (value) {
+        return <Icon color='green' name='checkmark' size='large' />
+      } else {
+        return <Icon color='green' name='x' size='large' />
+      }
     default:
       return value;
   }

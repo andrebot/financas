@@ -12,6 +12,7 @@ export default class DetailsPage extends Component {
 
   componentWillMount() {
     this.props.loadIncomeTransactions();
+    this.props.loadBills();
   }
 
   createIncomeTable(incomeTransactions) {
@@ -57,7 +58,7 @@ export default class DetailsPage extends Component {
   }
 
   render() {
-    const { incomeTransactions, isLoading, loadIncomeTransactions } = this.props;
+    const { incomeTransactions, bills, isLoading } = this.props;
 
     return (
       <Grid columns={2} padded={true}>
@@ -65,11 +66,19 @@ export default class DetailsPage extends Component {
           <Grid.Column>
             <Segment>
               <Header textAlign='center' as='h1'>Income</Header>
-              { isLoading ? (
+              { incomeTransactions.isLoading ? (
                 <div style={loadingStyle}><Loader active={true}>Fetching income...</Loader></div>
               ) :
-                this.createIncomeTable(incomeTransactions)
+                this.createIncomeTable(incomeTransactions.data)
               }
+            </Segment>
+          </Grid.Column>
+          <Grid.Column>
+            <Segment>
+              <Header textAlign='center' as='h1'>Bills</Header>
+              { bills.isLoading ? (
+                <div style={loadingStyle}><Loader active={true}>Fetching bills...</Loader></div>
+              ) : this.createBillsTable(bills.data)}
             </Segment>
           </Grid.Column>
         </Grid.Row>
@@ -79,12 +88,15 @@ export default class DetailsPage extends Component {
 }
 
 DetailsPage.propTypes = {
-  incomeTransactions: PropTypes.arrayOf(PropTypes.shape({
-    from: PropTypes.string.isRequired,
-    to: PropTypes.string.isRequired,
-    date: PropTypes.instanceOf(Date).isRequired,
-    value: PropTypes.number.isRequired
-  })).isRequired,
-  loadIncomeTransactions: PropTypes.func.isRequired,
-  isLoading: PropTypes.bool
+  incomeTransactions: PropTypes.shape({
+    errors: PropTypes.arrayOf(Error),
+    isLoading: PropTypes.bool,
+    data: PropTypes.arrayOf(PropTypes.shape({
+      from: PropTypes.string.isRequired,
+      to: PropTypes.string.isRequired,
+      date: PropTypes.instanceOf(Date).isRequired,
+      value: PropTypes.number.isRequired
+    })).isRequired
+  }),
+  loadIncomeTransactions: PropTypes.func.isRequired
 };

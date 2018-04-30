@@ -10,7 +10,7 @@ const Bill = new Schema({
   paid:        { type: Boolean, default: false },
   value:       { type: Number, require: true },
   dueDate:     { type: Date, required: true },
-  paidAt:     { type: Date },
+  paidAt:      { type: Date },
   isProgramed: { type: Boolean, default: false },
   repeat: {
     type:     { type: String, require: true, validate: Validator.isTimeRepeatingValue },

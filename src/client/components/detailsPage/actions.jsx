@@ -12,6 +12,30 @@ export function loadingIncome() {
   };
 }
 
+export const LOADING_BILLS = 'LOADING_BILLS';
+export function loadingBills() {
+  return {
+    type: LOADING_BILLS,
+    bills: {
+      isLoading: true,
+      errors: [],
+      data: []
+    }
+  };
+}
+
+export const LOADED_BILL = 'LOADED_BILL';
+export function handleBillResponse(data) {
+  return {
+    type: LOADED_BILL,
+    bills: {
+      isLoading: false,
+      errors: [],
+      data
+    }
+  };
+}
+
 export const LOADED_INCOME_TRANSACTIONS = 'LOADED_INCOME_TRANSACTIONS';
 export function handleIncomeTransactionsResponse(data) {
   return {
@@ -25,10 +49,22 @@ export function handleIncomeTransactionsResponse(data) {
 }
 
 export const ERROR_LOADING_TRANSACTIONS = 'ERROR_LOADING_TRANSACTIONS';
-export function handleErrorWhileLoading(errors) {
+export function handleIncomeErrorWhileLoading(errors) {
   return {
     type: ERROR_LOADING_TRANSACTIONS,
     incomeTransactions: {
+      isLoading: false,
+      errors,
+      data: []
+    }
+  }
+}
+
+export const ERROR_LOADING_BILL = 'ERROR_LOADING_BILL';
+export function handleBillErrorWhileLoading(errors) {
+  return {
+    type: ERROR_LOADING_BILL,
+    bills: {
       isLoading: false,
       errors,
       data: []
@@ -55,7 +91,38 @@ export function fetchIncomeTransactions () {
       console.error('There was an error fetching income transactions');
       console.error(error);
 
-      dispatch(handleErrorWhileLoading([ error ]));
+      dispatch(handleIncomeErrorWhileLoading([ error ]));
     });
+  }
+}
+
+export function fetchBills () {
+  return function (dispatch) {
+    dispatch(loadingBills());
+
+    return axios.get('/api/v1/bill').then(function (response) {
+      const bills = response.data.data.map(bill => {
+        if (bill.dueDate) {
+          bill.dueDate = new Date(bill.dueDate);
+        }
+
+        if (bill.paidAt) {
+          bill.paidAt = new Date(bill.paidAt);
+        }
+
+        if (bill.repeat && bill.repeat.until) {
+          bill.repeat.until = new Date(bill.repeat.until);
+        }
+
+        return bill;
+      });
+
+      dispatch(handleBillResponse(bills));
+    }).catch(function (error) {
+      console.error('There was an error fetching bills');
+      console.error(error);
+
+      dispatch(handleBillErrorWhileLoading([ error ]));
+    })
   }
 }
