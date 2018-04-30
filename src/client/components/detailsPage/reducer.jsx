@@ -1,6 +1,7 @@
 import { LOADING_INCOME_TRANSACTIONS,
          LOADING_BILLS,
          LOADED_INCOME_TRANSACTIONS,
+         LOADED_BILLS,
          ERROR_LOADING_TRANSACTIONS } from './actions.jsx';
 
 const initialState = {
@@ -25,6 +26,7 @@ export default function detailsPage(state = initialState, action) {
       const incomeTransactions = Object.assign({}, state.incomeTransactions, toMergeincomeTransactions);
       return Object.assign({}, state, { incomeTransactions });
     case LOADING_BILLS:
+    case LOADED_BILLS:
       const toMergeBills = action.bills;
       const bills = Object.assign({}, state.bills, toMergeBills);
       return Object.assign({}, state, { bills });

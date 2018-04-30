@@ -44,7 +44,7 @@ export default class DetailsPage extends Component {
       { title: 'Paid at', mapTo: 'paidAt' },
       { title: 'Value', mapTo: 'value' }
     ];
-    const TableData = bills.map(bill => {
+    const tableData = bills.map(bill => {
       const { paid, name, dueDate, paidAt, value, ...remains } = bill;
 
       return {
@@ -55,6 +55,8 @@ export default class DetailsPage extends Component {
         value:   { value, type: 'Currency' }
       };
     });
+
+    return <Table headers={headers} data={tableData}/>
   }
 
   render() {

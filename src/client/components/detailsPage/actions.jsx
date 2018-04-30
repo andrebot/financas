@@ -24,10 +24,10 @@ export function loadingBills() {
   };
 }
 
-export const LOADED_BILL = 'LOADED_BILL';
+export const LOADED_BILLS = 'LOADED_BILLS';
 export function handleBillResponse(data) {
   return {
-    type: LOADED_BILL,
+    type: LOADED_BILLS,
     bills: {
       isLoading: false,
       errors: [],
