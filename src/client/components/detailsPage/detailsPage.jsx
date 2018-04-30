@@ -14,8 +14,7 @@ export default class DetailsPage extends Component {
     this.props.loadIncomeTransactions();
   }
 
-  render() {
-    const { incomeTransactions, isLoading, loadIncomeTransactions } = this.props;
+  createIncomeTable(incomeTransactions) {
     const headers = [
       { title: 'Item', mapTo: 'name' },
       { title: 'Date', mapTo: 'date' },
@@ -26,12 +25,39 @@ export default class DetailsPage extends Component {
       const { name, to, date, value, ...remains } = income;
 
       return {
-        name: { value: name, type: 'String' },
-        to: { value: to, type: 'String' },
-        date: { value: date, type: 'Date' },
+        name:  { value: name, type: 'String' },
+        to:    { value: to, type: 'String' },
+        date:  { value: date, type: 'Date' },
         value: { value, type: 'Currency' }
       };
     });
+
+    return <Table headers={headers} data={tableData}/>
+  }
+
+  createBillsTable(bills) {
+    const headers = [
+      { title: 'Paid', mapTo: 'paid' },
+      { title: 'Name', mapTo: 'name' },
+      { title: 'Due Date', mapTo: 'dueDate' },
+      { title: 'Paid at', mapTo: 'paidAt' },
+      { title: 'Value', mapTo: 'value' }
+    ];
+    const TableData = bills.map(bill => {
+      const { paid, name, dueDate, paidAt, value, ...remains } = bill;
+
+      return {
+        paid:    { value: paid, type: 'Boolean' },
+        name:    { value: name, type: 'String' },
+        dueDate: { value: dueDate, type: 'Date' },
+        paidAt:  { value: paidAt, type: 'Date' },
+        value:   { value, type: 'Currency' }
+      };
+    });
+  }
+
+  render() {
+    const { incomeTransactions, isLoading, loadIncomeTransactions } = this.props;
 
     return (
       <Grid columns={2} padded={true}>
@@ -39,11 +65,11 @@ export default class DetailsPage extends Component {
           <Grid.Column>
             <Segment>
               <Header textAlign='center' as='h1'>Income</Header>
-              {isLoading ? (
+              { isLoading ? (
                 <div style={loadingStyle}><Loader active={true}>Fetching income...</Loader></div>
-              ) : (
-                <Table headers={headers} data={tableData}/>
-              )}
+              ) :
+                this.createIncomeTable(incomeTransactions)
+              }
             </Segment>
           </Grid.Column>
         </Grid.Row>
