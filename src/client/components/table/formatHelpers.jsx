@@ -1,4 +1,8 @@
 export function formatDate (value) {
+  if (!value) {
+    return '';
+  }
+
   if (!(value instanceof Date)) {
     throw new Error(`FormatHelpers.jsx: Trying to parse Date with some invalid value: ${value}`);
   }

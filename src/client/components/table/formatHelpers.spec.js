@@ -15,7 +15,14 @@ describe('FormatHelpers', function () {
     });
 
     it('should throw error if trying to parse something that is not a date', function () {
-      expect(() => formatDate()).to.throw(Error);
+      expect(() => formatDate(123)).to.throw(Error);
+    });
+
+    it('should return empty string if the value is empty', function () {
+      const emptyValue =  formatDate();
+
+      emptyValue.should.be.a('string');
+      emptyValue.should.be.empty;
     });
   });
 
