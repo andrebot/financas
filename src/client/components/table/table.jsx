@@ -13,7 +13,7 @@ const formatValue = ({ value, type }) => {
       if (value) {
         return <Icon color='green' name='checkmark' size='large' />
       } else {
-        return <Icon color='green' name='x' size='large' />
+        return <Icon color='red' name='x' size='large' />
       }
     default:
       return value;
