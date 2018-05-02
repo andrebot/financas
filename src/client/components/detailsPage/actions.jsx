@@ -102,10 +102,6 @@ export function fetchBills () {
 
     return axios.get('/api/v1/bill').then(function (response) {
       const bills = response.data.data.map(bill => {
-        if (bill.dueDate) {
-          bill.dueDate = new Date(bill.dueDate);
-        }
-
         if (bill.paidAt) {
           bill.paidAt = new Date(bill.paidAt);
         }

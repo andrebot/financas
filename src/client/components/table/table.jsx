@@ -3,12 +3,16 @@ import { Table, Icon } from 'semantic-ui-react';
 import PropTypes from 'prop-types';
 import { formatDate, formatCurrency } from './formatHelpers.jsx';
 
-const formatValue = ({ value, type }) => {
+const formatValue = ({ value, type }, transform = function (toParse) { return toParse }) => {
+  if (value == null) {
+    return '';
+  }
+
   switch(type) {
     case 'Date':
-      return formatDate(value);
+      return formatDate(transform(value));
     case 'Currency':
-      return formatCurrency(value);
+      return formatCurrency(transform(value));
     case 'Boolean':
       if (value) {
         return <Icon color='green' name='checkmark' size='large' />
@@ -16,14 +20,14 @@ const formatValue = ({ value, type }) => {
         return <Icon color='red' name='x' size='large' />
       }
     default:
-      return value;
+      return transform(value);
   }
 };
 
 const createTableRow = function (object, index, headers) {
   return (
     <Table.Row key={index}>
-      {headers.map(({ mapTo }, columnIndex) => <Table.Cell key={columnIndex}>{formatValue(object[mapTo])}</Table.Cell>)}
+      {headers.map(({ mapTo, transform }, columnIndex) => <Table.Cell key={columnIndex}>{formatValue(object[mapTo], transform)}</Table.Cell>)}
     </Table.Row>
   );
 };
@@ -60,7 +64,8 @@ const AppTable = ({ headers = [], data = [] }) => {
 AppTable.propTypes = {
   headers: PropTypes.arrayOf(PropTypes.shape({
     title: PropTypes.string.isRequired,
-    mapTo: PropTypes.string.isRequired
+    mapTo: PropTypes.string.isRequired,
+    transform: PropTypes.func
   })).isRequired,
   data: PropTypes.array
 };

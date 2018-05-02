@@ -36,11 +36,19 @@ export default class DetailsPage extends Component {
     return <Table headers={headers} data={tableData}/>
   }
 
-  createBillsTable(bills) {
+  createBillsTable(bills, currentMonth) {
+    const transform = function (value) {
+      const date = new Date();
+      date.setMonth(currentMonth);
+      date.setDate(value);
+
+      return date;
+    };
+
     const headers = [
       { title: 'Paid', mapTo: 'paid' },
       { title: 'Name', mapTo: 'name' },
-      { title: 'Due Date', mapTo: 'dueDate' },
+      { title: 'Due Date', mapTo: 'dueDate', transform },
       { title: 'Paid at', mapTo: 'paidAt' },
       { title: 'Value', mapTo: 'value' }
     ];
@@ -80,7 +88,7 @@ export default class DetailsPage extends Component {
               <Header textAlign='center' as='h1'>Bills</Header>
               { bills.isLoading ? (
                 <div style={loadingStyle}><Loader active={true}>Fetching bills...</Loader></div>
-              ) : this.createBillsTable(bills.data)}
+              ) : this.createBillsTable(bills.data, 4)}
             </Segment>
           </Grid.Column>
         </Grid.Row>
