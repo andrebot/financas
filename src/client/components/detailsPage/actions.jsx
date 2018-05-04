@@ -74,27 +74,32 @@ export function handleBillErrorWhileLoading(errors) {
 }
 
 export const NEXT_MONTH = 'NEXT_MONTH';
-export const CANT_CHANGE_MONTH = 'CANT_CHANGE_MONTH';
-export function nextMonth(currentMonthNumber, isNext) {
+export function nextMonth(currentMonthNumber, currentYear, isNext) {
   let newIndex;
-  
+  let newYear = currentYear;
+
   if (isNext) {
     newIndex = currentMonthNumber + 1;
+
+    if (newIndex > 11) {
+      newIndex = 0;
+      newYear = currentYear + 1;
+    }
   } else {
     newIndex = currentMonthNumber - 1;
-  }
 
-  if (newIndex > 11 ||  newIndex < 0) {
-    return {
-      type: CANT_CHANGE_MONTH
-    };
+    if (newIndex < 0) {
+      newIndex = 11;
+      newYear = currentYear - 1;
+    }
   }
 
   return {
     type: NEXT_MONTH,
-    currentMonth: {
+    currentDate: {
       monthNumber: newIndex,
-      monthName: MONTH_MAP[newIndex]
+      monthName: MONTH_MAP[newIndex],
+      year: newYear
     }
   }
 }

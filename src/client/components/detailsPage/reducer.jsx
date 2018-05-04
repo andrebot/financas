@@ -4,7 +4,9 @@ import { LOADING_INCOME_TRANSACTIONS,
          LOADED_BILLS,
          NEXT_MONTH,
          ERROR_LOADING_TRANSACTIONS } from './actions.jsx';
+import MONTH_MAP from './monthMapper.jsx';
 
+const today = new Date();
 const initialState = {
   incomeTransactions: {
     isLoading: true,
@@ -16,9 +18,10 @@ const initialState = {
     errors: [],
     data: []
   },
-  currentMonth: {
-    monthNumber: 4,
-    monthName: 'May'
+  currentDate: {
+    monthNumber: today.getMonth(),
+    monthName: MONTH_MAP[today.getMonth()],
+    year: today.getFullYear()
   }
 };
 
@@ -36,8 +39,8 @@ export default function detailsPage(state = initialState, action) {
       const bills = Object.assign({}, state.bills, toMergeBills);
       return Object.assign({}, state, { bills });
     case NEXT_MONTH:
-      const currentMonth = Object.assign({}, state.currentMonth, action.currentMonth);
-      return Object.assign({}, state, {currentMonth});
+      const currentDate = Object.assign({}, state.currentDate, action.currentDate);
+      return Object.assign({}, state, {currentDate});
     default:
       return state;
   }

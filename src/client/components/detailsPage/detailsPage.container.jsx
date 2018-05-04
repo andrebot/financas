@@ -15,8 +15,8 @@ const mapDispatchToProps = (dispatch) => (
     loadBills: () => {
       dispatch(fetchBills());
     },
-    nextMonth: (monthNumber, isNext) => {
-      dispatch(nextMonth(monthNumber, isNext));
+    nextMonth: (monthNumber, year, isNext) => {
+      dispatch(nextMonth(monthNumber, year, isNext));
     }
   }
 );

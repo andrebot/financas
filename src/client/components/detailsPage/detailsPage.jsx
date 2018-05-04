@@ -67,7 +67,7 @@ export default class DetailsPage extends Component {
     return <Table headers={headers} data={tableData}/>
   }
 
-  createMonthNavigation({ monthName, monthNumber }, nextMonth) {
+  createMonthNavigation({ monthName, monthNumber, year }, nextMonth) {
     const buttonStyle = {
       float: 'right'
     };
@@ -77,15 +77,15 @@ export default class DetailsPage extends Component {
         <Grid.Column>
         </Grid.Column>
         <Grid.Column>
-          <Button icon style={buttonStyle} onClick={() => nextMonth(monthNumber, false)}>
+          <Button icon style={buttonStyle} onClick={() => nextMonth(monthNumber, year, false)}>
             <Icon name="left arrow"></Icon>
           </Button>
         </Grid.Column>
         <Grid.Column>
-          <Header textAlign='center' as='h1'>{monthName}</Header>
+          <Header textAlign='center' as='h1'>{monthName} / {year}</Header>
         </Grid.Column>
         <Grid.Column>
-          <Button icon onClick={() => nextMonth(monthNumber, true)}>
+          <Button icon onClick={() => nextMonth(monthNumber, year, true)}>
             <Icon name="right arrow"></Icon>
           </Button>
         </Grid.Column>
@@ -96,11 +96,11 @@ export default class DetailsPage extends Component {
   }
 
   render() {
-    const { incomeTransactions, bills, isLoading, currentMonth, nextMonth } = this.props;
+    const { incomeTransactions, bills, isLoading, currentDate, nextMonth } = this.props;
 
     return (
       <Grid columns={2} padded={true}>
-        {this.createMonthNavigation(currentMonth, nextMonth)}
+        {this.createMonthNavigation(currentDate, nextMonth)}
         <Grid.Row>
           <Grid.Column>
             <Segment>
@@ -117,7 +117,7 @@ export default class DetailsPage extends Component {
               <Header textAlign='center' as='h1'>Bills</Header>
               { bills.isLoading ? (
                 <div style={loadingStyle}><Loader active={true}>Fetching bills...</Loader></div>
-              ) : this.createBillsTable(bills.data, currentMonth.monthNumber)}
+              ) : this.createBillsTable(bills.data, currentDate.monthNumber)}
             </Segment>
           </Grid.Column>
         </Grid.Row>
