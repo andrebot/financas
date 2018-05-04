@@ -2,6 +2,7 @@ import { LOADING_INCOME_TRANSACTIONS,
          LOADING_BILLS,
          LOADED_INCOME_TRANSACTIONS,
          LOADED_BILLS,
+         NEXT_MONTH,
          ERROR_LOADING_TRANSACTIONS } from './actions.jsx';
 
 const initialState = {
@@ -34,6 +35,9 @@ export default function detailsPage(state = initialState, action) {
       const toMergeBills = action.bills;
       const bills = Object.assign({}, state.bills, toMergeBills);
       return Object.assign({}, state, { bills });
+    case NEXT_MONTH:
+      const currentMonth = Object.assign({}, state.currentMonth, action.currentMonth);
+      return Object.assign({}, state, {currentMonth});
     default:
       return state;
   }

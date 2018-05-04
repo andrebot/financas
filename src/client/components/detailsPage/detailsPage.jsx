@@ -67,7 +67,7 @@ export default class DetailsPage extends Component {
     return <Table headers={headers} data={tableData}/>
   }
 
-  createMonthNavigation({ monthName, monthNumber }) {
+  createMonthNavigation({ monthName, monthNumber }, nextMonth) {
     const buttonStyle = {
       float: 'right'
     };
@@ -77,7 +77,7 @@ export default class DetailsPage extends Component {
         <Grid.Column>
         </Grid.Column>
         <Grid.Column>
-          <Button icon style={buttonStyle}>
+          <Button icon style={buttonStyle} onClick={() => nextMonth(monthNumber, false)}>
             <Icon name="left arrow"></Icon>
           </Button>
         </Grid.Column>
@@ -85,7 +85,7 @@ export default class DetailsPage extends Component {
           <Header textAlign='center' as='h1'>{monthName}</Header>
         </Grid.Column>
         <Grid.Column>
-          <Button icon>
+          <Button icon onClick={() => nextMonth(monthNumber, true)}>
             <Icon name="right arrow"></Icon>
           </Button>
         </Grid.Column>
@@ -96,11 +96,11 @@ export default class DetailsPage extends Component {
   }
 
   render() {
-    const { incomeTransactions, bills, isLoading, currentMonth } = this.props;
+    const { incomeTransactions, bills, isLoading, currentMonth, nextMonth } = this.props;
 
     return (
       <Grid columns={2} padded={true}>
-        {this.createMonthNavigation(currentMonth)}
+        {this.createMonthNavigation(currentMonth, nextMonth)}
         <Grid.Row>
           <Grid.Column>
             <Segment>

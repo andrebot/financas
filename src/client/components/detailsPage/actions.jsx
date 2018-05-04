@@ -1,4 +1,5 @@
 import axios from 'axios';
+import MONTH_MAP from './monthMapper.jsx';
 
 export const LOADING_INCOME_TRANSACTIONS = 'LOADING_INCOME_TRANSACTIONS';
 export function loadingIncome() {
@@ -68,6 +69,32 @@ export function handleBillErrorWhileLoading(errors) {
       isLoading: false,
       errors,
       data: []
+    }
+  }
+}
+
+export const NEXT_MONTH = 'NEXT_MONTH';
+export const CANT_CHANGE_MONTH = 'CANT_CHANGE_MONTH';
+export function nextMonth(currentMonthNumber, isNext) {
+  let newIndex;
+  
+  if (isNext) {
+    newIndex = currentMonthNumber + 1;
+  } else {
+    newIndex = currentMonthNumber - 1;
+  }
+
+  if (newIndex > 11 ||  newIndex < 0) {
+    return {
+      type: CANT_CHANGE_MONTH
+    };
+  }
+
+  return {
+    type: NEXT_MONTH,
+    currentMonth: {
+      monthNumber: newIndex,
+      monthName: MONTH_MAP[newIndex]
     }
   }
 }
