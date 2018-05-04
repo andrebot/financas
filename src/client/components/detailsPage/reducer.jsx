@@ -14,6 +14,10 @@ const initialState = {
     isLoading: true,
     errors: [],
     data: []
+  },
+  currentMonth: {
+    monthNumber: 4,
+    monthName: 'May'
   }
 };
 

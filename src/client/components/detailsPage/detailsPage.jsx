@@ -68,7 +68,7 @@ export default class DetailsPage extends Component {
   }
 
   render() {
-    const { incomeTransactions, bills, isLoading } = this.props;
+    const { incomeTransactions, bills, isLoading, currentMonth } = this.props;
 
     return (
       <Grid columns={2} padded={true}>
@@ -88,7 +88,7 @@ export default class DetailsPage extends Component {
               <Header textAlign='center' as='h1'>Bills</Header>
               { bills.isLoading ? (
                 <div style={loadingStyle}><Loader active={true}>Fetching bills...</Loader></div>
-              ) : this.createBillsTable(bills.data, 4)}
+              ) : this.createBillsTable(bills.data, currentMonth.monthNumber)}
             </Segment>
           </Grid.Column>
         </Grid.Row>
