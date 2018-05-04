@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Segment, Grid, Loader, Header } from 'semantic-ui-react';
+import { Segment, Grid, Loader, Header, Icon, Button } from 'semantic-ui-react';
 import PropTypes from 'prop-types';
 import { fetchIncomeTransactions } from './actions.jsx';
 import Table from '../table/table.jsx';
@@ -67,11 +67,40 @@ export default class DetailsPage extends Component {
     return <Table headers={headers} data={tableData}/>
   }
 
+  createMonthNavigation({ monthName, monthNumber }) {
+    const buttonStyle = {
+      float: 'right'
+    };
+
+    return (
+      <Grid.Row columns={5}>
+        <Grid.Column>
+        </Grid.Column>
+        <Grid.Column>
+          <Button icon style={buttonStyle}>
+            <Icon name="left arrow"></Icon>
+          </Button>
+        </Grid.Column>
+        <Grid.Column>
+          <Header textAlign='center' as='h1'>{monthName}</Header>
+        </Grid.Column>
+        <Grid.Column>
+          <Button icon>
+            <Icon name="right arrow"></Icon>
+          </Button>
+        </Grid.Column>
+        <Grid.Column>
+        </Grid.Column>
+      </Grid.Row>
+    );
+  }
+
   render() {
     const { incomeTransactions, bills, isLoading, currentMonth } = this.props;
 
     return (
       <Grid columns={2} padded={true}>
+        {this.createMonthNavigation(currentMonth)}
         <Grid.Row>
           <Grid.Column>
             <Segment>
