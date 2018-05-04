@@ -11,8 +11,8 @@ export default class DetailsPage extends Component {
   }
 
   componentWillMount() {
-    this.props.loadIncomeTransactions();
-    this.props.loadBills();
+    this.props.loadIncomeTransactions(this.props.currentDate);
+    this.props.loadBills(this.props.currentDate);
   }
 
   createIncomeTable(incomeTransactions) {

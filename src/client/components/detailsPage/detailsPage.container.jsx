@@ -9,11 +9,11 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = (dispatch) => (
   {
-    loadIncomeTransactions: () => {
-      dispatch(fetchIncomeTransactions());
+    loadIncomeTransactions: (currentDate) => {
+      dispatch(fetchIncomeTransactions(currentDate));
     },
-    loadBills: () => {
-      dispatch(fetchBills());
+    loadBills: (currentDate) => {
+      dispatch(fetchBills(currentDate));
     },
     nextMonth: (monthNumber, year, isNext) => {
       dispatch(nextMonth(monthNumber, year, isNext));

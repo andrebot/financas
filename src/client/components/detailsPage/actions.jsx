@@ -104,11 +104,13 @@ export function nextMonth(currentMonthNumber, currentYear, isNext) {
   }
 }
 
-export function fetchIncomeTransactions () {
+export function fetchIncomeTransactions (currentDate) {
   return function (dispatch) {
+    const { monthNumber, year } = currentDate;
+
     dispatch(loadingIncome());
 
-    return axios.get('/api/v1/transaction').then(function (response) {
+    return axios.get(`/api/v1/transaction/${monthNumber}/${year}`).then(function (response) {
       const incomeTransactions = response.data.data.map(income => {
         if (income.date) {
           income.date = new Date(income.date);
@@ -128,11 +130,13 @@ export function fetchIncomeTransactions () {
   }
 }
 
-export function fetchBills () {
+export function fetchBills (currentDate) {
   return function (dispatch) {
+    const { monthNumber, year } = currentDate;
+
     dispatch(loadingBills());
 
-    return axios.get('/api/v1/bill').then(function (response) {
+    return axios.get(`/api/v1/bill/${monthNumber}/${year}`).then(function (response) {
       const bills = response.data.data.map(bill => {
         if (bill.paidAt) {
           bill.paidAt = new Date(bill.paidAt);
