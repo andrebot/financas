@@ -16,12 +16,7 @@ const Bill = new Schema({
     type:      { type: String, require: true, validate: Validator.isTimeRepeatingValue },
     weekDays:  [ { type: String, validate: Validator.isWeekDay } ],
     times:     { type: Number },
-    until:    { 
-      day:     { type: Number },
-      month:   { type: Number },
-      year:    { type: Number }
-    },
-    untilDate: { type: Date }
+    until:     { type: Date }
   }
 });
 
