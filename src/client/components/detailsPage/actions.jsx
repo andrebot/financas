@@ -110,7 +110,7 @@ export function fetchIncomeTransactions (currentDate) {
 
     dispatch(loadingIncome());
 
-    return axios.get(`/api/v1/transaction/${monthNumber}/${year}`).then(function (response) {
+    return axios.get(`/api/v1/transaction?month=${monthNumber}&year=${year}`).then(function (response) {
       const incomeTransactions = response.data.data.map(income => {
         if (income.date) {
           income.date = new Date(income.date);
@@ -136,7 +136,7 @@ export function fetchBills (currentDate) {
 
     dispatch(loadingBills());
 
-    return axios.get(`/api/v1/bill/${monthNumber}/${year}`).then(function (response) {
+    return axios.get(`/api/v1/bill?month=${monthNumber}&year=${year}`).then(function (response) {
       const bills = response.data.data.map(bill => {
         if (bill.paidAt) {
           bill.paidAt = new Date(bill.paidAt);

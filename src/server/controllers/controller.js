@@ -102,8 +102,11 @@ function create(model, modelName) {
  */
 function listAll(model, modelName) {
   return function (request, response) {
+    const query = request.mongooseQuery || {};
 
-    model.find({}).then(function(documents) {
+    console.log(query);
+
+    model.find(query).then(function(documents) {
       const numberOfDocuments = documents.length;
       const result = {
         data: []

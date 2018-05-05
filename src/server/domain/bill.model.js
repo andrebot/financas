@@ -13,10 +13,15 @@ const Bill = new Schema({
   paidAt:      { type: Date },
   isProgramed: { type: Boolean, default: false },
   repeat: {
-    type:     { type: String, require: true, validate: Validator.isTimeRepeatingValue },
-    weekDays: [ { type: String, validate: Validator.isWeekDay } ],
-    times:    { type: Number },
-    until:    { type: Date }
+    type:      { type: String, require: true, validate: Validator.isTimeRepeatingValue },
+    weekDays:  [ { type: String, validate: Validator.isWeekDay } ],
+    times:     { type: Number },
+    until:    { 
+      day:     { type: Number },
+      month:   { type: Number },
+      year:    { type: Number }
+    },
+    untilDate: { type: Date }
   }
 });
 
