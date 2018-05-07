@@ -16,7 +16,28 @@ const mapDispatchToProps = (dispatch) => (
       dispatch(fetchBills(currentDate));
     },
     nextMonth: (monthNumber, year, isNext) => {
-      dispatch(nextMonth(monthNumber, year, isNext));
+      let newMonth;
+      let newYear = year;
+
+      if (isNext) {
+        newMonth = monthNumber + 1;
+
+        if (newMonth > 11) {
+          newMonth = 0;
+          newYear = year + 1;
+        }
+      } else {
+        newMonth = monthNumber - 1;
+
+        if (newMonth < 0) {
+          newMonth = 11;
+          newYear = year - 1;
+        }
+      }
+
+      dispatch(nextMonth(newMonth, newYear, isNext));
+      dispatch(fetchIncomeTransactions({ monthNumber: newMonth, year: newYear }));
+      dispatch(fetchBills({ monthNumber: newMonth, year: newYear }));
     }
   }
 );

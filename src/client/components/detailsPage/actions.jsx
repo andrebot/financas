@@ -74,31 +74,12 @@ export function handleBillErrorWhileLoading(errors) {
 }
 
 export const NEXT_MONTH = 'NEXT_MONTH';
-export function nextMonth(currentMonthNumber, currentYear, isNext) {
-  let newIndex;
-  let newYear = currentYear;
-
-  if (isNext) {
-    newIndex = currentMonthNumber + 1;
-
-    if (newIndex > 11) {
-      newIndex = 0;
-      newYear = currentYear + 1;
-    }
-  } else {
-    newIndex = currentMonthNumber - 1;
-
-    if (newIndex < 0) {
-      newIndex = 11;
-      newYear = currentYear - 1;
-    }
-  }
-
+export function nextMonth(newMonth, newYear, isNext) {
   return {
     type: NEXT_MONTH,
     currentDate: {
-      monthNumber: newIndex,
-      monthName: MONTH_MAP[newIndex],
+      monthNumber: newMonth,
+      monthName: MONTH_MAP[newMonth],
       year: newYear
     }
   }
@@ -138,8 +119,8 @@ export function fetchBills (currentDate) {
 
     return axios.get(`/api/v1/bill?month=${monthNumber}&year=${year}`).then(function (response) {
       const bills = response.data.data.map(bill => {
-        if (bill.paidAt) {
-          bill.paidAt = new Date(bill.paidAt);
+        if (bill.paidAt && bill.paidAt.length > 0) {
+          bill.paidAt = bill.paidAt.map(date => new Date(date));
         }
 
         if (bill.repeat && bill.repeat.until) {
