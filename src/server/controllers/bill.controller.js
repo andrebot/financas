@@ -24,7 +24,7 @@ const controller = {
       Logger.error('BillController: There was an error while parsing the query parameters.');
       Logger.error(error);
 
-      response.status(400).send(`Error while validating the query parameters. ${error.message}`)
+      response.status(400).send(`Error while validating the query parameters. ${error.message}`);
     }
   }
 };
