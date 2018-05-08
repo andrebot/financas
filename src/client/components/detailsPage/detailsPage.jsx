@@ -44,21 +44,42 @@ export default class DetailsPage extends Component {
 
       return date;
     };
+    const paidAtTransform = function (value) {
+      let date = new Date();
+      let firstDate = new Date();
+
+      date.setHours(23, 59, 59, 999);
+      firstDate.setMonth(currentMonth);
+      firstDate.setDate(1);
+      date = date.getTime();
+      firstDate = firstDate.getTime();
+
+      return value.find(function (element) {
+        const elementMilli = element.getTime();
+        return elementMilli >= firstDate && elementMilli <= date;
+      });
+    };
+
+    const isPaidTransform = function (value) {
+      const date = paidAtTransform(value);
+
+      return (date) ? true : false;
+    };
 
     const headers = [
-      { title: 'Paid', mapTo: 'paid' },
+      { title: 'Paid', mapTo: 'paid', transform: isPaidTransform },
       { title: 'Name', mapTo: 'name' },
       { title: 'Due Date', mapTo: 'dueDate', transform },
-      { title: 'Paid at', mapTo: 'paidAt' },
+      { title: 'Paid at', mapTo: 'paidAt', transform: paidAtTransform },
       { title: 'Value', mapTo: 'value' }
     ];
     const tableData = bills.map(bill => {
-      const { paid, name, dueDate, paidAt, value, ...remains } = bill;
+      const { name, dueDay, paidAt, value, ...remains } = bill;
 
       return {
-        paid:    { value: paid, type: 'Boolean' },
+        paid:    { value: paidAt, type: 'Boolean' },
         name:    { value: name, type: 'String' },
-        dueDate: { value: dueDate, type: 'Date' },
+        dueDate: { value: dueDay, type: 'Date' },
         paidAt:  { value: paidAt, type: 'Date' },
         value:   { value, type: 'Currency' }
       };

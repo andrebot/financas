@@ -14,7 +14,7 @@ const formatValue = ({ value, type }, transform = function (toParse) { return to
     case 'Currency':
       return formatCurrency(transform(value));
     case 'Boolean':
-      if (value) {
+      if (transform(value)) {
         return <Icon color='green' name='checkmark' size='large' />
       } else {
         return <Icon color='red' name='x' size='large' />
@@ -27,7 +27,9 @@ const formatValue = ({ value, type }, transform = function (toParse) { return to
 const createTableRow = function (object, index, headers) {
   return (
     <Table.Row key={index}>
-      {headers.map(({ mapTo, transform }, columnIndex) => <Table.Cell key={columnIndex}>{formatValue(object[mapTo], transform)}</Table.Cell>)}
+      {headers.map(({ mapTo, transform }, columnIndex) => {
+        return <Table.Cell key={columnIndex}>{formatValue(object[mapTo], transform)}</Table.Cell> 
+      })}
     </Table.Row>
   );
 };
