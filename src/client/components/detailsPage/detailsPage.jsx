@@ -136,7 +136,13 @@ export default class DetailsPage extends Component {
           </Grid.Column>
           <Grid.Column>
             <Segment>
-              <Header textAlign='center' as='h1'>Bills</Header>
+              <div>
+                <Header textAlign='center' as='h1'>Bills</Header>
+                <Button icon style={{position: 'relative', float: 'right', top: '-50px'}}>
+                  <Icon name='plus'></Icon>
+                  New Bill
+                </Button>
+              </div>
               { bills.isLoading ? (
                 <div style={loadingStyle}><Loader active={true}>Fetching bills...</Loader></div>
               ) : this.createBillsTable(bills.data, currentDate.monthNumber)}
