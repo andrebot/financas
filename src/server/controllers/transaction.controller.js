@@ -10,7 +10,7 @@ const controller = {
       month = parseInt(month);
       year = parseInt(year);
 
-      if (month && year) {
+      if ((month || month === 0) && year) {
         const date = new Date(year, month, 1);
         const endDate = new Date(year, month + 1, 0);
 

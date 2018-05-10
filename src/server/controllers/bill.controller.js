@@ -10,15 +10,15 @@ const controller = {
     try {
       month = parseInt(month);
       year = parseInt(year);
-  
-      if (month && year) {
+
+      if ((month || month === 0) && year) {
         const date = new Date(year, month, 1);
-  
+
         request.mongooseQuery = {
           'repeat.until': { $gte: date }
         };
       }
-  
+
       billController.listAll(request, response);
     } catch (error) {
       Logger.error('BillController: There was an error while parsing the query parameters.');

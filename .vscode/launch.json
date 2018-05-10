@@ -8,13 +8,8 @@
         "name": "Debug Main Process",
         "type": "node",
         "request": "launch",
-        "cwd": "${workspaceRoot}",
-        "program": "${workspaceRoot}/dist/src/index.js",
-        "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron",
-        "windows": {
-          "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron.cmd"
-        },
-        "args" : ["."]
+        "runtimeVersion": "9.2.0",
+        "program": "${workspaceFolder}/src/server/index.js"
     },
     {
       "name": "Run Mocha Back",
