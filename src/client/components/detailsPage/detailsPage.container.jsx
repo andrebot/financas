@@ -16,6 +16,12 @@ const mapDispatchToProps = (dispatch) => (
       dispatch(fetchBills(currentDate));
     },
     nextMonth: (monthNumber, year, isNext) => {
+      const today = new Date();
+
+      if (today.getMonth() === monthNumber && isNext) {
+        return;
+      }
+
       let newMonth;
       let newYear = year;
 

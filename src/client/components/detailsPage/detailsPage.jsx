@@ -92,6 +92,7 @@ export default class DetailsPage extends Component {
     const buttonStyle = {
       float: 'right'
     };
+    const today = new Date();
 
     return (
       <Grid.Row columns={5}>
@@ -106,7 +107,7 @@ export default class DetailsPage extends Component {
           <Header textAlign='center' as='h1'>{monthName} / {year}</Header>
         </Grid.Column>
         <Grid.Column>
-          <Button icon onClick={() => nextMonth(monthNumber, year, true)}>
+          <Button icon onClick={() => nextMonth(monthNumber, year, true)} disabled={today.getMonth() === monthNumber}>
             <Icon name="right arrow"></Icon>
           </Button>
         </Grid.Column>
