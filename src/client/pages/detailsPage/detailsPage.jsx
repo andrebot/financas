@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { Segment, Grid, Loader, Header, Icon, Button } from 'semantic-ui-react';
 import PropTypes from 'prop-types';
 import { fetchIncomeTransactions } from './actions.jsx';
-import Table from '../table/table.jsx';
+import Table from '../../components/table/table.jsx';
 
 const loadingStyle = { position: 'relative', height: '80px' };
 export default class DetailsPage extends Component {
