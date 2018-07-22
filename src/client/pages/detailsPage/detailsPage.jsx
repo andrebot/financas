@@ -104,5 +104,6 @@ DetailsPage.propTypes = {
       value: PropTypes.number.isRequired
     })).isRequired
   }),
-  loadIncomeTransactions: PropTypes.func.isRequired
+  loadIncomeTransactions: PropTypes.func.isRequired,
+  loadBills: PropTypes.func.isRequired
 };

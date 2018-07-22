@@ -52,9 +52,9 @@ describe('Details Page', function () {
     });
 
     it('should update the state accordingly if there is an error when fetching income', function (done) {
-      const actionFunction = fetchIncomeTransactions();
+      const actionFunction = fetchIncomeTransactions({ monthNumber: 1, year: 2018 });
       const dispatchMock = sinon.spy();
-      const mockError = new Error('Request failed with status code 576');
+      const mockError = new Error('Request failed with status code 404');
 
       axiosMock.onGet('/api/v1/transaction').reply(function () {
         return new Promise((resolve, reject) => {
@@ -77,7 +77,7 @@ describe('Details Page', function () {
           incomeTransactions: {
             isLoading: false,
             errors: [ mockError ],
-            data:  []
+            data: []
           }
         });
 
