@@ -36,18 +36,36 @@ describe('detailsPage', function () {
     const params = {
       isLoading: false,
       loadIncomeTransactions: this.loadIncomeTransactions,
-      incomeTransactions: [{
-        name: 'dummy',
-        to: 'dummy',
-        date: new Date(),
-        value: 312
-      }]
+      loadBills: this.loadBills,
+      currentDate: {
+        monthName: 'January',
+        monthNumber: 1,
+        year: 2018
+      },
+      incomeTransactions: {
+        data: [{
+          name: 'dummy',
+          to: 'dummy',
+          date: new Date(),
+          value: 312
+        }],
+        isLoading: false
+      },
+      bills: {
+        isLoading: false,
+        data: [{
+          name: 'dummy',
+          value: 321,
+          dueDay: 1,
+          paidAt: [new Date()]
+        }]
+      }
     };
 
     const page = mount(<DetailsPage {...params}/>);
 
     page.find(Loader).length.should.be.eq(0);
-    page.find(Table).length.should.be.be.eq(1);
+    page.find(Table).length.should.be.be.eq(2);
 
     this.loadIncomeTransactions.should.have.been.calledOnce;
   });
