@@ -105,7 +105,6 @@ DetailsPage.propTypes = {
       value: PropTypes.number.isRequired
     })).isRequired
   }),
-  bills: BillsTablePropType,
   loadIncomeTransactions: PropTypes.func.isRequired,
   loadBills: PropTypes.func.isRequired
 };
