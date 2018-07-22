@@ -3,6 +3,7 @@ import { Segment, Grid, Loader, Header, Icon, Button } from 'semantic-ui-react';
 import PropTypes from 'prop-types';
 import Table from '../../components/table/table.jsx';
 import BillsTable from '../../components/billsTable/billsTable.jsx';
+import BillsTablePropType from '../../components/billsTable/propTypes.jsx';
 
 const loadingStyle = { position: 'relative', height: '80px' }; 
 export default class DetailsPage extends Component {
@@ -104,6 +105,7 @@ DetailsPage.propTypes = {
       value: PropTypes.number.isRequired
     })).isRequired
   }),
+  bills: BillsTablePropType,
   loadIncomeTransactions: PropTypes.func.isRequired,
   loadBills: PropTypes.func.isRequired
 };
