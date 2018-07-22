@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
 import { Segment, Grid, Loader, Header, Icon, Button } from 'semantic-ui-react';
 import PropTypes from 'prop-types';
-import { fetchIncomeTransactions } from './actions.jsx';
 import Table from '../../components/table/table.jsx';
+import BillsTable from '../../components/billsTable/billsTable.jsx';
 
-const loadingStyle = { position: 'relative', height: '80px' };
+const loadingStyle = { position: 'relative', height: '80px' }; 
 export default class DetailsPage extends Component {
   constructor(props) {
     super(props);
@@ -30,58 +30,6 @@ export default class DetailsPage extends Component {
         to:    { value: to, type: 'String' },
         date:  { value: date, type: 'Date' },
         value: { value, type: 'Currency' }
-      };
-    });
-
-    return <Table headers={headers} data={tableData}/>
-  }
-
-  createBillsTable(bills, currentMonth) {
-    const transform = function (value) {
-      const date = new Date();
-      date.setMonth(currentMonth);
-      date.setDate(value);
-
-      return date;
-    };
-    const paidAtTransform = function (value) {
-      let date = new Date();
-      let firstDate = new Date();
-
-      date.setHours(23, 59, 59, 999);
-      firstDate.setMonth(currentMonth);
-      firstDate.setDate(1);
-      date = date.getTime();
-      firstDate = firstDate.getTime();
-
-      return value.find(function (element) {
-        const elementMilli = element.getTime();
-        return elementMilli >= firstDate && elementMilli <= date;
-      });
-    };
-
-    const isPaidTransform = function (value) {
-      const date = paidAtTransform(value);
-
-      return (date) ? true : false;
-    };
-
-    const headers = [
-      { title: 'Paid', mapTo: 'paid', transform: isPaidTransform },
-      { title: 'Name', mapTo: 'name' },
-      { title: 'Due Date', mapTo: 'dueDate', transform },
-      { title: 'Paid at', mapTo: 'paidAt', transform: paidAtTransform },
-      { title: 'Value', mapTo: 'value' }
-    ];
-    const tableData = bills.map(bill => {
-      const { name, dueDay, paidAt, value, ...remains } = bill;
-
-      return {
-        paid:    { value: paidAt, type: 'Boolean' },
-        name:    { value: name, type: 'String' },
-        dueDate: { value: dueDay, type: 'Date' },
-        paidAt:  { value: paidAt, type: 'Date' },
-        value:   { value, type: 'Currency' }
       };
     });
 
@@ -118,7 +66,7 @@ export default class DetailsPage extends Component {
   }
 
   render() {
-    const { incomeTransactions, bills, isLoading, currentDate, nextMonth } = this.props;
+    const { incomeTransactions, bills, currentDate, nextMonth } = this.props;
 
     return (
       <Grid columns={2} padded={true}>
@@ -136,16 +84,7 @@ export default class DetailsPage extends Component {
           </Grid.Column>
           <Grid.Column>
             <Segment>
-              <div>
-                <Header textAlign='center' as='h1'>Bills</Header>
-                <Button icon style={{position: 'relative', float: 'right', top: '-50px'}}>
-                  <Icon name='plus'></Icon>
-                  New Bill
-                </Button>
-              </div>
-              { bills.isLoading ? (
-                <div style={loadingStyle}><Loader active={true}>Fetching bills...</Loader></div>
-              ) : this.createBillsTable(bills.data, currentDate.monthNumber)}
+              <BillsTable bills={bills} currentDate={currentDate} />
             </Segment>
           </Grid.Column>
         </Grid.Row>

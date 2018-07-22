@@ -7,7 +7,7 @@ import thunk from 'redux-thunk';
 import MainMenu from './components/menu/menu.container.jsx';
 import DetailsPageComp from './pages/detailsPage/detailsPage.container.jsx';
 import menu from './components/menu/reducer.jsx';
-import detailsPage from './components/detailsPage/reducer.jsx';
+import detailsPage from './pages/detailsPage/reducer.jsx';
 
 const app = combineReducers({
   menu,
