@@ -1,5 +1,5 @@
-import React, { Component } from 'react';
-import { Segment, Grid, Loader, Header, Icon, Button } from 'semantic-ui-react';
+import React from 'react';
+import { Loader, Header, Icon, Button } from 'semantic-ui-react';
 import PropTypes from 'prop-types';
 import Table from '../table/table.jsx';
 
@@ -59,8 +59,7 @@ function createBillsTable(bills, currentMonth) {
   return <Table headers={headers} data={tableData}/>
 }
 
-const table = ({ bills, currentDate }) => {
-
+const BillsTable = ({ bills, currentDate }) => {
   return (
     <div>
       <div>
@@ -77,4 +76,22 @@ const table = ({ bills, currentDate }) => {
   );
 }
 
-export default table;
+BillsTable.propTypes = {
+  bills: PropTypes.shape({
+    errors: PropTypes.arrayOf(Error),
+    isLoading: PropTypes.bool,
+    data: PropTypes.arrayOf(PropTypes.shape({
+      name: PropTypes.string.isRequired,
+      paidAt: PropTypes.arrayOf(PropTypes.instanceOf(Date)).isRequired,
+      dueDay: PropTypes.number.isRequired,
+      value: PropTypes.number.isRequired
+    })).isRequired
+  }),
+  currentDate: PropTypes.shape({
+    monthName: PropTypes.string.isRequired,
+    monthNumber: PropTypes.number.isRequired,
+    year: PropTypes.number.isRequired
+  })
+}
+
+export default BillsTable;
