@@ -7,15 +7,19 @@ import Table from '../table/table.jsx';
 const buttonStyle = {position: 'relative', float: 'right', top: '-50px'};
 const loadingStyle = { position: 'relative', height: '80px' }; 
 
-function createBillsTable(bills, currentMonth) {
-  const transform = function (value) {
+function dateTransformFactory (currentMonth) {
+  return function (day) {
     const date = new Date();
+
     date.setMonth(currentMonth);
-    date.setDate(value);
+    date.setDate(day);
 
     return date;
-  };
-  const paidAtTransform = function (value) {
+  }
+}
+
+function paidAtTransformFactory(currentMonth) {
+  return function (paidAtValues) {
     let date = new Date();
     let firstDate = new Date();
 
@@ -25,22 +29,30 @@ function createBillsTable(bills, currentMonth) {
     date = date.getTime();
     firstDate = firstDate.getTime();
 
-    return value.find(function (element) {
+    return paidAtValues.find(function (element) {
       const elementMilli = element.getTime();
       return elementMilli >= firstDate && elementMilli <= date;
     });
-  };
+  }
+}
 
-  const isPaidTransform = function (value) {
-    const date = paidAtTransform(value);
+function isPaidTransformFactory (paidAtTransform){
+  return function (paidAtValues) {
+    const date = paidAtTransform(paidAtValues);
 
     return (date) ? true : false;
-  };
+  }
+}
+
+function createBillsTable(bills, currentMonth) {
+  const dateTransform = dateTransformFactory(currentMonth);
+  const paidAtTransform = paidAtTransformFactory(currentMonth);
+  const isPaidTransform = isPaidTransformFactory(paidAtTransform);
 
   const headers = [
     { title: 'Paid', mapTo: 'paid', transform: isPaidTransform },
     { title: 'Name', mapTo: 'name' },
-    { title: 'Due Date', mapTo: 'dueDate', transform },
+    { title: 'Due Date', mapTo: 'dueDate', transform: dateTransform },
     { title: 'Paid at', mapTo: 'paidAt', transform: paidAtTransform },
     { title: 'Value', mapTo: 'value' }
   ];
