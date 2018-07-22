@@ -4,7 +4,7 @@ import sinon from 'sinon';
 import { Loader, Table } from 'semantic-ui-react';
 import DetailsPage from './detailsPage';
 
-describe('detailsPage', function () {
+describe('<DetailsPage />', function () {
   beforeEach(function () {
     this.loadIncomeTransactions = sinon.spy();
     this.loadBills = sinon.spy();
@@ -72,19 +72,37 @@ describe('detailsPage', function () {
 
   it('should always render loading status template if the isLoading is true', function () {
     const params = {
-      isLoading: true,
+      isLoading: false,
       loadIncomeTransactions: this.loadIncomeTransactions,
-      incomeTransactions: [{
-        name: 'dummy',
-        to: 'dummy',
-        date: new Date(),
-        value: 312
-      }]
+      loadBills: this.loadBills,
+      currentDate: {
+        monthName: 'January',
+        monthNumber: 1,
+        year: 2018
+      },
+      incomeTransactions: {
+        data: [{
+          name: 'dummy',
+          to: 'dummy',
+          date: new Date(),
+          value: 312
+        }],
+        isLoading: true
+      },
+      bills: {
+        isLoading: true,
+        data: [{
+          name: 'dummy',
+          value: 321,
+          dueDay: 1,
+          paidAt: [new Date()]
+        }]
+      }
     };
 
     const page = mount(<DetailsPage {...params}/>);
 
-    page.find(Loader).length.should.be.eq(1);
+    page.find(Loader).length.should.be.eq(2);
     page.find(Table).length.should.be.be.eq(0);
 
     this.loadIncomeTransactions.should.have.been.calledOnce;
