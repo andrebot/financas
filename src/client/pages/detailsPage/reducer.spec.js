@@ -53,12 +53,14 @@ describe('Details Page', function () {
       }).catch(done);
     });
 
-    xit('should update the state accordingly if there is an error when fetching income', function (done) {
-      const actionFunction = fetchIncomeTransactions({ monthNumber: 1, year: 2018 });
+    it('should update the state accordingly if there is an error when fetching income', function (done) {
+      const monthNumber = 1;
+      const year = 2018;
+      const actionFunction = fetchIncomeTransactions({ monthNumber, year });
       const dispatchMock = sinon.spy();
       const mockError = new Error('Request failed with status code 404');
 
-      axiosMock.onGet('/api/v1/transaction').reply(function () {
+      axiosMock.onGet(`/api/v1/transaction?month=${monthNumber}&year=${year}`).reply(function () {
         return new Promise((resolve, reject) => {
           reject(mockError);
         });
