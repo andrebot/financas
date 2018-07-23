@@ -86,10 +86,11 @@ export function nextMonth(newMonth, newYear, isNext) {
 }
 
 export const EDIT_BILL = 'EDIT_BILL';
-export function editBill(bill, index) {
+export function editBill(attr, value, index) {
   return {
     type: EDIT_BILL,
-    bill,
+    attr,
+    value,
     index
   }
 }

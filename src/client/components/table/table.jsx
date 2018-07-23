@@ -12,7 +12,7 @@ export default class AppTable extends Component {
     };
   }
 
-  createTableRow(object, index, headers) {
+  createTableRow(object, index, headers, editRow) {
     return (
       <Table.Row key={index}>
         {headers.map(({ mapTo, transform }, columnIndex) => {
@@ -36,6 +36,15 @@ export default class AppTable extends Component {
             this.setState({ values });
           };
 
+          const saveChange = (evt) => {
+            editRow(object[mapTo].attr, this.state.values[columnKey], index);
+            const editingRows = this.state.editingRows;
+
+            editingRows[columnKey] = !editingRows[columnKey];
+
+            this.setState({ editingRows })
+          };
+
           if (this.state.editingRows[columnKey] === undefined) {
             this.state.editingRows[columnKey] = false;
           }
@@ -49,7 +58,7 @@ export default class AppTable extends Component {
               {this.state.editingRows[columnKey] ? 
                 <div>
                   <input type='text' value={this.state.values[columnKey]} onChange={onChange}/>
-                  <Icon color='green' name='save' size='large' />
+                  <Icon color='green' name='save' size='large' onClick={saveChange}/>
                   <Icon color='red' name='trash' size='large' onClick={toggleEdit}/>
                 </div> : 
                 <div onDoubleClick={toggleEdit}>{value}</div>
@@ -62,12 +71,12 @@ export default class AppTable extends Component {
   }
 
   render() {
-    const { headers = [], data = [] } = this.props;
+    const { headers = [], data = [], editRow } = this.props;
     const showHeader = headers.some(function (header) {
       return header.title;
     });
     const tableBody = data.length > 0 ? (
-      data.map((object, index) => this.createTableRow(object, index, headers))
+      data.map((object, index) => this.createTableRow(object, index, headers, editRow))
     ) : (
       <Table.Row>
         <Table.Cell>No data to render</Table.Cell>

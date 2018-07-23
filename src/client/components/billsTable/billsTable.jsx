@@ -8,7 +8,7 @@ import { dateTransformFactory, paidAtTransformFactory, isPaidTransformFactory } 
 const buttonStyle = {position: 'relative', float: 'right', top: '-50px'};
 const loadingStyle = { position: 'relative', height: '80px' }; 
 
-function createBillsTable(bills, currentMonth) {
+function createBillsTable(bills, currentMonth, editBill) {
   const dateTransform = dateTransformFactory(currentMonth);
   const paidAtTransform = paidAtTransformFactory(currentMonth);
   const isPaidTransform = isPaidTransformFactory(paidAtTransform);
@@ -24,18 +24,18 @@ function createBillsTable(bills, currentMonth) {
     const { name, dueDay, paidAt, value, ...remains } = bill;
 
     return {
-      paid:    { value: paidAt, type: 'Boolean' },
-      name:    { value: name, type: 'String' },
-      dueDate: { value: dueDay, type: 'Date' },
-      paidAt:  { value: paidAt, type: 'Date' },
-      value:   { value, type: 'Currency' }
+      paid:    { value: paidAt, attr: 'paidAt', type: 'Boolean' },
+      name:    { value: name, attr: 'name', type: 'String' },
+      dueDate: { value: dueDay, attr: 'dueDay', type: 'Date' },
+      paidAt:  { value: paidAt, attr: 'paidAt', type: 'Date' },
+      value:   { value, attr: 'value', type: 'Currency' }
     };
   });
 
-  return <Table headers={headers} data={tableData}/>
+  return <Table headers={headers} data={tableData} editRow={editBill}/>
 }
 
-const BillsTable = ({ bills, currentDate }) => {
+const BillsTable = ({ bills, currentDate, editBill }) => {
   return (
     <div>
       <div>
@@ -47,7 +47,7 @@ const BillsTable = ({ bills, currentDate }) => {
       </div>
       { bills.isLoading ? (
         <div style={loadingStyle}><Loader active={true}>Fetching bills...</Loader></div>
-      ) : createBillsTable(bills.data, currentDate.monthNumber)}
+      ) : createBillsTable(bills.data, currentDate.monthNumber, editBill)}
     </div>
   );
 }

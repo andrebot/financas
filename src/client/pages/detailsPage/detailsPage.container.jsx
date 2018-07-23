@@ -15,8 +15,8 @@ const mapDispatchToProps = (dispatch) => (
     loadBills: (currentDate) => {
       dispatch(fetchBills(currentDate));
     },
-    editBill: (bill, index) => {
-      dispatch(editBill(bill, index));
+    editBill: (attr, value, index) => {
+      dispatch(editBill(attr, value, index));
     },
     nextMonth: (monthNumber, year, isNext) => {
       const today = new Date();

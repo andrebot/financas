@@ -44,11 +44,11 @@ function nextMonthHandler(date, state) {
   return Object.assign({}, state, { currentDate });
 }
 
-function editBillHandler({ bill, index }, state) {
+function editBillHandler({ attr, value, index }, state) {
   const bills = Object.assign({}, state.bills);
 
-  bills[index] = bill;
-  return Object.assign({}, { bills });
+  bills.data[index][attr] = value;
+  return Object.assign({}, state, { bills });
 }
 
 export default function detailsPage(state = initialState, action) {

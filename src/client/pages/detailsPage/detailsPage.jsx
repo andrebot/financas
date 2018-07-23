@@ -67,7 +67,7 @@ export default class DetailsPage extends Component {
   }
 
   render() {
-    const { incomeTransactions, bills, currentDate, nextMonth } = this.props;
+    const { incomeTransactions, bills, currentDate, nextMonth, editBill } = this.props;
 
     return (
       <Grid columns={2} padded={true}>
@@ -85,7 +85,7 @@ export default class DetailsPage extends Component {
           </Grid.Column>
           <Grid.Column>
             <Segment>
-              <BillsTable bills={bills} currentDate={currentDate} />
+              <BillsTable bills={bills} currentDate={currentDate} editBill={editBill} />
             </Segment>
           </Grid.Column>
         </Grid.Row>
