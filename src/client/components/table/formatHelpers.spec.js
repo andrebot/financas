@@ -46,17 +46,58 @@ describe('FormatHelpers', function () {
   });
 
   describe('formatValue', function() {
-    it('should format the value as date', function () {
-      const myDate = new Date();
-      const spy1 = sinon.stub().returns(myDate);
+    this.beforeEach(function () {
+      this.transformStub = sinon.stub();
+    });
 
-      const result = formatValue({value: 1, type: 'Date'}, spy1);
+    describe('format date', function () {
+      beforeEach(function () {
+        this.transformStub.returns(new Date);
+      });
 
-      spy1.should.have.been.calledOnce;
+      it('should format the value as date', function () {
+        const result = formatValue({value: 1, type: 'Date'}, this.transformStub);
+  
+        this.transformStub.should.have.been.calledOnce;
+  
+        result.should.not.be.empty;
+        result.should.be.a('string');
+        this.dateRegExp.test(result).should.be.true;
+      });
+
+      it('should return an empty string if there is no value', function () {
+        this.transformStub.returns('');
+
+        const result = formatValue({value: 1, type: 'Date'}, this.transformStub);
+  
+        this.transformStub.should.have.been.calledOnce;
+  
+        result.should.be.empty;
+        result.should.be.a('string');
+      });
+
+      it('should throw an error if the value providade is not a date', function () {
+        this.transformStub.returns(1);
+
+        const result = () => {
+          formatValue({value: 1, type: 'Date'}, this.transformStub);
+        };
+
+        result.should.throw('Trying to parse Date with some invalid value');
+        this.transformStub.should.have.been.calledOnce;
+      });
+    });
+
+    xit('should format the value as currency', function () {
+      this.transformStub.return()
+
+      const result = formatValue({value: 1, type: 'Date'}, this.transformStub);
+
+      this.transformStub.should.have.been.calledOnce;
 
       result.should.not.be.empty;
       result.should.be.a('string');
       this.dateRegExp.test(result).should.be.true;
-    })
-  })
+    });
+  });
 });
