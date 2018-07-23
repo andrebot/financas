@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Table } from 'semantic-ui-react';
+import { Table, Icon } from 'semantic-ui-react';
 import PropTypes from 'prop-types';
 import { formatValue} from './formatHelpers.jsx';
 
@@ -7,7 +7,8 @@ export default class AppTable extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      editingRows: {}
+      editingRows: {},
+      values: {}
     };
   }
 
@@ -16,18 +17,45 @@ export default class AppTable extends Component {
       <Table.Row key={index}>
         {headers.map(({ mapTo, transform }, columnIndex) => {
           const columnKey = `row${index}${columnIndex}`;
-          const aha = (event, b) => {
+          let value = formatValue(object[mapTo], transform);
+
+          const toggleEdit = () => {
             const editingRows = this.state.editingRows;
+            const values = this.state.values;
 
             editingRows[columnKey] = !editingRows[columnKey];
+            values[columnKey] = value;
+
             this.setState({ editingRows })
+          };
+
+          const onChange = (evt) => {
+            const values = this.state.values;
+
+            values[columnKey] = evt.target.value;
+            this.setState({ values });
           };
 
           if (this.state.editingRows[columnKey] === undefined) {
             this.state.editingRows[columnKey] = false;
           }
 
-          return <Table.Cell onDoubleClick={aha} key={columnIndex}>{this.state.editingRows[columnKey] ? <input type='text' /> : formatValue(object[mapTo], transform)}</Table.Cell> 
+          if (this.state.values[columnKey] === undefined) {
+            this.state.values[columnKey] = value;
+          }
+
+          return (
+            <Table.Cell key={columnIndex}>
+              {this.state.editingRows[columnKey] ? 
+                <div>
+                  <input type='text' value={this.state.values[columnKey]} onChange={onChange}/>
+                  <Icon color='green' name='save' size='large' />
+                  <Icon color='red' name='trash' size='large' onClick={toggleEdit}/>
+                </div> : 
+                <div onDoubleClick={toggleEdit}>{value}</div>
+              }
+            </Table.Cell> 
+          );
         })}
       </Table.Row>
     );
@@ -45,7 +73,7 @@ export default class AppTable extends Component {
         <Table.Cell>No data to render</Table.Cell>
       </Table.Row>
     );
-  
+
     return (
       <Table basic='very'>
        {showHeader && 
@@ -55,7 +83,7 @@ export default class AppTable extends Component {
             </Table.Row>
           </Table.Header>
        }
-  
+
         <Table.Body>
           {tableBody}
         </Table.Body>
