@@ -1,3 +1,6 @@
+import React from 'react';
+import { Icon } from 'semantic-ui-react';
+
 export function formatDate (value) {
   if (!value) {
     return '';
@@ -24,3 +27,24 @@ export function formatDate (value) {
 export function formatCurrency (value) {
   return `R$ ${value.toFixed(2)}`;
 }
+
+export const formatValue = ({ value, type }, transform = function (toParse) { return toParse }) => {
+  if (value == null) {
+    return '';
+  }
+
+  switch(type) {
+    case 'Date':
+      return formatDate(transform(value));
+    case 'Currency':
+      return formatCurrency(transform(value));
+    case 'Boolean':
+      if (transform(value)) {
+        return <Icon color='green' name='checkmark' size='large' />
+      } else {
+        return <Icon color='red' name='x' size='large' />
+      }
+    default:
+      return transform(value);
+  }
+};

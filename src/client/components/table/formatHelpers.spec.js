@@ -1,12 +1,13 @@
 import { expect } from 'chai';
-import { formatDate, formatCurrency } from './formatHelpers.jsx';
+import sinon from 'sinon';
+import { formatDate, formatCurrency, formatValue } from './formatHelpers.jsx';
 
 describe('FormatHelpers', function () {
-  describe('formatDate', function () {
-    before(function () {
-      this.dateRegExp = /[0-2]\d\/[0-2]\d\/\d\d\d\d/;
-    });
+  before(function () {
+    this.dateRegExp = /[0-2]\d\/[0-2]\d\/\d\d\d\d/;
+  });
 
+  describe('formatDate', function () {
     it('should parse data correctly to `dd/mm/YYYY`', function () {
       const formattedDate = formatDate(new Date());
 
@@ -43,4 +44,19 @@ describe('FormatHelpers', function () {
       expect(() => formatCurrency('123123')).to.throw(Error);
     });
   });
+
+  describe('formatValue', function() {
+    it('should format the value as date', function () {
+      const myDate = new Date();
+      const spy1 = sinon.stub().returns(myDate);
+
+      const result = formatValue({value: 1, type: 'Date'}, spy1);
+
+      spy1.should.have.been.calledOnce;
+
+      result.should.not.be.empty;
+      result.should.be.a('string');
+      this.dateRegExp.test(result).should.be.true;
+    })
+  })
 });

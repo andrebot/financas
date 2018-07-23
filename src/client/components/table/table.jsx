@@ -1,28 +1,7 @@
 import React, { Component } from 'react';
-import { Table, Icon } from 'semantic-ui-react';
+import { Table } from 'semantic-ui-react';
 import PropTypes from 'prop-types';
-import { formatDate, formatCurrency } from './formatHelpers.jsx';
-
-const formatValue = ({ value, type }, transform = function (toParse) { return toParse }) => {
-  if (value == null) {
-    return '';
-  }
-
-  switch(type) {
-    case 'Date':
-      return formatDate(transform(value));
-    case 'Currency':
-      return formatCurrency(transform(value));
-    case 'Boolean':
-      if (transform(value)) {
-        return <Icon color='green' name='checkmark' size='large' />
-      } else {
-        return <Icon color='red' name='x' size='large' />
-      }
-    default:
-      return transform(value);
-  }
-};
+import { formatValue} from './formatHelpers.jsx';
 
 export default class AppTable extends Component {
   constructor(props) {
