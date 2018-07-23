@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { fetchIncomeTransactions, fetchBills, nextMonth } from './actions.jsx';
+import { fetchIncomeTransactions, fetchBills, nextMonth, editBill } from './actions.jsx';
 import DetailsPage from './detailsPage.jsx';
 
 const mapStateToProps = state => {
@@ -14,6 +14,9 @@ const mapDispatchToProps = (dispatch) => (
     },
     loadBills: (currentDate) => {
       dispatch(fetchBills(currentDate));
+    },
+    editBill: (bill, index) => {
+      dispatch(editBill(bill, index));
     },
     nextMonth: (monthNumber, year, isNext) => {
       const today = new Date();

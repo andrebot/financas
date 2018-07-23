@@ -85,6 +85,15 @@ export function nextMonth(newMonth, newYear, isNext) {
   }
 }
 
+export const EDIT_BILL = 'EDIT_BILL';
+export function editBill(bill, index) {
+  return {
+    type: EDIT_BILL,
+    bill,
+    index
+  }
+}
+
 export function fetchIncomeTransactions (currentDate) {
   return function (dispatch) {
     const { monthNumber, year } = currentDate;

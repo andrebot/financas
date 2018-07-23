@@ -3,7 +3,8 @@ import { LOADING_INCOME_TRANSACTIONS,
          LOADED_INCOME_TRANSACTIONS,
          LOADED_BILLS,
          NEXT_MONTH,
-         ERROR_LOADING_TRANSACTIONS } from './actions.jsx';
+         ERROR_LOADING_TRANSACTIONS,
+         EDIT_BILL } from './actions.jsx';
 import MONTH_MAP from './monthMapper.jsx';
 
 const today = new Date();
@@ -25,22 +26,44 @@ const initialState = {
   }
 };
 
+function loadingIncomeTransactionsHandler(toMergeincomeTransactions, state) {
+  const incomeTransactions = Object.assign({}, state.incomeTransactions, toMergeincomeTransactions);
+
+  return Object.assign({}, state, { incomeTransactions });
+}
+
+function loadingBillsHandler(toMergeBills, state) {
+  const bills = Object.assign({}, state.bills, toMergeBills);
+
+  return Object.assign({}, state, { bills });
+}
+
+function nextMonthHandler(date, state) {
+  const currentDate = Object.assign({}, state.currentDate, date);
+
+  return Object.assign({}, state, { currentDate });
+}
+
+function editBillHandler({ bill, index }, state) {
+  const bills = Object.assign({}, state.bills);
+
+  bills[index] = bill;
+  return Object.assign({}, { bills });
+}
+
 export default function detailsPage(state = initialState, action) {
   switch (action.type) {
     case LOADING_INCOME_TRANSACTIONS:
     case LOADED_INCOME_TRANSACTIONS:
     case ERROR_LOADING_TRANSACTIONS:
-      const toMergeincomeTransactions = action.incomeTransactions;
-      const incomeTransactions = Object.assign({}, state.incomeTransactions, toMergeincomeTransactions);
-      return Object.assign({}, state, { incomeTransactions });
+      return loadingIncomeTransactionsHandler( action.incomeTransactions, state)
     case LOADING_BILLS:
     case LOADED_BILLS:
-      const toMergeBills = action.bills;
-      const bills = Object.assign({}, state.bills, toMergeBills);
-      return Object.assign({}, state, { bills });
+      return loadingBillsHandler(action.bills, state);
     case NEXT_MONTH:
-      const currentDate = Object.assign({}, state.currentDate, action.currentDate);
-      return Object.assign({}, state, {currentDate});
+      return nextMonthHandler(action.currentDate, state);
+    case EDIT_BILL:
+      return editBillHandler(action, state);
     default:
       return state;
   }
