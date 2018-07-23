@@ -1,10 +1,13 @@
+import React from 'react';
 import { expect } from 'chai';
 import sinon from 'sinon';
+import { mount } from 'enzyme';
 import { formatDate, formatCurrency, formatValue } from './formatHelpers.jsx';
 
 describe('FormatHelpers', function () {
   before(function () {
     this.dateRegExp = /[0-2]\d\/[0-2]\d\/\d\d\d\d/;
+    this.currencyRegExp = /R\$ [0-9]+.\d\d/;
   });
 
   describe('formatDate', function () {
@@ -28,10 +31,6 @@ describe('FormatHelpers', function () {
   });
 
   describe('formatCurrency', function () {
-    before(function () {
-      this.currencyRegExp = /R\$ [0-9]+.\d\d/;
-    });
-
     it('should parse data correctly to `R$ [0-9]+.DD`', function () {
       const formattedCurrency = formatCurrency(1);
 
@@ -88,16 +87,46 @@ describe('FormatHelpers', function () {
       });
     });
 
-    xit('should format the value as currency', function () {
-      this.transformStub.return()
+    describe('format currency', function () {
+      beforeEach(function () {
+        this.transformStub.returns(123.2);
+      });
 
-      const result = formatValue({value: 1, type: 'Date'}, this.transformStub);
+      it('should format the value as currency', function () {
+        const result = formatValue({value: 1, type: 'Currency'}, this.transformStub);
 
-      this.transformStub.should.have.been.calledOnce;
+        this.transformStub.should.have.been.calledOnce;
 
-      result.should.not.be.empty;
-      result.should.be.a('string');
-      this.dateRegExp.test(result).should.be.true;
+        result.should.not.be.empty;
+        result.should.be.a('string');
+        this.currencyRegExp.test(result).should.be.true;
+      });
+    });
+
+    describe('format boolean', function () {
+      it('should return an Icon component if the value is true', function () {
+        this.transformStub.returns(true);
+        const result = formatValue({value: true, type: 'Boolean'}, this.transformStub);
+
+        this.transformStub.should.have.been.calledOnce;
+
+        const dom = mount(result);
+
+        dom.find('i').length.should.gt(0);
+        dom.props().name.should.eq('checkmark');
+      });
+
+      it('should return an Icon component if the value is true', function () {
+        this.transformStub.returns(false);
+        const result = formatValue({value: true, type: 'Boolean'}, this.transformStub);
+
+        this.transformStub.should.have.been.calledOnce;
+
+        const dom = mount(result);
+
+        dom.find('i').length.should.gt(0);
+        dom.props().name.should.eq('x');
+      });
     });
   });
 });
