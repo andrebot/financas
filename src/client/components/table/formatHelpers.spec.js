@@ -128,5 +128,37 @@ describe('FormatHelpers', function () {
         dom.props().name.should.eq('x');
       });
     });
+
+    describe('format default', function () {
+      it('should return the raw value if an empty type is provided', function () {
+        const value = 1;
+        this.transformStub.returns(value);
+
+        const result = formatValue({value, type: ''}, this.transformStub);
+
+        this.transformStub.should.have.been.calledOnce;
+        result.should.be.eq(value);
+      });
+
+      it('should return the raw value if no type is provided', function () {
+        const value = 1;
+        this.transformStub.returns(value);
+
+        const result = formatValue({value}, this.transformStub);
+
+        this.transformStub.should.have.been.calledOnce;
+        result.should.be.eq(value);
+      });
+
+      it('should return the raw value if an unknown type is provided', function () {
+        const value = 1;
+        this.transformStub.returns(value);
+
+        const result = formatValue({value, type: 'dummy one'}, this.transformStub);
+
+        this.transformStub.should.have.been.calledOnce;
+        result.should.be.eq(value);
+      });
+    });
   });
 });
