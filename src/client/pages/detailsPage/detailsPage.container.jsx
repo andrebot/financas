@@ -18,7 +18,7 @@ const mapDispatchToProps = (dispatch) => (
     nextMonth: (monthNumber, year, isNext) => {
       const today = new Date();
 
-      if (today.getMonth() === monthNumber && isNext) {
+      if (year >= today.getFullYear() && today.getMonth() === monthNumber && isNext) {
         return;
       }
 
