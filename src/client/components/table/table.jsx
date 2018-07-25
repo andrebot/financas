@@ -12,38 +12,60 @@ export default class AppTable extends Component {
     };
   }
 
+  createEventsHandler(value, columnKey, object, mapTo, index, editRow) {
+    const toggleEdit = (evt) => {
+      const editingRows = this.state.editingRows;
+      const values = this.state.values;
+
+      editingRows[columnKey] = !editingRows[columnKey];
+      values[columnKey] = value;
+
+      setTimeout(() => this.input.focus(), 1);
+
+      this.setState({ editingRows })
+    };
+
+    const onChange = (evt) => {
+      const values = this.state.values;
+
+      values[columnKey] = evt.target.value;
+      this.setState({ values });
+    };
+
+    const saveChange = () => {
+      editRow(object[mapTo].attr, this.state.values[columnKey], index);
+      const editingRows = this.state.editingRows;
+
+      editingRows[columnKey] = !editingRows[columnKey];
+
+      this.setState({ editingRows })
+    };
+
+    const onKeyPress = (evt) => {
+      const key = evt.key;
+  
+      if (key === 'Enter') {
+        saveChange();
+      } else if (key === 'Escape') {
+        toggleEdit();
+      }
+    };
+  
+    return {
+      toggleEdit,
+      onChange,
+      saveChange,
+      onKeyPress
+    };
+  }
+
   createTableRow(object, index, headers, editRow) {
     return (
       <Table.Row key={index}>
         {headers.map(({ mapTo, transform }, columnIndex) => {
           const columnKey = `row${index}${columnIndex}`;
           let value = formatValue(object[mapTo], transform);
-
-          const toggleEdit = () => {
-            const editingRows = this.state.editingRows;
-            const values = this.state.values;
-
-            editingRows[columnKey] = !editingRows[columnKey];
-            values[columnKey] = value;
-
-            this.setState({ editingRows })
-          };
-
-          const onChange = (evt) => {
-            const values = this.state.values;
-
-            values[columnKey] = evt.target.value;
-            this.setState({ values });
-          };
-
-          const saveChange = (evt) => {
-            editRow(object[mapTo].attr, this.state.values[columnKey], index);
-            const editingRows = this.state.editingRows;
-
-            editingRows[columnKey] = !editingRows[columnKey];
-
-            this.setState({ editingRows })
-          };
+          const { toggleEdit, onChange, saveChange, onKeyPress } = this.createEventsHandler(value, columnKey, object, mapTo, index, editRow);
 
           if (this.state.editingRows[columnKey] === undefined) {
             this.state.editingRows[columnKey] = false;
@@ -57,7 +79,7 @@ export default class AppTable extends Component {
             <Table.Cell key={columnIndex}>
               {this.state.editingRows[columnKey] ? 
                 <div>
-                  <input type='text' value={this.state.values[columnKey]} onChange={onChange}/>
+                  <input ref={(input) => this.input = input} type='text' value={this.state.values[columnKey]} onChange={onChange} onKeyUp={onKeyPress}/>
                   <Icon color='green' name='save' size='large' onClick={saveChange}/>
                   <Icon color='red' name='trash' size='large' onClick={toggleEdit}/>
                 </div> : 
