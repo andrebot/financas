@@ -2,6 +2,7 @@ import React from 'react';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
+import { useTranslation } from 'react-i18next';
 
 const loadingPage = {
   backgroundColor: 'lightgray',
@@ -17,10 +18,12 @@ const loadingPage = {
  * the page is dangling
  */
 export default function LoadingPage(): React.JSX.Element {
+  const { t } = useTranslation();
+
   return (
     <Container sx={loadingPage}>
       <Typography variant="h5" component="div" align="center" gutterBottom>
-        Loading...
+        {t('loading')}
       </Typography>
 
       {/* Loading circle */}

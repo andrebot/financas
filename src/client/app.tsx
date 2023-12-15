@@ -5,6 +5,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import CssBaseLine from '@mui/material/CssBaseline';
+import './i18n';
 
 import createMuiTheme from './theme';
 import router from './routes';
