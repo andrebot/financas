@@ -1,0 +1,24 @@
+name: Update Badges
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  update-badges:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Update Badges
+        run: |
+          # Add script or commands here to update badges in your README
+          # Update the project version badge
+          PROJECT_VERSION=$(node -pe "require('./package.json').version")
+          VERSION_BADGE_URL="https://img.shields.io/badge/version-$PROJECT_VERSION-brightgreen.svg"
+          sed -i "s|!\[Version\].*|![Version]($VERSION_BADGE_URL)|" README.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
