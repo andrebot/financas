@@ -318,8 +318,9 @@ describe('AuthenticationManager', function () {
 
   it('should list users (we are not testing mongoose)', async function() {
     await listUsers({});
+    await listUsers();
 
-    findStub.should.have.been.calledOnce;
+    findStub.should.have.been.calledTwice;
   });
 
   it('should be able to delete an user', async function() {

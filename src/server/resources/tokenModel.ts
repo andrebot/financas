@@ -1,7 +1,7 @@
 const TOKEN_MAP = new Set<string>();
 
 export function addToken(token: string) {
-  if (!TOKEN_MAP.has(token)) {
+  if (token && !TOKEN_MAP.has(token)) {
     TOKEN_MAP.add(token);
   }
 }
