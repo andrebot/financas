@@ -7,7 +7,7 @@ interface AuthConfig {
   ISSUER: string;
   ACCESS_TOKEN_EXPIRATION: string;
   REFRESH_TOKEN_EXPIRATION: string;
-};
+}
 
 const AUTH = exportConfig<AuthConfig>({
   default: {

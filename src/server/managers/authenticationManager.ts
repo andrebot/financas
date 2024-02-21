@@ -15,11 +15,16 @@ import {
   REFRESH_TOKEN_EXPIRATION,
 } from '../config/auth';
 
-export function createToken(payload: any, expiresIn: string, secret: string): string {
+export function createToken(payload: UserPayload, expiresIn: string, secret: string): string {
   return jwt.sign(payload, secret, { issuer: ISSUER, expiresIn });
 }
 
-export function createAccessToken(email: string, role: string, firstName: string, lastName: string): string {
+export function createAccessToken(
+  email: string,
+  role: string,
+  firstName: string,
+  lastName: string,
+): string {
   return createToken({
     email,
     role,
@@ -46,9 +51,8 @@ export async function createUser(email: string, password: string, firstName: str
     await newUser.save();
 
     return newUser.toObject();
-  } else {
-    throw new Error('Password does not follow the rules');
   }
+  throw new Error('Password does not follow the rules');
 }
 
 export async function updateUser(id: string, payload: UserPayload): Promise<IUser> {
@@ -59,7 +63,7 @@ export async function updateUser(id: string, payload: UserPayload): Promise<IUse
   }
 
   const {
-    email, 
+    email,
     firstName,
     lastName,
   } = payload;
@@ -80,9 +84,8 @@ export async function updateUser(id: string, payload: UserPayload): Promise<IUse
     await user.save();
 
     return user.toObject();
-  } else {
-    throw new Error('User not found');
   }
+  throw new Error('User not found');
 }
 
 export function listUsers(query: FilterQuery<IUser> = {}): Promise<IUser[]> {
@@ -99,13 +102,13 @@ export async function deleteUser(id: string): Promise<IUser> {
   });
 }
 
-export async function login(email: string, password: string): Promise<Tokens> {
-  const user = await UserModel.findOne({ email });
+export async function login(searchEmail: string, password: string): Promise<Tokens> {
+  const user = await UserModel.findOne({ searchEmail });
 
   if (user) {
     const isMatch = bcrypt.compareSync(password, user.password);
     const {
-      email, 
+      email,
       role,
       firstName,
       lastName,
@@ -121,9 +124,8 @@ export async function login(email: string, password: string): Promise<Tokens> {
         accessToken,
         refreshToken,
       };
-    } else {
-      throw new Error('Password was not a match');
     }
+    throw new Error('Password was not a match');
   }
 
   throw new Error('User not found');
@@ -135,7 +137,7 @@ export async function logout(refreshToken: string): Promise<boolean> {
 
     deleteToken(refreshToken);
 
-    return true
+    return true;
   } catch (error) {
     Logger.error('Failed to verify token');
     Logger.error(error);
@@ -146,9 +148,13 @@ export async function logout(refreshToken: string): Promise<boolean> {
 
 export async function refreshTokens(refreshToken: string): Promise<Tokens> {
   if (isValidToken(refreshToken)) {
-    const tokenDecrypted = jwt.verify(refreshToken, REFRESH_TOKEN_EXPIRATION, { complete: true }) as Token;
+    const tokenDecrypted = jwt.verify(
+      refreshToken,
+      REFRESH_TOKEN_EXPIRATION,
+      { complete: true },
+    ) as Token;
     const user = await UserModel.findOne({ email: tokenDecrypted.payload.email });
-  
+
     if (user) {
       const {
         email,
@@ -156,14 +162,13 @@ export async function refreshTokens(refreshToken: string): Promise<Tokens> {
         lastName,
         role,
       } = user;
-  
+
       return {
         accessToken: createAccessToken(email, role, firstName, lastName),
         refreshToken: createRefreshToken(email),
       };
-    } else {
-      throw new Error(`No user was found with email: ${tokenDecrypted.payload.email}`);
     }
+    throw new Error(`No user was found with email: ${tokenDecrypted.payload.email}`);
   } else {
     throw new Error('Token is not valid');
   }

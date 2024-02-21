@@ -12,10 +12,11 @@ export interface Token extends jwt.Jwt {
     firstName: string;
     lastName: string;
   }
-};
+}
 
 export type UserPayload = {
   email?: string;
   firstName?: string;
   lastName?: string;
+  role?: string;
 };
