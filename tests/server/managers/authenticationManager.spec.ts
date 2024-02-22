@@ -33,6 +33,9 @@ const bcryptMock = {
   hashSync: sinon.stub().returns('hashedPassword'),
   compareSync: sinon.stub(),
 };
+const notificationStub = {
+  sendNotification: sinon.stub(),
+};
 const saveStub = sinon.stub().resolves();
 const findByIdStub = sinon.stub();
 const findStub = sinon.stub();
@@ -59,6 +62,7 @@ const {
   createRefreshToken,
   createAccessToken,
   refreshTokens,
+  resetPassword,
   createToken,
   deleteUser,
   createUser,
@@ -70,6 +74,7 @@ const {
   'jsonwebtoken': { sign: jwtSignStub, verify: jwtVerifyStub, '@global': true },
   'bcrypt': bcryptMock,
   '../resources/userModel': { default: UserModelM },
+  '../utils/notification': notificationStub,
 });
 
 describe('AuthenticationManager', function () {
@@ -515,4 +520,42 @@ describe('AuthenticationManager', function () {
 
     deleteToken(cryptToken);
   });
+
+  it('should reset the password and send a notification', async function() {
+    const mockUser = {
+      _id: '1',
+      email: 'old@example.com',
+      firstName: 'Old',
+      lastName: 'User',
+      role: 'admin',
+      save: sinon.stub().resolves(),
+    };
+    findOneStub.resolves(mockUser);
+
+    try {
+      const result = await resetPassword(mockUser.email);
+
+      should().exist(result);
+      result.should.be.true;
+      mockUser.save.should.have.been.calledOnce;
+      notificationStub.sendNotification.should.have.been.calledOnce;
+      notificationStub.sendNotification.should.have.been.calledWith(mockUser.email, sinon.match.string);
+    } catch (error) {
+      console.error(error);
+      chai.assert.fail('Should not have thrown an error');
+    }
+  });
+
+  it('should throw an error if the user is not found when resetting password', async function() {
+    findOneStub.resolves(null);
+
+    try {
+      await resetPassword('test@gmail.com');
+
+      chai.assert.fail('Should have thrown an error');
+    } catch (error) {
+      (error as Error).message.should.be.a('string');
+      (error as Error).message.should.contain('No user was found with email:')
+    }
+  })
 });

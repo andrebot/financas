@@ -14,6 +14,7 @@ import {
   ACCESS_TOKEN_EXPIRATION,
   REFRESH_TOKEN_EXPIRATION,
 } from '../config/auth';
+import { sendNotification } from '../utils/notification';
 
 /**
  * Function to create a token
@@ -260,3 +261,30 @@ export async function refreshTokens(refreshToken: string): Promise<Tokens> {
     throw new Error('Token is not valid');
   }
 }
+
+/**
+ * Function to reset password. It will find the user by email and create a new password.
+ * It will send the new password to the user's email.
+ * 
+ * @throws - Error if the user is not found
+ * 
+ * @param email - Email of the user to be found
+ * @returns - if the password was reset
+ */
+export async function resetPassword(email: string): Promise<boolean> {
+  const user = await UserModel.findOne({ email });
+
+  if (user) {
+    const newPassword = Math.random().toString(36).slice(-8);
+    const salt = bcrypt.genSaltSync(WORK_FACTOR);
+
+    user.password = bcrypt.hashSync(newPassword, salt);
+    await user.save();
+
+    sendNotification(email, `Your new password is: ${newPassword}`);
+
+    return true;
+  } else {
+    throw new Error(`No user was found with email: ${email}`);
+  }
+};
