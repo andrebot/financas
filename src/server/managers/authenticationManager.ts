@@ -288,3 +288,32 @@ export async function resetPassword(email: string): Promise<boolean> {
     throw new Error(`No user was found with email: ${email}`);
   }
 };
+
+/**
+ * Function to change password. It will find the user by email and compare the old password
+ * to the one in the database. If it matches, it will create a new password.
+ * 
+ * @throws - Error if the password does not match
+ * 
+ * @param email - Email of the user to be found
+ * @param oldPassword - Old password of the user to be compared
+ * @param newPassword - New password of the user to be created
+ * @returns - if the password was changed
+ */
+export async function changePassword(email: string, oldPassword: string, newPassword: string): Promise<boolean> {
+  const user = await UserModel.findOne({ email });
+
+  if (user) {
+    const isMatch = bcrypt.compareSync(oldPassword, user.password);
+
+    if (isMatch) {
+      const salt = bcrypt.genSaltSync(WORK_FACTOR);
+      user.password = bcrypt.hashSync(newPassword, salt);
+      await user.save();
+
+      return true;
+    } 
+  }
+
+  return false
+}

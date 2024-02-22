@@ -61,6 +61,7 @@ class UserModelM {
 const {
   createRefreshToken,
   createAccessToken,
+  changePassword,
   refreshTokens,
   resetPassword,
   createToken,
@@ -557,5 +558,75 @@ describe('AuthenticationManager', function () {
       (error as Error).message.should.be.a('string');
       (error as Error).message.should.contain('No user was found with email:')
     }
-  })
+  });
+
+  it('should change the password', async function() {
+    const mockUser = {
+      password: 'oldPassword',
+      save: sinon.stub().resolves(),
+    };
+
+    bcryptMock.compareSync.returns(true);
+    UserModelM.findOne.returns(mockUser);
+
+    try {
+      const result = await changePassword('1', 'oldPassword', 'newPassword');
+
+      should().exist(result);
+      result.should.be.true;
+      UserModelM.findOne.should.have.been.calledOnce;
+      bcryptMock.compareSync.should.have.been.calledOnce;
+      bcryptMock.compareSync.should.have.been.calledWith('oldPassword', 'oldPassword');
+      bcryptMock.genSaltSync.should.have.been.calledOnce;
+      bcryptMock.hashSync.should.have.been.calledOnce;
+      mockUser.save.should.have.been.calledOnce;
+    } catch (error) {
+      console.error(error);
+      chai.assert.fail('Should not have thrown an error');
+    }
+  });
+
+  it('should return false if the old password does not match', async function() {
+    const mockUser = {
+      password: 'anotherPassword',
+      save: sinon.stub().resolves(),
+    };
+
+    bcryptMock.compareSync.returns(false);
+    UserModelM.findOne.returns(mockUser);
+
+    try {
+      const result = await changePassword('1', 'oldPassword', 'newPassword');
+
+      should().exist(result);
+      result.should.be.false;
+      UserModelM.findOne.should.have.been.calledOnce;
+      bcryptMock.compareSync.should.have.been.calledOnce;
+      bcryptMock.compareSync.should.have.been.calledWith('oldPassword', 'anotherPassword');
+      bcryptMock.genSaltSync.should.have.not.been.called;
+      bcryptMock.hashSync.should.have.not.been.called;
+      mockUser.save.should.have.not.been.called;
+    } catch (error) {
+      console.error(error);
+      chai.assert.fail('Should not have thrown an error');
+    }
+  });
+
+  it('should return false if the user is not found', async function() {
+    UserModelM.findOne.returns(null);
+
+    try {
+      const result = await changePassword('1', 'oldPassword', 'newPassword');
+
+      should().exist(result);
+      result.should.be.false;
+      UserModelM.findOne.should.have.been.calledOnce;
+      bcryptMock.compareSync.should.have.not.been.called;
+      bcryptMock.genSaltSync.should.have.not.been.called;
+      bcryptMock.hashSync.should.have.not.been.called;
+    } catch (error) {
+      console.error(error);
+      chai.assert.fail('Should not have thrown an error');
+    }
+  });
 });
