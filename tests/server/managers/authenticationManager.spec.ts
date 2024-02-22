@@ -33,9 +33,7 @@ const bcryptMock = {
   hashSync: sinon.stub().returns('hashedPassword'),
   compareSync: sinon.stub(),
 };
-const notificationStub = {
-  sendNotification: sinon.stub(),
-};
+const sendNotificationStub = sinon.stub();
 const saveStub = sinon.stub().resolves();
 const findByIdStub = sinon.stub();
 const findStub = sinon.stub();
@@ -75,7 +73,7 @@ const {
   'jsonwebtoken': { sign: jwtSignStub, verify: jwtVerifyStub, '@global': true },
   'bcrypt': bcryptMock,
   '../resources/userModel': { default: UserModelM },
-  '../utils/notification': notificationStub,
+  '../utils/notification': { default: sendNotificationStub },
 });
 
 describe('AuthenticationManager', function () {
@@ -539,8 +537,8 @@ describe('AuthenticationManager', function () {
       should().exist(result);
       result.should.be.true;
       mockUser.save.should.have.been.calledOnce;
-      notificationStub.sendNotification.should.have.been.calledOnce;
-      notificationStub.sendNotification.should.have.been.calledWith(mockUser.email, sinon.match.string);
+      sendNotificationStub.should.have.been.calledOnce;
+      sendNotificationStub.should.have.been.calledWith(mockUser.email, sinon.match.string);
     } catch (error) {
       console.error(error);
       chai.assert.fail('Should not have thrown an error');

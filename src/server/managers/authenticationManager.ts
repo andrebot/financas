@@ -14,7 +14,7 @@ import {
   ACCESS_TOKEN_EXPIRATION,
   REFRESH_TOKEN_EXPIRATION,
 } from '../config/auth';
-import { sendNotification } from '../utils/notification';
+import sendNotification from '../utils/notification';
 
 /**
  * Function to create a token
@@ -265,9 +265,9 @@ export async function refreshTokens(refreshToken: string): Promise<Tokens> {
 /**
  * Function to reset password. It will find the user by email and create a new password.
  * It will send the new password to the user's email.
- * 
+ *
  * @throws - Error if the user is not found
- * 
+ *
  * @param email - Email of the user to be found
  * @returns - if the password was reset
  */
@@ -284,23 +284,26 @@ export async function resetPassword(email: string): Promise<boolean> {
     sendNotification(email, `Your new password is: ${newPassword}`);
 
     return true;
-  } else {
-    throw new Error(`No user was found with email: ${email}`);
   }
-};
+  throw new Error(`No user was found with email: ${email}`);
+}
 
 /**
  * Function to change password. It will find the user by email and compare the old password
  * to the one in the database. If it matches, it will create a new password.
- * 
+ *
  * @throws - Error if the password does not match
- * 
+ *
  * @param email - Email of the user to be found
  * @param oldPassword - Old password of the user to be compared
  * @param newPassword - New password of the user to be created
  * @returns - if the password was changed
  */
-export async function changePassword(email: string, oldPassword: string, newPassword: string): Promise<boolean> {
+export async function changePassword(
+  email: string,
+  oldPassword: string,
+  newPassword: string,
+): Promise<boolean> {
   const user = await UserModel.findOne({ email });
 
   if (user) {
@@ -312,8 +315,8 @@ export async function changePassword(email: string, oldPassword: string, newPass
       await user.save();
 
       return true;
-    } 
+    }
   }
 
-  return false
+  return false;
 }

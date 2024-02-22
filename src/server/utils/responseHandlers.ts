@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import { Types } from 'mongoose';
-import logger from '../utils/logger';
+import logger from './logger';
 
 /**
  * Function to handle errors. It will log the error and return a response with
