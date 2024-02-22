@@ -63,7 +63,7 @@ export function createRefreshToken(email: string): string {
 /**
  * Function to create a user. It will hash the password and add the user to the database
  *
- * @throws - Error if the password does not follow the rules
+ * @throws - Error if any of the fields are missing or invalid
  *
  * @param email - Email of the user to be added to the database
  * @param password - Password of the user to be added to the database
