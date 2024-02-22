@@ -55,7 +55,6 @@ class UserModelM {
   }
 }
 
-
 const {
   createRefreshToken,
   createAccessToken,
