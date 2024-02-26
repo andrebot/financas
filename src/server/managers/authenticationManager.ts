@@ -94,6 +94,7 @@ export async function createUser(email: string, password: string, firstName: str
 /**
  * Function to update a user. It will find the user by id and update the information provided
  *
+ * @throws - Error if the user is not an admin and is trying to update another user
  * @throws - Error if no information is provided to be updated
  * @throws - Error if the user is not found
  *
@@ -101,8 +102,20 @@ export async function createUser(email: string, password: string, firstName: str
  * @param payload - Information to be updated
  * @returns - the User as an object
  */
-export async function updateUser(id: string, payload: UserPayload): Promise<IUser> {
+export async function updateUser(
+  requestingUser: UserPayload | undefined,
+  id: string, 
+  payload: UserPayload,
+): Promise<IUser> {
   const user = await UserModel.findById(id);
+
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  if (!requestingUser || requestingUser.role !== 'admin' && requestingUser.email !== user.email) {
+    throw new Error('You do not have permission to update this user');
+  }
 
   if (!payload || (!payload.email && !payload.firstName && !payload.lastName)) {
     throw new Error('No information provided to be updated');
@@ -114,24 +127,21 @@ export async function updateUser(id: string, payload: UserPayload): Promise<IUse
     lastName,
   } = payload;
 
-  if (user) {
-    if (email) {
-      user.email = email;
-    }
-
-    if (firstName) {
-      user.firstName = firstName;
-    }
-
-    if (lastName) {
-      user.lastName = lastName;
-    }
-
-    await user.save();
-
-    return user.toObject();
+  if (email) {
+    user.email = email;
   }
-  throw new Error('User not found');
+
+  if (firstName) {
+    user.firstName = firstName;
+  }
+
+  if (lastName) {
+    user.lastName = lastName;
+  }
+
+  await user.save();
+
+  return user.toObject();
 }
 
 /**

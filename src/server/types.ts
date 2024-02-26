@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { Request } from 'express';
 
 /**
  * Interface for the Token
@@ -46,3 +47,7 @@ export type UserPayload = {
   /** Role of the user. Can be either 'admin' or 'user' */
   role?: 'admin' | 'user';
 };
+
+export interface RequestWithUser extends Request {
+  user?: UserPayload;
+}

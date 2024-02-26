@@ -4,6 +4,7 @@ import {
   createUser, updateUser, listUsers, deleteUser, login, logout, refreshTokens,
 } from '../managers/authenticationManager';
 import { handleError, isValidObjectId } from '../utils/responseHandlers';
+import { RequestWithUser } from '../types';
 
 /**
  * Function to create a user. It will create a new user with the provided data
@@ -41,7 +42,7 @@ export async function createUserController(req: Request, res: Response) {
  * @param res - The response object
  * @returns - The user as an object
  */
-export async function updateUserController(req: Request, res: Response) {
+export async function updateUserController(req: RequestWithUser, res: Response) {
   const {
     email,
     firstName,
@@ -50,6 +51,7 @@ export async function updateUserController(req: Request, res: Response) {
 
   try {
     const user = await updateUser(
+      req.user,
       req.params.id,
       {
         email,

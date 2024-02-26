@@ -1,7 +1,7 @@
 import chai, { should } from 'chai';
 import sinon from 'sinon';
 import proxyquire from 'proxyquire';
-import { Tokens } from '../../../src/server/types';
+import { Tokens, UserPayload } from '../../../src/server/types';
 import { addToken, deleteToken } from '../../../src/server/resources/tokenModel';
 import {
   ACCESS_TOKEN_EXPIRATION,
@@ -202,6 +202,7 @@ describe('AuthenticationManager', function () {
   describe('updating user', function() {
     let user: MockUser;
     let newValues: MockUserObj;
+    let userPayload: UserPayload
 
     beforeEach(function() {
       user = {
@@ -217,6 +218,12 @@ describe('AuthenticationManager', function () {
         firstName: 'New',
         lastName: 'User',
       };
+      userPayload = {
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: 'admin',
+      }
       findByIdStub.withArgs('1').resolves(user);
       toObjectStub.reset();
     });
@@ -224,7 +231,7 @@ describe('AuthenticationManager', function () {
     it('should update user with all fields provided', async function() {    
       toObjectStub.returns(newValues);
   
-      await updateUser('1', {
+      await updateUser(userPayload, '1', {
         email: newValues.email,
         firstName: newValues.firstName,
         lastName: newValues.lastName,
@@ -240,7 +247,7 @@ describe('AuthenticationManager', function () {
     it('should update user with only email field provided', async function() {    
       toObjectStub.returns(user);
   
-      await updateUser('1', { email: newValues.email });
+      await updateUser(userPayload, '1', { email: newValues.email });
 
       user.email.should.be.equal(newValues.email);
       user.firstName.should.be.equal('Old');
@@ -252,7 +259,7 @@ describe('AuthenticationManager', function () {
     it('should update user with only firstName field provided', async function() {    
       toObjectStub.returns(user);
   
-      await updateUser('1', { firstName: newValues.firstName });
+      await updateUser(userPayload, '1', { firstName: newValues.firstName });
 
       user.firstName.should.be.equal(newValues.firstName);
       user.email.should.be.equal('old@example.com');
@@ -264,7 +271,7 @@ describe('AuthenticationManager', function () {
     it('should update user with only lastName field provided', async function() {    
       toObjectStub.returns(user);
   
-      await updateUser('1', { lastName: newValues.lastName });
+      await updateUser(userPayload, '1', { lastName: newValues.lastName });
 
       user.lastName.should.be.equal(newValues.lastName);
       user.email.should.be.equal('old@example.com');
@@ -277,7 +284,7 @@ describe('AuthenticationManager', function () {
       toObjectStub.returns(user);
   
       try {
-        await updateUser('1', { });
+        await updateUser(userPayload, '1', { });
       } catch (error) {
         (error as Error).should.be.an('error');
         (error as Error).message.should.contain('No information provided to be updated');
@@ -288,7 +295,7 @@ describe('AuthenticationManager', function () {
       toObjectStub.returns(user);
   
       try {
-        await updateUser('1');
+        await updateUser(userPayload, '1');
       } catch (error) {
         (error as Error).should.be.an('error');
         (error as Error).message.should.contain('No information provided to be updated');
@@ -300,7 +307,7 @@ describe('AuthenticationManager', function () {
       findByIdStub.withArgs('1').resolves(null);
   
       try {
-        await updateUser('1', { firstName: 'test' });
+        await updateUser(userPayload, '1', { firstName: 'test' });
       } catch (error) {
         (error as Error).should.be.an('error');
         (error as Error).message.should.contain('User not found');
@@ -311,12 +318,26 @@ describe('AuthenticationManager', function () {
       toObjectStub.returns(user);
   
       try {
-        await updateUser('1');
+        await updateUser(userPayload, '1');
       } catch (error) {
         (error as Error).should.be.an('error');
         (error as Error).message.should.contain('No information provided to be updated');
       }
     });
+
+    it('should throw an error if the user trying to update is not an admin updating another user', async function() {
+      userPayload.role = 'user';
+      userPayload.email = 'another@email.com';
+
+      try {
+        await updateUser(userPayload, '1', { firstName: 'test' });
+        chai.assert.fail('Should have thrown an error');
+      } catch (error) {
+        (error as Error).should.be.an('error');
+        (error as Error).message.should.contain('You do not have permission to update this user');
+      }
+    });
+
   });
 
   it('should list users (we are not testing mongoose)', async function() {

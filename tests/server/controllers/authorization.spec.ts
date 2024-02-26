@@ -21,6 +21,10 @@ type MockRequest = {
   query: {
     [key: string]: string;
   };
+  user?: {
+    email: string;
+    role: string;
+  };
 };
 
 const authManagerStub = {
@@ -66,6 +70,10 @@ describe('AuthorizationController', () => {
         id: '507f1f77bcf86cd799439011',
       },
       query: {},
+      user: {
+        email: 'test@gmail.com',
+        role: 'admin',
+      }
     };
   });
 
@@ -106,6 +114,7 @@ describe('AuthorizationController', () => {
       response.send.should.have.been.calledOnce;
       authManagerStub.updateUser.should.have.been.calledOnce;
       authManagerStub.updateUser.should.have.been.calledWith(
+        request.user,
         request.params.id,
         {
           email: request.body.email,
