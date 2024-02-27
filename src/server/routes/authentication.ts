@@ -14,7 +14,7 @@ import createTokenValidation from '../utils/authorization';
 const router = express.Router();
 
 router.post('/', createTokenValidation(true), createUserController);
-router.get('/', createTokenValidation(), listUsersController);
+router.get('/', createTokenValidation(true), listUsersController);
 router.post('/login', loginController);
 router.post('/logout', createTokenValidation(), logoutController);
 router.post('/refresh-tokens', createTokenValidation(), refreshTokensController);
