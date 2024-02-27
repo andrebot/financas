@@ -9,6 +9,14 @@ import UserModel from '../../src/server/resources/userModel'
 chai.use(chaiHttp);
 
 describe('Authentication', () => {
+  let newUser = {
+    _id: '',
+    email: 'test1@gmail.com',
+    firstName: 'Test1',
+    lastName: 'User1',
+    password: 'Maka-jan32',
+  };
+
   describe('Listing Users - GET /api/v1/user', () => {
     it('should return a 401 error if the user is not authenticated', (done) => {
       chai.request(server)
@@ -64,12 +72,6 @@ describe('Authentication', () => {
   });
 
   describe('Creating Users - POST /api/v1/user', () => {
-    let newUser = {
-      email: 'test1@gmail.com',
-      firstName: 'Test1',
-      lastName: 'User1',
-      password: 'Maka-jan32',
-    };
     let token: string;
 
     beforeEach(() => {
@@ -96,6 +98,10 @@ describe('Authentication', () => {
           res.body.should.have.property('firstName').eql(newUser.firstName);
           res.body.should.have.property('lastName').eql(newUser.lastName);
           res.body.should.have.property('role').eql('user');
+          res.body.should.have.property('_id');
+          res.body.should.not.have.property('password');
+
+          newUser._id = res.body._id;
           done();
         });
     });
@@ -179,6 +185,141 @@ describe('Authentication', () => {
         .end((err, res) => {
           res.should.have.status(500);
           res.body.should.have.property('error').eql('user validation failed: lastName: Path `lastName` is required.');
+          done();
+        });
+    });
+  });
+
+  describe('Updating Users - PUT /api/v1/user/:userId', () => {
+    let token: string;
+
+    beforeEach(() => {
+      token = createAccessToken(newUser.email, 'user', newUser.firstName, newUser.lastName);
+    });
+
+    it('should be able to update an user if the user is an admin', (done) => {
+      token = createAccessToken(adminUser.email, 'admin', adminUser.firstName, adminUser.lastName);
+      adminUser.firstName.should.be.eql('Admin');
+
+      chai.request(server)
+        .put(`/api/v1/user/${adminUser._id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ firstName: 'Admin1' })
+        .end((err, res) => {
+          res.should.have.status(200);
+          res.body.should.have.property('firstName').eql('Admin1');
+          res.body.should.not.have.property('password');
+          done();
+        });
+    });
+
+    it('should not be able to update a user if it is not the same user', (done) => {
+      token = createAccessToken('another@gmail.com', 'user', 'nothing', 'here');
+
+      chai.request(server)
+        .put(`/api/v1/user/${newUser._id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ firstName: 'Test2' })
+        .end((err, res) => {
+          res.should.have.status(401);
+          done();
+        });
+    });
+
+    it('should not be able to update password of an user if it is the same user', (done) => {
+      chai.request(server)
+        .put(`/api/v1/user/${newUser._id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ password: 'Gero-jun23' })
+        .end((err, res) => {
+          res.should.have.status(500);
+
+          done();
+        });
+    });
+
+    it('should not be able to update role of an user if it is the same user', (done) => {
+      chai.request(server)
+        .put(`/api/v1/user/${newUser._id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ role: 'admin' })
+        .end((err, res) => {
+          res.should.have.status(500);
+
+          done();
+        });
+    });
+
+    it('should be able to update firstName of an user if it is the same user', (done) => {
+      chai.request(server)
+        .put(`/api/v1/user/${newUser._id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ firstName: 'Test2' })
+        .end((err, res) => {
+          res.should.have.status(200);
+          res.body.should.have.property('firstName').eql('Test2');
+          res.body.should.not.have.property('password');
+
+          done();
+        });
+    });
+
+    it('should be able to update lastName of an user if it is the same user', (done) => {
+      chai.request(server)
+        .put(`/api/v1/user/${newUser._id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ lastName: 'bogabofa' })
+        .end((err, res) => {
+          res.should.have.status(200);
+          res.body.should.have.property('lastName').eql('bogabofa');
+          res.body.should.not.have.property('password');
+
+          done();
+        });
+    });
+
+    it('should be able to update email of an user if it is the same user', (done) => {
+      const newEmail = 'new@email.com';
+
+      chai.request(server)
+        .put(`/api/v1/user/${newUser._id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ email: newEmail })
+        .end((err, res) => {
+          res.should.have.status(200);
+          res.body.should.have.property('email').eql(newEmail);
+          res.body.should.not.have.property('password');
+
+          newUser.email = newEmail;
+          done();
+        });
+    });
+
+    it('should be able to handle errors when finding the user to be updated', (done) => {
+      const stub = sinon.stub(UserModel, 'findById').throws();
+
+      chai.request(server)
+        .put(`/api/v1/user/${newUser._id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ email: 'nada@gmail.com' })
+        .end((err, res) => {
+          res.should.have.status(500);
+          res.body.should.have.property('error').eql('Error');
+
+          stub.restore();
+          done();
+        });
+    });
+
+    it('should throw an error if no user is found', (done) => {
+      chai.request(server)
+        .put(`/api/v1/user/34865234582734n523485n23487`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ email: 'nada@gmail.com' })
+        .end((err, res) => {
+          res.should.have.status(500);
+          res.body.should.have.property('error').eql('Cast to ObjectId failed for value "34865234582734n523485n23487" (type string) at path "_id" for model "user"');
+
           done();
         });
     });

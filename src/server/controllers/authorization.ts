@@ -52,7 +52,7 @@ export async function updateUserController(req: RequestWithUser, res: Response) 
   try {
     const user = await updateUser(
       req.user,
-      req.params.id,
+      req.params.userId,
       {
         email,
         firstName,
@@ -62,6 +62,10 @@ export async function updateUserController(req: RequestWithUser, res: Response) 
 
     return res.send(user);
   } catch (error) {
+    if ((error as Error).message === 'You do not have permission to update this user') {
+      return res.sendStatus(401);
+    }
+
     return handleError(error as Error, res);
   }
 }

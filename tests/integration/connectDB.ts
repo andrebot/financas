@@ -8,8 +8,7 @@ export const adminUser = {
   firstName: 'Admin',
   lastName: 'User',
   role: 'admin',
-  password: '',
-};
+} as IUser;
 let mongoServer: MongoMemoryServer;
 
 // Establish a connection to the in-memory database
@@ -31,5 +30,6 @@ export const createAdminUser = async () => {
   const savedUSer: IUser = new UserModel(adminUser);
 
   await savedUSer.save();
+  adminUser._id = savedUSer._id;
   console.log('admin user created');
 };
