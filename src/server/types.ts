@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { Request } from 'express';
+import { Request, Response, NextFunction } from 'express';
 
 /**
  * Interface for the Token
@@ -51,3 +51,14 @@ export type UserPayload = {
 export interface RequestWithUser extends Request {
   user?: UserPayload;
 }
+
+/**
+ * Interface for token validation middleware
+ */
+/* eslint-disable no-unused-vars */
+export type TokenValidationMiddleware = (
+  req: RequestWithUser,
+  res: Response,
+  next: NextFunction,
+) => void;
+/* eslint-enable no-unused-vars */

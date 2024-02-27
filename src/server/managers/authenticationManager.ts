@@ -104,7 +104,7 @@ export async function createUser(email: string, password: string, firstName: str
  */
 export async function updateUser(
   requestingUser: UserPayload | undefined,
-  id: string, 
+  id: string,
   payload: UserPayload,
 ): Promise<IUser> {
   const user = await UserModel.findById(id);
@@ -113,7 +113,7 @@ export async function updateUser(
     throw new Error('User not found');
   }
 
-  if (!requestingUser || requestingUser.role !== 'admin' && requestingUser.email !== user.email) {
+  if (!requestingUser || (requestingUser.role !== 'admin' && requestingUser.email !== user.email)) {
     throw new Error('You do not have permission to update this user');
   }
 

@@ -5,9 +5,7 @@ import { RequestWithUser } from '../../../src/server/types';
 
 const jwtVerifyStub = sinon.stub();
 
-const {
-  createTokenValidation
-} = proxyquire('../../../src/server/utils/authorization', {
+const createTokenValidation = proxyquire('../../../src/server/utils/authorization', {
   'jsonwebtoken': { verify: jwtVerifyStub, '@global': true },
 });
 

@@ -2,7 +2,7 @@ import logger from './logger';
 
 /**
  * Send a notification to a user
- * 
+ *
  * @param userEmail - The user email
  * @param message - The message to send
  * @returns Whether the notification was sent or not

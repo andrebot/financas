@@ -8,7 +8,7 @@ import {
   logoutController,
   refreshTokensController,
 } from '../controllers/authorization';
-import { createTokenValidation } from '../utils/authorization';
+import createTokenValidation from '../utils/authorization';
 
 const router = express.Router();
 
