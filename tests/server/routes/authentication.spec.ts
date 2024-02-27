@@ -10,7 +10,7 @@ describe('Authentication routes', () => {
   it('should have the correct URL prefix', () => {
     authRouter.urlPrefix.should.be.a('string');
     authRouter.urlPrefix.should.not.be.empty;
-    authRouter.urlPrefix.should.equal('auth');
+    authRouter.urlPrefix.should.equal('user');
   });
 
   it('should have the correct routes', () => {
@@ -21,6 +21,7 @@ describe('Authentication routes', () => {
       { method: 'post', path: '/logout' },
       { method: 'post', path: '/refresh-tokens' },
       { method: 'put', path: '/:userId' },
+      { method: 'get', path: '/:userId' },
       { method: 'delete', path: '/:userId' },
     ];
 

@@ -7,6 +7,7 @@ import {
   loginController,
   logoutController,
   refreshTokensController,
+  getUserController,
 } from '../controllers/authorization';
 import createTokenValidation from '../utils/authorization';
 
@@ -17,10 +18,11 @@ router.get('/', createTokenValidation(), listUsersController);
 router.post('/login', loginController);
 router.post('/logout', createTokenValidation(), logoutController);
 router.post('/refresh-tokens', createTokenValidation(), refreshTokensController);
+router.get('/:userId', createTokenValidation(), getUserController);
 router.put('/:userId', createTokenValidation(), updateUserController);
 router.delete('/:userId', createTokenValidation(), deleteUserController);
 
 export default {
-  urlPrefix: 'auth',
+  urlPrefix: 'user',
   router,
 };

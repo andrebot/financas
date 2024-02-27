@@ -84,6 +84,23 @@ export async function listUsersController(req: Request, res: Response) {
 }
 
 /**
+ * Function to get a user. It will return the user by id
+ *
+ * @param req - The request object
+ * @param res - The response object
+ * @returns - The user as an object
+ */
+export async function getUserController(req:Request, res: Response) {
+  try {
+    const users = await listUsers({ _id: req.params.id });
+
+    return res.send(users[0]);
+  } catch (error) {
+    return handleError(error as Error, res);
+  }
+}
+
+/**
  * Function to delete a user. It will find the user by id and delete it
  *
  * @param req - The request object

@@ -24,7 +24,7 @@ const logFormat = printf(({
 
 // Define the logger configuration
 const logger = winston.createLogger({
-  level: 'info',
+  level: process.env.NODE_ENV === 'test' ? 'silent' : 'info',
   format: combine(
     colorize(),
     timestamp(),

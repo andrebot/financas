@@ -45,6 +45,7 @@ const {
   loginController,
   logoutController,
   refreshTokensController,
+  getUserController,
 } = proxyquire('../../../src/server/controllers/authorization', {
   '../managers/authenticationManager': authManagerStub,
 });
@@ -75,6 +76,13 @@ describe('AuthorizationController', () => {
         role: 'admin',
       }
     };
+    authManagerStub.createUser.resetHistory();
+    authManagerStub.updateUser.resetHistory();
+    authManagerStub.listUsers.resetHistory();
+    authManagerStub.deleteUser.resetHistory();
+    authManagerStub.login.resetHistory();
+    authManagerStub.logout.resetHistory();
+    authManagerStub.refreshTokens.resetHistory();
   });
 
   it('should be able to create an user successfully', async () => {
@@ -164,7 +172,43 @@ describe('AuthorizationController', () => {
       response.status.should.have.been.calledWith(500);
       response.send.should.have.been.calledWith({ error: 'Test error' });
     }
-  })
+  });
+
+  it('should be able to retrieve a user successfully', async () => {
+    const user = {
+      firstName: 'Test',
+      lastName: 'User',
+      email: 'test@gmail.com',
+      _id: request.params.id,
+    };
+
+    authManagerStub.listUsers.resolves([user]);
+
+    try {
+      await getUserController(request, response);
+
+      response.send.should.have.been.calledOnce;
+      response.send.should.have.been.calledWith(user);
+      authManagerStub.listUsers.should.have.been.calledOnce;
+      authManagerStub.listUsers.should.have.been.calledWith({ _id: request.params.id });
+    } catch (error) {
+      console.error(error);
+      chai.assert.fail('Should not have thrown an error');
+    }
+  });
+
+  it('should be able to handle an error when retrieveing a user', async () => {
+    authManagerStub.listUsers.rejects(new Error('Test error'));
+
+    try {
+      await getUserController(request, response);
+
+      chai.assert.fail('Should have thrown an error');
+    } catch (error) {
+      response.status.should.have.been.calledWith(500);
+      response.send.should.have.been.calledWith({ error: 'Test error' });
+    }
+  });
   
   it('should be able to delete an user successfully', async () => {
     try {
