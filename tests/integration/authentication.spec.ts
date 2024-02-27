@@ -1,6 +1,7 @@
 import chai from 'chai';
 import chaiHttp from 'chai-http';
 import sinon from 'sinon';
+import jwt from 'jsonwebtoken';
 import server from '../../src/server/server';
 import { adminUser } from './connectDB';
 import { createAccessToken } from '../../src/server/managers/authenticationManager'
@@ -16,6 +17,7 @@ describe('Authentication', () => {
     lastName: 'User1',
     password: 'Maka-jan32',
   };
+  let loginTokens: { accessToken: string, refreshToken: string };
 
   describe('Listing Users - GET /api/v1/user', () => {
     it('should return a 401 error if the user is not authenticated', (done) => {
@@ -468,9 +470,52 @@ describe('Authentication', () => {
         .end((err, res) => {	
           res.should.have.status(200);	
           res.body.should.have.property('accessToken');	
-          res.body.should.have.property('refreshToken');	
+          res.body.should.have.property('refreshToken');
+
+          loginTokens = res.body;
           done();	
         });	
+    });
+  });
+
+  describe('Logging out - POST /api/v1/user/logout', () => {
+    it('should return a 400 error if the refreshToken is empty', (done) => {
+      chai.request(server)
+        .post('/api/v1/user/logout')
+        .set('Authorization', `Bearer ${loginTokens.accessToken}`)
+        .send({ refreshToken: '' })
+        .end((err, res) => {
+          res.should.have.status(400);
+          res.body.should.have.property('error').eql('Empty refresh token');
+          done();
+        });
+    });
+
+    it('should be able to handle errors when verifying the token', (done) => {
+      const stub = sinon.stub(jwt, 'verify').onSecondCall().throws();
+
+      chai.request(server)
+        .post('/api/v1/user/logout')
+        .set('Authorization', `Bearer ${loginTokens.accessToken}`)
+        .send({ refreshToken: loginTokens.refreshToken })
+        .end((err, res) => {
+          res.should.have.status(403);
+
+          stub.restore();
+          done();
+        });
+    });
+
+    it('should be able to logout the user successfully', (done) => {
+      chai.request(server)
+        .post('/api/v1/user/logout')
+        .set('Authorization', `Bearer ${loginTokens.accessToken}`)
+        .send({ refreshToken: loginTokens.refreshToken })
+        .end((err, res) => {
+          res.should.have.status(200);
+          res.body.should.have.property('message').eql('Logged out');
+          done();
+        });
     });
   });
 });
