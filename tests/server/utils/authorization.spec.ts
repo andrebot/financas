@@ -7,7 +7,7 @@ const jwtVerifyStub = sinon.stub();
 
 const createTokenValidation = proxyquire('../../../src/server/utils/authorization', {
   'jsonwebtoken': { verify: jwtVerifyStub, '@global': true },
-});
+}).default;
 
 type MiddlewareType = (req: RequestWithUser, res: Response, next: NextFunction) => void
 
