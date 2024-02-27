@@ -28,6 +28,7 @@ export default function setRoutes(app: Express, basePath = __dirname): void {
       const { urlPrefix, router } = require(filePath).default;
 
       app.use(`/api/v1/${urlPrefix}`, router);
+      logger.info(`Route added: /api/v1/${urlPrefix}`);
     });
   } catch (error) {
     logger.error('Error reading directory:', error);
