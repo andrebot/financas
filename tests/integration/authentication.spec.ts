@@ -404,4 +404,73 @@ describe('Authentication', () => {
         });
     });
   });
+
+  describe('Logging in - POST /api/v1/login', () => {
+    it('should return a 500 error if the user is not found', (done) => {
+      chai.request(server)
+        .post('/api/v1/user/login')
+        .send({ email: 'andre.almeida@gmail.com', password: 'Maka-jan32' })
+        .end((err, res) => {
+          res.should.have.status(500);
+          res.body.should.have.property('error').eql('User not found');
+          done();
+        });
+    });
+
+    it('should return a 400 error if the email is not valid', (done) => {
+      chai.request(server)
+        .post('/api/v1/user/login')
+        .send({ email: 'andre.almeida', password: 'Maka-jan32' })
+        .end((err, res) => {
+          res.should.have.status(400);
+          res.body.should.have.property('error').eql('Invalid email or password');
+          done();
+        });
+    });
+
+    it('should return a 400 error if the email is empty', (done) => {
+      chai.request(server)
+        .post('/api/v1/user/login')
+        .send({ password: 'Maka-jan32' })
+        .end((err, res) => {
+          res.should.have.status(400);
+          res.body.should.have.property('error').eql('Invalid email or password');
+          done();
+        });
+    });
+
+    it('should return a 400 error if the password is empty', (done) => {
+      chai.request(server)
+        .post('/api/v1/user/login')
+        .send({ email: 'andre.almeida@gmail.com' })
+        .end((err, res) => {
+          res.should.have.status(400);
+          res.body.should.have.property('error').eql('Invalid email or password');
+          done();
+        });
+    });
+
+    it('should return a 400 error if the password is not a match', (done) => {
+      chai.request(server)
+        .post('/api/v1/user/login')
+        .send({ email: adminUser.email, password: 'wrong password' })
+        .end((err, res) => {
+          res.should.have.status(500);
+          res.body.should.have.property('error').eql('Password was not a match');
+          done();
+        });
+    });
+
+    it('should return a 200 status and the tokens if the user is found', (done) => {	
+      chai.request(server)	
+        .post('/api/v1/user/login')	
+        .send({ email: adminUser.email, password: 'adminPassword' })	
+        .end((err, res) => {	
+          res.should.have.status(200);	
+          res.body.should.have.property('accessToken');	
+          res.body.should.have.property('refreshToken');	
+          done();	
+        });	
+    });
+  });
 });

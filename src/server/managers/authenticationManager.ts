@@ -183,7 +183,7 @@ export async function deleteUser(id: string): Promise<IUser> {
  * @returns - the Tokens as an object
  */
 export async function login(searchEmail: string, password: string): Promise<Tokens> {
-  const user = await UserModel.findOne({ searchEmail });
+  const user = await UserModel.findOne({ email: searchEmail });
 
   if (user) {
     const isMatch = bcrypt.compareSync(password, user.password);
