@@ -20,7 +20,7 @@ router.post('/logout', createTokenValidation(), logoutController);
 router.post('/refresh-tokens', createTokenValidation(), refreshTokensController);
 router.get('/:userId', createTokenValidation(), getUserController);
 router.put('/:userId', createTokenValidation(), updateUserController);
-router.delete('/:userId', createTokenValidation(), deleteUserController);
+router.delete('/:userId', createTokenValidation(true), deleteUserController);
 
 export default {
   urlPrefix: 'user',

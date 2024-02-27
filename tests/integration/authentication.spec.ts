@@ -324,4 +324,84 @@ describe('Authentication', () => {
         });
     });
   });
+
+  describe('Deleting Users - DELETE /api/v1/user/:userId', () => {
+    let token: string;
+
+    beforeEach(() => {
+      token = createAccessToken(adminUser.email, 'admin', adminUser.firstName, adminUser.lastName);
+    });
+
+    it('shoud return a 401 error if the user is not an admin', (done) => {
+      token = createAccessToken(newUser.email, 'user', newUser.firstName, newUser.lastName);
+
+      chai.request(server)
+        .delete(`/api/v1/user/${newUser._id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .end((err, res) => {
+          res.should.have.status(403);
+          done();
+        });
+    });
+
+    it('should return a 401 error if the user is not authenticated', (done) => {
+      chai.request(server)
+        .delete(`/api/v1/user/${newUser._id}`)
+        .end((err, res) => {
+          res.should.have.status(401);
+          done();
+        });
+    });
+
+    it('should not be able to delete a user if the id it not valid', (done) => {
+      chai.request(server)
+        .delete(`/api/v1/user/34865234582734n523485n23487`)
+        .set('Authorization', `Bearer ${token}`)
+        .end((err, res) => {
+          res.should.have.status(400);
+          res.body.should.have.property('error').eql('Invalid id');
+
+          done();
+        });
+    });
+
+    it('should be able to delete an user if it is an admin', (done) => {
+      chai.request(server)
+        .delete(`/api/v1/user/${newUser._id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .end((err, res) => {
+          res.should.have.status(200);
+          res.body.should.have.property('message').eql(`User deleted: id ${newUser._id}`);
+
+          done();
+        });
+    });
+
+    it('should return error if the user is not found', (done) => {
+      chai.request(server)
+        .delete(`/api/v1/user/${newUser._id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .end((err, res) => {
+          res.should.have.status(500);
+          res.body.should.have.property('error').eql(`User not found ${newUser._id}`);
+
+          done();
+        });
+    });
+
+    it('should return error if an error occurs', (done) => {
+      const stub = sinon.stub(UserModel, 'findByIdAndDelete').throws();
+
+      chai.request(server)
+        .delete(`/api/v1/user/${newUser._id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .end((err, res) => {
+          res.should.have.status(500);
+          res.body.should.have.property('error').eql('Error');
+
+          stub.restore();
+          done();
+        });
+    });
+  });
 });

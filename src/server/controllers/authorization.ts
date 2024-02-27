@@ -113,7 +113,7 @@ export async function getUserController(req:Request, res: Response) {
  */
 export async function deleteUserController(req: Request, res: Response) {
   try {
-    const userId = req.params.id;
+    const userId = req.params.userId;
 
     if (!userId || !isValidObjectId(userId)) {
       return handleError(new Error('Invalid id'), res, 400);
