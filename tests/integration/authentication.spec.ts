@@ -224,7 +224,8 @@ describe('Authentication', () => {
         .set('Authorization', `Bearer ${token}`)
         .send({ firstName: 'Test2' })
         .end((err, res) => {
-          res.should.have.status(401);
+          res.should.have.status(403);
+          res.body.should.have.property('error').eql('You do not have permission to update this user');
           done();
         });
     });
@@ -604,4 +605,70 @@ describe('Authentication', () => {
         });
     });
   });
+
+  describe('Resetting Password - POST /api/v1/user/reset-password', () => {
+    it('should return 400 if the email is empty', (done) => {
+      chai.request(server)
+        .post('/api/v1/user/reset-password')
+        .send({ email: '' })
+        .end((err, res) => {
+          res.should.have.status(400);
+          res.body.should.have.property('error').eql('Invalid email');
+          done();
+        });
+    });
+
+    it('should return 400 if the email is not valid', (done) => {
+      chai.request(server)
+        .post('/api/v1/user/reset-password')
+        .send({ email: 'email' })
+        .end((err, res) => {
+          res.should.have.status(400);
+          res.body.should.have.property('error').eql('Invalid email');
+          done();
+        });
+    });
+
+    it('should return 500 if the user is not found', (done) => {
+      const badEmail = 'not@gmail.com';
+
+      chai.request(server)
+        .post('/api/v1/user/reset-password')
+        .send({ email: badEmail })
+        .end((err, res) => {
+          res.should.have.status(500);
+          res.body.should.have.property('error').eql(`No user was found with email: ${badEmail}`);
+          done();
+        });
+    });
+
+    it('should return 500 if finding the user throws an error', (done) => {
+      const stub = sinon.stub(UserModel, 'findOne').throws();
+
+      chai.request(server)
+        .post('/api/v1/user/reset-password')
+        .send({ email: adminUser.email })
+        .end((err, res) => {
+          res.should.have.status(500);
+          res.body.should.have.property('error').eql('Error');
+
+          stub.restore();
+          done();
+        });
+    });
+
+    it('should return 200 if the password was reset', (done) => {
+      chai.request(server)
+        .post('/api/v1/user/reset-password')
+        .send({ email: adminUser.email })
+        .end((err, res) => {
+          res.should.have.status(200);
+          res.body.should.have.property('message').eql(`New password sent to ${adminUser.email}`);
+
+          done();
+        });
+    });
+  });
+
+  describe('Changing Password - POST /api/v1/user/change-password', () => {});
 });

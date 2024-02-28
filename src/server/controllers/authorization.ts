@@ -9,6 +9,7 @@ import {
   logout,
   refreshTokens,
   resetPassword,
+  changePassword,
 } from '../managers/authenticationManager';
 import { handleError, isValidObjectId } from '../utils/responseHandlers';
 import { RequestWithUser } from '../types';
@@ -219,6 +220,26 @@ export async function resetPasswordController(req: Request, res: Response) {
     await resetPassword(email);
 
     return res.send({ message: `New password sent to ${email}` });
+  } catch (error) {
+    return handleError(error as Error, res);
+  }
+}
+
+export async function changePasswordController(req: RequestWithUser, res: Response) {
+  try {
+    const { oldPassword, newPassword } = req.body;
+
+    if (!req.user?.email) {
+      return handleError(new Error('Invalid user'), res, 400);
+    }
+
+    if (!oldPassword || !newPassword) {
+      return handleError(new Error('Invalid password'), res, 400);
+    }
+
+    await changePassword(req.user?.email, oldPassword, newPassword);
+
+    return res.send({ message: 'Password changed' });
   } catch (error) {
     return handleError(error as Error, res);
   }

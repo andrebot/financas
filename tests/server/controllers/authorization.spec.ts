@@ -14,6 +14,8 @@ type MockRequest = {
     firstName: string;
     lastName: string;
     refreshToken: string;
+    oldPassword: string;
+    newPassword: string;
   };
   params: {
     userId: string;
@@ -36,6 +38,7 @@ const authManagerStub = {
   logout: sinon.stub().resolves(),
   refreshTokens: sinon.stub().resolves(),
   resetPassword: sinon.stub().resolves(),
+  changePassword: sinon.stub().resolves(),
 };
 
 const {
@@ -48,6 +51,7 @@ const {
   refreshTokensController,
   getUserController,
   resetPasswordController,
+  changePasswordController,
 } = proxyquire('../../../src/server/controllers/authorization', {
   '../managers/authenticationManager': authManagerStub,
 });
@@ -68,6 +72,8 @@ describe('AuthorizationController', () => {
         firstName: 'Test',
         lastName: 'User',
         refreshToken: 'refresh-token',
+        oldPassword: 'Malo-ban76',
+        newPassword: 'Malo-ban77',
       },
       params: {
         userId: '507f1f77bcf86cd799439011',
@@ -86,6 +92,7 @@ describe('AuthorizationController', () => {
     authManagerStub.logout.resetHistory();
     authManagerStub.refreshTokens.resetHistory();
     authManagerStub.resetPassword.resetHistory();
+    authManagerStub.changePassword.resetHistory();
   });
 
   it('should be able to create an user successfully', async () => {
@@ -465,6 +472,78 @@ describe('AuthorizationController', () => {
 
     try {
       await resetPasswordController(request, response);
+
+      chai.assert.fail('Should have thrown an error');
+    } catch (error) {
+      response.status.should.have.been.calledWith(500);
+      response.send.should.have.been.calledWith({ error: 'Test error' });
+    }
+  });
+
+  it('should send 400 error if user is not valid while changing password', async () => {
+    request.user = undefined;
+
+    try {
+      await changePasswordController(request, response);
+
+      response.status.should.have.been.calledWith(400);
+      response.send.should.have.been.calledWith({ error: 'Invalid user' });
+    } catch (error) {
+      console.error(error);
+      chai.assert.fail('Should not have thrown an error');
+    }
+  });
+
+  it('should send 400 error if no old password is provided', async () => {
+    request.body.oldPassword = '';
+
+    try {
+      await changePasswordController(request, response);
+
+      response.status.should.have.been.calledWith(400);
+      response.send.should.have.been.calledWith({ error: 'Invalid password' });
+    } catch (error) {
+      console.error(error);
+      chai.assert.fail('Should not have thrown an error');
+    }
+  });
+
+  it('should send 400 error if no new password is provided', async () => {
+    request.body.oldPassword = '';
+
+    try {
+      await changePasswordController(request, response);
+
+      response.status.should.have.been.calledWith(400);
+      response.send.should.have.been.calledWith({ error: 'Invalid password' });
+    } catch (error) {
+      console.error(error);
+      chai.assert.fail('Should not have thrown an error');
+    }
+  });
+
+  it('should be able to change password successfully', async () => {
+    try {
+      await changePasswordController(request, response);
+
+      response.send.should.have.been.calledOnce;
+      authManagerStub.changePassword.should.have.been.calledOnce;
+      authManagerStub.changePassword.should.have.been.calledWith(
+        request.user?.email,
+        request.body.oldPassword,
+        request.body.newPassword,
+      );
+    } catch (error) {
+      console.error(error);
+      chai.assert.fail('Should not have thrown an error');
+    }
+  });
+
+  it('should be able to handle an error when changing password', async () => {
+    authManagerStub.changePassword.rejects(new Error('Test error'));
+
+    try {
+      await changePasswordController(request, response);
 
       chai.assert.fail('Should have thrown an error');
     } catch (error) {
