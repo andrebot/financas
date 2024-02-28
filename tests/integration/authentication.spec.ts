@@ -4,8 +4,9 @@ import sinon from 'sinon';
 import jwt from 'jsonwebtoken';
 import server from '../../src/server/server';
 import { adminUser } from './connectDB';
-import { createAccessToken } from '../../src/server/managers/authenticationManager'
-import UserModel from '../../src/server/resources/userModel'
+import { createAccessToken, createRefreshToken } from '../../src/server/managers/authenticationManager';
+import UserModel from '../../src/server/resources/userModel';
+import { addToken, deleteToken } from '../../src/server/resources/tokenModel';
 
 chai.use(chaiHttp);
 
@@ -514,6 +515,91 @@ describe('Authentication', () => {
         .end((err, res) => {
           res.should.have.status(200);
           res.body.should.have.property('message').eql('Logged out');
+          done();
+        });
+    });
+  });
+
+  describe('Refreshing Tokens - POST /api/v1/user/refresh-tokens', () => {
+    let refreshToken: string;
+    let accessToken: string;
+
+    beforeEach(() => {
+      refreshToken = createRefreshToken(adminUser.email);
+      accessToken = createAccessToken(adminUser.email, 'admin', adminUser.firstName, adminUser.lastName);
+
+      addToken(refreshToken);
+    });
+
+    afterEach(() => {
+      deleteToken(refreshToken);
+    });
+
+    it('should return a 400 error if the refreshToken is empty', (done) => {
+      chai.request(server)
+        .post('/api/v1/user/refresh-tokens')
+        .send({ refreshToken: '' })
+        .end((err, res) => {
+          res.should.have.status(400);
+          res.body.should.have.property('error').eql('Empty refresh token');
+          done();
+        });
+    });
+
+    it('should be able to handle errors when verifying the token', (done) => {
+      const stub = sinon.stub(jwt, 'verify').throws();
+
+      chai.request(server)
+        .post('/api/v1/user/refresh-tokens')
+        .send({ refreshToken })
+        .end((err, res) => {
+          res.should.have.status(500);
+
+          stub.restore();
+          done();
+        });
+    });
+
+    it('should be able to refresh the tokens successfully if refreshToken is valid', (done) => {
+      chai.request(server)
+        .post('/api/v1/user/refresh-tokens')
+        .send({ refreshToken })
+        .end((err, res) => {
+          res.should.have.status(200);
+          res.body.should.have.property('accessToken');
+          res.body.should.have.property('refreshToken');
+
+          done();
+        });
+    });
+
+    it('should return 500 if cannot find the user', (done) => {
+      const badEmail = 'naotem@gmail.com';
+      refreshToken = createRefreshToken(badEmail);
+      addToken(refreshToken);
+
+      chai.request(server)
+        .post('/api/v1/user/refresh-tokens')
+        .send({ refreshToken })
+        .end((err, res) => {
+          res.should.have.status(500);
+          res.body.should.have.property('error').eql(`No user was found with email: ${badEmail}`);
+
+          done();
+        });
+    });
+
+    it('should return 500 if finding the user throws an error', (done) => {
+      const stub = sinon.stub(UserModel, 'findOne').throws();
+
+      chai.request(server)
+        .post('/api/v1/user/refresh-tokens')
+        .send({ refreshToken })
+        .end((err, res) => {
+          res.should.have.status(500);
+          res.body.should.have.property('error').eql('Error');
+
+          stub.restore();
           done();
         });
     });

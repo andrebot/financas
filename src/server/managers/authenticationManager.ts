@@ -15,6 +15,7 @@ import {
   REFRESH_TOKEN_EXPIRATION,
 } from '../config/auth';
 import sendNotification from '../utils/notification';
+import { t } from 'i18next';
 
 /**
  * Function to create a token
@@ -248,10 +249,9 @@ export async function refreshTokens(refreshToken: string): Promise<Tokens> {
   if (isValidToken(refreshToken)) {
     const tokenDecrypted = jwt.verify(
       refreshToken,
-      REFRESH_TOKEN_EXPIRATION,
-      { complete: true },
-    ) as Token;
-    const user = await UserModel.findOne({ email: tokenDecrypted.payload.email });
+      REFRESH_TOKEN_SECRET,
+    ) as UserPayload;
+    const user = await UserModel.findOne({ email: tokenDecrypted.email });
 
     if (user) {
       const {
@@ -266,7 +266,7 @@ export async function refreshTokens(refreshToken: string): Promise<Tokens> {
         refreshToken: createRefreshToken(email),
       };
     }
-    throw new Error(`No user was found with email: ${tokenDecrypted.payload.email}`);
+    throw new Error(`No user was found with email: ${tokenDecrypted.email}`);
   } else {
     throw new Error('Token is not valid');
   }

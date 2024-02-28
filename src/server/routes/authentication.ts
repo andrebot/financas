@@ -17,7 +17,7 @@ router.post('/', createTokenValidation(true), createUserController);
 router.get('/', createTokenValidation(true), listUsersController);
 router.post('/login', loginController);
 router.post('/logout', createTokenValidation(), logoutController);
-router.post('/refresh-tokens', createTokenValidation(), refreshTokensController);
+router.post('/refresh-tokens', refreshTokensController);
 router.get('/:userId', createTokenValidation(), getUserController);
 router.put('/:userId', createTokenValidation(), updateUserController);
 router.delete('/:userId', createTokenValidation(true), deleteUserController);
