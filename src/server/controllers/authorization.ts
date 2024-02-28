@@ -1,7 +1,14 @@
 import { Request, Response } from 'express';
 import { regExpEmail } from '../utils/validators';
 import {
-  createUser, updateUser, listUsers, deleteUser, login, logout, refreshTokens,
+  createUser,
+  updateUser,
+  listUsers,
+  deleteUser,
+  login,
+  logout,
+  refreshTokens,
+  resetPassword,
 } from '../managers/authenticationManager';
 import { handleError, isValidObjectId } from '../utils/responseHandlers';
 import { RequestWithUser } from '../types';
@@ -62,11 +69,13 @@ export async function updateUserController(req: RequestWithUser, res: Response) 
 
     return res.send(user);
   } catch (error) {
+    let errorCode = 500;
+
     if ((error as Error).message === 'You do not have permission to update this user') {
-      return res.sendStatus(401);
+      errorCode = 403;
     }
 
-    return handleError(error as Error, res);
+    return handleError(error as Error, res, errorCode);
   }
 }
 
@@ -96,7 +105,7 @@ export async function listUsersController(req: Request, res: Response) {
  */
 export async function getUserController(req:Request, res: Response) {
   try {
-    const users = await listUsers({ _id: req.params.id });
+    const users = await listUsers({ _id: req.params.userId });
 
     return res.send(users[0]);
   } catch (error) {
@@ -194,6 +203,22 @@ export async function refreshTokensController(req: Request, res: Response) {
     const tokens = await refreshTokens(refreshToken);
 
     return res.send(tokens);
+  } catch (error) {
+    return handleError(error as Error, res);
+  }
+}
+
+export async function resetPasswordController(req: Request, res: Response) {
+  try {
+    const { email } = req.body;
+
+    if (!email || !regExpEmail.test(email)) {
+      return handleError(new Error('Invalid email'), res, 400);
+    }
+
+    await resetPassword(email);
+
+    return res.send({ message: `New password sent to ${email}` });
   } catch (error) {
     return handleError(error as Error, res);
   }

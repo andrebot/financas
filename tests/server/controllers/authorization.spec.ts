@@ -16,7 +16,7 @@ type MockRequest = {
     refreshToken: string;
   };
   params: {
-    id: string;
+    userId: string;
   };
   query: {
     [key: string]: string;
@@ -35,6 +35,7 @@ const authManagerStub = {
   login: sinon.stub().resolves(),
   logout: sinon.stub().resolves(),
   refreshTokens: sinon.stub().resolves(),
+  resetPassword: sinon.stub().resolves(),
 };
 
 const {
@@ -46,6 +47,7 @@ const {
   logoutController,
   refreshTokensController,
   getUserController,
+  resetPasswordController,
 } = proxyquire('../../../src/server/controllers/authorization', {
   '../managers/authenticationManager': authManagerStub,
 });
@@ -68,7 +70,7 @@ describe('AuthorizationController', () => {
         refreshToken: 'refresh-token',
       },
       params: {
-        id: '507f1f77bcf86cd799439011',
+        userId: '507f1f77bcf86cd799439011',
       },
       query: {},
       user: {
@@ -83,6 +85,7 @@ describe('AuthorizationController', () => {
     authManagerStub.login.resetHistory();
     authManagerStub.logout.resetHistory();
     authManagerStub.refreshTokens.resetHistory();
+    authManagerStub.resetPassword.resetHistory();
   });
 
   it('should be able to create an user successfully', async () => {
@@ -123,7 +126,7 @@ describe('AuthorizationController', () => {
       authManagerStub.updateUser.should.have.been.calledOnce;
       authManagerStub.updateUser.should.have.been.calledWith(
         request.user,
-        request.params.id,
+        request.params.userId,
         {
           email: request.body.email,
           firstName: request.body.firstName,
@@ -146,6 +149,20 @@ describe('AuthorizationController', () => {
     } catch (error) {
       response.status.should.have.been.calledWith(500);
       response.send.should.have.been.calledWith({ error: 'Test error' });
+    }
+  });
+
+  it('should be able to handle an error when updating an user without permission', async () => {
+    authManagerStub.updateUser.rejects(new Error('You do not have permission to update this user'));
+
+    try {
+      await updateUserController(request, response);
+
+      response.status.should.have.been.calledWith(403);
+      response.send.should.have.been.calledOnce;
+    } catch (error) {
+      console.error(error);
+      chai.assert.fail('Should not have thrown an error');
     }
   });
 
@@ -179,7 +196,7 @@ describe('AuthorizationController', () => {
       firstName: 'Test',
       lastName: 'User',
       email: 'test@gmail.com',
-      _id: request.params.id,
+      _id: request.params.userId,
     };
 
     authManagerStub.listUsers.resolves([user]);
@@ -190,7 +207,7 @@ describe('AuthorizationController', () => {
       response.send.should.have.been.calledOnce;
       response.send.should.have.been.calledWith(user);
       authManagerStub.listUsers.should.have.been.calledOnce;
-      authManagerStub.listUsers.should.have.been.calledWith({ _id: request.params.id });
+      authManagerStub.listUsers.should.have.been.calledWith({ _id: request.params.userId });
     } catch (error) {
       console.error(error);
       chai.assert.fail('Should not have thrown an error');
@@ -215,9 +232,9 @@ describe('AuthorizationController', () => {
       await deleteUserController(request, response);
 
       response.send.should.have.been.calledOnce;
-      response.send.should.have.been.calledWith({ message: `User deleted: id ${request.params.id}` });
+      response.send.should.have.been.calledWith({ message: `User deleted: id ${request.params.userId}` });
       authManagerStub.deleteUser.should.have.been.calledOnce;
-      authManagerStub.deleteUser.should.have.been.calledWith(request.params.id);
+      authManagerStub.deleteUser.should.have.been.calledWith(request.params.userId);
     } catch (error) {
       console.error(error);
       chai.assert.fail('Should not have thrown an error');
@@ -238,7 +255,7 @@ describe('AuthorizationController', () => {
   });
 
   it('should be able to handle an invalid id when deleting an user', async () => {
-    request.params.id = 'invalid-id';
+    request.params.userId = 'invalid-id';
 
     try {
       await deleteUserController(request, response);
@@ -397,6 +414,62 @@ describe('AuthorizationController', () => {
     } catch (error) {
       console.error(error);
       chai.assert.fail('Should not have thrown an error');
+    }
+  });
+
+  it('should throw 400 error if email is empty while reseting passowrd of a user', async () => {
+    request.body.email = '';
+
+    try {
+      await resetPasswordController(request, response);
+
+      response.status.should.have.been.calledWith(400);
+      response.send.should.have.been.calledWith({ error: 'Invalid email' });
+    } catch (error) {
+      console.error(error);
+      chai.assert.fail('Should not have thrown an error');
+    }
+  });
+
+  it('should throw 400 error if email is not valid while reseting passowrd of a user', async () => {
+    request.body.email = 'invalid-email';
+
+    try {
+      await resetPasswordController(request, response);
+
+      response.status.should.have.been.calledWith(400);
+      response.send.should.have.been.calledWith({ error: 'Invalid email' });
+    } catch (error) {
+      console.error(error);
+      chai.assert.fail('Should not have thrown an error');
+    }
+  });
+
+  it('should be able to reset password successfully', async () => {
+    try {
+      await resetPasswordController(request, response);
+
+      response.send.should.have.been.calledOnce;
+      authManagerStub.resetPassword.should.have.been.calledOnce;
+      authManagerStub.resetPassword.should.have.been.calledWith(
+        request.body.email,
+      );
+    } catch (error) {
+      console.error(error);
+      chai.assert.fail('Should not have thrown an error');
+    }
+  });
+
+  it('should be able to handle an error when reseting password', async () => {
+    authManagerStub.resetPassword.rejects(new Error('Test error'));
+
+    try {
+      await resetPasswordController(request, response);
+
+      chai.assert.fail('Should have thrown an error');
+    } catch (error) {
+      response.status.should.have.been.calledWith(500);
+      response.send.should.have.been.calledWith({ error: 'Test error' });
     }
   });
 });

@@ -510,7 +510,7 @@ describe('AuthenticationManager', function () {
   });
 
   it('should throw an error if user is not found when refreshing tokens', async function() {
-    const token = { payload: { email: 'test@gmail.com' } };
+    const token = { email: 'test@gmail.com' };
     jwtVerifyStub.returns(token);
     findOneStub.resolves(null);
 
@@ -519,7 +519,7 @@ describe('AuthenticationManager', function () {
       chai.assert.fail('Should have thrown an error');
     } catch (error) {
       (error as Error).message.should.be.a('string');
-      (error as Error).message.should.contain(`No user was found with email: ${token.payload.email}`);
+      (error as Error).message.should.contain(`No user was found with email: ${token.email}`);
     }
   });
 

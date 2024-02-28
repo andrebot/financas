@@ -21,6 +21,7 @@ router.post('/refresh-tokens', refreshTokensController);
 router.get('/:userId', createTokenValidation(), getUserController);
 router.put('/:userId', createTokenValidation(), updateUserController);
 router.delete('/:userId', createTokenValidation(true), deleteUserController);
+router.post('/reset-password', createUserController);
 
 export default {
   urlPrefix: 'user',

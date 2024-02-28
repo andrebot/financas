@@ -23,6 +23,7 @@ describe('Authentication routes', () => {
       { method: 'put', path: '/:userId' },
       { method: 'get', path: '/:userId' },
       { method: 'delete', path: '/:userId' },
+      { method: 'post', path: '/reset-password' },
     ];
 
     routes.forEach((route) => {
