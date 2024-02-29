@@ -1,11 +1,12 @@
 import { should } from 'chai';
 import AccountModel, { IAccount } from '../../../src/server/resources/accountModel';
+import mongoose from 'mongoose';
 
 interface IAccountTest extends IAccount{
   [key: string]: any;
 }
 
-function checkRequiredField(account: IAccountTest, field: string) {
+function checkRequiredField(account: IAccountTest, field: string, eql: string = 'required') {
   account[field] = '';
 
   const error = account.validateSync();
@@ -13,7 +14,7 @@ function checkRequiredField(account: IAccountTest, field: string) {
   should().exist(error);
   error?.should.have.property('errors');
   error?.errors.should.have.property(field);
-  error?.errors[field].should.have.property('kind').eql('required');
+  error?.errors[field].should.have.property('kind').eql(eql);
 }
 
 describe('AccountModel', () => {
@@ -25,6 +26,7 @@ describe('AccountModel', () => {
       agency: '1234',
       accountNumber: '123456',
       currency: 'BRL',
+      user: new mongoose.Types.ObjectId().toString(),
       cards: [
         {
           number: '1234567890123456',
@@ -48,6 +50,10 @@ describe('AccountModel', () => {
 
   it('should be invalid if currency is empty', () => {
     checkRequiredField(account, 'currency');
+  });
+
+  it('should be invalid if user is empty', () => {
+    checkRequiredField(account, 'user', 'ObjectId');
   });
 
   it('should be able to save', () => {

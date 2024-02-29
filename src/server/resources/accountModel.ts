@@ -2,6 +2,7 @@ import {
   Schema,
   model,
   Document,
+  mongo,
 } from 'mongoose';
 
 /**
@@ -38,6 +39,10 @@ export interface IAccount extends Document {
    * Currency of the account
    */
   currency: string;
+  /**
+   * User of the account
+   */
+  user: Schema.Types.ObjectId;
   /**
    * Cards of the account
    */
@@ -76,6 +81,11 @@ const AccountSchema = new Schema<IAccount>({
   },
   accountNumber: {
     type: String,
+    required: true,
+  },
+  user: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
     required: true,
   },
   cards: [CardSchema],
