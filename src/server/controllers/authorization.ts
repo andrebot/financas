@@ -209,6 +209,13 @@ export async function refreshTokensController(req: Request, res: Response) {
   }
 }
 
+/**
+ * Function to reset the password. It will send a new password to the user's email
+ *
+ * @param req - The request object
+ * @param res - The response object
+ * @returns - The message as an object
+ */
 export async function resetPasswordController(req: Request, res: Response) {
   try {
     const { email } = req.body;
@@ -225,6 +232,13 @@ export async function resetPasswordController(req: Request, res: Response) {
   }
 }
 
+/**
+ * Function to change the password. It will update the user's password
+ *
+ * @param req - The request object
+ * @param res - The response object
+ * @returns - The message as an object
+ */
 export async function changePasswordController(req: RequestWithUser, res: Response) {
   try {
     const { oldPassword, newPassword } = req.body;
