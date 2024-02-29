@@ -642,7 +642,8 @@ describe('Authentication', () => {
     });
 
     it('should return 500 if the user is not found', (done) => {
-      token = createAccessToken('not@gmail.com', 'admin', 'not', 'found');
+      const badEmail = 'not@gmail.com';
+      token = createAccessToken(badEmail, 'admin', 'not', 'found');
 
       chai.request(server)
         .post('/api/v1/user/change-password')
@@ -650,7 +651,7 @@ describe('Authentication', () => {
         .send({ oldPassword: 'adminPassword', newPassword: 'Maka-jan32' })
         .end((err, res) => {
           res.should.have.status(500);
-          res.body.should.have.property('error').eql('User not found');
+          res.body.should.have.property('error').eql(`No user was found with email: ${badEmail}`);
           done();
         });
     });
@@ -662,7 +663,7 @@ describe('Authentication', () => {
         .send({ oldPassword: 'wrongPassword', newPassword: 'Maka-jan32' })
         .end((err, res) => {
           res.should.have.status(500);
-          res.body.should.have.property('error').eql('Password was not a match');
+          res.body.should.have.property('error').eql('Invalid Password');
           done();
         });
     });

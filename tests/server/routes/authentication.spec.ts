@@ -24,6 +24,7 @@ describe('Authentication routes', () => {
       { method: 'get', path: '/:userId' },
       { method: 'delete', path: '/:userId' },
       { method: 'post', path: '/reset-password' },
+      { method: 'post', path: '/change-password' },
     ];
 
     routes.forEach((route) => {
