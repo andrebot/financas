@@ -315,10 +315,10 @@ export async function changePassword(
   newPassword: string,
 ): Promise<boolean> {
   const user = await UserModel.findOne({ email });
-
+  
   if (user) {
     const isMatch = bcrypt.compareSync(oldPassword, user.password);
-
+    
     if (isMatch) {
       const salt = bcrypt.genSaltSync(WORK_FACTOR);
       user.password = bcrypt.hashSync(newPassword, salt);
@@ -326,7 +326,9 @@ export async function changePassword(
 
       return true;
     }
+
+    throw new Error('Password was not a match');
   }
 
-  return false;
+  throw new Error('User not found');
 }

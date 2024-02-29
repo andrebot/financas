@@ -606,6 +606,80 @@ describe('Authentication', () => {
     });
   });
 
+  describe('Changing Password - POST /api/v1/user/change-password', () => {
+    let token: string;
+
+    before(async () => {
+      await UserModel.findByIdAndUpdate(adminUser._id, { email: adminUser.email });
+    });
+
+    beforeEach(() => {
+      token = createAccessToken(adminUser.email, 'admin', adminUser.firstName, adminUser.lastName);
+    });
+
+    it('should return 400 if the oldPassword is empty', (done) => {
+      chai.request(server)
+        .post('/api/v1/user/change-password')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ oldPassword: '', newPassword: 'Maka-jan32' })
+        .end((err, res) => {
+          res.should.have.status(400);
+          res.body.should.have.property('error').eql('Invalid password');
+          done();
+        });
+    });
+
+    it('should return 400 if the newPassword is empty', (done) => {
+      chai.request(server)
+        .post('/api/v1/user/change-password')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ oldPassword: 'adminPassword', newPassword: '' })
+        .end((err, res) => {
+          res.should.have.status(400);
+          res.body.should.have.property('error').eql('Invalid password');
+          done();
+        });
+    });
+
+    it('should return 500 if the user is not found', (done) => {
+      token = createAccessToken('not@gmail.com', 'admin', 'not', 'found');
+
+      chai.request(server)
+        .post('/api/v1/user/change-password')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ oldPassword: 'adminPassword', newPassword: 'Maka-jan32' })
+        .end((err, res) => {
+          res.should.have.status(500);
+          res.body.should.have.property('error').eql('User not found');
+          done();
+        });
+    });
+
+    it('should return 500 if the password is not a match', (done) => {
+      chai.request(server)
+        .post('/api/v1/user/change-password')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ oldPassword: 'wrongPassword', newPassword: 'Maka-jan32' })
+        .end((err, res) => {
+          res.should.have.status(500);
+          res.body.should.have.property('error').eql('Password was not a match');
+          done();
+        });
+    });
+
+    it('should change password successfully', (done) => {
+      chai.request(server)
+        .post('/api/v1/user/change-password')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ oldPassword: 'adminPassword', newPassword: 'Maka-jan32' })
+        .end((err, res) => {
+          res.should.have.status(200);
+          res.body.should.have.property('message').eql('Password changed');
+          done();
+        });
+    });
+  });
+
   describe('Resetting Password - POST /api/v1/user/reset-password', () => {
     it('should return 400 if the email is empty', (done) => {
       chai.request(server)
@@ -669,6 +743,4 @@ describe('Authentication', () => {
         });
     });
   });
-
-  describe('Changing Password - POST /api/v1/user/change-password', () => {});
 });

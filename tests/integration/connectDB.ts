@@ -26,8 +26,8 @@ export const disconnectDatabase = async () => {
 };
 
 export const createAdminUser = async () => {
-  adminUser.password = await bcrypt.hash('adminPassword', 10);
-  const savedUSer: IUser = new UserModel(adminUser);
+  adminUser.password = await bcrypt.hash('adminPassword', bcrypt.genSaltSync(10));
+  const savedUSer: IUser = new UserModel(adminUser)
 
   await savedUSer.save();
   adminUser._id = savedUSer._id;
