@@ -15,7 +15,6 @@ import {
   REFRESH_TOKEN_EXPIRATION,
 } from '../config/auth';
 import sendNotification from '../utils/notification';
-import { t } from 'i18next';
 
 /**
  * Function to create a token
@@ -315,10 +314,10 @@ export async function changePassword(
   newPassword: string,
 ): Promise<boolean> {
   const user = await UserModel.findOne({ email });
-  
+
   if (user) {
     const isMatch = bcrypt.compareSync(oldPassword, user.password);
-    
+
     if (isMatch) {
       const salt = bcrypt.genSaltSync(WORK_FACTOR);
       user.password = bcrypt.hashSync(newPassword, salt);
