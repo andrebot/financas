@@ -605,7 +605,7 @@ describe('AuthenticationManager', function () {
     }
   });
 
-  it('should return false if the old password does not match', async function() {
+  it('should throw error if the old password does not match', async function() {
     const mockUser = {
       password: 'anotherPassword',
       save: sinon.stub().resolves(),
@@ -615,37 +615,34 @@ describe('AuthenticationManager', function () {
     UserModelM.findOne.returns(mockUser);
 
     try {
-      const result = await changePassword('1', 'oldPassword', 'newPassword');
+      await changePassword('1', 'oldPassword', 'newPassword');
 
-      should().exist(result);
-      result.should.be.false;
+      chai.assert.fail('Should have thrown an error');
+    } catch (error) {
       UserModelM.findOne.should.have.been.calledOnce;
       bcryptMock.compareSync.should.have.been.calledOnce;
       bcryptMock.compareSync.should.have.been.calledWith('oldPassword', 'anotherPassword');
       bcryptMock.genSaltSync.should.have.not.been.called;
       bcryptMock.hashSync.should.have.not.been.called;
       mockUser.save.should.have.not.been.called;
-    } catch (error) {
-      console.error(error);
-      chai.assert.fail('Should not have thrown an error');
+      (error as Error).message.should.contain('Invalid Password');
     }
   });
 
-  it('should return false if the user is not found', async function() {
+  it('should throw error if the user is not found', async function() {
     UserModelM.findOne.returns(null);
 
     try {
-      const result = await changePassword('1', 'oldPassword', 'newPassword');
+      await changePassword('1', 'oldPassword', 'newPassword');
 
-      should().exist(result);
-      result.should.be.false;
+      chai.assert.fail('Should have thrown an error');
+
+    } catch (error) {
       UserModelM.findOne.should.have.been.calledOnce;
       bcryptMock.compareSync.should.have.not.been.called;
       bcryptMock.genSaltSync.should.have.not.been.called;
       bcryptMock.hashSync.should.have.not.been.called;
-    } catch (error) {
-      console.error(error);
-      chai.assert.fail('Should not have thrown an error');
+      (error as Error).message.should.contain('No user was found with email: 1');
     }
   });
 });

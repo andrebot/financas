@@ -326,8 +326,8 @@ export async function changePassword(
       return true;
     }
 
-    throw new Error('Password was not a match');
+    throw new Error('Invalid Password');
   }
 
-  throw new Error('User not found');
+  throw new Error(`No user was found with email: ${email}`);
 }
