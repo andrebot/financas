@@ -32,7 +32,8 @@
       ],
       "no-plusplus": "off",
       "no-underscore-dangle": "off",
-      "react/jsx-filename-extension": "off"
+      "react/jsx-filename-extension": "off",
+      "default-param-last": "off"
   },
   "ignorePatterns": [
       "src/server/public/*"

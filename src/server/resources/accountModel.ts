@@ -2,7 +2,6 @@ import {
   Schema,
   model,
   Document,
-  mongo,
 } from 'mongoose';
 
 /**
@@ -17,7 +16,7 @@ export interface ICard extends Document {
    * Expiration date of the card
    */
   expirationDate: string;
-};
+}
 
 /**
  * Interface for the Account
@@ -47,7 +46,7 @@ export interface IAccount extends Document {
    * Cards of the account
    */
   cards: ICard[];
-};
+}
 
 /**
  * Schema for the Card

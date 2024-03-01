@@ -63,7 +63,6 @@ export type TokenValidationMiddleware = (
   res: Response,
   next: NextFunction,
 ) => void;
-/* eslint-enable no-unused-vars */
 
 export interface IContentController {
   /**
@@ -108,3 +107,4 @@ export interface IContentController {
    */
   getContent(req: RequestWithUser, res: Response): Promise<Response>;
 }
+/* eslint-enable no-unused-vars */

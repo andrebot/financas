@@ -34,7 +34,7 @@ export default function contentControllerFactory<T extends Document>(
             res,
           );
         }
-        
+
         if (req.user && req.user.id) {
           const {
             id: userId,
@@ -48,7 +48,7 @@ export default function contentControllerFactory<T extends Document>(
             userId,
             role === 'admin',
           );
-      
+
           return res.send(content);
         }
 
@@ -80,7 +80,7 @@ export default function contentControllerFactory<T extends Document>(
             userId,
             role === 'admin',
           );
-      
+
           return res.send(content);
         }
 
@@ -118,4 +118,4 @@ export default function contentControllerFactory<T extends Document>(
       }
     },
   };
-};
+}
