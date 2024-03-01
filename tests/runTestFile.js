@@ -28,7 +28,11 @@ const runTest = () => {
     // Remove the require option if ts-node is registered globally
   });
 
-  mocha.addFile(path.resolve('tests/server/testSetup.ts'));
+  if (process.env.TEST_TYPE === 'integration') {
+    mocha.addFile(path.resolve('tests/integration/testSetup.ts'));
+  } else {
+    mocha.addFile(path.resolve('tests/server/testSetup.ts'));
+  }
   mocha.addFile(path.resolve(testFilePath));
 
   // Run the tests.

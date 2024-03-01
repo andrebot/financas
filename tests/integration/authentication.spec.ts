@@ -1,5 +1,4 @@
 import chai from 'chai';
-import chaiHttp from 'chai-http';
 import sinon from 'sinon';
 import jwt from 'jsonwebtoken';
 import server from '../../src/server/server';
@@ -8,8 +7,6 @@ import { createAccessToken, createRefreshToken } from '../../src/server/managers
 import UserModel from '../../src/server/resources/userModel';
 import { addToken, deleteToken } from '../../src/server/resources/tokenModel';
 import { Types } from 'mongoose';
-
-chai.use(chaiHttp);
 
 describe('Authentication', () => {
   let newUser = {

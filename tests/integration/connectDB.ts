@@ -1,7 +1,8 @@
-import mongoose from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import bcrypt from 'bcrypt';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import UserModel, { IUser } from '../../src/server/resources/userModel';
+import AccountModel, { IAccount } from '../../src/server/resources/accountModel';
 
 export const adminUser = {
   email: 'admin@example.com',
@@ -10,6 +11,43 @@ export const adminUser = {
   role: 'admin',
 } as IUser;
 let mongoServer: MongoMemoryServer;
+
+export const account1 = {
+  name: 'Test Account 1',
+  agency: '1234',
+  accountNumber: '123456',
+  currency: 'BRL',
+  cards: [
+    {
+      number: '1234567890123456',
+      expirationDate: '12/2024',
+    },
+  ],
+} as IAccount;
+export const account2 = {
+  name: 'Test Account 2',
+  agency: '5678',
+  accountNumber: '567890',
+  currency: 'USD',
+  cards: [
+    {
+      number: '6543210987654321',
+      expirationDate: '12/2024',
+    },
+  ],
+} as IAccount;
+export const account3 = {
+  name: 'Test Account 3',
+  agency: '5678',
+  accountNumber: '567890',
+  currency: 'USD',
+  cards: [
+    {
+      number: '6543210987654321',
+      expirationDate: '12/2024',
+    },
+  ],
+} as IAccount;
 
 // Establish a connection to the in-memory database
 export const connectToDatabase = async () => {
@@ -31,5 +69,14 @@ export const createAdminUser = async () => {
 
   await savedUSer.save();
   adminUser._id = savedUSer._id;
-  console.log('admin user created');
+};
+
+export const createAccount = async (account: IAccount, userID: Types.ObjectId) => {
+  const newAccount = new AccountModel({
+    ...account,
+    user: userID,
+  });
+  await newAccount.save();
+
+  account._id = newAccount._id;
 };
