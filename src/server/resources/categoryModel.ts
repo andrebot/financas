@@ -18,7 +18,7 @@ export interface ICategory extends Document {
    * Parent category, if this is a sub-category
    */
   parentCategory?: Types.ObjectId;
-};
+}
 
 const CategorySchema = new Schema<ICategory>({
   name: {

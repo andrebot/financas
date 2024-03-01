@@ -3,7 +3,10 @@ import { Model, Document } from 'mongoose';
 import contentControllerFactory from '../controllers/contentFactory';
 import createTokenValidation from '../utils/authorization';
 
-export default function contentRouteFactory<T extends Document>(model: Model<T>, urlPrefix: string) {
+export default function contentRouteFactory<T extends Document>(
+  model: Model<T>,
+  urlPrefix: string,
+) {
   const router = Router();
   const contentController = contentControllerFactory(model);
 
@@ -16,5 +19,5 @@ export default function contentRouteFactory<T extends Document>(model: Model<T>,
   return {
     urlPrefix,
     router,
-  }
-};
+  };
+}
