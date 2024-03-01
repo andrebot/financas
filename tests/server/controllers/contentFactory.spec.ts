@@ -36,7 +36,7 @@ const contentManagetStub = {
 const {
   default: contentControllerFactory,
   IContentController,
-} = proxyquire('../../../src/server/controllers/account', {
+} = proxyquire('../../../src/server/controllers/contentFactory', {
   '../managers/contentManager': contentManagetStub,
 });
 
