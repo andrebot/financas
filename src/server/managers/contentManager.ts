@@ -10,7 +10,7 @@ import { Model, Document } from 'mongoose';
  * @param model - The model to save the content to
  * @returns The saved content
  */
-export async function saveContent<T extends Document>(
+export async function createContent<T extends Document>(
   content: Record<string, any>,
   model: Model<T>,
 ): Promise<Record<string, any>> {
@@ -105,13 +105,13 @@ export async function deleteContent<T extends Document>(
  *
  * @throws {Error} - If the content cannot be listed
  * 
- * @param query - The query to use to filter the content
+ * @param query - The query to filter the content. Default is an empty object to list all objects
  * @param model - The model to list the content from
  * @param userId - The id of the user listing the content
  * @returns The list of content
  */
 export async function listContent<T extends Document>(
-  query: Record<string, any>,
+  query: Record<string, any> = {},
   model: Model<T>,
   userId?: string,
 ): Promise<T[]> {

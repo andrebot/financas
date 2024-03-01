@@ -1,7 +1,7 @@
 import { should } from 'chai';
 import sinon from 'sinon';
 import {
-  saveContent,
+  createContent,
   updateContent,
   deleteContent,
   listContent,
@@ -35,7 +35,7 @@ describe('contentManager', () => {
 
   describe('saveContent', () => {
     it('should save content', async () => {
-      const result = await saveContent(content, contentModelStub as any);
+      const result = await createContent(content, contentModelStub as any);
   
       should().exist(result);
       result.should.equal(content);
@@ -48,7 +48,7 @@ describe('contentManager', () => {
       (methodStubs.save as sinon.SinonStub).rejects(new Error('Error'));
   
       try {
-        await saveContent({}, contentModelStub as any);
+        await createContent({}, contentModelStub as any);
         should().fail();
       } catch (err) {
         should().exist(err);
@@ -205,6 +205,14 @@ describe('contentManager', () => {
       methodStubs.find.should.have.been.calledOnce;
     });
 
+    it('should list all user\'s content if no query is provided', async () => {
+      const result = await listContent(undefined, methodStubs as any, content.user.toString());
+  
+      should().exist(result);
+      result.should.deep.equal([content]);
+      methodStubs.find.should.have.been.calledOnce;
+    });
+
     it('should handle errors when listing content', async () => {
       (methodStubs.find as sinon.SinonStub).rejects(new Error('Error'));
   
@@ -237,6 +245,14 @@ describe('contentManager', () => {
         should().exist(err);
         (err as Error).message.should.equal('Error');
       }
+    });
+
+    it('should return null if the content is not found', async () => {
+      (methodStubs.findById as sinon.SinonStub).resolves(null);
+  
+      const result = await getContent('id', methodStubs as any, content.user.toString());
+  
+      should().not.exist(result);
     });
   });
 });
