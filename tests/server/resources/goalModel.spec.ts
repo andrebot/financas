@@ -7,13 +7,13 @@ describe('GoalModel', () => {
   let goal: IGoal;
 
   beforeEach(() => {
-    const duaDate = new Date();
-    duaDate.setDate(duaDate.getDate() + 2);
+    const dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + 2);
 
     goal = new GoalModel({
       name: 'Test goal',
       value: 100,
-      duaDate,
+      dueDate,
       user: new Types.ObjectId().toString(),
     });
   });

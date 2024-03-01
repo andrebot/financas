@@ -1,16 +1,16 @@
-import categoryRouter from '../../../src/server/routes/category';
+import goalRouter from '../../../src/server/routes/goal';
 
 describe('Account routes', () => {
   let router: any;
 
   beforeEach(() => {
-    router = categoryRouter.router;
+    router = goalRouter.router;
   });
 
   it('should have the correct URL prefix', () => {
-    categoryRouter.urlPrefix.should.be.a('string');
-    categoryRouter.urlPrefix.should.not.be.empty;
-    categoryRouter.urlPrefix.should.equal('category');
+    goalRouter.urlPrefix.should.be.a('string');
+    goalRouter.urlPrefix.should.not.be.empty;
+    goalRouter.urlPrefix.should.equal('goal');
   });
 
   it('should have the correct routes', () => {

@@ -17,7 +17,7 @@ export interface IGoal extends Document {
   /**
    * Due date for the goal
    */
-  duaDate: Date;
+  dueDate: Date;
   /**
    * Category owner
    */
@@ -33,7 +33,7 @@ const GoalSchema = new Schema<IGoal>({
     type: Number,
     required: true,
   },
-  duaDate: {
+  dueDate: {
     type: Date,
     required: true,
   },

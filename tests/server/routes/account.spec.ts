@@ -24,7 +24,7 @@ describe('Account routes', () => {
 
     routes.forEach((route) => {
       const foundRoute = router.stack.find((s: any) => s.route.path === route.path && s.route.methods[route.method]);
-      foundRoute.should.not.be.undefined;;
+      foundRoute.should.not.be.undefined;
     });
   });
 });
