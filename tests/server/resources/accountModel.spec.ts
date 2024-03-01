@@ -1,21 +1,7 @@
 import { should } from 'chai';
-import AccountModel, { IAccount } from '../../../src/server/resources/accountModel';
 import mongoose from 'mongoose';
-
-interface IAccountTest extends IAccount{
-  [key: string]: any;
-}
-
-function checkRequiredField(account: IAccountTest, field: string, eql: string = 'required') {
-  account[field] = '';
-
-  const error = account.validateSync();
-
-  should().exist(error);
-  error?.should.have.property('errors');
-  error?.errors.should.have.property(field);
-  error?.errors[field].should.have.property('kind').eql(eql);
-}
+import AccountModel, { IAccount } from '../../../src/server/resources/accountModel';
+import checkRequiredField from '../checkRequiredField';
 
 describe('AccountModel', () => {
   let account: IAccount;

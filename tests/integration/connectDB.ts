@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import UserModel, { IUser } from '../../src/server/resources/userModel';
 import AccountModel, { IAccount } from '../../src/server/resources/accountModel';
+import categoryModel, { ICategory } from '../../src/server/resources/categoryModel';
 
 export const adminUser = {
   email: 'admin@example.com',
@@ -48,6 +49,15 @@ export const account3 = {
     },
   ],
 } as IAccount;
+export const category1 = {
+  name: 'Test Category 1',
+} as ICategory;
+export const category2 = {
+  name: 'Test Category 2',
+} as ICategory;
+export const category3 = {
+  name: 'Test Category 3',
+} as ICategory;
 
 // Establish a connection to the in-memory database
 export const connectToDatabase = async () => {
@@ -79,4 +89,15 @@ export const createAccount = async (account: IAccount, userID: Types.ObjectId) =
   await newAccount.save();
 
   account._id = newAccount._id;
+};
+
+export const createCategory = async (category: ICategory, userID: Types.ObjectId, parentCategory?: Types.ObjectId) => {
+  const newCategory = new categoryModel({
+    ...category,
+    user: userID,
+    parentCategory,
+  });
+  await newCategory.save();
+
+  category._id = newCategory._id;
 };

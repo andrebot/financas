@@ -5,10 +5,14 @@ import {
   connectToDatabase,
   createAdminUser,
   createAccount,
+  createCategory,
   disconnectDatabase,
   account1,
   account2,
   account3,
+  category1,
+  category2,
+  category3,
   adminUser,
 } from './connectDB';
 import { Types } from 'mongoose';
@@ -26,6 +30,10 @@ before(async () => {
   await createAccount(account2, adminUser._id);
   await createAccount(account3, new Types.ObjectId());
   console.log('Accounts created');
+  await createCategory(category1, adminUser._id);
+  await createCategory(category2, adminUser._id);
+  await createCategory(category3, new Types.ObjectId());
+  console.log('Categories created');
 });
 
 after(async () => {
