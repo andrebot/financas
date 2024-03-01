@@ -10,6 +10,7 @@ import {
   REFRESH_TOKEN_SECRET,
   ACCESS_TOKEN_SECRET,
 } from '../../../src/server/config/auth';
+import { Types } from 'mongoose';
 
 chai.should();
 
@@ -108,12 +109,13 @@ describe('AuthenticationManager', function () {
     const role = 'admin';
     const firstName = 'John';
     const lastName = 'Doe';
+    const id = '1';
 
     jwtSignStub.returns('mocktoken');
 
-    const token = createAccessToken(email, role, firstName, lastName) as string;
+    const token = createAccessToken(email, role, firstName, lastName, id) as string;
 
-    const expectedPayload = { email, role, firstName, lastName };
+    const expectedPayload = { email, role, firstName, lastName, id };
     jwtSignStub.should.have.been.calledOnce;
     jwtSignStub.firstCall.args[0].should.deep.equal(expectedPayload);
     jwtSignStub.firstCall.args[2].should.have.property('expiresIn', ACCESS_TOKEN_EXPIRATION);
@@ -206,7 +208,7 @@ describe('AuthenticationManager', function () {
 
     beforeEach(function() {
       user = {
-        _id: '1',
+        _id: new Types.ObjectId().toHexString(),
         email: 'old@example.com',
         firstName: 'Old',
         lastName: 'User',
@@ -223,6 +225,7 @@ describe('AuthenticationManager', function () {
         firstName: user.firstName,
         lastName: user.lastName,
         role: 'admin',
+        id: user._id,
       }
       findByIdStub.withArgs('1').resolves(user);
       toObjectStub.reset();
@@ -403,6 +406,7 @@ describe('AuthenticationManager', function () {
         firstName: mockUser.firstName,
         lastName: mockUser.lastName,
         role: mockUser.role,
+        id: mockUser._id,
       },
       ACCESS_TOKEN_SECRET,
       { issuer: ISSUER, expiresIn: ACCESS_TOKEN_EXPIRATION },
@@ -477,6 +481,7 @@ describe('AuthenticationManager', function () {
       firstName: 'test',
       lastName: 'user',
       role: 'admin',
+      _id: '1',
     };
 
     jwtVerifyStub.returns({ payload: { email: 'test@gmail.com' } });

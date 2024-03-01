@@ -7,6 +7,7 @@ import { adminUser } from './connectDB';
 import { createAccessToken, createRefreshToken } from '../../src/server/managers/authenticationManager';
 import UserModel from '../../src/server/resources/userModel';
 import { addToken, deleteToken } from '../../src/server/resources/tokenModel';
+import { Types } from 'mongoose';
 
 chai.use(chaiHttp);
 
@@ -31,7 +32,13 @@ describe('Authentication', () => {
     });
 
     it('should list users successfully if the user is authenticated', (done) => {
-      const token = createAccessToken(adminUser.email, 'admin', adminUser.firstName, adminUser.lastName);
+      const token = createAccessToken(
+        adminUser.email,
+        'admin',
+        adminUser.firstName,
+        adminUser.lastName,
+        adminUser._id,
+      );
 
       chai.request(server)
         .get('/api/v1/user')
@@ -46,7 +53,13 @@ describe('Authentication', () => {
     });
 
     it('should return a 403 error if the user is authenticated but not an admin', (done) => {
-      const token = createAccessToken(adminUser.email, 'user', adminUser.firstName, adminUser.lastName);
+      const token = createAccessToken(
+        adminUser.email,
+        'user',
+        adminUser.firstName,
+        adminUser.lastName,
+        adminUser._id,
+      );
 
       chai.request(server)
         .get('/api/v1/user')
@@ -58,7 +71,13 @@ describe('Authentication', () => {
     });
 
     it('should return a 500 error if an error occurs', (done) => {
-      const token = createAccessToken(adminUser.email, 'admin', adminUser.firstName, adminUser.lastName);
+      const token = createAccessToken(
+        adminUser.email,
+        'admin',
+        adminUser.firstName,
+        adminUser.lastName,
+        adminUser._id,
+      );
       const stub = sinon.stub(UserModel, 'find').throws();
 
       chai.request(server)
@@ -78,7 +97,13 @@ describe('Authentication', () => {
     let token: string;
 
     beforeEach(() => {
-      token = createAccessToken(adminUser.email, 'admin', adminUser.firstName, adminUser.lastName);
+      token = createAccessToken(
+        adminUser.email,
+        'admin',
+        adminUser.firstName,
+        adminUser.lastName,
+        adminUser._id,
+      );
     });
 
     it('should return a 401 error if the user is not authenticated', (done) => {
@@ -110,7 +135,13 @@ describe('Authentication', () => {
     });
 
     it('should return a 403 error if the user is authenticated but not an admin', (done) => {
-      const token = createAccessToken(adminUser.email, 'user', adminUser.firstName, adminUser.lastName);
+      const token = createAccessToken(
+        adminUser.email,
+        'user',
+        adminUser.firstName,
+        adminUser.lastName,
+        adminUser._id,
+      );
 
       chai.request(server)
         .post('/api/v1/user')
@@ -197,11 +228,23 @@ describe('Authentication', () => {
     let token: string;
 
     beforeEach(() => {
-      token = createAccessToken(newUser.email, 'user', newUser.firstName, newUser.lastName);
+      token = createAccessToken(
+        newUser.email,
+        'user',
+        newUser.firstName,
+        newUser.lastName,
+        newUser._id,
+      );
     });
 
     it('should be able to update an user if the user is an admin', (done) => {
-      token = createAccessToken(adminUser.email, 'admin', adminUser.firstName, adminUser.lastName);
+      token = createAccessToken(
+        adminUser.email,
+        'admin',
+        adminUser.firstName,
+        adminUser.lastName,
+        adminUser._id,
+      );
       adminUser.firstName.should.be.eql('Admin');
 
       chai.request(server)
@@ -217,7 +260,13 @@ describe('Authentication', () => {
     });
 
     it('should not be able to update a user if it is not the same user', (done) => {
-      token = createAccessToken('another@gmail.com', 'user', 'nothing', 'here');
+      token = createAccessToken(
+        'another@gmail.com',
+        'user',
+        'nothing',
+        'here',
+        new Types.ObjectId().toHexString(),
+      );
 
       chai.request(server)
         .put(`/api/v1/user/${newUser._id}`)
@@ -333,11 +382,23 @@ describe('Authentication', () => {
     let token: string;
 
     beforeEach(() => {
-      token = createAccessToken(adminUser.email, 'admin', adminUser.firstName, adminUser.lastName);
+      token = createAccessToken(
+        adminUser.email,
+        'admin',
+        adminUser.firstName,
+        adminUser.lastName,
+        adminUser._id,
+      );
     });
 
     it('shoud return a 401 error if the user is not an admin', (done) => {
-      token = createAccessToken(newUser.email, 'user', newUser.firstName, newUser.lastName);
+      token = createAccessToken(
+        newUser.email,
+        'user',
+        newUser.firstName,
+        newUser.lastName,
+        newUser._id,
+      );
 
       chai.request(server)
         .delete(`/api/v1/user/${newUser._id}`)
@@ -527,7 +588,13 @@ describe('Authentication', () => {
 
     beforeEach(() => {
       refreshToken = createRefreshToken(adminUser.email);
-      accessToken = createAccessToken(adminUser.email, 'admin', adminUser.firstName, adminUser.lastName);
+      accessToken = createAccessToken(
+        adminUser.email,
+        'admin',
+        adminUser.firstName,
+        adminUser.lastName,
+        adminUser._id,
+      );
 
       addToken(refreshToken);
     });
@@ -614,7 +681,13 @@ describe('Authentication', () => {
     });
 
     beforeEach(() => {
-      token = createAccessToken(adminUser.email, 'admin', adminUser.firstName, adminUser.lastName);
+      token = createAccessToken(
+        adminUser.email,
+        'admin',
+        adminUser.firstName,
+        adminUser.lastName,
+        adminUser._id,
+      );
     });
 
     it('should return 400 if the oldPassword is empty', (done) => {
@@ -643,7 +716,13 @@ describe('Authentication', () => {
 
     it('should return 500 if the user is not found', (done) => {
       const badEmail = 'not@gmail.com';
-      token = createAccessToken(badEmail, 'admin', 'not', 'found');
+      token = createAccessToken(
+        badEmail,
+        'admin',
+        'not',
+        'found',
+        new Types.ObjectId().toHexString(),
+      );
 
       chai.request(server)
         .post('/api/v1/user/change-password')

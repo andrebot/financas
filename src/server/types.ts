@@ -46,6 +46,8 @@ export type UserPayload = {
   lastName?: string;
   /** Role of the user. Can be either 'admin' or 'user' */
   role?: 'admin' | 'user';
+  /** Id of the user */
+  id?: string;
 };
 
 export interface RequestWithUser extends Request {

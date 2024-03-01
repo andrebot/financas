@@ -35,6 +35,7 @@ export function createToken(payload: UserPayload, expiresIn: string, secret: str
  * @param role - Role of the user to be added to the token
  * @param firstName - First name of the user to be added to the token
  * @param lastName - Last name of the user to be added to the token
+ * @param id - Id of the user to be added to the token
  * @returns - the Access Token as a string
  */
 export function createAccessToken(
@@ -42,12 +43,14 @@ export function createAccessToken(
   role: 'admin' | 'user',
   firstName: string,
   lastName: string,
+  id: string,
 ): string {
   return createToken({
     email,
     role,
     firstName,
     lastName,
+    id,
   }, ACCESS_TOKEN_EXPIRATION, ACCESS_TOKEN_SECRET);
 }
 
@@ -192,10 +195,11 @@ export async function login(searchEmail: string, password: string): Promise<Toke
       role,
       firstName,
       lastName,
+      _id,
     } = user;
 
     if (isMatch) {
-      const accessToken = createAccessToken(email, role, firstName, lastName);
+      const accessToken = createAccessToken(email, role, firstName, lastName, _id.toString());
       const refreshToken = createRefreshToken(email);
 
       addToken(refreshToken);
@@ -258,10 +262,11 @@ export async function refreshTokens(refreshToken: string): Promise<Tokens> {
         firstName,
         lastName,
         role,
+        _id,
       } = user;
 
       return {
-        accessToken: createAccessToken(email, role, firstName, lastName),
+        accessToken: createAccessToken(email, role, firstName, lastName, _id.toString()),
         refreshToken: createRefreshToken(email),
       };
     }
