@@ -6,6 +6,7 @@ import {
   createAdminUser,
   createAccount,
   createCategory,
+  createGoal,
   disconnectDatabase,
   account1,
   account2,
@@ -13,6 +14,9 @@ import {
   category1,
   category2,
   category3,
+  goal1,
+  goal2,
+  goal3,
   adminUser,
 } from './connectDB';
 import { Types } from 'mongoose';
@@ -34,6 +38,10 @@ before(async () => {
   await createCategory(category2, adminUser._id);
   await createCategory(category3, new Types.ObjectId());
   console.log('Categories created');
+  await createGoal(goal1, adminUser._id);
+  await createGoal(goal2, adminUser._id);
+  await createGoal(goal3, new Types.ObjectId());
+  console.log('Goals created');
 });
 
 after(async () => {

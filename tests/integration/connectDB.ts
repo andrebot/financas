@@ -4,6 +4,7 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import UserModel, { IUser } from '../../src/server/resources/userModel';
 import AccountModel, { IAccount } from '../../src/server/resources/accountModel';
 import categoryModel, { ICategory } from '../../src/server/resources/categoryModel';
+import GoalModel, { IGoal } from '../../src/server/resources/goalModel';
 
 export const adminUser = {
   email: 'admin@example.com',
@@ -58,6 +59,21 @@ export const category2 = {
 export const category3 = {
   name: 'Test Category 3',
 } as ICategory;
+export const goal1 = {
+  name: 'Test Goal 1',
+  value: 100,
+  dueDate: new Date(),
+} as IGoal;
+export const goal2 = {
+  name: 'Test Goal 2',
+  value: 200,
+  dueDate: new Date(),
+} as IGoal;
+export const goal3 = {
+  name: 'Test Goal 3',
+  value: 300,
+  dueDate: new Date(),
+} as IGoal;
 
 // Establish a connection to the in-memory database
 export const connectToDatabase = async () => {
@@ -100,4 +116,14 @@ export const createCategory = async (category: ICategory, userID: Types.ObjectId
   await newCategory.save();
 
   category._id = newCategory._id;
+};
+
+export const createGoal = async (goal: IGoal, userID: Types.ObjectId) => {
+  const newGoal = new GoalModel({
+    ...goal,
+    user: userID,
+  });
+  await newGoal.save();
+
+  goal._id = newGoal._id;
 };
