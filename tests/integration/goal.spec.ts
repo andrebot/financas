@@ -2,13 +2,13 @@ import chai from 'chai';
 import sinon from 'sinon';
 import { Types } from 'mongoose';
 import server from '../../src/server/server';
-import { category1, category2, category3, adminUser } from './connectDB';
+import { goal1, goal2, goal3, adminUser } from './connectDB';
 import { createAccessToken } from '../../src/server/managers/authenticationManager';
-import categoryModel from '../../src/server/resources/categoryModel';
+import goalModel from '../../src/server/resources/goalModel';
 
-const resourceUrl = '/api/v1/category';
+const resourceUrl = '/api/v1/goal';
 
-describe('Category', () => {
+describe('Goal', () => {
   let accessToken: string;
 
   beforeEach(async () => {
@@ -21,8 +21,8 @@ describe('Category', () => {
     );
   });
 
-  describe('List Categories - GET /api/v1/category', () => {
-    it('should return the list of categories', (done) => {
+  describe('List Goals - GET /api/v1/goal', () => {
+    it('should return the list of goals', (done) => {
       chai.request(server)
         .get(`${resourceUrl}`)
         .set('Authorization', `Bearer ${accessToken}`)
@@ -35,7 +35,7 @@ describe('Category', () => {
         });
     });
 
-    it('should return nothing when user has no categories', (done) => {
+    it('should return nothing when user has no goals', (done) => {
       const token = createAccessToken(
         'test@gmail.com',
         'user',
@@ -66,7 +66,7 @@ describe('Category', () => {
     });
 
     it('should return 500 when an error occurs', (done) => {
-      const stub = sinon.stub(categoryModel, 'find').throws(new Error('Error'));
+      const stub = sinon.stub(goalModel, 'find').throws(new Error('Error'));
 
       chai.request(server)
         .get(`${resourceUrl}`)
@@ -79,15 +79,17 @@ describe('Category', () => {
     });
   });
 
-  describe('Retrieve Category - GET /api/v1/category/:id', () => {
-    it('should return the category', (done) => {
+  describe('Retrieve Goal - GET /api/v1/goal/:id', () => {
+    it('should return the goal', (done) => {
       chai.request(server)
-        .get(`${resourceUrl}/${category1._id}`)
+        .get(`${resourceUrl}/${goal1._id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(200);
           response.body.should.be.an('object');
-          response.body.should.have.property('name', category1.name);
+          response.body.should.have.property('name', goal1.name);
+          response.body.should.have.property('value', goal1.value);
+          response.body.should.have.property('dueDate', goal1.dueDate.toISOString());
           response.body.should.have.property('user', adminUser._id.toString());
 
           done();
@@ -108,7 +110,7 @@ describe('Category', () => {
 
     it('should return 401 when the user is not authenticated', (done) => {
       chai.request(server)
-        .get(`${resourceUrl}/${category1._id}`)
+        .get(`${resourceUrl}/${goal1._id}`)
         .end((err, response) => {
           response.should.have.status(401);
           done();
@@ -116,10 +118,10 @@ describe('Category', () => {
     });
 
     it('should return 500 when an error occurs', (done) => {
-      const stub = sinon.stub(categoryModel, 'findById').throws(new Error('Error'));
+      const stub = sinon.stub(goalModel, 'findById').throws(new Error('Error'));
 
       chai.request(server)
-        .get(`${resourceUrl}/${category1._id}`)
+        .get(`${resourceUrl}/${goal1._id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(500);
@@ -129,22 +131,24 @@ describe('Category', () => {
     });
   });
 
-  describe('Create Category - POST /api/v1/category/', () => {
-    it('should create a category', (done) => {
-      const newCategory = {
+  describe('Create Goal - POST /api/v1/goal/', () => {
+    it('should create a goal', (done) => {
+      const newGoal = {
         name: 'Test Account',
+        value: 400,
+        dueDate: new Date(),
         user: adminUser._id,
       };
 
       chai.request(server)
         .post(`${resourceUrl}`)
         .set('Authorization', `Bearer ${accessToken}`)
-        .send(newCategory)
+        .send(newGoal)
         .end((err, response) => {
           response.should.have.status(200);
           response.body.should.be.an('object');
-          response.body.should.have.property('name', newCategory.name);
-          response.body.should.have.property('user', newCategory.user.toString());
+          response.body.should.have.property('name', newGoal.name);
+          response.body.should.have.property('user', newGoal.user.toString());
 
           done();
         });
@@ -153,7 +157,7 @@ describe('Category', () => {
     it('should return 401 when the user is not authenticated', (done) => {
       chai.request(server)
         .post(`${resourceUrl}`)
-        .send(category2)
+        .send(goal2)
         .end((err, response) => {
           response.should.have.status(401);
           done();
@@ -161,12 +165,12 @@ describe('Category', () => {
     });
 
     it('should return 500 when an error occurs', (done) => {
-      const stub = sinon.stub(categoryModel.prototype, 'save').throws(new Error('Error'));
+      const stub = sinon.stub(goalModel.prototype, 'save').throws(new Error('Error'));
 
       chai.request(server)
         .post(`${resourceUrl}`)
         .set('Authorization', `Bearer ${accessToken}`)
-        .send(category2)
+        .send(goal2)
         .end((err, response) => {
           response.should.have.status(500);
           stub.restore();
@@ -175,20 +179,20 @@ describe('Category', () => {
     });
   });
 
-  describe('Update Category - PUT /api/v1/category/:id', () => {
-    it('should update a category', (done) => {
-      const updatedCategory = {
-        name: 'Updated Account',
+  describe('Update Goal - PUT /api/v1/goal/:id', () => {
+    it('should update a goal', (done) => {
+      const updatedGoal = {
+        name: 'Updated Goal',
       };
 
       chai.request(server)
-        .put(`${resourceUrl}/${category1._id}`)
+        .put(`${resourceUrl}/${goal1._id}`)
         .set('Authorization', `Bearer ${accessToken}`)
-        .send(updatedCategory)
+        .send(updatedGoal)
         .end((err, response) => {
           response.should.have.status(200);
           response.body.should.be.an('object');
-          response.body.should.have.property('name', updatedCategory.name);
+          response.body.should.have.property('name', updatedGoal.name);
 
           done();
         });
@@ -196,8 +200,8 @@ describe('Category', () => {
 
     it('should return 401 when the user is not authenticated', (done) => {
       chai.request(server)
-        .put(`${resourceUrl}/${category1._id}`)
-        .send(category2)
+        .put(`${resourceUrl}/${goal1._id}`)
+        .send(goal2)
         .end((err, response) => {
           response.should.have.status(401);
           done();
@@ -206,7 +210,7 @@ describe('Category', () => {
 
     it('should throw 500 when no information is provided', (done) => {
       chai.request(server)
-        .put(`${resourceUrl}/${category1._id}`)
+        .put(`${resourceUrl}/${goal1._id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(500);
@@ -216,7 +220,7 @@ describe('Category', () => {
 
     it('should throw 500 when provided an empty object to update', (done) => {
       chai.request(server)
-        .put(`${resourceUrl}/${category1._id}`)
+        .put(`${resourceUrl}/${goal1._id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send({})
         .end((err, response) => {
@@ -225,21 +229,21 @@ describe('Category', () => {
         });
     });
 
-    it('should be able to update another user\'s category if is admin', (done) => {
+    it('should be able to update another user\'s goal if is admin', (done) => {
       chai.request(server)
-        .put(`${resourceUrl}/${category3._id}`)
+        .put(`${resourceUrl}/${goal3._id}`)
         .set('Authorization', `Bearer ${accessToken}`)
-        .send(category2)
+        .send(goal2)
         .end((err, response) => {
           response.should.have.status(200);
           response.body.should.be.an('object');
-          response.body.should.have.property('name', category2.name);
+          response.body.should.have.property('name', goal2.name);
 
           done();
         });
     });
 
-    it('should return 403 when the user is not allowed to update the category', (done) => {
+    it('should return 403 when the user is not allowed to update the goal', (done) => {
       const token = createAccessToken(
         'test@gmail.com',
         'user',
@@ -249,20 +253,20 @@ describe('Category', () => {
       );
 
       chai.request(server)
-        .put(`${resourceUrl}/${category3._id}`)
+        .put(`${resourceUrl}/${goal3._id}`)
         .set('Authorization', `Bearer ${token}`)
-        .send(category2)
+        .send(goal2)
         .end((err, response) => {
           response.should.have.status(403);
           done();
         });
     });
 
-    it('should return 500 if no category is found', (done) => {
+    it('should return 500 if no goal is found', (done) => {
       chai.request(server)
         .put(`${resourceUrl}/${new Types.ObjectId()}`)
         .set('Authorization', `Bearer ${accessToken}`)
-        .send(category2)
+        .send(goal2)
         .end((err, response) => {
           response.should.have.status(500);
           done();
@@ -270,15 +274,15 @@ describe('Category', () => {
     });
   });
 
-  describe('Delete Category - DELETE /api/v1/category/:id', () => {
-    it('should delete a category', (done) => {
+  describe('Delete Goal - DELETE /api/v1/goal/:id', () => {
+    it('should delete a goal', (done) => {
       chai.request(server)
-        .delete(`${resourceUrl}/${category2._id}`)
+        .delete(`${resourceUrl}/${goal2._id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(200);
           response.body.should.be.an('object');
-          response.body.should.have.property('name', category2.name);
+          response.body.should.have.property('name', goal2.name);
           response.body.should.have.property('user', adminUser._id.toString());
 
           done();
@@ -287,21 +291,21 @@ describe('Category', () => {
 
     it('should return 401 when the user is not authenticated', (done) => {
       chai.request(server)
-        .delete(`${resourceUrl}/${category1._id}`)
+        .delete(`${resourceUrl}/${goal1._id}`)
         .end((err, response) => {
           response.should.have.status(401);
           done();
         });
     });
 
-    it('should be able to delete another user\'s category if is admin', (done) => {
+    it('should be able to delete another user\'s goal if is admin', (done) => {
       chai.request(server)
-        .delete(`${resourceUrl}/${category3._id}`)
+        .delete(`${resourceUrl}/${goal3._id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(200);
           response.body.should.be.an('object');
-          response.body.should.have.property('name', category3.name);
+          response.body.should.have.property('name', goal3.name);
           response.body.should.have.property('user');
           response.body.user.should.not.equal(adminUser._id.toString());
 
@@ -309,7 +313,7 @@ describe('Category', () => {
         });
     });
 
-    it('should return 403 when the user is not allowed to delete the category', (done) => {
+    it('should return 403 when the user is not allowed to delete the goal', (done) => {
       const token = createAccessToken(
         'test@gmail.com',
         'user',
@@ -319,7 +323,7 @@ describe('Category', () => {
       );
 
       chai.request(server)
-        .delete(`${resourceUrl}/${category1._id}`)
+        .delete(`${resourceUrl}/${goal1._id}`)
         .set('Authorization', `Bearer ${token}`)
         .end((err, response) => {
           response.should.have.status(403);
@@ -327,7 +331,7 @@ describe('Category', () => {
         });
     });
 
-    it('should return 500 if no category is found', (done) => {
+    it('should return 500 if no goal is found', (done) => {
       chai.request(server)
         .delete(`${resourceUrl}/${new Types.ObjectId()}`)
         .set('Authorization', `Bearer ${accessToken}`)
@@ -338,10 +342,10 @@ describe('Category', () => {
     });
 
     it('should return 500 when an error occurs', (done) => {
-      const stub = sinon.stub(categoryModel, 'findByIdAndDelete').throws(new Error('Error'));
+      const stub = sinon.stub(goalModel, 'findByIdAndDelete').throws(new Error('Error'));
 
       chai.request(server)
-        .delete(`${resourceUrl}/${category1._id}`)
+        .delete(`${resourceUrl}/${goal1._id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(500);
