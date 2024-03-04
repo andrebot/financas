@@ -27,8 +27,12 @@ export default function setRoutes(app: Express, basePath = __dirname): void {
       // eslint-disable-next-line
       const { urlPrefix, router } = require(filePath).default;
 
-      app.use(`/api/v1/${urlPrefix}`, router);
-      logger.info(`Route added: /api/v1/${urlPrefix}`);
+      if (urlPrefix && router) {
+        app.use(`/api/v1/${urlPrefix}`, router);
+        logger.info(`Route added: /api/v1/${urlPrefix}`);
+      } else {
+        logger.error(`file ${file} does not have a valid route configuration. Skipping...`);
+      }
     });
   } catch (error) {
     logger.error('Error reading directory:', error);

@@ -80,4 +80,19 @@ describe('setRoutes', () => {
     // Check if app.use has been called with the correct arguments
     appUseStub.should.have.been.calledWith(`/api/v1/${mockRoute.urlPrefix}`, mockRoute.router);
   });
+
+  it('should handle invalid route configuration', () => {
+    // Mock a route file in the directory
+    readdirSyncStub.returns(['invalidRoute.ts']);
+    
+    // Assuming the mock route is in the same directory as the test file
+    const invalidRoutePath = require.resolve('./invalidRoute'); 
+    const invalidRoute = require(invalidRoutePath).default;
+
+    setRoutes(appMock, __dirname);
+
+    // Check if app.use has been called with the correct arguments
+    appUseStub.should.not.have.been.calledWith(`/api/v1/${invalidRoute.urlPrefix}`, invalidRoute.router);
+    loggerStub.error.should.have.been.calledWithMatch('file invalidRoute.ts does not have a valid route configuration. Skipping...');
+  });
 });
