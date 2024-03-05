@@ -4,8 +4,9 @@ import {
   Document,
   Types,
 } from 'mongoose';
+import transactionModel, { ITransaction } from './transactionModel';
 
-export enum BUGET_TYPES {
+export enum BUDGET_TYPES {
   ANNUALY  = 'annualy',
   QUARTERLY = 'quarterly',
   MONTHLY = 'monthly',
@@ -25,11 +26,11 @@ export interface IBudget extends Document {
   /**
    * Budget type
    */
-  type: BUGET_TYPES;
+  type: BUDGET_TYPES;
   /**
    * Budget's spent value
    */
-  spent: number;
+  spent?: number;
   /**
    * Budget's start date
    */
@@ -46,25 +47,50 @@ export interface IBudget extends Document {
    * Budget owner
    */
   user: Types.ObjectId;
+  /**
+   * Calculate the spent value of the budget by
+   * querying the transactions related to the budget
+   * by category and date
+   *
+   * @returns {Promise<number>} The spent value
+   */
+  calculateSpent: () => Promise<number>;
 }
 
 const BudgetSchema = new Schema<IBudget>({
   name: { type: String, required: true },
   value: { type: Number, required: true },
-  type: { type: String, enum: Object.values(BUGET_TYPES), required: true },
+  type: { type: String, enum: Object.values(BUDGET_TYPES), required: true },
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
-  categories: { type: [String], default: [] },
+  categories: { 
+    type: [String],
+    validate: {
+      validator: (v: string[]) => v.length > 0,
+      message: 'Categories must not be empty',
+    },
+    default: [],
+  },
   user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-}, {
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true },
 });
 
-// create a virtual field to calculate the spent value based in the categories
-BudgetSchema.virtual('spent').get(function getSpent(this: IBudget) {
-  /// do this later
-});
+/**
+ * Calculate the spent value of the budget
+ *
+ * @returns {Promise<number>} The spent value
+ */
+async function calculateSpent(this: IBudget): Promise<number> {
+  return transactionModel.find({
+    user: this.user,
+    category: { $in: this.categories },
+    date: { $gte: this.startDate, $lte: this.endDate },
+  }).then(
+    (transactionModels: ITransaction[]) => transactionModels.reduce(
+      (acc, curr) => acc + curr.value, 0
+    )
+  ).catch((err) => 0);
+};
 
+BudgetSchema.methods.calculateSpent = calculateSpent;
 
 export default model<IBudget>('Budget', BudgetSchema);
