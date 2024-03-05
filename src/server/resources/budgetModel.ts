@@ -6,13 +6,15 @@ import {
 } from 'mongoose';
 import transactionModel, { ITransaction } from './transactionModel';
 
+/* eslint-disable no-unused-vars */
 export enum BUDGET_TYPES {
-  ANNUALY  = 'annualy',
+  ANNUALY = 'annualy',
   QUARTERLY = 'quarterly',
   MONTHLY = 'monthly',
   WEEKLY = 'weekly',
   DAILY = 'daily',
 }
+/* eslint-enable no-unused-vars */
 
 export interface IBudget extends Document {
   /**
@@ -63,7 +65,7 @@ const BudgetSchema = new Schema<IBudget>({
   type: { type: String, enum: Object.values(BUDGET_TYPES), required: true },
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
-  categories: { 
+  categories: {
     type: [String],
     validate: {
       validator: (v: string[]) => v.length > 0,
@@ -79,17 +81,17 @@ const BudgetSchema = new Schema<IBudget>({
  *
  * @returns {Promise<number>} The spent value
  */
+// eslint-disable-next-line no-unused-vars
 async function calculateSpent(this: IBudget): Promise<number> {
   return transactionModel.find({
     user: this.user,
     category: { $in: this.categories },
     date: { $gte: this.startDate, $lte: this.endDate },
   }).then(
-    (transactionModels: ITransaction[]) => transactionModels.reduce(
-      (acc, curr) => acc + curr.value, 0
-    )
-  ).catch((err) => 0);
-};
+    (transactionModels: ITransaction[]) => transactionModels
+      .reduce((acc, curr) => acc + curr.value, 0),
+  ).catch(() => 0);
+}
 
 BudgetSchema.methods.calculateSpent = calculateSpent;
 

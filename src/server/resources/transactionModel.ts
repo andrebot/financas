@@ -5,13 +5,14 @@ import {
   Types,
 } from 'mongoose';
 
+/* eslint-disable no-unused-vars */
 export enum TRANSACTION_TYPES {
   WITHDRAW = 'withdraw',
   DEPOSIT = 'deposit',
   TRANSFER = 'transfer',
   BANK_SLIP = 'bank_slip',
   CARD = 'card',
-};
+}
 
 export enum INVESTMENT_TYPES {
   CDB = 'cdb',
@@ -27,7 +28,8 @@ export enum INVESTMENT_TYPES {
   LF = 'lf',
   FII = 'fii',
   TRESURY = 'tresury',
-};
+}
+/* eslint-enable no-unused-vars */
 
 export interface IGoalItem extends Document {
   goal: Types.ObjectId;
@@ -47,7 +49,7 @@ export interface ITransaction extends Document {
   investmentType: INVESTMENT_TYPES;
   user: Schema.Types.ObjectId;
   goalsList: IGoalItem[];
-};
+}
 
 const TransactionSchema = new Schema<ITransaction>({
   name: { type: String, required: true },
@@ -64,7 +66,9 @@ const TransactionSchema = new Schema<ITransaction>({
     type: [{
       goal: { type: Schema.Types.ObjectId, ref: 'Goal', required: true },
       goalName: { type: String, required: true },
-      percentage: { type: Number, default: 0, min: 0, max: 1 },
+      percentage: {
+        type: Number, default: 0, min: 0, max: 1,
+      },
     }],
     default: [],
   },
