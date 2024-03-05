@@ -7,7 +7,7 @@ import {
 
 export interface IGoal extends Document {
   /**
-   * Name of the category
+   * Name of the Goal
    */
   name: string;
   /**
@@ -19,7 +19,7 @@ export interface IGoal extends Document {
    */
   dueDate: Date;
   /**
-   * Category owner
+   * Goal owner
    */
   user: Types.ObjectId;
 }
