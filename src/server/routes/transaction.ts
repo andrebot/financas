@@ -1,21 +1,13 @@
 import contentRouteFactory from './contentRouteFactory';
 import createTokenValidation from '../utils/authorization';
-import TransactionModel, {
-  ITransaction,
-  TRANSACTION_TYPES,
-  INVESTMENT_TYPES,
-} from '../resources/transactionModel';
+import TransactionModel, { ITransaction } from '../resources/transactionModel';
+import { getTransactionTypes } from '../controllers/transaction';
 
 const {
   urlPrefix,
   router,
 } = contentRouteFactory<ITransaction>(TransactionModel, 'transaction');
 
-router.get('/types', createTokenValidation(), (req, res) => {
-  res.send({
-    transactionTypes: Object.values(TRANSACTION_TYPES),
-    investmentTypes: Object.values(INVESTMENT_TYPES),
-  });
-});
+router.get('/types', createTokenValidation(), getTransactionTypes);
 
-export { urlPrefix, router };
+export default { urlPrefix, router };
