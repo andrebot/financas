@@ -21,19 +21,9 @@ export interface ICategory extends Document {
 }
 
 const CategorySchema = new Schema<ICategory>({
-  name: {
-    type: String,
-    required: true,
-  },
-  user: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-  },
-  parentCategory: {
-    type: Schema.Types.ObjectId,
-    ref: 'Category',
-  },
+  name: { type: String, required: true },
+  user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  parentCategory: { type: Schema.Types.ObjectId, ref: 'Category' },
 });
 
 export default model<ICategory>('Category', CategorySchema);

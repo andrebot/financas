@@ -25,23 +25,10 @@ export interface IGoal extends Document {
 }
 
 const GoalSchema = new Schema<IGoal>({
-  name: {
-    type: String,
-    required: true,
-  },
-  value: {
-    type: Number,
-    required: true,
-  },
-  dueDate: {
-    type: Date,
-    required: true,
-  },
-  user: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-  },
+  name: { type: String, required: true },
+  value: { type: Number, required: true },
+  dueDate: { type: Date, required: true },
+  user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
 });
 
 export default model<IGoal>('Goal', GoalSchema);

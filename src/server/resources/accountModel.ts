@@ -52,41 +52,19 @@ export interface IAccount extends Document {
  * Schema for the Card
  */
 const CardSchema = new Schema<ICard>({
-  number: {
-    type: String,
-    required: true,
-  },
-  expirationDate: {
-    type: String,
-    required: true,
-  },
+  number: { type: String, required: true },
+  expirationDate: { type: String, required: true },
 });
 
 /**
  * Schema for the Account
  */
 const AccountSchema = new Schema<IAccount>({
-  name: {
-    type: String,
-    required: true,
-  },
-  currency: {
-    type: String,
-    required: true,
-  },
-  agency: {
-    type: String,
-    required: true,
-  },
-  accountNumber: {
-    type: String,
-    required: true,
-  },
-  user: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-  },
+  name: { type: String, required: true },
+  currency: { type: String, required: true },
+  agency: { type: String, required: true },
+  accountNumber: { type: String, required: true },
+  user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   cards: [CardSchema],
 });
 

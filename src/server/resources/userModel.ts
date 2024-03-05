@@ -60,14 +60,10 @@ function transformUserObject(doc: DocType, ret: Record<string, unknown>) {
  * Schema for the User
  */
 const UserModel = new Schema<IUser>({
-  email: {
-    type: String, match: regExpEmail, unique: true, required: true,
-  },
+  email: { type: String, match: regExpEmail, unique: true, required: true },
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
-  role: {
-    type: String, required: true, enum: ['admin', 'user'], default: 'user',
-  },
+  role: { type: String, required: true, enum: ['admin', 'user'], default: 'user' },
   password: { type: String, required: true },
 }, {
   timestamps: true,
