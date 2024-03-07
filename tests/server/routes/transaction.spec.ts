@@ -1,6 +1,6 @@
 import transactionRouter from '../../../src/server/routes/transaction';
 
-describe('Account routes', () => {
+describe('Transaction routes', () => {
   let router: any;
 
   beforeEach(() => {
@@ -17,9 +17,9 @@ describe('Account routes', () => {
     const routes = [
       { method: 'get', path: '/' },
       { method: 'post', path: '/' },
-      { method: 'get', path: '/:id' },
-      { method: 'put', path: '/:id' },
-      { method: 'delete', path: '/:id' },
+      { method: 'get', path: '/:id([0-9a-fA-F]{24})' },
+      { method: 'put', path: '/:id([0-9a-fA-F]{24})' },
+      { method: 'delete', path: '/:id([0-9a-fA-F]{24})' },
       { method: 'get', path: '/types' },
     ];
 

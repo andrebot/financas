@@ -41,9 +41,9 @@ describe(('contentRouteFactory'), () => {
     newRouter.router.stack.should.have.lengthOf(5);
     newRouter.router.stack[0].route.path.should.equal('/');
     newRouter.router.stack[1].route.path.should.equal('/');
-    newRouter.router.stack[2].route.path.should.equal('/:id');
-    newRouter.router.stack[3].route.path.should.equal('/:id');
-    newRouter.router.stack[4].route.path.should.equal('/:id');
+    newRouter.router.stack[2].route.path.should.equal('/:id([0-9a-fA-F]{24})');
+    newRouter.router.stack[3].route.path.should.equal('/:id([0-9a-fA-F]{24})');
+    newRouter.router.stack[4].route.path.should.equal('/:id([0-9a-fA-F]{24})');
   });
 
   it('should return a router with the correct middleware', () => {
