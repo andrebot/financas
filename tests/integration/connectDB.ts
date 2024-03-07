@@ -5,6 +5,7 @@ import UserModel, { IUser } from '../../src/server/resources/userModel';
 import AccountModel, { IAccount } from '../../src/server/resources/accountModel';
 import categoryModel, { ICategory } from '../../src/server/resources/categoryModel';
 import GoalModel, { IGoal } from '../../src/server/resources/goalModel';
+import transactionModel, { ITransaction, IGoalItem, INVESTMENT_TYPES, TRANSACTION_TYPES } from '../../src/server/resources/transactionModel';
 
 export const adminUser = {
   email: 'admin@example.com',
@@ -74,6 +75,45 @@ export const goal3 = {
   value: 300,
   dueDate: new Date(),
 } as IGoal;
+export const transaction1 = {
+  name: 'Test Transaction 1',
+  category: 'Test Category 1',
+  parentCategory: 'Test Parent Category 1',
+  type: TRANSACTION_TYPES.WITHDRAW,
+  date: new Date(),
+  value: 100,
+  isCredit: false,
+} as ITransaction;
+export const transaction2 = {
+  name: 'Test Transaction 2',
+  category: 'Test Category 2',
+  parentCategory: 'Test Parent Category 2',
+  type: TRANSACTION_TYPES.INVESTMENT,
+  date: new Date(),
+  value: 200,
+  isCredit: false,
+  investmentType: INVESTMENT_TYPES.LCI,
+  goalsList: [{
+    goal: new mongoose.Types.ObjectId(),
+    goalName: 'Test Goal 1',
+    percentage: 0.5,
+  }],
+} as ITransaction;
+export const transaction3 = {
+  name: 'Test Transaction 3',
+  category: 'Test Category 3',
+  parentCategory: 'Test Parent Category 3',
+  type: TRANSACTION_TYPES.INVESTMENT,
+  date: new Date(),
+  value: 300,
+  isCredit: false,
+  investmentType: INVESTMENT_TYPES.LCA,
+  goalsList: [{
+    goal: new mongoose.Types.ObjectId(),
+    goalName: 'Test Goal 2',
+    percentage: 0.5,
+  }],
+} as ITransaction;
 
 // Establish a connection to the in-memory database
 export const connectToDatabase = async () => {
@@ -127,3 +167,14 @@ export const createGoal = async (goal: IGoal, userID: Types.ObjectId) => {
 
   goal._id = newGoal._id;
 };
+
+export const createTransaction = async (transaction: ITransaction, userID: Types.ObjectId, accountID: Types.ObjectId) => {
+  const newTransaction = new transactionModel({
+    ...transaction,
+    user: userID,
+    account: accountID,
+  });
+  await newTransaction.save();
+
+  transaction._id = newTransaction._id;
+}

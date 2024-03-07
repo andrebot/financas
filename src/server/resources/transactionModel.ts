@@ -12,6 +12,7 @@ export enum TRANSACTION_TYPES {
   TRANSFER = 'transfer',
   BANK_SLIP = 'bank_slip',
   CARD = 'card',
+  INVESTMENT = 'investment',
 }
 
 export enum INVESTMENT_TYPES {
