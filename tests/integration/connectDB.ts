@@ -5,7 +5,8 @@ import UserModel, { IUser } from '../../src/server/resources/userModel';
 import AccountModel, { IAccount } from '../../src/server/resources/accountModel';
 import categoryModel, { ICategory } from '../../src/server/resources/categoryModel';
 import GoalModel, { IGoal } from '../../src/server/resources/goalModel';
-import transactionModel, { ITransaction, IGoalItem, INVESTMENT_TYPES, TRANSACTION_TYPES } from '../../src/server/resources/transactionModel';
+import BudgetModel, { IBudget, BUDGET_TYPES } from '../../src/server/resources/budgetModel';
+import transactionModel, { ITransaction, INVESTMENT_TYPES, TRANSACTION_TYPES } from '../../src/server/resources/transactionModel';
 
 export const adminUser = {
   email: 'admin@example.com',
@@ -75,6 +76,30 @@ export const goal3 = {
   value: 300,
   dueDate: new Date(),
 } as IGoal;
+export const budget1 = {
+  name: 'Test Budget 1',
+  value: 100,
+  type: BUDGET_TYPES.MONTHLY,
+  startDate: new Date(),
+  endDate: new Date(),
+  categories: ['Test Category 1'],
+} as IBudget;
+export const budget2 = {
+  name: 'Test Budget 2',
+  value: 100,
+  type: BUDGET_TYPES.ANNUALY,
+  startDate: new Date(),
+  endDate: new Date(),
+  categories: ['Test Category 1'],
+} as IBudget;
+export const budget3 = {
+  name: 'Test Budget 3',
+  value: 100,
+  type: BUDGET_TYPES.QUARTERLY,
+  startDate: new Date(),
+  endDate: new Date(),
+  categories: ['Test Category 1'],
+} as IBudget;
 export const transaction1 = {
   name: 'Test Transaction 1',
   category: 'Test Category 1',
@@ -178,3 +203,13 @@ export const createTransaction = async (transaction: ITransaction, userID: Types
 
   transaction._id = newTransaction._id;
 }
+
+export const createBudget = async (budget: IBudget, userID: Types.ObjectId) => {
+  const newBudget = new BudgetModel({
+    ...budget,
+    user: userID,
+  });
+  await newBudget.save();
+
+  budget._id = newBudget._id;
+};

@@ -1,4 +1,5 @@
 import { Model, Document } from 'mongoose';
+import { IBudget } from '../resources/budgetModel';
 
 /**
  * Save content to the database
@@ -143,4 +144,21 @@ export async function getContent<T extends Document>(
   }
 
   return null;
+}
+
+/**
+ * Get a budget from the database
+ *
+ * @param id - The id of the budget to get
+ * @param userId - The id of the user getting the budget
+ * @returns The budget
+ */
+export async function getBudget(id: string, ContentModel: Model<IBudget>, userId?: string): Promise<IBudget | null> {
+  const budget = await getContent<IBudget>(id, ContentModel, userId);
+
+  if (budget) {
+    budget.spent = await budget.calculateSpent();
+  }
+
+  return budget;
 }

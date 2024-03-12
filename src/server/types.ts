@@ -107,4 +107,15 @@ export interface IContentController {
    */
   getContent(req: RequestWithUser, res: Response): Promise<Response>;
 }
+
+export interface IBudgetController extends IContentController {
+  /**
+   * Get budget by id. If the user is an admin, they can get any budget.
+   *
+   * @param req - The request object
+   * @param res - The response object
+   * @returns The budget
+   */
+  getBudget(req: RequestWithUser, res: Response): Promise<Response>;
+}
 /* eslint-enable no-unused-vars */

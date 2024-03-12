@@ -7,6 +7,7 @@ import {
   createAccount,
   createCategory,
   createTransaction,
+  createBudget,
   createGoal,
   disconnectDatabase,
   account1,
@@ -18,6 +19,9 @@ import {
   goal1,
   goal2,
   goal3,
+  budget1,
+  budget2,
+  budget3,
   transaction1,
   transaction2,
   transaction3,
@@ -50,6 +54,10 @@ before(async () => {
   await createTransaction(transaction2, adminUser._id, account1._id);
   await createTransaction(transaction3, new Types.ObjectId(), account2._id);
   console.log('Transactions created');
+  await createBudget(budget1, adminUser._id);
+  await createBudget(budget2, adminUser._id);
+  await createBudget(budget3, new Types.ObjectId());
+  console.log('Budgets created');
 });
 
 after(async () => {

@@ -6,6 +6,7 @@ import {
   deleteContent,
   listContent,
   getContent,
+  getBudget,
 } from '../../../src/server/managers/contentManager';
 import { Types } from 'mongoose';
 
@@ -253,6 +254,49 @@ describe('contentManager', () => {
       const result = await getContent('id', methodStubs as any, content.user.toString());
   
       should().not.exist(result);
+    });
+  });
+
+  describe('getBudget', () => {
+    it('should calculate spent when retrieving a valid budget', async () => {
+      const budget = {
+        name: 'test',
+        value: 1000,
+        type: 'monthly',
+        startDate: new Date(),
+        endDate: new Date(),
+        categories: ['test'],
+        user: new Types.ObjectId(),
+        calculateSpent: sinon.stub().resolves(100),
+      };
+      (methodStubs.findById as sinon.SinonStub).resolves(budget);
+      const result = await getBudget('id', methodStubs as any, budget.user.toString()) as any & { spent: number };
+  
+      should().exist(result);
+      result.should.equal(budget);
+      result.spent.should.equal(100);
+      methodStubs.findById.should.have.been.calledOnce;
+      budget.calculateSpent.should.have.been.calledOnce;
+    });
+
+    it('should return null if the budget is not found', async () => {	
+      (methodStubs.findById as sinon.SinonStub).resolves(null);
+  
+      const result = await getBudget('id', methodStubs as any, content.user.toString());
+  
+      should().not.exist(result);
+    });
+
+    it('should throw an error if anything goes wrong', async () => {
+      (methodStubs.findById as sinon.SinonStub).rejects(new Error('Error'));
+  
+      try {
+        await getBudget('id', methodStubs as any, content.user.toString());
+        should().fail();
+      } catch (err) {
+        should().exist(err);
+        (err as Error).message.should.equal('Error');
+      }
     });
   });
 });
