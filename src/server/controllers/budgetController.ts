@@ -1,7 +1,7 @@
+import { Response } from 'express';
 import contentControllerFactory from './contentFactory';
 import budgetModel from '../resources/budgetModel';
 import { getBudget } from '../managers/contentManager';
-import { Response } from 'express';
 import { RequestWithUser } from '../types';
 import { handleError } from '../utils/responseHandlers';
 
@@ -14,7 +14,10 @@ const budgetController = contentControllerFactory(budgetModel);
  * @param res - The response object
  * @returns The budget
  */
-budgetController.getContent = async function getBudgetController(req: RequestWithUser, res: Response) {
+budgetController.getContent = async function getBudgetController(
+  req: RequestWithUser,
+  res: Response,
+) {
   try {
     const { id: contentId } = req.params;
 

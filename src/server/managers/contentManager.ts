@@ -153,7 +153,11 @@ export async function getContent<T extends Document>(
  * @param userId - The id of the user getting the budget
  * @returns The budget
  */
-export async function getBudget(id: string, ContentModel: Model<IBudget>, userId?: string): Promise<IBudget | null> {
+export async function getBudget(
+  id: string,
+  ContentModel: Model<IBudget>,
+  userId?: string,
+): Promise<IBudget | null> {
   const budget = await getContent<IBudget>(id, ContentModel, userId);
 
   if (budget) {
