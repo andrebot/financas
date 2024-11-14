@@ -1,9 +1,13 @@
-import exportConfig from 'export-config';
+import exportConfig from './configWrap';
 
-const mongo = {
+interface MongoConfig {
+  DB_URL: string;
+};
+
+const MONGO = exportConfig<MongoConfig>({
   default: {
     DB_URL: process.env.DB_URL || 'mongodb://127.0.0.1:27017/financas',
   },
-};
+});
 
-export default exportConfig(mongo);
+export const { DB_URL } = MONGO;

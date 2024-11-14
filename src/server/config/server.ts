@@ -1,9 +1,13 @@
-import exportConfig from 'export-config';
+import exportConfig from './configWrap';
 
-const SERVER = {
+interface ServerConfig {
+  PORT: number;
+}
+
+const SERVER = exportConfig<ServerConfig>({
   default: {
     PORT: process.env.PORT || 3000,
   },
-};
+});
 
-export default exportConfig(SERVER);
+export const { PORT } = SERVER;
