@@ -33,9 +33,9 @@ function updateInstanceObject(payload: Record<string, unknown>, instance: Docume
  * @param instance - The instance to check
  * @param modelName - The name of the model
  */
-function checkVoidInstance(instance: Document, modelName: string): void {
+function checkVoidInstance(instance: Document, modelName: string, id: string): void {
   if (!instance) {
-    throw new Error(`${modelName} not found`);
+    throw new Error(`${modelName} not found with id ${id}`);
   }
 }
 
@@ -109,7 +109,7 @@ export async function updateContent<T extends Document>(
 
   const instance = await ContentModel.findById(id) as T & { user: string };
 
-  checkVoidInstance(instance, ContentModel.modelName);
+  checkVoidInstance(instance, ContentModel.modelName, id);
   checkUserAccess(instance.user.toString(), userId, isAdmin, ContentModel.modelName, id, 'update');
   updateInstanceObject(payload, instance);
 
@@ -139,7 +139,7 @@ export async function deleteContent<T extends Document>(
 ): Promise<T> {
   const instance = await ContentModel.findById(id) as T & { user: string };
 
-  checkVoidInstance(instance, ContentModel.modelName);
+  checkVoidInstance(instance, ContentModel.modelName, id);
   checkUserAccess(instance.user.toString(), userId, isAdmin, ContentModel.modelName, id, 'delete');
 
   await ContentModel.findByIdAndDelete(id);
