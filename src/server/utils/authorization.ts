@@ -7,6 +7,32 @@ import {
   TokenValidationMiddleware,
 } from '../types';
 import { regExpBearer } from './validators';
+import logger from './logger';
+
+/**
+ * Check if the payload is valid
+ *
+ * @param payload - The payload
+ * @throws 403 - If the payload is not an object or null
+ */
+function checkValidPayload(payload: string | jwt.JwtPayload): void {
+  if (typeof payload !== 'object' || payload === null) {
+    throw new Error('Invalid payload');
+  }
+}
+
+/**
+ * Check if the user has admin access
+ *
+ * @param user - The user
+ * @param isAdmin - Whether the user must be an admin
+ * @throws 403 - If the user is not an admin
+ */
+function checkAdminAccess(user: UserPayload, isAdmin: boolean): void {
+  if (user.role !== 'admin' && isAdmin) {
+    throw new Error('User is not an admin');
+  }
+}
 
 /**
  * Create a token validation middleware
@@ -45,21 +71,13 @@ TokenValidationMiddleware {
     try {
       const payload = jwt.verify(token, ACCESS_TOKEN_SECRET);
 
-      if (typeof payload !== 'object' || payload === null) {
-        res.sendStatus(403);
-        return;
-      }
+      checkValidPayload(payload);
+      checkAdminAccess(payload as UserPayload, isAdmin);
 
-      const user = payload as UserPayload;
-
-      if (isAdmin && user.role !== 'admin') {
-        res.sendStatus(403);
-        return;
-      }
-
-      req.user = user;
+      req.user = payload as UserPayload;
       next();
     } catch (err) {
+      logger.error(err);
       res.sendStatus(403);
     }
   };
