@@ -113,6 +113,109 @@ function handleContentError(
 }
 
 /**
+ * Creates the content.
+ *
+ * @param req - The request object
+ * @param res - The response object
+ * @param model - The model to create the content from
+ * @returns The content
+ */
+async function createContentController<T extends Document>(req: RequestWithUser, res: Response, model: Model<T>) {
+  try {
+    checkVoidPayload(req.body, model.modelName, 'create');
+    const content = await createContent<T>(req.body, model);
+
+    return res.send(content);
+  } catch (error) {
+    return handleError(error as Error, res);
+  }
+}
+
+/**
+ * Updates the content.
+ *
+ * @param req - The request object
+ * @param res - The response object
+ * @param model - The model to update the content from
+ * @returns The content
+ */
+async function updateContentController<T extends Document>(req: RequestWithUser, res: Response, model: Model<T>) {
+  try {
+    const { id: contentId } = req.params;
+
+    checkVoidPayload(req.body, model.modelName, 'update');
+
+    if (req.user && req.user.id) {
+      return await updatePayload<T>(req, res, model, contentId);
+    }
+
+    throw new Error('User not authenticated');
+  } catch (error) {
+    return handleContentError(error as Error, res);
+  }
+}
+
+/**
+ * Deletes the content.
+ *
+ * @param req - The request object
+ * @param res - The response object
+ * @param model - The model to delete the content from
+ * @returns The content
+ */
+async function deleteContentController<T extends Document>(req: RequestWithUser, res: Response, model: Model<T>) {
+  try {
+    const { id: contentId } = req.params;
+
+    if (req.user && req.user.id) {
+      return await deleteContentPayload<T>(req, res, model, contentId);
+    }
+
+    throw new Error('User not authenticated');
+  } catch (error) {
+    return handleContentError(error as Error, res);
+  }
+}
+
+/**
+ * Lists the content.
+ *
+ * @param req - The request object
+ * @param res - The response object
+ * @param model - The model to list the content from
+ * @returns The content
+ */
+async function listContentController<T extends Document>(req: RequestWithUser, res: Response, model: Model<T>) {
+  try {
+    const content = await listContent<T>(req.body, model, req.user?.id);
+
+    return res.send(content);
+  } catch (error) {
+    return handleError(error as Error, res);
+  }
+}
+
+/**
+ * Gets the content.
+ *
+ * @param req - The request object
+ * @param res - The response object
+ * @param model - The model to get the content from
+ * @returns The content
+ */
+async function getContentController<T extends Document>(req: RequestWithUser, res: Response, model: Model<T>) {
+  try {
+    const { id: contentId } = req.params;
+
+    const content = await getContent<T>(contentId, model, req.user?.id);
+
+    return res.send(content);
+  } catch (error) {
+    return handleError(error as Error, res);
+  }
+}
+
+/**
  * Creates the content controller.
  *
  * @param model - The model to create the content from
@@ -122,67 +225,10 @@ export default function contentControllerFactory<T extends Document>(
   model: Model<T>,
 ): IContentController {
   return {
-    async createContent(req: RequestWithUser, res: Response) {
-      try {
-        checkVoidPayload(req.body, model.modelName, 'create');
-        const content = await createContent<T>(req.body, model);
-
-        return res.send(content);
-      } catch (error) {
-        return handleError(error as Error, res);
-      }
-    },
-
-    async updateContent(req: RequestWithUser, res: Response) {
-      try {
-        const { id: contentId } = req.params;
-
-        checkVoidPayload(req.body, model.modelName, 'update');
-
-        if (req.user && req.user.id) {
-          return await updatePayload<T>(req, res, model, contentId);
-        }
-
-        throw new Error('User not authenticated');
-      } catch (error) {
-        return handleContentError(error as Error, res);
-      }
-    },
-
-    async deleteContent(req: RequestWithUser, res: Response) {
-      try {
-        const { id: contentId } = req.params;
-
-        if (req.user && req.user.id) {
-          return await deleteContentPayload<T>(req, res, model, contentId);
-        }
-
-        throw new Error('User not authenticated');
-      } catch (error) {
-        return handleContentError(error as Error, res);
-      }
-    },
-
-    async listContent(req: RequestWithUser, res: Response) {
-      try {
-        const content = await listContent<T>(req.body, model, req.user?.id);
-
-        return res.send(content);
-      } catch (error) {
-        return handleError(error as Error, res);
-      }
-    },
-
-    async getContent(req: RequestWithUser, res: Response) {
-      try {
-        const { id: contentId } = req.params;
-
-        const content = await getContent<T>(contentId, model, req.user?.id);
-
-        return res.send(content);
-      } catch (error) {
-        return handleError(error as Error, res);
-      }
-    },
+    createContent: (req: RequestWithUser, res: Response) => createContentController(req, res, model),
+    updateContent: (req: RequestWithUser, res: Response) => updateContentController(req, res, model),
+    deleteContent: (req: RequestWithUser, res: Response) => deleteContentController(req, res, model),
+    listContent: (req: RequestWithUser, res: Response) => listContentController(req, res, model),
+    getContent: (req: RequestWithUser, res: Response) => getContentController(req, res, model),
   };
 }
