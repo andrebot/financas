@@ -1,11 +1,11 @@
 import app from './server';
 import logger from './utils/logger';
 import db from './utils/databaseConnection';
-import config from './config/server';
+import { PORT } from './config/server';
 
 // Start the server
-const server = app.listen(config.PORT, async () => {
-  logger.info(`Server listening on port ${config.PORT}...`);
+const server = app.listen(PORT, async () => {
+  logger.info(`Server listening on port ${PORT}...`);
 
   await db.connectToDatabase();
 });

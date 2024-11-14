@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import logger from './logger';
-import mongocfg from '../config/mongo';
+import { DB_URL, MONGO_OPT } from '../config/mongo';
 
 /**
  * Connects to a MongoDB database
@@ -9,8 +9,8 @@ import mongocfg from '../config/mongo';
  */
 async function connectToDatabase(): Promise<void> {
   try {
-    logger.info(`Connecting to mongo: ${mongocfg.DB_URL}`);
-    await mongoose.connect(mongocfg.DB_URL, mongocfg.MONGO_OPT);
+    logger.info(`Connecting to mongo: ${DB_URL}`);
+    await mongoose.connect(DB_URL, MONGO_OPT);
 
     logger.info('Connected to database');
   } catch (error) {

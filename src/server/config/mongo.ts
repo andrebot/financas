@@ -2,6 +2,7 @@ import exportConfig from './configWrap';
 
 interface MongoConfig {
   DB_URL: string;
+  MONGO_OPT?: Record<string, unknown>;
 };
 
 const MONGO = exportConfig<MongoConfig>({
@@ -10,4 +11,4 @@ const MONGO = exportConfig<MongoConfig>({
   },
 });
 
-export const { DB_URL } = MONGO;
+export const { DB_URL, MONGO_OPT } = MONGO;
