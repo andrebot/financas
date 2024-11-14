@@ -11,6 +11,24 @@ import { handleError } from '../utils/responseHandlers';
 import type{ RequestWithUser, IContentController, UserPayload } from '../types';
 
 /**
+ * Creates the content controller.
+ *
+ * @param model - The model to create the content from
+ * @returns The content controller
+ */
+export default function contentControllerFactory<T extends Document>(
+  model: Model<T>,
+): IContentController {
+  return {
+    createContent: (req: RequestWithUser, res: Response) => createContentController(req, res, model),
+    updateContent: (req: RequestWithUser, res: Response) => updateContentController(req, res, model),
+    deleteContent: (req: RequestWithUser, res: Response) => deleteContentController(req, res, model),
+    listContent: (req: RequestWithUser, res: Response) => listContentController(req, res, model),
+    getContent: (req: RequestWithUser, res: Response) => getContentController(req, res, model),
+  };
+}
+
+/**
  * Checks if the payload is void.
  *
  * @param payload - The payload to check
@@ -33,7 +51,8 @@ function checkVoidPayload(payload: Record<string, unknown>, modelName: string, a
  * @throws {Error} - If the user is not authenticated
  */
 async function updatePayload<T extends Document>(
-  req: RequestWithUser,
+  user: UserPayload,
+  updateProperties: Record<string, unknown>,
   res: Response,
   model: Model<T>,
   contentId: string,
@@ -41,17 +60,13 @@ async function updatePayload<T extends Document>(
   const {
     id: userId,
     role,
-  } = req.user as UserPayload;
-
-  if (!userId) {
-    throw new Error('User not authenticated');
-  }
+  } = user;
 
   const content = await updateContent<T>(
     contentId,
-    req.body,
+    updateProperties,
     model,
-    userId,
+    userId!,
     role === 'admin',
   );
 
@@ -68,7 +83,7 @@ async function updatePayload<T extends Document>(
  * @throws {Error} - If the user is not authenticated
  */
 async function deleteContentPayload<T extends Document>(
-  req: RequestWithUser,
+  user: UserPayload,
   res: Response,
   model: Model<T>,
   contentId: string,
@@ -76,16 +91,12 @@ async function deleteContentPayload<T extends Document>(
   const {
     id: userId,
     role,
-  } = req.user as UserPayload;
-
-  if (!userId) {
-    throw new Error('User not authenticated');
-  }
+  } = user;
 
   const content = await deleteContent<T>(
     contentId,
     model,
-    userId,
+    userId!,
     role === 'admin',
   );
 
@@ -146,7 +157,7 @@ async function updateContentController<T extends Document>(req: RequestWithUser,
     checkVoidPayload(req.body, model.modelName, 'update');
 
     if (req.user && req.user.id) {
-      return await updatePayload<T>(req, res, model, contentId);
+      return await updatePayload<T>(req.user, req.body, res, model, contentId);
     }
 
     throw new Error('User not authenticated');
@@ -168,7 +179,7 @@ async function deleteContentController<T extends Document>(req: RequestWithUser,
     const { id: contentId } = req.params;
 
     if (req.user && req.user.id) {
-      return await deleteContentPayload<T>(req, res, model, contentId);
+      return await deleteContentPayload<T>(req.user, res, model, contentId);
     }
 
     throw new Error('User not authenticated');
@@ -213,22 +224,4 @@ async function getContentController<T extends Document>(req: RequestWithUser, re
   } catch (error) {
     return handleError(error as Error, res);
   }
-}
-
-/**
- * Creates the content controller.
- *
- * @param model - The model to create the content from
- * @returns The content controller
- */
-export default function contentControllerFactory<T extends Document>(
-  model: Model<T>,
-): IContentController {
-  return {
-    createContent: (req: RequestWithUser, res: Response) => createContentController(req, res, model),
-    updateContent: (req: RequestWithUser, res: Response) => updateContentController(req, res, model),
-    deleteContent: (req: RequestWithUser, res: Response) => deleteContentController(req, res, model),
-    listContent: (req: RequestWithUser, res: Response) => listContentController(req, res, model),
-    getContent: (req: RequestWithUser, res: Response) => getContentController(req, res, model),
-  };
 }
