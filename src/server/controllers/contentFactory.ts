@@ -8,14 +8,123 @@ import {
   getContent,
 } from '../managers/contentManager';
 import { handleError } from '../utils/responseHandlers';
-import { RequestWithUser, IContentController } from '../types';
+import type{ RequestWithUser, IContentController, UserPayload } from '../types';
 
+/**
+ * Checks if the payload is void.
+ *
+ * @param payload - The payload to check
+ * @param modelName - The name of the model
+ * @throws {Error} - If the payload is void
+ */
+function checkVoidPayload(payload: Record<string, unknown>, modelName: string, action: string): void {
+  if (!payload || Object.keys(payload).length === 0) {
+    throw new Error(`No information provided to ${action} ${modelName}`);
+  }
+}
+
+/**
+ * Updates the content.
+ *
+ * @param req - The request object
+ * @param res - The response object
+ * @param model - The model to update the content from
+ * @param contentId - The id of the content to update
+ * @throws {Error} - If the user is not authenticated
+ */
+async function updatePayload<T extends Document>(
+  req: RequestWithUser,
+  res: Response,
+  model: Model<T>,
+  contentId: string,
+): Promise<Response<T>> {
+  const {
+    id: userId,
+    role,
+  } = req.user as UserPayload;
+
+  if (!userId) {
+    throw new Error('User not authenticated');
+  }
+
+  const content = await updateContent<T>(
+    contentId,
+    req.body,
+    model,
+    userId,
+    role === 'admin',
+  );
+
+  return res.send(content);
+}
+
+/**
+ * Deletes the content.
+ *
+ * @param req - The request object
+ * @param res - The response object
+ * @param model - The model to delete the content from
+ * @param contentId - The id of the content to delete
+ * @throws {Error} - If the user is not authenticated
+ */
+async function deleteContentPayload<T extends Document>(
+  req: RequestWithUser,
+  res: Response,
+  model: Model<T>,
+  contentId: string,
+): Promise<Response<T>> {
+  const {
+    id: userId,
+    role,
+  } = req.user as UserPayload;
+
+  if (!userId) {
+    throw new Error('User not authenticated');
+  }
+
+  const content = await deleteContent<T>(
+    contentId,
+    model,
+    userId,
+    role === 'admin',
+  );
+
+  return res.send(content);
+}
+
+/**
+ * Handles the content error.
+ *
+ * @param error - The error to handle
+ * @param res - The response object
+ * @throws {Error} - If the error is not allowed to update
+ */
+function handleContentError(
+  error: Error,
+  res: Response,
+) {
+  let status = 500;
+
+  if ((error as Error).message.includes('is not allowed')) {
+    status = 403;
+  }
+
+  return handleError(error as Error, res, status);
+}
+
+/**
+ * Creates the content controller.
+ *
+ * @param model - The model to create the content from
+ * @returns The content controller
+ */
 export default function contentControllerFactory<T extends Document>(
   model: Model<T>,
 ): IContentController {
   return {
     async createContent(req: RequestWithUser, res: Response) {
       try {
+        checkVoidPayload(req.body, model.modelName, 'create');
         const content = await createContent<T>(req.body, model);
 
         return res.send(content);
@@ -28,39 +137,15 @@ export default function contentControllerFactory<T extends Document>(
       try {
         const { id: contentId } = req.params;
 
-        if (!req.body || Object.keys(req.body).length === 0) {
-          return handleError(
-            new Error(`No information provided to update ${model.modelName}`),
-            res,
-          );
-        }
+        checkVoidPayload(req.body, model.modelName, 'update');
 
         if (req.user && req.user.id) {
-          const {
-            id: userId,
-            role,
-          } = req.user;
-
-          const content = await updateContent<T>(
-            contentId,
-            req.body,
-            model,
-            userId,
-            role === 'admin',
-          );
-
-          return res.send(content);
+          return await updatePayload<T>(req, res, model, contentId);
         }
 
         throw new Error('User not authenticated');
       } catch (error) {
-        let status = 500;
-
-        if ((error as Error).message.includes('is not allowed to update')) {
-          status = 403;
-        }
-
-        return handleError(error as Error, res, status);
+        return handleContentError(error as Error, res);
       }
     },
 
@@ -69,30 +154,12 @@ export default function contentControllerFactory<T extends Document>(
         const { id: contentId } = req.params;
 
         if (req.user && req.user.id) {
-          const {
-            id: userId,
-            role,
-          } = req.user;
-
-          const content = await deleteContent<T>(
-            contentId,
-            model,
-            userId,
-            role === 'admin',
-          );
-
-          return res.send(content);
+          return await deleteContentPayload<T>(req, res, model, contentId);
         }
 
         throw new Error('User not authenticated');
       } catch (error) {
-        let status = 500;
-
-        if ((error as Error).message.includes('is not allowed to delete')) {
-          status = 403;
-        }
-
-        return handleError(error as Error, res, status);
+        return handleContentError(error as Error, res);
       }
     },
 
