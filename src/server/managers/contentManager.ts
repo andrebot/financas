@@ -2,6 +2,67 @@ import { Model, Document } from 'mongoose';
 import { IBudget } from '../resources/budgetModel';
 
 /**
+ * Check if the payload is void
+ *
+ * @param content - The payload to check
+ * @param modelName - The name of the model
+ */
+function checkVoidPayload(content: Record<string, unknown>, modelName: string): void {
+  if (!content || Object.keys(content).length === 0) {
+    throw new Error(`No information provided to update ${modelName}`);
+  }
+}
+
+/**
+ * Update the instance object with the payload
+ *
+ * @param payload - The payload to update the instance with
+ * @param instance - The instance to update
+ */
+function updateInstanceObject(payload: Record<string, unknown>, instance: Document): void {
+  Object.keys(payload).forEach((key) => {
+    const value = payload[key as keyof typeof payload];
+
+    instance[key as keyof typeof instance] = value as typeof instance[keyof typeof instance];
+  });
+}
+
+/**
+ * Check if the instance is void
+ *
+ * @param instance - The instance to check
+ * @param modelName - The name of the model
+ */
+function checkVoidInstance(instance: Document, modelName: string): void {
+  if (!instance) {
+    throw new Error(`${modelName} not found`);
+  }
+}
+
+/**
+ * Check if the user has access to the content
+ *
+ * @param contentOwnerId - The id of the user who owns the content
+ * @param userId - The id of the user trying to access the content
+ * @param isAdmin - Whether the user is an admin
+ * @param modelName - The name of the model
+ * @param contentId - The id of the content
+ * @param action - The action to check access for
+ */
+function checkUserAccess(
+  contentOwnerId: string,
+  userId: string,
+  isAdmin: boolean,
+  modelName: string,
+  contentId: string,
+  action: string,
+): void {
+  if (!isAdmin && contentOwnerId !== userId) {
+    throw new Error(`User ${userId} is not allowed to ${action} ${modelName} with id ${contentId}`);
+  }
+}
+
+/**
  * Save content to the database
  *
  * @throws {Error} - If no content is provided
@@ -44,25 +105,13 @@ export async function updateContent<T extends Document>(
   userId: string,
   isAdmin: boolean = false,
 ): Promise<T> {
-  if (!payload || Object.keys(payload).length === 0) {
-    throw new Error(`No information provided to update ${ContentModel.modelName}`);
-  }
+  checkVoidPayload(payload, ContentModel.modelName);
 
   const instance = await ContentModel.findById(id) as T & { user: string };
 
-  if (!instance) {
-    throw new Error(`${ContentModel.modelName} not found with id ${id}`);
-  }
-
-  if (!isAdmin && instance.user.toString() !== userId) {
-    throw new Error(`User ${userId} is not allowed to update ${ContentModel.modelName} with id ${id}`);
-  }
-
-  Object.keys(payload).forEach((key) => {
-    const value = payload[key as keyof typeof payload];
-
-    instance[key as keyof typeof instance] = value as typeof instance[keyof typeof instance];
-  });
+  checkVoidInstance(instance, ContentModel.modelName);
+  checkUserAccess(instance.user.toString(), userId, isAdmin, ContentModel.modelName, id, 'update');
+  updateInstanceObject(payload, instance);
 
   await instance.save();
 
@@ -90,13 +139,8 @@ export async function deleteContent<T extends Document>(
 ): Promise<T> {
   const instance = await ContentModel.findById(id) as T & { user: string };
 
-  if (!instance) {
-    throw new Error(`${ContentModel.modelName} not found with id ${id}`);
-  }
-
-  if (!isAdmin && instance.user.toString() !== userId) {
-    throw new Error(`User ${userId} is not allowed to delete ${ContentModel.modelName} with id ${id}`);
-  }
+  checkVoidInstance(instance, ContentModel.modelName);
+  checkUserAccess(instance.user.toString(), userId, isAdmin, ContentModel.modelName, id, 'delete');
 
   await ContentModel.findByIdAndDelete(id);
 
