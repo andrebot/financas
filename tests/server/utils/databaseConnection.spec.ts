@@ -2,9 +2,10 @@ import chai from 'chai';
 import sinon, { SinonStub } from 'sinon';
 import sinonChai from 'sinon-chai';
 import mongoose from 'mongoose';
-import database from '../../../src/server/utils/databaseConnection'; // Replace with actual path
-import logger from '../../../src/server/utils/logger'; // Replace with actual path
+import database from '../../../src/server/utils/databaseConnection';
+import logger from '../../../src/server/utils/logger';
 
+// This is the first test file that needs to be run, so we need to initialize chai here. setup is not working
 chai.use(sinonChai);
 chai.should();
 
@@ -15,7 +16,6 @@ describe('Database Connection', function() {
   let loggerErrorStub: SinonStub;
 
   beforeEach(() => {
-    // Stubbing mongoose and logger methods
     connectStub = sinon.stub(mongoose, 'connect').resolves();
     disconnectStub = sinon.stub(mongoose, 'disconnect').resolves();
     loggerInfoStub = sinon.stub(logger, 'info');
@@ -23,7 +23,6 @@ describe('Database Connection', function() {
   });
 
   afterEach(() => {
-    // Restoring stubs
     sinon.restore();
   });
 

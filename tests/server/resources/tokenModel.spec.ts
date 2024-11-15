@@ -1,4 +1,3 @@
-import { should, util } from 'chai';
 import {
   addToken,
   isValidToken,

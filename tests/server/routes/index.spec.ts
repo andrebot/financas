@@ -1,11 +1,8 @@
-import chai from 'chai';
 import sinon, { SinonStub } from 'sinon';
 import { Express } from 'express';
 import setRoutes from '../../../src/server/routes';
 import logger from '../../../src/server/utils/logger';
 import fs from 'fs';
-
-chai.should();
 
 describe('setRoutes', () => {
   let readdirSyncStub: SinonStub;

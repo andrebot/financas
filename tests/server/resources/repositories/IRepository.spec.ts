@@ -1,7 +1,6 @@
-import chai, { should } from 'chai';
+import { should } from 'chai';
 import sinon from 'sinon';
 import { Document } from 'mongoose';
-import proxyquire from 'proxyquire';
 import { Repository } from '../../../../src/server/resources/repositories/IRepository';
 
 interface IMockModel {

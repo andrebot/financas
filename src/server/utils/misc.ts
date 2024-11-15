@@ -5,9 +5,12 @@
  * @returns True if the object is empty or null, false otherwise.
  */
 export function isObjectEmptyOrNull(obj: any): boolean {
-  console.log(obj);
   if (obj === null || obj === undefined) {
     return true;
+  }
+
+  if (obj instanceof RegExp) {
+    return false;
   }
 
   if (typeof obj === 'object' && obj !== null) {
