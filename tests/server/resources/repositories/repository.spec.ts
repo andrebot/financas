@@ -1,7 +1,7 @@
 import { should } from 'chai';
 import sinon from 'sinon';
 import { Document } from 'mongoose';
-import { Repository } from '../../../../src/server/resources/repositories/IRepository';
+import { Repository } from '../../../../src/server/resources/repositories/repository';
 
 interface IMockModel {
   name: string;
