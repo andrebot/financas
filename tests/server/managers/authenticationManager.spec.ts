@@ -12,8 +12,6 @@ import {
 } from '../../../src/server/config/auth';
 import { Types } from 'mongoose';
 
-chai.should();
-
 type MockUserObj = {
   email: string;
   firstName: string;

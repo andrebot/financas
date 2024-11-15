@@ -1,11 +1,12 @@
 import { Model, Document, FilterQuery } from 'mongoose';
 import { QueryCondition, QueryFilter } from './query';
+import { isObjectEmptyOrNull, removeEmptyProperties } from '../../utils/misc';
 
 export interface IRepository<T extends Document, K> {
   findById(id: string): Promise<K | null>;
   findByIdAndDelete(id: string): Promise<K | null>;
-  find(query: Record<string, unknown>): Promise<K[]>;
-  findOne(query: Record<string, unknown>): Promise<K | null>;
+  find(query: QueryFilter<T>): Promise<K[]>;
+  findOne(query: QueryFilter<T>): Promise<K | null>;
   save(entity?: K): Promise<K>;
   update(id: string, entity: Partial<K>): Promise<K | null>;
 }
@@ -18,7 +19,7 @@ const operatorMap: Record<string, string> = {
   lt: '$lt',
   lte: '$lte',
   gt: '$gt',
-  gte: '$gte'
+  gte: '$gte',
 };
 
 export class Repository<T extends Document, K> implements IRepository<T, K> {
@@ -37,6 +38,10 @@ export class Repository<T extends Document, K> implements IRepository<T, K> {
       translatedCondition[operatorMap[key]] = value;
     } else if (key === 'contains' && value !== undefined) {
       translatedCondition.$regex = new RegExp(String(value), 'i');
+    } else if (key === 'startsWith' && value !== undefined) {
+      translatedCondition.$regex = new RegExp(`^${String(value)}`, 'i');
+    } else if (key === 'endsWith' && value !== undefined) {
+      translatedCondition.$regex = new RegExp(`${String(value)}$`, 'i');
     }
   }
 
@@ -55,6 +60,7 @@ export class Repository<T extends Document, K> implements IRepository<T, K> {
 
     for (const key in query) {
       const value = query[key];
+
       if (this.isQueryCondition(value)) {
         translatedQuery[key] = this.translateCondition(value);
       } else {
@@ -62,7 +68,7 @@ export class Repository<T extends Document, K> implements IRepository<T, K> {
       }
     }
 
-    return translatedQuery;
+    return removeEmptyProperties(translatedQuery) || {};
   }
 
   findById(id: string): Promise<K | null> {
@@ -73,11 +79,15 @@ export class Repository<T extends Document, K> implements IRepository<T, K> {
     return this.model.findByIdAndDelete(id).lean();
   }
 
-  find(query: QueryFilter<T>): Promise<K[]> {
+  find(query: QueryFilter<T> = {}): Promise<K[]> {
     return this.model.find(this.translateFilter(query)).lean();
   }
 
   findOne(query: QueryFilter<T>): Promise<K | null> {
+    if (isObjectEmptyOrNull(query)) {
+      throw new Error('Cannot search for one instance with empty query');
+    }
+
     return this.model.findOne(this.translateFilter(query)).lean();
   }
 
