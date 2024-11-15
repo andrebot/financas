@@ -203,7 +203,7 @@ describe('AuthorizationController', () => {
       firstName: 'Test',
       lastName: 'User',
       email: 'test@gmail.com',
-      _id: request.params.userId,
+      id: request.params.userId,
     };
 
     authManagerStub.listUsers.resolves([user]);
@@ -214,7 +214,7 @@ describe('AuthorizationController', () => {
       response.send.should.have.been.calledOnce;
       response.send.should.have.been.calledWith(user);
       authManagerStub.listUsers.should.have.been.calledOnce;
-      authManagerStub.listUsers.should.have.been.calledWith({ _id: request.params.userId });
+      authManagerStub.listUsers.should.have.been.calledWith({ id: request.params.userId });
     } catch (error) {
       console.error(error);
       chai.assert.fail('Should not have thrown an error');

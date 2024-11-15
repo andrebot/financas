@@ -1,7 +1,8 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { FilterQuery } from 'mongoose';
-import UserModel, { IUser } from '../resources/userModel';
+import { QueryFilter } from '../resources/repositories/query';
+import { IUser } from '../resources/userModel';
+import UserRepo from '../resources/repositories/userRepo';
 import { addToken, deleteToken, isValidToken } from '../resources/tokenModel';
 import { regExpPassword } from '../utils/validators';
 import { Tokens, Token, UserPayload } from '../types';
@@ -76,21 +77,17 @@ export function createRefreshToken(email: string): string {
  * @param role - Role of the user to be added to the database
  * @returns - the User as an object
  */
-export async function createUser(email: string, password: string, firstName: string, lastName: string, role = 'user'): Promise<IUser> {
+export async function createUser(email: string, password: string, firstName: string, lastName: string, role: 'admin' | 'user' = 'user'): Promise<IUser> {
   if (regExpPassword.test(password)) {
-    const salt = bcrypt.genSaltSync(WORK_FACTOR);
-    const newUser = new UserModel({
+    return await UserRepo.save({
       email,
-      password: bcrypt.hashSync(password, salt),
+      password: bcrypt.hashSync(password, bcrypt.genSaltSync(WORK_FACTOR)),
       firstName,
       lastName,
       role,
     });
-
-    await newUser.save();
-
-    return newUser.toObject();
   }
+
   throw new Error('Password does not follow the rules');
 }
 
@@ -109,8 +106,8 @@ export async function updateUser(
   requestingUser: UserPayload | undefined,
   id: string,
   payload: UserPayload,
-): Promise<IUser> {
-  const user = await UserModel.findById(id);
+): Promise<IUser | null> {
+  const user = await UserRepo.findById(id);
 
   if (!user) {
     throw new Error('User not found');
@@ -142,9 +139,7 @@ export async function updateUser(
     user.lastName = lastName;
   }
 
-  await user.save();
-
-  return user.toObject();
+  return await UserRepo.update(id, user);
 }
 
 /**
@@ -153,8 +148,8 @@ export async function updateUser(
  * @param query - Query to be used to find the users
  * @returns - the Users as an array
  */
-export function listUsers(query: FilterQuery<IUser> = {}): Promise<IUser[]> {
-  return UserModel.find(query);
+export function listUsers(query: QueryFilter<IUser> = {}): Promise<IUser[]> {
+  return UserRepo.find(query);
 }
 
 /**
@@ -166,12 +161,12 @@ export function listUsers(query: FilterQuery<IUser> = {}): Promise<IUser[]> {
  * @returns - the User as an object
  */
 export async function deleteUser(id: string): Promise<IUser> {
-  return UserModel.findByIdAndDelete(id).then((deletedUser) => {
+  return UserRepo.findByIdAndDelete(id).then((deletedUser) => {
     if (!deletedUser) {
       throw new Error(`User not found ${id}`);
     }
 
-    return deletedUser.value as IUser;
+    return deletedUser;
   });
 }
 
@@ -186,7 +181,7 @@ export async function deleteUser(id: string): Promise<IUser> {
  * @returns - the Tokens as an object
  */
 export async function login(searchEmail: string, password: string): Promise<Tokens> {
-  const user = await UserModel.findOne({ email: searchEmail });
+  const user = await UserRepo.findOne({ email: searchEmail });
 
   if (user) {
     const isMatch = bcrypt.compareSync(password, user.password);
@@ -195,11 +190,11 @@ export async function login(searchEmail: string, password: string): Promise<Toke
       role,
       firstName,
       lastName,
-      _id,
+      id,
     } = user;
 
     if (isMatch) {
-      const accessToken = createAccessToken(email, role, firstName, lastName, _id.toString());
+      const accessToken = createAccessToken(email, role, firstName, lastName, id!);
       const refreshToken = createRefreshToken(email);
 
       addToken(refreshToken);
@@ -209,6 +204,7 @@ export async function login(searchEmail: string, password: string): Promise<Toke
         refreshToken,
       };
     }
+
     throw new Error('Password was not a match');
   }
 
@@ -254,7 +250,7 @@ export async function refreshTokens(refreshToken: string): Promise<Tokens> {
       refreshToken,
       REFRESH_TOKEN_SECRET,
     ) as UserPayload;
-    const user = await UserModel.findOne({ email: tokenDecrypted.email });
+    const user = await UserRepo.findOne({ email: tokenDecrypted.email });
 
     if (user) {
       const {
@@ -262,14 +258,15 @@ export async function refreshTokens(refreshToken: string): Promise<Tokens> {
         firstName,
         lastName,
         role,
-        _id,
+        id,
       } = user;
 
       return {
-        accessToken: createAccessToken(email, role, firstName, lastName, _id.toString()),
+        accessToken: createAccessToken(email, role, firstName, lastName, id!),
         refreshToken: createRefreshToken(email),
       };
     }
+
     throw new Error(`No user was found with email: ${tokenDecrypted.email}`);
   } else {
     throw new Error('Token is not valid');
@@ -286,19 +283,19 @@ export async function refreshTokens(refreshToken: string): Promise<Tokens> {
  * @returns - if the password was reset
  */
 export async function resetPassword(email: string): Promise<boolean> {
-  const user = await UserModel.findOne({ email });
+  const user = await UserRepo.findOne({ email });
 
   if (user) {
     const newPassword = Math.random().toString(36).slice(-8);
-    const salt = bcrypt.genSaltSync(WORK_FACTOR);
 
-    user.password = bcrypt.hashSync(newPassword, salt);
-    await user.save();
+    user.password = bcrypt.hashSync(newPassword, bcrypt.genSaltSync(WORK_FACTOR));
+    await UserRepo.update(user.id!, user);
 
     sendNotification(email, `Your new password is: ${newPassword}`);
 
     return true;
   }
+
   throw new Error(`No user was found with email: ${email}`);
 }
 
@@ -318,15 +315,14 @@ export async function changePassword(
   oldPassword: string,
   newPassword: string,
 ): Promise<boolean> {
-  const user = await UserModel.findOne({ email });
+  const user = await UserRepo.findOne({ email });
 
   if (user) {
     const isMatch = bcrypt.compareSync(oldPassword, user.password);
 
     if (isMatch) {
-      const salt = bcrypt.genSaltSync(WORK_FACTOR);
-      user.password = bcrypt.hashSync(newPassword, salt);
-      await user.save();
+      user.password = bcrypt.hashSync(newPassword, bcrypt.genSaltSync(WORK_FACTOR));
+      await UserRepo.update(user.id!, user);
 
       return true;
     }

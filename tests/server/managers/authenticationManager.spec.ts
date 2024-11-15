@@ -25,8 +25,6 @@ type MockUser = {
   email: string;
   firstName: string;
   lastName: string;
-  save: () => MockUser;
-  toObject: () => MockUserObj;
 }
 
 const bcryptMock = {
@@ -35,26 +33,16 @@ const bcryptMock = {
   compareSync: sinon.stub(),
 };
 const sendNotificationStub = sinon.stub();
-const saveStub = sinon.stub().resolves();
-const findByIdStub = sinon.stub();
-const findStub = sinon.stub();
-const findOneStub = sinon.stub();
-const findByIdAndDeleteStub = sinon.stub();
-const toObjectStub = sinon.stub();
 const jwtSignStub = sinon.stub();
 const jwtVerifyStub = sinon.stub();
 
-class UserModelM {
-  static findById = findByIdStub;
-  static find = findStub;
-  static findByIdAndDelete = findByIdAndDeleteStub;
-  static findOne = findOneStub;
-  save = saveStub;
-  toObject = toObjectStub;
-
-  constructor(data: any) {
-    Object.assign(this, data);
-  }
+const UserRepo = {
+  findById: sinon.stub(),
+  find: sinon.stub(),
+  findByIdAndDelete: sinon.stub(),
+  findOne: sinon.stub(),
+  save: sinon.stub(),
+  update: sinon.stub(),
 }
 
 const {
@@ -73,7 +61,7 @@ const {
 } = proxyquire('../../../src/server/managers/authenticationManager', {
   'jsonwebtoken': { sign: jwtSignStub, verify: jwtVerifyStub, '@global': true },
   'bcrypt': bcryptMock,
-  '../resources/userModel': { default: UserModelM },
+  '../resources/repositories/userRepo': { default: UserRepo },
   '../utils/notification': { default: sendNotificationStub },
 });
 
@@ -82,12 +70,13 @@ describe('AuthenticationManager', function () {
     bcryptMock.genSaltSync.resetHistory();
     bcryptMock.hashSync.resetHistory();
     bcryptMock.compareSync.reset();
-    saveStub.reset();
-    toObjectStub.reset();
     jwtSignStub.reset();
-    findByIdStub.reset();
-    findByIdAndDeleteStub.reset();
-    findOneStub.reset();
+    UserRepo.save.reset();
+    UserRepo.findById.reset();
+    UserRepo.findOne.reset();
+    UserRepo.update.reset();
+    UserRepo.find.reset();
+    UserRepo.findByIdAndDelete.reset();
   });
 
   it('createToken should be called with correct arguments', function() {
@@ -145,9 +134,10 @@ describe('AuthenticationManager', function () {
       firstName: 'John',
       lastName: 'Doe',
       role: 'user',
+      id: '1',
     };
 
-    toObjectStub.returns(mockUser);
+    UserRepo.save.resolves(mockUser);
 
     const user = await createUser(
       mockUser.email,
@@ -159,8 +149,14 @@ describe('AuthenticationManager', function () {
 
     bcryptMock.genSaltSync.should.have.been.calledOnce;
     bcryptMock.hashSync.should.have.been.calledOnceWithExactly(mockUser.password, 'salt');
-    saveStub.should.have.been.calledOnce;
-    toObjectStub.should.have.been.calledOnce;
+    UserRepo.save.should.have.been.calledOnce;
+    UserRepo.save.firstCall.args[0].should.deep.equal({
+      email: mockUser.email,
+      password: 'hashedPassword',
+      firstName: mockUser.firstName,
+      lastName: mockUser.lastName,
+      role: mockUser.role,
+    });
     should().exist(user);
     should().exist(user.email);
     should().exist(user.password);
@@ -190,7 +186,7 @@ describe('AuthenticationManager', function () {
     const firstName = 'John';
     const lastName = 'Doe';
 
-    saveStub.throwsException('User already exists');
+    UserRepo.save.throwsException('User already exists');
 
     try {
       await createUser(email, password, firstName, lastName);
@@ -212,8 +208,6 @@ describe('AuthenticationManager', function () {
         email: 'old@example.com',
         firstName: 'Old',
         lastName: 'User',
-        save: saveStub,
-        toObject: toObjectStub,
       };
       newValues = {
         email: 'new@example.com',
@@ -227,64 +221,59 @@ describe('AuthenticationManager', function () {
         role: 'admin',
         id: user._id,
       }
-      findByIdStub.withArgs('1').resolves(user);
-      toObjectStub.reset();
+      UserRepo.findById.withArgs('1').resolves(user);
     });
 
     it('should update user with all fields provided', async function() {    
-      toObjectStub.returns(newValues);
+      UserRepo.update.resolves({ ...newValues, _id: user._id });
   
-      await updateUser(userPayload, '1', {
-        email: newValues.email,
-        firstName: newValues.firstName,
-        lastName: newValues.lastName,
-      });
+      const result = await updateUser(userPayload, '1', newValues);
   
-      user.email.should.be.equal(newValues.email);
-      user.firstName.should.be.equal(newValues.firstName);
-      user.lastName.should.be.equal(newValues.lastName);
-      saveStub.should.have.been.calledOnce;
-      toObjectStub.should.have.been.calledOnce;
+      result.email.should.be.equal(newValues.email);
+      result.firstName.should.be.equal(newValues.firstName);
+      result.lastName.should.be.equal(newValues.lastName);
+      UserRepo.update.should.have.been.calledOnce;
+      UserRepo.findById.should.have.been.calledOnce;
     });
 
     it('should update user with only email field provided', async function() {    
-      toObjectStub.returns(user);
+      UserRepo.update.resolves({ ...user, email: newValues.email });
   
-      await updateUser(userPayload, '1', { email: newValues.email });
+      const result = await updateUser(userPayload, '1', { email: newValues.email });
 
-      user.email.should.be.equal(newValues.email);
-      user.firstName.should.be.equal('Old');
-      user.lastName.should.be.equal('User');
-      saveStub.should.have.been.calledOnce;
-      toObjectStub.should.have.been.calledOnce;
+      result.email.should.be.equal(newValues.email);
+      result.firstName.should.be.equal('Old');
+      result.lastName.should.be.equal('User');
+      UserRepo.update.should.have.been.calledOnce;
+      UserRepo.findById.should.have.been.calledOnce;
     });
 
     it('should update user with only firstName field provided', async function() {    
-      toObjectStub.returns(user);
+      UserRepo.update.resolves({ ...user, firstName: newValues.firstName });
   
-      await updateUser(userPayload, '1', { firstName: newValues.firstName });
+      const result = await updateUser(userPayload, '1', { firstName: newValues.firstName });
 
-      user.firstName.should.be.equal(newValues.firstName);
-      user.email.should.be.equal('old@example.com');
-      user.lastName.should.be.equal('User');
-      saveStub.should.have.been.calledOnce;
-      toObjectStub.should.have.been.calledOnce;
+      result.firstName.should.be.equal(newValues.firstName);
+      result.email.should.be.equal('old@example.com');
+      result.lastName.should.be.equal('User');
+      UserRepo.update.should.have.been.calledOnce;
+      UserRepo.findById.should.have.been.calledOnce;
     });
 
     it('should update user with only lastName field provided', async function() {    
-      toObjectStub.returns(user);
+      UserRepo.update.resolves({ ...user, lastName: newValues.lastName });
   
-      await updateUser(userPayload, '1', { lastName: newValues.lastName });
+      const result = await updateUser(userPayload, '1', { lastName: newValues.lastName });
 
-      user.lastName.should.be.equal(newValues.lastName);
-      user.email.should.be.equal('old@example.com');
-      user.firstName.should.be.equal('Old');
-      saveStub.should.have.been.calledOnce;
-      toObjectStub.should.have.been.calledOnce;
+      result.lastName.should.be.equal(newValues.lastName);
+      result.email.should.be.equal('old@example.com');
+      result.firstName.should.be.equal('Old');
+      UserRepo.update.should.have.been.calledOnce;
+      UserRepo.findById.should.have.been.calledOnce;
     });
 
     it('should throw an error if empty was provided to be updated', async function() {    
-      toObjectStub.returns(user);
+      UserRepo.update.resolves(user);
   
       try {
         await updateUser(userPayload, '1', { });
@@ -295,7 +284,7 @@ describe('AuthenticationManager', function () {
     });
 
     it('should throw an error if nothing was provided to be updated', async function() {    
-      toObjectStub.returns(user);
+      UserRepo.update.resolves(user);
   
       try {
         await updateUser(userPayload, '1');
@@ -306,25 +295,13 @@ describe('AuthenticationManager', function () {
     });
 
     it('should throw an error if nothing was provided to be updated', async function() {    
-      toObjectStub.returns(user);
-      findByIdStub.withArgs('1').resolves(null);
+      UserRepo.findById.withArgs('1').resolves(null);
   
       try {
         await updateUser(userPayload, '1', { firstName: 'test' });
       } catch (error) {
         (error as Error).should.be.an('error');
         (error as Error).message.should.contain('User not found');
-      }
-    });
-
-    it('should throw an error if the user is not found', async function() {    
-      toObjectStub.returns(user);
-  
-      try {
-        await updateUser(userPayload, '1');
-      } catch (error) {
-        (error as Error).should.be.an('error');
-        (error as Error).message.should.contain('No information provided to be updated');
       }
     });
 
@@ -340,29 +317,28 @@ describe('AuthenticationManager', function () {
         (error as Error).message.should.contain('You do not have permission to update this user');
       }
     });
-
   });
 
   it('should list users (we are not testing mongoose)', async function() {
     await listUsers({});
     await listUsers();
 
-    findStub.should.have.been.calledTwice;
+    UserRepo.find.should.have.been.calledTwice;
   });
 
   it('should be able to delete an user', async function() {
     const userId = '1';
 
-    findByIdAndDeleteStub.resolves({ value: { _id: userId } });
+    UserRepo.findByIdAndDelete.resolves({ id: userId });
 
     const deletedUser = await deleteUser(userId);
 
-    deletedUser._id.should.be.equal(userId);
-    findByIdAndDeleteStub.should.have.been.calledWith(userId);
+    deletedUser.id.should.be.equal(userId);
+    UserRepo.findByIdAndDelete.should.have.been.calledWith(userId);
   });
 
   it('should throw an error if the user is not found', async function() {
-    findByIdAndDeleteStub.resolves(null);
+    UserRepo.findByIdAndDelete.resolves(null);
 
     try {
       await deleteUser('1');
@@ -375,7 +351,7 @@ describe('AuthenticationManager', function () {
   it('should successfully login the user', async function() {
     const password = 'Meu-password23';
     const mockUser = {
-      _id: '1',
+      id: '1',
       email: 'old@example.com',
       firstName: 'Old',
       lastName: 'User',
@@ -386,7 +362,7 @@ describe('AuthenticationManager', function () {
     jwtSignStub.returns('mockToken');
 
     bcryptMock.compareSync.returns(true);
-    findOneStub.resolves(mockUser);
+    UserRepo.findOne.resolves(mockUser);
 
     const tokens = await login(mockUser.email, mockUser.password);
 
@@ -406,7 +382,7 @@ describe('AuthenticationManager', function () {
         firstName: mockUser.firstName,
         lastName: mockUser.lastName,
         role: mockUser.role,
-        id: mockUser._id,
+        id: mockUser.id,
       },
       ACCESS_TOKEN_SECRET,
       { issuer: ISSUER, expiresIn: ACCESS_TOKEN_EXPIRATION },
@@ -415,7 +391,7 @@ describe('AuthenticationManager', function () {
 
   it('should throw an error if the user is not found', async function() {
     const mockUser = {
-      _id: '1',
+      id: '1',
       email: 'old@example.com',
       firstName: 'Old',
       lastName: 'User',
@@ -423,7 +399,7 @@ describe('AuthenticationManager', function () {
       password: 'nada',
     };
 
-    findOneStub.resolves(null);
+    UserRepo.findOne.resolves(null);
 
     try {
       await login(mockUser.email, mockUser.password);
@@ -435,7 +411,7 @@ describe('AuthenticationManager', function () {
 
   it('should thrown an error if the passwords do not match', async function() {
     const mockUser = {
-      _id: '1',
+      id: '1',
       email: 'old@example.com',
       firstName: 'Old',
       lastName: 'User',
@@ -443,7 +419,7 @@ describe('AuthenticationManager', function () {
       password: 'nada',
     };
     
-    findOneStub.returns(mockUser);
+    UserRepo.findOne.returns(mockUser);
 
     try {
       await login(mockUser.email, 'errada');
@@ -481,12 +457,12 @@ describe('AuthenticationManager', function () {
       firstName: 'test',
       lastName: 'user',
       role: 'admin',
-      _id: '1',
+      id: '1',
     };
 
     jwtVerifyStub.returns({ payload: { email: 'test@gmail.com' } });
     jwtSignStub.returns(accessToken);
-    findOneStub.resolves(user);
+    UserRepo.findOne.resolves(user);
     addToken(cryptToken);
 
     const tokens = await refreshTokens(cryptToken) as Tokens;
@@ -517,7 +493,7 @@ describe('AuthenticationManager', function () {
   it('should throw an error if user is not found when refreshing tokens', async function() {
     const token = { email: 'test@gmail.com' };
     jwtVerifyStub.returns(token);
-    findOneStub.resolves(null);
+    UserRepo.findOne.resolves(null);
 
     try {
       await refreshTokens('mockToken');
@@ -548,21 +524,22 @@ describe('AuthenticationManager', function () {
 
   it('should reset the password and send a notification', async function() {
     const mockUser = {
-      _id: '1',
+      id: '1',
       email: 'old@example.com',
       firstName: 'Old',
       lastName: 'User',
       role: 'admin',
-      save: sinon.stub().resolves(),
     };
-    findOneStub.resolves(mockUser);
+    UserRepo.findOne.resolves(mockUser);
+    UserRepo.update.resolves(mockUser);
 
     try {
       const result = await resetPassword(mockUser.email);
 
       should().exist(result);
       result.should.be.true;
-      mockUser.save.should.have.been.calledOnce;
+      UserRepo.findOne.should.have.been.calledOnce;
+      UserRepo.update.should.have.been.calledOnce;
       sendNotificationStub.should.have.been.calledOnce;
       sendNotificationStub.should.have.been.calledWith(mockUser.email, sinon.match.string);
     } catch (error) {
@@ -572,7 +549,7 @@ describe('AuthenticationManager', function () {
   });
 
   it('should throw an error if the user is not found when resetting password', async function() {
-    findOneStub.resolves(null);
+    UserRepo.findOne.resolves(null);
 
     try {
       await resetPassword('test@gmail.com');
@@ -591,19 +568,20 @@ describe('AuthenticationManager', function () {
     };
 
     bcryptMock.compareSync.returns(true);
-    UserModelM.findOne.returns(mockUser);
+    UserRepo.findOne.resolves(mockUser);
+    UserRepo.update.resolves(mockUser);
 
     try {
       const result = await changePassword('1', 'oldPassword', 'newPassword');
 
       should().exist(result);
       result.should.be.true;
-      UserModelM.findOne.should.have.been.calledOnce;
+      UserRepo.findOne.should.have.been.calledOnce;
+      UserRepo.update.should.have.been.calledOnce;
       bcryptMock.compareSync.should.have.been.calledOnce;
       bcryptMock.compareSync.should.have.been.calledWith('oldPassword', 'oldPassword');
       bcryptMock.genSaltSync.should.have.been.calledOnce;
       bcryptMock.hashSync.should.have.been.calledOnce;
-      mockUser.save.should.have.been.calledOnce;
     } catch (error) {
       console.error(error);
       chai.assert.fail('Should not have thrown an error');
@@ -617,25 +595,25 @@ describe('AuthenticationManager', function () {
     };
 
     bcryptMock.compareSync.returns(false);
-    UserModelM.findOne.returns(mockUser);
+    UserRepo.findOne.resolves(mockUser);
 
     try {
       await changePassword('1', 'oldPassword', 'newPassword');
 
       chai.assert.fail('Should have thrown an error');
     } catch (error) {
-      UserModelM.findOne.should.have.been.calledOnce;
+      UserRepo.findOne.should.have.been.calledOnce;
       bcryptMock.compareSync.should.have.been.calledOnce;
       bcryptMock.compareSync.should.have.been.calledWith('oldPassword', 'anotherPassword');
       bcryptMock.genSaltSync.should.have.not.been.called;
       bcryptMock.hashSync.should.have.not.been.called;
-      mockUser.save.should.have.not.been.called;
+      UserRepo.update.should.have.not.been.called;
       (error as Error).message.should.contain('Invalid Password');
     }
   });
 
   it('should throw error if the user is not found', async function() {
-    UserModelM.findOne.returns(null);
+    UserRepo.findOne.resolves(null);
 
     try {
       await changePassword('1', 'oldPassword', 'newPassword');
@@ -643,7 +621,7 @@ describe('AuthenticationManager', function () {
       chai.assert.fail('Should have thrown an error');
 
     } catch (error) {
-      UserModelM.findOne.should.have.been.calledOnce;
+      UserRepo.findOne.should.have.been.calledOnce;
       bcryptMock.compareSync.should.have.not.been.called;
       bcryptMock.genSaltSync.should.have.not.been.called;
       bcryptMock.hashSync.should.have.not.been.called;

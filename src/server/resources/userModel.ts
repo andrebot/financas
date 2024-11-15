@@ -10,7 +10,11 @@ import { regExpEmail } from '../utils/validators';
 /**
  * Interface for the User
  */
-export interface IUser extends Document{
+export interface IUser {
+  /**
+   * Unique identifier of the user
+   */
+  id?: string; // Optional to account for new objects
   /**
    * Email of the user
    */
@@ -33,25 +37,30 @@ export interface IUser extends Document{
   password: string;
 }
 
+export interface IUserDocument extends Omit<IUser, 'id'>, Document {}
+
 /**
  * Type for the User. It is a Document and a FlatRecord of the IUser to follow
  * the schema and a _id of type ObjectId on Mongoose
  */
-type DocType = Document<unknown, unknown, FlatRecord<IUser>> & FlatRecord<IUser> & {
+type DocType = Document<unknown, unknown, FlatRecord<IUserDocument>> & FlatRecord<IUserDocument> & {
   _id: Types.ObjectId;
 };
 
 /**
- * Function to transform the user object by removing the password, since it should not be returned
+ * Function to transform the user object by removing the password, since it should not be returned.
+ * Also, it will convert the _id to id and remove it from the object.
  *
  * @param doc - Document of the user
  * @param ret - Record of the user
  * @returns - Record of the user
  */
-function transformUserObject(doc: DocType, ret: Record<string, unknown>) {
+function transformUserObject(doc: DocType, ret: Record<string, any>) {
   const { ...newObject } = ret;
 
   delete newObject.password;
+  newObject.id = newObject._id.toString();
+  delete newObject._id;
 
   return newObject;
 }
@@ -59,7 +68,7 @@ function transformUserObject(doc: DocType, ret: Record<string, unknown>) {
 /**
  * Schema for the User
  */
-const UserModel = new Schema<IUser>({
+const UserModel = new Schema<IUserDocument>({
   email: {
     type: String, match: regExpEmail, unique: true, required: true,
   },
@@ -79,4 +88,4 @@ const UserModel = new Schema<IUser>({
   },
 });
 
-export default model<IUser>('user', UserModel);
+export default model<IUserDocument>('user', UserModel);

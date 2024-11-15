@@ -106,7 +106,7 @@ export async function listUsersController(req: Request, res: Response) {
  */
 export async function getUserController(req:Request, res: Response) {
   try {
-    const users = await listUsers({ _id: req.params.userId });
+    const users = await listUsers({ id: req.params.userId });
 
     return res.send(users[0]);
   } catch (error) {
