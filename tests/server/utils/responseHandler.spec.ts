@@ -30,6 +30,32 @@ describe('responseHandlers', () => {
       res.status.should.have.been.calledWith(500);
       res.send.should.have.been.calledWith({ error: error.message });
     });
+
+    it('should call response with error status 404 if the error is a not found error', () => {
+      const error = new Error('not found');
+      const res = {
+        status: sinon.stub().returnsThis(),
+        send: sinon.spy(),
+      } as unknown as Response;
+
+      handleError(error, res);
+
+      res.status.should.have.been.calledWith(404);
+      res.send.should.have.been.calledWith({ error: error.message });
+    });
+
+    it('should call response with error status 403 if the error is a is not allowed error', () => {
+      const error = new Error('is not allowed');
+      const res = {
+        status: sinon.stub().returnsThis(),
+        send: sinon.spy(),
+      } as unknown as Response;
+
+      handleError(error, res);
+
+      res.status.should.have.been.calledWith(403);
+      res.send.should.have.been.calledWith({ error: error.message });
+    });
   });
 
   describe('isValidObjectId', () => {

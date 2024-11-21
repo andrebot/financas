@@ -1,13 +1,12 @@
 import contentRouteFactory from './contentRouteFactory';
 import createTokenValidation from '../utils/authorization';
-import TransactionModel, { ITransaction } from '../resources/transactionModel';
-import { getTransactionTypes } from '../controllers/transaction';
+import TransactionController from '../controllers/transactionController';
 
 const {
   urlPrefix,
   router,
-} = contentRouteFactory<ITransaction>(TransactionModel, 'transaction');
+} = contentRouteFactory(TransactionController, 'transaction');
 
-router.get('/types', createTokenValidation(), getTransactionTypes);
+router.get('/types', createTokenValidation(), TransactionController.getTransactionTypes);
 
 export default { urlPrefix, router };

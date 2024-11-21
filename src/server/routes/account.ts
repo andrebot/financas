@@ -1,4 +1,4 @@
 import contentRouteFactory from './contentRouteFactory';
-import accountModel, { IAccount } from '../resources/accountModel';
+import accountController from '../controllers/accountController';
 
-export default contentRouteFactory<IAccount>(accountModel, 'account');
+export default contentRouteFactory(accountController, 'account');

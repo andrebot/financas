@@ -4,7 +4,7 @@ import { Types } from 'mongoose';
 import server from '../../src/server/server';
 import { goal1, goal2, goal3, adminUser } from './connectDB';
 import { createAccessToken } from '../../src/server/managers/authenticationManager';
-import goalModel from '../../src/server/resources/goalModel';
+import goalModel from '../../src/server/resources/models/goalModel';
 
 const resourceUrl = '/api/v1/goal';
 

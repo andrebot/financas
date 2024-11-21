@@ -4,7 +4,7 @@ import { Types } from 'mongoose';
 import server from '../../src/server/server';
 import { transaction1, transaction2, transaction3, account1, adminUser } from './connectDB';
 import { createAccessToken } from '../../src/server/managers/authenticationManager';
-import transactionModel, { INVESTMENT_TYPES, TRANSACTION_TYPES } from '../../src/server/resources/transactionModel';
+import transactionModel, { INVESTMENT_TYPES, TRANSACTION_TYPES } from '../../src/server/resources/models/transactionModel';
 
 const resourceUrl = '/api/v1/transaction';
 

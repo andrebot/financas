@@ -11,21 +11,21 @@ type TestRouter = {
 describe(('contentRouteFactory'), () => {
   let newRouter: TestRouter;
   const urlPrefix = 'test';
-  const testModel = {
-    find: sinon.spy(),
-    findById: sinon.spy(),
-    findByIdAndDelete: sinon.spy(),
-    findByIdAndUpdate: sinon.spy(),
-    create: sinon.spy(),
+  const testController = {
+    listContent: sinon.spy(),
+    createContent: sinon.spy(),
+    getContent: sinon.spy(),
+    updateContent: sinon.spy(),
+    deleteContent: sinon.spy(),
   };
 
   beforeEach(() => {
-    newRouter = contentRouteFactory(testModel as unknown as Model<any, any, any, any, any, any>, urlPrefix);
-    testModel.find.resetHistory();
-    testModel.findById.resetHistory();
-    testModel.findByIdAndDelete.resetHistory();
-    testModel.findByIdAndUpdate.resetHistory();
-    testModel.create.resetHistory();
+    newRouter = contentRouteFactory(testController, urlPrefix);
+    testController.listContent.resetHistory();
+    testController.createContent.resetHistory();
+    testController.getContent.resetHistory();
+    testController.updateContent.resetHistory();
+    testController.deleteContent.resetHistory();
   });
 
   it('should return a router and a urlPrefix', () => {
@@ -51,13 +51,5 @@ describe(('contentRouteFactory'), () => {
       layer.route.stack.should.have.lengthOf(2);
       layer.route.stack[0].handle.name.should.equal('tokenValidator');
     });
-  });
-
-  it('should return a router with the correct controller methods', () => {
-    newRouter.router.stack[0].route.stack[1].handle.name.should.equal('listContent');
-    newRouter.router.stack[1].route.stack[1].handle.name.should.equal('createContent');
-    newRouter.router.stack[2].route.stack[1].handle.name.should.equal('getContent');
-    newRouter.router.stack[3].route.stack[1].handle.name.should.equal('updateContent');
-    newRouter.router.stack[4].route.stack[1].handle.name.should.equal('deleteContent');
   });
 });

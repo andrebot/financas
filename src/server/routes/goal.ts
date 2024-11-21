@@ -1,4 +1,4 @@
 import contentRouteFactory from './contentRouteFactory';
-import GoalModel, { IGoal } from '../resources/goalModel';
+import goalController from '../controllers/goalController';
 
-export default contentRouteFactory<IGoal>(GoalModel, 'goal');
+export default contentRouteFactory(goalController, 'goal');

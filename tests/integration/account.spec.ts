@@ -4,7 +4,7 @@ import { Types } from 'mongoose';
 import server from '../../src/server/server';
 import { account1, account2, account3, adminUser } from './connectDB';
 import { createAccessToken } from '../../src/server/managers/authenticationManager';
-import accountModel from '../../src/server/resources/accountModel';
+import accountModel from '../../src/server/resources/models/accountModel';
 
 describe('Account', () => {
   let accessToken: string;

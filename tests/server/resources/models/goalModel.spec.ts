@@ -1,10 +1,10 @@
 import { should } from 'chai';
 import { Types } from 'mongoose';
-import GoalModel, { IGoal } from '../../../src/server/resources/goalModel';
-import checkRequiredField from '../checkRequiredField';
+import GoalModel, { IGoalDocument } from '../../../../src/server/resources/models/goalModel';
+import checkRequiredField from '../../checkRequiredField';
 
 describe('GoalModel', () => {
-  let goal: IGoal;
+  let goal: IGoalDocument;
 
   beforeEach(() => {
     const dueDate = new Date();

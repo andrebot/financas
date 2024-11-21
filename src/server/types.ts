@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
+/* eslint-disable no-unused-vars */
 
 /**
  * Interface for the Token
@@ -57,7 +58,6 @@ export interface RequestWithUser extends Request {
 /**
  * Interface for token validation middleware
  */
-/* eslint-disable no-unused-vars */
 export type TokenValidationMiddleware = (
   req: RequestWithUser,
   res: Response,
@@ -118,4 +118,222 @@ export interface IBudgetController extends IContentController {
    */
   getBudget(req: RequestWithUser, res: Response): Promise<Response>;
 }
+
+/**
+ * Interface for the Card
+ */
+export interface ICard {
+  /**
+   * Id of the card
+   */
+  id?: string;
+  /**
+   * Number of the card
+   */
+  number: string;
+  /**
+   * Expiration date of the card
+   */
+  expirationDate: string;
+}
+
+/**
+ * Interface for the Account
+ */
+export interface IAccount {
+  /**
+   * Id of the account
+   */
+  id?: string;
+  /**
+   * Name of the account
+   */
+  name: string;
+  /**
+   * Agency of the account
+   */
+  agency: string;
+  /**
+   * Account number
+   */
+  accountNumber: string;
+  /**
+   * Currency of the account
+   */
+  currency: string;
+  /**
+   * User of the account
+   */
+  user: string;
+  /**
+   * Cards of the account
+   */
+  cards: ICard[];
+}
+
+/**
+ * Interface for the User
+ */
+export interface IUser {
+  /**
+   * Unique identifier of the user
+   */
+  id?: string; // Optional to account for new objects
+  /**
+   * Email of the user
+   */
+  email: string;
+  /**
+   * First name of the user
+   */
+  firstName: string;
+  /**
+   * Last name of the user
+   */
+  lastName: string;
+  /**
+   * Role of the user. Can be either 'admin' or 'user'
+   */
+  role: 'admin' | 'user';
+  /**
+   * Password of the user
+   */
+  password: string;
+}
+
+export enum TRANSACTION_TYPES {
+  WITHDRAW = 'withdraw',
+  DEPOSIT = 'deposit',
+  TRANSFER = 'transfer',
+  BANK_SLIP = 'bank_slip',
+  CARD = 'card',
+  INVESTMENT = 'investment',
+}
+
+export enum INVESTMENT_TYPES {
+  CDB = 'cdb',
+  LCI = 'lci',
+  LCA = 'lca',
+  STOCK = 'stock',
+  FUND = 'fund',
+  CRA = 'cra',
+  CRI = 'cri',
+  DEBENTURE = 'debenture',
+  CURRENCY = 'currency',
+  LC = 'lc',
+  LF = 'lf',
+  FII = 'fii',
+  TRESURY = 'tresury',
+}
+
+export interface IGoalItem {
+  goal: string;
+  goalName: string;
+  percentage: number;
+}
+
+export interface ITransaction {
+  id?: string;
+  name: string;
+  category: string;
+  parentCategory: string;
+  account: string;
+  type: TRANSACTION_TYPES;
+  date: Date;
+  value: number;
+  isCredit: boolean;
+  investmentType: INVESTMENT_TYPES;
+  user: string;
+  goalsList: IGoalItem[];
+}
+
+export interface IGoal {
+  /**
+   * Unique identifier
+   */
+  id?: string;
+  /**
+   * Name of the Goal
+   */
+  name: string;
+  /**
+   * Goal's target value
+   */
+  value: number;
+  /**
+   * Due date for the goal
+   */
+  dueDate: Date;
+  /**
+   * Goal owner
+   */
+  user: string;
+}
+
+export interface ICategory {
+  /**
+   * Unique identifier
+   */
+  id?: string;
+  /**
+   * Name of the category
+   */
+  name: string;
+  /**
+   * Category owner
+   */
+  user: string;
+  /**
+   * Parent category, if this is a sub-category
+   */
+  parentCategory?: string;
+}
+
+export enum BUDGET_TYPES {
+  ANNUALY = 'annualy',
+  QUARTERLY = 'quarterly',
+  MONTHLY = 'monthly',
+  WEEKLY = 'weekly',
+  DAILY = 'daily',
+}
+
+export interface IBudget {
+  /**
+   * Unique identifier of the budget
+   */
+  id?: string;
+  /**
+   * Budget's name
+   */
+  name: string;
+  /**
+   * Budget's target value
+   */
+  value: number;
+  /**
+   * Budget type
+   */
+  type: BUDGET_TYPES;
+  /**
+   * Budget's spent value
+   */
+  spent?: number;
+  /**
+   * Budget's start date
+   */
+  startDate: Date;
+  /**
+   * Budget's end date
+   */
+  endDate: Date;
+  /**
+   * Categories related to this budget
+   */
+  categories: string[];
+  /**
+   * Budget owner
+   */
+  user: string;
+}
+
 /* eslint-enable no-unused-vars */

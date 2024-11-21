@@ -5,39 +5,10 @@ import {
   FlatRecord,
   Types,
 } from 'mongoose';
-import { regExpEmail } from '../utils/validators';
+import { regExpEmail } from '../../utils/validators';
+import { IUser } from '../../types';
 
-/**
- * Interface for the User
- */
-export interface IUser {
-  /**
-   * Unique identifier of the user
-   */
-  id?: string; // Optional to account for new objects
-  /**
-   * Email of the user
-   */
-  email: string;
-  /**
-   * First name of the user
-   */
-  firstName: string;
-  /**
-   * Last name of the user
-   */
-  lastName: string;
-  /**
-   * Role of the user. Can be either 'admin' or 'user'
-   */
-  role: 'admin' | 'user';
-  /**
-   * Password of the user
-   */
-  password: string;
-}
-
-export interface IUserDocument extends Omit<IUser, 'id'>, Document {}
+export interface IUserDocument extends Omit<IUser, 'id'>, Document {};
 
 /**
  * Type for the User. It is a Document and a FlatRecord of the IUser to follow

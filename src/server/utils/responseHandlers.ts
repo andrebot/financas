@@ -14,6 +14,12 @@ import logger from './logger';
 export function handleError(error: Error, res: Response, status = 500) {
   logger.error(error);
 
+  if (error.message.includes('not found')) {
+    status = 404;
+  } else if (error.message.includes('is not allowed')) {
+    status = 403;
+  }
+
   return res.status(status).send({ error: error.message });
 }
 

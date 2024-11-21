@@ -1,15 +1,11 @@
 import { should } from 'chai';
 import mongoose from 'mongoose';
-import TransactionModel, {
-  INVESTMENT_TYPES,
-  ITransaction,
-  IGoalItem,
-  TRANSACTION_TYPES,
-} from '../../../src/server/resources/transactionModel';
-import checkRequiredField from '../checkRequiredField';
+import TransactionModel, { ITransactionDocument } from '../../../../src/server/resources/models/transactionModel';
+import checkRequiredField from '../../checkRequiredField';
+import { INVESTMENT_TYPES, IGoalItem, TRANSACTION_TYPES } from '../../../../src/server/types';
 
 describe('Transaction Model', () => {
-  let transaction: ITransaction;
+  let transaction: ITransactionDocument;
 
   beforeEach(() => {
     transaction = new TransactionModel({
@@ -92,9 +88,9 @@ describe('Transaction Model', () => {
   it('should be valid if goalsList is not empty', () => {
     transaction.goalsList = [{
       goal: new mongoose.Types.ObjectId(),
-      goalName: 'Test Goal',
+      goalName: 'Test Goal', 
       percentage: 0.5,
-    } as IGoalItem]; // Explicitly cast the object to IGoalItem
+    }]; // Explicitly cast the object to IGoalItem
     const error = transaction.validateSync();
 
     should().not.exist(error);
@@ -105,7 +101,7 @@ describe('Transaction Model', () => {
       goal: new mongoose.Types.ObjectId(),
       goalName: 'Test Goal',
       percentage: 1.5,
-    } as IGoalItem]; // Explicitly cast the object to IGoalItem
+    }]; // Explicitly cast the object to IGoalItem
     const error = transaction.validateSync();
 
     should().exist(error);

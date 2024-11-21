@@ -1,4 +1,4 @@
 import contentRouteFactory from './contentRouteFactory';
-import categoryModel, { ICategory } from '../resources/categoryModel';
+import categoryController from '../controllers/categoryController';
 
-export default contentRouteFactory<ICategory>(categoryModel, 'category');
+export default contentRouteFactory(categoryController, 'category');

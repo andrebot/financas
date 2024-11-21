@@ -4,7 +4,7 @@ import { Types } from 'mongoose';
 import server from '../../src/server/server';
 import { category1, category2, category3, adminUser } from './connectDB';
 import { createAccessToken } from '../../src/server/managers/authenticationManager';
-import categoryModel from '../../src/server/resources/categoryModel';
+import categoryModel from '../../src/server/resources/models/categoryModel';
 
 const resourceUrl = '/api/v1/category';
 

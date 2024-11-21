@@ -1,7 +1,10 @@
 import sinon from 'sinon';
-import proxyquire from 'proxyquire';
+import { Response } from 'express';
 import { Types } from 'mongoose';
 import { should } from 'chai';
+import ContentController from '../../../src/server/controllers/contentController';
+import ContentManager from '../../../src/server/managers/contentManager';
+import { RequestWithUser } from '../../../src/server/types';
 
 type MockResponse = {
   send: sinon.SinonStub;
@@ -25,31 +28,20 @@ type MockRequest = {
   };
 };
 
-const contentManagetStub = {
-  createContent: sinon.stub(),
-  updateContent: sinon.stub(),
-  deleteContent: sinon.stub(),
-  listContent: sinon.stub(),
-  getContent: sinon.stub(),
-};
-
-const {
-  default: contentControllerFactory,
-  IContentController,
-} = proxyquire('../../../src/server/controllers/contentFactory', {
-  '../managers/contentManager': contentManagetStub,
-});
-
-describe('Account Controller', () => {
+describe('Content Controller', () => {
+  let managerStub: sinon.SinonStubbedInstance<ContentManager<any>>;
   let response: MockResponse;
   let request: MockRequest;
-  let contentController: typeof IContentController;
+  let contentController: ContentController<any>;
   let model = {
     modelName: 'Test',
   };
 
   beforeEach(() => {
-    contentController = contentControllerFactory(model);
+    managerStub = sinon.createStubInstance(ContentManager);
+    contentController = new ContentController(managerStub as unknown as ContentManager<any>);
+    // Stub the `modelName` property directly on the instance
+    (managerStub as any).modelName = model.modelName;
     response = {
       send: sinon.stub(),
       status: sinon.stub().returnsThis(),
@@ -78,24 +70,20 @@ describe('Account Controller', () => {
         id: new Types.ObjectId().toHexString(),
       }
     };
-    contentManagetStub.createContent.resetHistory();
-    contentManagetStub.updateContent.resetHistory();
-    contentManagetStub.deleteContent.resetHistory();
-    contentManagetStub.listContent.resetHistory();
-    contentManagetStub.getContent.resetHistory();
   });
 
   describe('createContent', () => {
     it('should create a new content', async () => {
-      contentManagetStub.createContent.resolves(request.body);
+      const createdContent = { id: 1, ...request.body };
+      managerStub.createContent.resolves(createdContent);
 
       try {
-        await contentController.createContent(request, response);
+        await contentController.createContent(request as RequestWithUser, response as unknown as Response);
 
-        contentManagetStub.createContent.should.have.been.calledOnce;
-        contentManagetStub.createContent.should.have.been.calledWith(request.body, sinon.match.any);
+        managerStub.createContent.should.have.been.calledOnce;
+        managerStub.createContent.should.have.been.calledWith(request.body);
         response.send.should.have.been.calledOnce;
-        response.send.should.have.been.calledWith(request.body);
+        response.send.should.have.been.calledWith(createdContent);
       } catch (error) {
         should().fail((error as Error).message);
       }
@@ -103,13 +91,13 @@ describe('Account Controller', () => {
 
     it('should handle errors', async () => {
       const error = new Error('Test Error');
-      contentManagetStub.createContent.rejects(error);
+      managerStub.createContent.rejects(error);
 
       try {
-        await contentController.createContent(request, response);
+        await contentController.createContent(request as RequestWithUser, response as unknown as Response);
 
-        contentManagetStub.createContent.should.have.been.calledOnce;
-        contentManagetStub.createContent.should.have.been.calledWith(request.body, sinon.match.any);
+        managerStub.createContent.should.have.been.calledOnce;
+        managerStub.createContent.should.have.been.calledWith(request.body);
         response.status.should.have.been.calledOnce;
         response.status.should.have.been.calledWith(500);
         response.send.should.have.been.calledOnce;
@@ -122,21 +110,21 @@ describe('Account Controller', () => {
 
   describe('updateContent', () => {
     it('should update a content', async () => {
-      contentManagetStub.updateContent.resolves(request.body);
+      const updatedContent = { id: 1, ...request.body };
+      managerStub.updateContent.resolves(updatedContent);
 
       try {
-        await contentController.updateContent(request, response);
+        await contentController.updateContent(request as RequestWithUser, response as unknown as Response);
 
-        contentManagetStub.updateContent.should.have.been.calledOnce;
-        contentManagetStub.updateContent.should.have.been.calledWith(
+        managerStub.updateContent.should.have.been.calledOnce;
+        managerStub.updateContent.should.have.been.calledWith(
           request.params.id,
           request.body,
-          model,
           request.user?.id,
           false,
         );
         response.send.should.have.been.calledOnce;
-        response.send.should.have.been.calledWith(request.body);
+        response.send.should.have.been.calledWith(updatedContent);
       } catch (error) {
         should().fail((error as Error).message);
       }
@@ -146,13 +134,13 @@ describe('Account Controller', () => {
       request.user = undefined;
 
       try {
-        await contentController.updateContent(request, response);
+        await contentController.updateContent(request as RequestWithUser, response as unknown as Response);
 
-        contentManagetStub.updateContent.should.not.have.been.called;
+        managerStub.updateContent.should.not.have.been.called;
         response.status.should.have.been.calledOnce;
         response.status.should.have.been.calledWith(500);
         response.send.should.have.been.calledOnce;
-        response.send.should.have.been.calledWith({ error: 'User not authenticated' });
+        response.send.should.have.been.calledWith({ error: 'User not authenticated to update Test' });
       } catch (error) {
         should().fail((error as Error).message);
       }
@@ -162,9 +150,9 @@ describe('Account Controller', () => {
       request.body = {};
 
       try {
-        await contentController.updateContent(request, response);
+        await contentController.updateContent(request as RequestWithUser, response as unknown as Response);
 
-        contentManagetStub.updateContent.should.not.have.been.called;
+        managerStub.updateContent.should.not.have.been.called;
         response.status.should.have.been.calledOnce;
         response.status.should.have.been.calledWith(500);
         response.send.should.have.been.calledOnce;
@@ -178,9 +166,9 @@ describe('Account Controller', () => {
       request.body = undefined;
 
       try {
-        await contentController.updateContent(request, response);
+        await contentController.updateContent(request as RequestWithUser, response as unknown as Response);
 
-        contentManagetStub.updateContent.should.not.have.been.called;
+        managerStub.updateContent.should.not.have.been.called;
         response.status.should.have.been.calledOnce;
         response.status.should.have.been.calledWith(500);
         response.send.should.have.been.calledOnce;
@@ -191,46 +179,46 @@ describe('Account Controller', () => {
     });
 
     it('should throw 500 error if can\'t update content', async () => {
-      contentManagetStub.updateContent.rejects(new Error(`${model.modelName} not found with id ${request.params.id}`));
+      const errorMessage = `${model.modelName} does not exist with id ${request.params.id}`;
+      managerStub.updateContent.rejects(new Error(errorMessage));
 
       try {
-        await contentController.updateContent(request, response);
+        await contentController.updateContent(request as RequestWithUser, response as unknown as Response);
 
-        contentManagetStub.updateContent.should.have.been.calledOnce;
-        contentManagetStub.updateContent.should.have.been.calledWith(
+        managerStub.updateContent.should.have.been.calledOnce;
+        managerStub.updateContent.should.have.been.calledWith(
           request.params.id,
           request.body,
-          model,
           request.user?.id,
           false,
         );
         response.status.should.have.been.calledOnce;
         response.status.should.have.been.calledWith(500);
         response.send.should.have.been.calledOnce;
-        response.send.should.have.been.calledWith({ error: `${model.modelName} not found with id ${request.params.id}` });
+        response.send.should.have.been.calledWith({ error: errorMessage });
       } catch (error) {
         should().fail((error as Error).message);
       }
     });
 
     it('should throw 403 error if user is not allowed to update content', async () => {
-      contentManagetStub.updateContent.rejects(new Error(`User ${request.user?.id} is not allowed to update ${model.modelName} with id ${request.params.id}`));
+      const errorMessage = `User ${request.user?.id} is not allowed to update ${model.modelName} with id ${request.params.id}`;
+      managerStub.updateContent.rejects(new Error(errorMessage));
 
       try {
-        await contentController.updateContent(request, response);
+        await contentController.updateContent(request as RequestWithUser, response as unknown as Response);
 
-        contentManagetStub.updateContent.should.have.been.calledOnce;
-        contentManagetStub.updateContent.should.have.been.calledWith(
+        managerStub.updateContent.should.have.been.calledOnce;
+        managerStub.updateContent.should.have.been.calledWith(
           request.params.id,
           request.body,
-          model,
           request.user?.id,
           false,
         );
         response.status.should.have.been.calledOnce;
         response.status.should.have.been.calledWith(403);
         response.send.should.have.been.calledOnce;
-        response.send.should.have.been.calledWith({ error: `User ${request.user?.id} is not allowed to update ${model.modelName} with id ${request.params.id}` });
+        response.send.should.have.been.calledWith({ error: errorMessage });
       } catch (error) {
         should().fail((error as Error).message);
       }
@@ -239,20 +227,20 @@ describe('Account Controller', () => {
 
   describe('deleteContent', () => {
     it('should delete a content', async () => {
-      contentManagetStub.deleteContent.resolves(request.body);
+      const deletedContent = { id: 1, ...request.body };
+      managerStub.deleteContent.resolves(deletedContent);
 
       try {
-        await contentController.deleteContent(request, response);
+        await contentController.deleteContent(request as RequestWithUser, response as unknown as Response);
 
-        contentManagetStub.deleteContent.should.have.been.calledOnce;
-        contentManagetStub.deleteContent.should.have.been.calledWith(
+        managerStub.deleteContent.should.have.been.calledOnce;
+        managerStub.deleteContent.should.have.been.calledWith(
           request.params.id,
-          model,
           request.user?.id,
           false,
         );
         response.send.should.have.been.calledOnce;
-        response.send.should.have.been.calledWith(request.body);
+        response.send.should.have.been.calledWith(deletedContent);
       } catch (error) {
         should().fail((error as Error).message);
       }
@@ -262,57 +250,74 @@ describe('Account Controller', () => {
       request.user = undefined;
 
       try {
-        await contentController.deleteContent(request, response);
+        await contentController.deleteContent(request as RequestWithUser, response as unknown as Response);
 
-        contentManagetStub.deleteContent.should.not.have.been.called;
+        managerStub.deleteContent.should.not.have.been.called;
         response.status.should.have.been.calledOnce;
         response.status.should.have.been.calledWith(500);
         response.send.should.have.been.calledOnce;
-        response.send.should.have.been.calledWith({ error: 'User not authenticated' });
+        response.send.should.have.been.calledWith({ error: 'User not authenticated to delete Test' });
       } catch (error) {
         should().fail((error as Error).message);
       }
     });
 
     it('should throw 500 error if can\'t delete content', async () => {
-      contentManagetStub.deleteContent.rejects(new Error(`${model.modelName} not found with id ${request.params.id}`));
+      const errorMessage = `${model.modelName} does not exist with id ${request.params.id}`;
+      managerStub.deleteContent.rejects(new Error(errorMessage));
 
       try {
-        await contentController.deleteContent(request, response);
+        await contentController.deleteContent(request as RequestWithUser, response as unknown as Response);
 
-        contentManagetStub.deleteContent.should.have.been.calledOnce;
-        contentManagetStub.deleteContent.should.have.been.calledWith(
+        managerStub.deleteContent.should.have.been.calledOnce;
+        managerStub.deleteContent.should.have.been.calledWith(
           request.params.id,
-          model,
           request.user?.id,
           false,
         );
         response.status.should.have.been.calledOnce;
         response.status.should.have.been.calledWith(500);
         response.send.should.have.been.calledOnce;
-        response.send.should.have.been.calledWith({ error: `${model.modelName} not found with id ${request.params.id}` });
+        response.send.should.have.been.calledWith({ error: errorMessage });
       } catch (error) {
         should().fail((error as Error).message);
       }
     });
 
     it('should throw 403 error if user is not allowed to delete content', async () => {
-      contentManagetStub.deleteContent.rejects(new Error(`User ${request.user?.id} is not allowed to delete ${model.modelName} with id ${request.params.id}`));
+      const errorMessage = `User ${request.user?.id} is not allowed to delete ${model.modelName} with id ${request.params.id}`;
+      managerStub.deleteContent.rejects(new Error(errorMessage));
 
       try {
-        await contentController.deleteContent(request, response);
+        await contentController.deleteContent(request as RequestWithUser, response as unknown as Response);
 
-        contentManagetStub.deleteContent.should.have.been.calledOnce;
-        contentManagetStub.deleteContent.should.have.been.calledWith(
+        managerStub.deleteContent.should.have.been.calledOnce;
+        managerStub.deleteContent.should.have.been.calledWith(
           request.params.id,
-          model,
           request.user?.id,
           false,
         );
         response.status.should.have.been.calledOnce;
         response.status.should.have.been.calledWith(403);
         response.send.should.have.been.calledOnce;
-        response.send.should.have.been.calledWith({ error: `User ${request.user?.id} is not allowed to delete ${model.modelName} with id ${request.params.id}` });
+        response.send.should.have.been.calledWith({ error: errorMessage });
+      } catch (error) {
+        should().fail((error as Error).message);
+      }
+    });
+
+    it('should throw 404 error if content does not exist', async () => {
+      const errorMessage = 'Content id is required for deleting action';
+      request.params.id = '';
+
+      try {
+        await contentController.deleteContent(request as RequestWithUser, response as unknown as Response);
+
+        managerStub.deleteContent.should.not.have.been.called;
+        response.status.should.have.been.calledOnce;
+        response.status.should.have.been.calledWith(500);
+        response.send.should.have.been.calledOnce;
+        response.send.should.have.been.calledWith({ error: errorMessage });
       } catch (error) {
         should().fail((error as Error).message);
       }
@@ -322,19 +327,18 @@ describe('Account Controller', () => {
   describe('listContent', () => {
     it('should list content', async () => {
       const content = [request.body];
-      contentManagetStub.listContent.resolves(content);
+      managerStub.listContent.resolves(content);
 
       try {
-        await contentController.listContent(request, response);
+        await contentController.listContent(request as RequestWithUser, response as unknown as Response);
 
-        contentManagetStub.listContent.should.have.been.calledOnce;
-        contentManagetStub.listContent.should.have.been.calledWith(
+        managerStub.listContent.should.have.been.calledOnce;
+        managerStub.listContent.should.have.been.calledWith(
           request.body,
-          model,
           request.user?.id,
         );
-        // response.send.should.have.been.calledOnce;
-        // response.send.should.have.been.calledWith(content);
+        response.send.should.have.been.calledOnce;
+        response.send.should.have.been.calledWith(content);
       } catch (error) {
         should().fail((error as Error).message);
       }
@@ -342,15 +346,14 @@ describe('Account Controller', () => {
 
     it('should handle errors', async () => {
       const error = new Error('Test Error');
-      contentManagetStub.listContent.rejects(error);
+      managerStub.listContent.rejects(error);
 
       try {
-        await contentController.listContent(request, response);
+        await contentController.listContent(request as RequestWithUser, response as unknown as Response);
 
-        contentManagetStub.listContent.should.have.been.calledOnce;
-        contentManagetStub.listContent.should.have.been.calledWith(
+        managerStub.listContent.should.have.been.calledOnce;
+        managerStub.listContent.should.have.been.calledWith(
           request.body,
-          model,
           request.user?.id,
         );
         response.status.should.have.been.calledOnce;
@@ -365,15 +368,14 @@ describe('Account Controller', () => {
 
   describe('getContent', () => {
     it('should get content', async () => {
-      contentManagetStub.getContent.resolves(request.body);
+      managerStub.getContent.resolves(request.body);
 
       try {
-        await contentController.getContent(request, response);
+        await contentController.getContent(request as RequestWithUser, response as unknown as Response);
 
-        contentManagetStub.getContent.should.have.been.calledOnce;
-        contentManagetStub.getContent.should.have.been.calledWith(
+        managerStub.getContent.should.have.been.calledOnce;
+        managerStub.getContent.should.have.been.calledWith(
           request.params.id,
-          model,
           request.user?.id,
         );
         response.send.should.have.been.calledOnce;
@@ -385,15 +387,14 @@ describe('Account Controller', () => {
 
     it('should handle errors', async () => {
       const error = new Error('Test Error');
-      contentManagetStub.getContent.rejects(error);
+      managerStub.getContent.rejects(error);
 
       try {
-        await contentController.getContent(request, response);
+        await contentController.getContent(request as RequestWithUser, response as unknown as Response);
 
-        contentManagetStub.getContent.should.have.been.calledOnce;
-        contentManagetStub.getContent.should.have.been.calledWith(
+        managerStub.getContent.should.have.been.calledOnce;
+        managerStub.getContent.should.have.been.calledWith(
           request.params.id,
-          model,
           request.user?.id,
         );
         response.status.should.have.been.calledOnce;

@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import server from '../../src/server/server';
 import { adminUser } from './connectDB';
 import { createAccessToken, createRefreshToken } from '../../src/server/managers/authenticationManager';
-import UserModel from '../../src/server/resources/userModel';
+import UserModel from '../../src/server/resources/models/userModel';
 import { addToken, deleteToken } from '../../src/server/resources/tokenModel';
 import { Types } from 'mongoose';
 

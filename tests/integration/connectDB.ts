@@ -1,12 +1,12 @@
 import mongoose, { Types } from 'mongoose';
 import bcrypt from 'bcrypt';
 import { MongoMemoryServer } from 'mongodb-memory-server';
-import UserModel, { IUser } from '../../src/server/resources/userModel';
-import AccountModel, { IAccount } from '../../src/server/resources/accountModel';
-import categoryModel, { ICategory } from '../../src/server/resources/categoryModel';
-import GoalModel, { IGoal } from '../../src/server/resources/goalModel';
-import BudgetModel, { IBudget, BUDGET_TYPES } from '../../src/server/resources/budgetModel';
-import transactionModel, { ITransaction, INVESTMENT_TYPES, TRANSACTION_TYPES } from '../../src/server/resources/transactionModel';
+import UserModel, { IUser } from '../../src/server/resources/models/userModel';
+import AccountModel, { IAccount } from '../../src/server/resources/models/accountModel';
+import categoryModel, { ICategory } from '../../src/server/resources/models/categoryModel';
+import GoalModel, { IGoal } from '../../src/server/resources/models/goalModel';
+import BudgetModel, { IBudget, BUDGET_TYPES } from '../../src/server/resources/models/budgetModel';
+import transactionModel, { ITransaction, INVESTMENT_TYPES, TRANSACTION_TYPES } from '../../src/server/resources/models/transactionModel';
 
 export const adminUser = {
   email: 'admin@example.com',

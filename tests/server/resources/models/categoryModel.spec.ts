@@ -1,10 +1,10 @@
 import { should } from 'chai';
-import CategoryModel, { ICategory } from '../../../src/server/resources/categoryModel';
-import checkRequiredField from '../checkRequiredField';
+import CategoryModel, { ICategoryDocument } from '../../../../src/server/resources/models/categoryModel';
+import checkRequiredField from '../../checkRequiredField';
 import { Types } from 'mongoose';
 
 describe('AccountModel', () => {
-  let category: ICategory;
+  let category: ICategoryDocument;
 
   beforeEach(() => {
     category = new CategoryModel({

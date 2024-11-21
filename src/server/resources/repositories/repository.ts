@@ -31,9 +31,11 @@ const operatorMap: Record<string, string> = {
 
 export class Repository<T extends Document, K> implements IRepository<T, K> {
   private model: Model<T>;
+  modelName: string;
 
   constructor(model: Model<T>) {
     this.model = model;
+    this.modelName = model.modelName;
   }
 
   private isQueryCondition(value: any): value is QueryCondition<any> {
@@ -62,8 +64,8 @@ export class Repository<T extends Document, K> implements IRepository<T, K> {
     return translatedCondition;
   }
 
-  private translateFilter(query: QueryFilter<T>): FilterQuery<T> {
-    const translatedQuery: FilterQuery<T> = {};
+  private translateFilter(query: QueryFilter<K>): FilterQuery<T> {
+    const translatedQuery: FilterQuery<K> = {};
 
     for (const key in query) {
       const value = query[key];
@@ -71,7 +73,7 @@ export class Repository<T extends Document, K> implements IRepository<T, K> {
       if (this.isQueryCondition(value)) {
         translatedQuery[key] = this.translateCondition(value);
       } else {
-        translatedQuery[key] = value as FilterQuery<T>[Extract<keyof T, string>];
+        translatedQuery[key] = value as FilterQuery<K>[Extract<keyof K, string>];
       }
     }
 
@@ -86,11 +88,11 @@ export class Repository<T extends Document, K> implements IRepository<T, K> {
     return this.model.findByIdAndDelete(id).lean();
   }
 
-  find(query: QueryFilter<T> = {}): Promise<K[]> {
+  find(query: QueryFilter<K> = {}): Promise<K[]> {
     return this.model.find(this.translateFilter(query)).lean();
   }
 
-  findOne(query: QueryFilter<T>): Promise<K | null> {
+  findOne(query: QueryFilter<K>): Promise<K | null> {
     if (isObjectEmptyOrNull(query)) {
       throw new Error('Cannot search for one instance with empty query');
     }

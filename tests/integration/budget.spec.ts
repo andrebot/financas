@@ -4,7 +4,7 @@ import { Types } from 'mongoose';
 import server from '../../src/server/server';
 import { budget1, budget2, budget3, adminUser } from './connectDB';
 import { createAccessToken } from '../../src/server/managers/authenticationManager';
-import budgetModel, { BUDGET_TYPES } from '../../src/server/resources/budgetModel';
+import budgetModel, { BUDGET_TYPES } from '../../src/server/resources/models/budgetModel';
 
 const resourceUrl = '/api/v1/budget';
 

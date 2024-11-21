@@ -1,7 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { QueryFilter } from '../resources/repositories/query';
-import { IUser } from '../resources/userModel';
 import UserRepo from '../resources/repositories/userRepo';
 import { addToken, deleteToken, isValidToken } from '../resources/tokenModel';
 import { regExpPassword } from '../utils/validators';
@@ -16,6 +15,7 @@ import {
   REFRESH_TOKEN_EXPIRATION,
 } from '../config/auth';
 import sendNotification from '../utils/notification';
+import type { IUser } from '../types';
 
 /**
  * Function to create a token

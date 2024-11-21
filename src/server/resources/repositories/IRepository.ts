@@ -8,6 +8,11 @@ import { QueryFilter } from './query';
  */
 export interface IRepository<T, K> {
   /**
+   * The name of the model.
+   */
+  modelName: string;
+
+  /**
    * Finds a document by its ID.
    *
    * @param id - The ID of the document to find.
@@ -29,7 +34,7 @@ export interface IRepository<T, K> {
    * @param query - The query to filter the documents.
    * @returns An array of found objects.
    */
-  find(query: QueryFilter<T>): Promise<K[]>;
+  find(query: QueryFilter<K>): Promise<K[]>;
 
   /**
    * Finds a single document based on the given query.
@@ -37,7 +42,7 @@ export interface IRepository<T, K> {
    * @param query - The query to filter the document.
    * @returns The found object or null if not found.
    */
-  findOne(query: QueryFilter<T>): Promise<K | null>;
+  findOne(query: QueryFilter<K>): Promise<K | null>;
 
   /**
    * Saves a new document.

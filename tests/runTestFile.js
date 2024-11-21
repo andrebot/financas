@@ -16,6 +16,8 @@ if (!testFilePath) {
 
 // Function to run the test
 const runTest = () => {
+  console.clear();
+  console.log('Running test file:', testFilePath);
   // Clear require cache to ensure test files are reloaded on each run
   Object.keys(require.cache).forEach(function(key) {
     delete require.cache[key];

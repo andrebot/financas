@@ -1,10 +1,10 @@
 import { should } from 'chai';
 import mongoose from 'mongoose';
-import AccountModel, { IAccount } from '../../../src/server/resources/accountModel';
-import checkRequiredField from '../checkRequiredField';
+import AccountModel, { IAccountDocument } from '../../../../src/server/resources/models/accountModel';
+import checkRequiredField from '../../checkRequiredField';
 
 describe('AccountModel', () => {
-  let account: IAccount;
+  let account: IAccountDocument;
 
   beforeEach(() => {
     account = new AccountModel({

@@ -1,3 +1,5 @@
+import { UserPayload } from "../types";
+
 /**
  * Checks if an object is empty or null.
  *
@@ -56,4 +58,42 @@ export function removeEmptyProperties(obj: any): any {
   }
 
   return obj;
+}
+
+/**
+ * Check if the payload is void
+ *
+ * @param content - The payload to check
+ * @param modelName - The name of the model
+ * @param action - The action to check
+ */
+export function checkVoidPayload(content: any, modelName: string, action: string): void {
+  if (!content || Object.keys(content).length === 0) {
+    throw new Error(`No information provided to ${action} ${modelName}`);
+  }
+}
+
+/**
+ * Check if the instance is void
+ *
+ * @param instance - The instance to check
+ * @param modelName - The name of the model
+ */
+export function checkVoidInstance(instance: any, modelName: string, id: string): void {
+  if (!instance) {
+    throw new Error(`${modelName} not found with id ${id}`);
+  }
+}
+
+/**
+ * Check if the user is void
+ *
+ * @param user - The user to check
+ * @param modelName - The name of the model
+ * @param action - The action to check
+ */
+export function checkVoidUser(user: UserPayload | undefined, modelName: string, action: string): void {
+  if (!user || Object.keys(user).length === 0) {
+    throw new Error(`User not authenticated to ${action} ${modelName}`);
+  }
 }
