@@ -1,6 +1,6 @@
 import { Model, FilterQuery, Document } from 'mongoose';
 import { IRepository } from './IRepository';
-import { QueryFilter, QueryCondition } from './query';
+import { QueryFilter, QueryCondition } from '../../types';
 import { removeEmptyProperties, isObjectEmptyOrNull } from '../../utils/misc';
 
 /**

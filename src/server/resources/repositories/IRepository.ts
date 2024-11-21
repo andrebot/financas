@@ -1,4 +1,4 @@
-import { QueryFilter } from './query';
+import { QueryFilter } from '../../types';
 
 /**
  * Interface for a repository.

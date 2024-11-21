@@ -1,5 +1,5 @@
 import { IRepository } from '../resources/repositories/IRepository';
-import { QueryFilter } from '../resources/repositories/query';
+import { QueryFilter } from '../types';
 import { checkVoidPayload, checkVoidInstance } from '../utils/misc';
 
 export type Content = { user: string };
