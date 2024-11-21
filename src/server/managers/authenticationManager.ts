@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { QueryFilter } from '../resources/repositories/query';
 import UserRepo from '../resources/repositories/userRepo';
-import { addToken, deleteToken, isValidToken } from '../resources/tokenModel';
+import { addToken, deleteToken, isValidToken } from '../resources/repositories/tokenRepo';
 import { regExpPassword } from '../utils/validators';
 import { Tokens, Token, UserPayload } from '../types';
 import Logger from '../utils/logger';

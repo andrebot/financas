@@ -2,7 +2,7 @@ import chai, { should } from 'chai';
 import sinon from 'sinon';
 import proxyquire from 'proxyquire';
 import { Tokens, UserPayload } from '../../../src/server/types';
-import { addToken, deleteToken } from '../../../src/server/resources/tokenModel';
+import { addToken, deleteToken } from '../../../src/server/resources/repositories/tokenRepo';
 import {
   ACCESS_TOKEN_EXPIRATION,
   REFRESH_TOKEN_EXPIRATION,

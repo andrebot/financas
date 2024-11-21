@@ -2,7 +2,7 @@ import {
   addToken,
   isValidToken,
   deleteToken,
-} from '../../../src/server/resources/tokenModel';
+} from '../../../../src/server/resources/repositories/tokenRepo';
 
 describe('Token Model', function () {
   it('should add a new token to the map', function() {

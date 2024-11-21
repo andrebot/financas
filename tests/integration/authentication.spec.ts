@@ -5,7 +5,7 @@ import server from '../../src/server/server';
 import { adminUser } from './connectDB';
 import { createAccessToken, createRefreshToken } from '../../src/server/managers/authenticationManager';
 import UserModel from '../../src/server/resources/models/userModel';
-import { addToken, deleteToken } from '../../src/server/resources/tokenModel';
+import { addToken, deleteToken } from '../../src/server/resources/repositories/tokenRepo';
 import { Types } from 'mongoose';
 
 describe('Authentication', () => {
