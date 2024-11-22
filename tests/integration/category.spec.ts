@@ -17,7 +17,7 @@ describe('Category', () => {
       'admin',
       adminUser.firstName,
       adminUser.lastName,
-      adminUser._id,
+      adminUser.id!,
     );
   });
 
@@ -82,13 +82,13 @@ describe('Category', () => {
   describe('Retrieve Category - GET /api/v1/category/:id', () => {
     it('should return the category', (done) => {
       chai.request(server)
-        .get(`${resourceUrl}/${category1._id}`)
+        .get(`${resourceUrl}/${category1.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(200);
           response.body.should.be.an('object');
           response.body.should.have.property('name', category1.name);
-          response.body.should.have.property('user', adminUser._id.toString());
+          response.body.should.have.property('user', adminUser.id);
 
           done();
         });
@@ -108,7 +108,7 @@ describe('Category', () => {
 
     it('should return 401 when the user is not authenticated', (done) => {
       chai.request(server)
-        .get(`${resourceUrl}/${category1._id}`)
+        .get(`${resourceUrl}/${category1.id}`)
         .end((err, response) => {
           response.should.have.status(401);
           done();
@@ -116,10 +116,10 @@ describe('Category', () => {
     });
 
     it('should return 500 when an error occurs', (done) => {
-      const stub = sinon.stub(categoryModel, 'findById').throws(new Error('Error'));
+      const stub = sinon.stub(categoryModel, 'findOne').throws(new Error('Error'));
 
       chai.request(server)
-        .get(`${resourceUrl}/${category1._id}`)
+        .get(`${resourceUrl}/${category1.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(500);
@@ -133,7 +133,7 @@ describe('Category', () => {
     it('should create a category', (done) => {
       const newCategory = {
         name: 'Test Account',
-        user: adminUser._id,
+        user: adminUser.id,
       };
 
       chai.request(server)
@@ -144,7 +144,7 @@ describe('Category', () => {
           response.should.have.status(200);
           response.body.should.be.an('object');
           response.body.should.have.property('name', newCategory.name);
-          response.body.should.have.property('user', newCategory.user.toString());
+          response.body.should.have.property('user', newCategory.user);
 
           done();
         });
@@ -182,7 +182,7 @@ describe('Category', () => {
       };
 
       chai.request(server)
-        .put(`${resourceUrl}/${category1._id}`)
+        .put(`${resourceUrl}/${category1.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send(updatedCategory)
         .end((err, response) => {
@@ -196,7 +196,7 @@ describe('Category', () => {
 
     it('should return 401 when the user is not authenticated', (done) => {
       chai.request(server)
-        .put(`${resourceUrl}/${category1._id}`)
+        .put(`${resourceUrl}/${category1.id}`)
         .send(category2)
         .end((err, response) => {
           response.should.have.status(401);
@@ -206,7 +206,7 @@ describe('Category', () => {
 
     it('should throw 500 when no information is provided', (done) => {
       chai.request(server)
-        .put(`${resourceUrl}/${category1._id}`)
+        .put(`${resourceUrl}/${category1.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(500);
@@ -216,7 +216,7 @@ describe('Category', () => {
 
     it('should throw 500 when provided an empty object to update', (done) => {
       chai.request(server)
-        .put(`${resourceUrl}/${category1._id}`)
+        .put(`${resourceUrl}/${category1.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send({})
         .end((err, response) => {
@@ -227,13 +227,15 @@ describe('Category', () => {
 
     it('should be able to update another user\'s category if is admin', (done) => {
       chai.request(server)
-        .put(`${resourceUrl}/${category3._id}`)
+        .put(`${resourceUrl}/${category3.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send(category2)
         .end((err, response) => {
           response.should.have.status(200);
           response.body.should.be.an('object');
           response.body.should.have.property('name', category2.name);
+
+          category3.name = category2.name;
 
           done();
         });
@@ -249,7 +251,7 @@ describe('Category', () => {
       );
 
       chai.request(server)
-        .put(`${resourceUrl}/${category3._id}`)
+        .put(`${resourceUrl}/${category3.id}`)
         .set('Authorization', `Bearer ${token}`)
         .send(category2)
         .end((err, response) => {
@@ -258,13 +260,13 @@ describe('Category', () => {
         });
     });
 
-    it('should return 500 if no category is found', (done) => {
+    it('should return 404 if no category is found', (done) => {
       chai.request(server)
         .put(`${resourceUrl}/${new Types.ObjectId()}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send(category2)
         .end((err, response) => {
-          response.should.have.status(500);
+          response.should.have.status(404);
           done();
         });
     });
@@ -273,13 +275,13 @@ describe('Category', () => {
   describe('Delete Category - DELETE /api/v1/category/:id', () => {
     it('should delete a category', (done) => {
       chai.request(server)
-        .delete(`${resourceUrl}/${category2._id}`)
+        .delete(`${resourceUrl}/${category2.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(200);
           response.body.should.be.an('object');
           response.body.should.have.property('name', category2.name);
-          response.body.should.have.property('user', adminUser._id.toString());
+          response.body.should.have.property('user', adminUser.id);
 
           done();
         });
@@ -287,7 +289,7 @@ describe('Category', () => {
 
     it('should return 401 when the user is not authenticated', (done) => {
       chai.request(server)
-        .delete(`${resourceUrl}/${category1._id}`)
+        .delete(`${resourceUrl}/${category1.id}`)
         .end((err, response) => {
           response.should.have.status(401);
           done();
@@ -296,14 +298,14 @@ describe('Category', () => {
 
     it('should be able to delete another user\'s category if is admin', (done) => {
       chai.request(server)
-        .delete(`${resourceUrl}/${category3._id}`)
+        .delete(`${resourceUrl}/${category3.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(200);
           response.body.should.be.an('object');
           response.body.should.have.property('name', category3.name);
           response.body.should.have.property('user');
-          response.body.user.should.not.equal(adminUser._id.toString());
+          response.body.user.should.not.equal(adminUser.id);
 
           done();
         });
@@ -319,7 +321,7 @@ describe('Category', () => {
       );
 
       chai.request(server)
-        .delete(`${resourceUrl}/${category1._id}`)
+        .delete(`${resourceUrl}/${category1.id}`)
         .set('Authorization', `Bearer ${token}`)
         .end((err, response) => {
           response.should.have.status(403);
@@ -327,12 +329,12 @@ describe('Category', () => {
         });
     });
 
-    it('should return 500 if no category is found', (done) => {
+    it('should return 404 if no category is found', (done) => {
       chai.request(server)
         .delete(`${resourceUrl}/${new Types.ObjectId()}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
-          response.should.have.status(500);
+          response.should.have.status(404);
           done();
         });
     });
@@ -341,7 +343,7 @@ describe('Category', () => {
       const stub = sinon.stub(categoryModel, 'findByIdAndDelete').throws(new Error('Error'));
 
       chai.request(server)
-        .delete(`${resourceUrl}/${category1._id}`)
+        .delete(`${resourceUrl}/${category1.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(500);
