@@ -51,7 +51,7 @@ export class BudgetManager extends ContentManager<IBudget> {
     });
 
     if (!budget) {
-      throw new Error('Budget not found');
+      return {} as IBudget;
     }
 
     const budgetWithSpent = await this.calculateSpent(budget);

@@ -111,6 +111,6 @@ export class Repository<T extends Document, K> implements IRepository<T, K> {
   }
 
   update(id: string, entity: Partial<K>): Promise<K | null> {
-    return this.model.findByIdAndUpdate(id, entity as any, { new: true }).lean();
+    return this.model.findByIdAndUpdate(id, entity as any, { new: true, runValidators: true }).lean();
   }
 }

@@ -4,7 +4,8 @@ import { Types } from 'mongoose';
 import server from '../../src/server/server';
 import { budget1, budget2, budget3, adminUser } from './connectDB';
 import { createAccessToken } from '../../src/server/managers/authenticationManager';
-import budgetModel, { BUDGET_TYPES } from '../../src/server/resources/models/budgetModel';
+import budgetModel from '../../src/server/resources/models/budgetModel';
+import { BUDGET_TYPES } from '../../src/server/types';
 
 const resourceUrl = '/api/v1/budget';
 
@@ -17,7 +18,7 @@ describe('Budget', () => {
       'admin',
       adminUser.firstName,
       adminUser.lastName,
-      adminUser._id,
+      adminUser.id!,
     );
   });
 
@@ -82,7 +83,7 @@ describe('Budget', () => {
   describe('Retrieve Budget - GET /api/v1/budget/:id', () => {
     it('should return the budget', (done) => {
       chai.request(server)
-        .get(`${resourceUrl}/${budget1._id}`)
+        .get(`${resourceUrl}/${budget1.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(200);
@@ -114,7 +115,7 @@ describe('Budget', () => {
 
     it('should return 401 when the user is not authenticated', (done) => {
       chai.request(server)
-        .get(`${resourceUrl}/${budget1._id}`)
+        .get(`${resourceUrl}/${budget1.id}`)
         .end((err, response) => {
           response.should.have.status(401);
           done();
@@ -122,10 +123,10 @@ describe('Budget', () => {
     });
 
     it('should return 500 when an error occurs', (done) => {
-      const stub = sinon.stub(budgetModel, 'findById').throws(new Error('Error'));
+      const stub = sinon.stub(budgetModel, 'findOne').throws(new Error('Error'));
 
       chai.request(server)
-        .get(`${resourceUrl}/${budget1._id}`)
+        .get(`${resourceUrl}/${budget1.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(500);
@@ -144,7 +145,7 @@ describe('Budget', () => {
         startDate: new Date(),
         endDate: new Date(),
         categories: ['New Category'],
-        user: adminUser._id,
+        user: adminUser.id,
       };
 
       chai.request(server)
@@ -175,7 +176,7 @@ describe('Budget', () => {
         startDate: new Date(),
         endDate: new Date(),
         categories: ['New Category'],
-        user: adminUser._id,
+        user: adminUser.id,
       };
 
       chai.request(server)
@@ -226,7 +227,7 @@ describe('Budget', () => {
       };
 
       chai.request(server)
-        .put(`${resourceUrl}/${budget1._id}`)
+        .put(`${resourceUrl}/${budget1.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send(updatedBudget)
         .end((err, response) => {
@@ -256,7 +257,7 @@ describe('Budget', () => {
       };
 
       chai.request(server)
-        .put(`${resourceUrl}/${budget1._id}`)
+        .put(`${resourceUrl}/${budget1.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send(updatedBudget)
         .end((err, response) => {
@@ -268,7 +269,7 @@ describe('Budget', () => {
 
     it('should return 401 when the user is not authenticated', (done) => {
       chai.request(server)
-        .put(`${resourceUrl}/${budget1._id}`)
+        .put(`${resourceUrl}/${budget1.id}`)
         .send(budget2)
         .end((err, response) => {
           response.should.have.status(401);
@@ -279,7 +280,7 @@ describe('Budget', () => {
 
     it('should throw 500 when no information is provided', (done) => {
       chai.request(server)
-        .put(`${resourceUrl}/${budget1._id}`)
+        .put(`${resourceUrl}/${budget1.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(500);
@@ -290,7 +291,7 @@ describe('Budget', () => {
 
     it('should throw 500 when provided an empty object to update', (done) => {
       chai.request(server)
-        .put(`${resourceUrl}/${budget1._id}`)
+        .put(`${resourceUrl}/${budget1.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send({})
         .end((err, response) => {
@@ -302,7 +303,7 @@ describe('Budget', () => {
 
     it('should be able to update another user\'s budget if is admin', (done) => {
       chai.request(server)
-        .put(`${resourceUrl}/${budget3._id}`)
+        .put(`${resourceUrl}/${budget3.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send(budget2)
         .end((err, response) => {
@@ -316,6 +317,13 @@ describe('Budget', () => {
           response.body.should.have.property('categories');
           response.body.categories.should.be.an('array');
           response.body.categories.should.have.lengthOf(1);
+
+          budget3.name = budget2.name;
+          budget3.value = budget2.value;
+          budget3.type = budget2.type;
+          budget3.startDate = budget2.startDate;
+          budget3.endDate = budget2.endDate;
+          budget3.categories = budget2.categories;
 
           done();
         });
@@ -331,7 +339,7 @@ describe('Budget', () => {
       );
 
       chai.request(server)
-        .put(`${resourceUrl}/${budget1._id}`)
+        .put(`${resourceUrl}/${budget1.id}`)
         .set('Authorization', `Bearer ${token}`)
         .send(budget2)
         .end((err, response) => {
@@ -341,13 +349,13 @@ describe('Budget', () => {
         });
     });
 
-    it('should return 500 if no budget is found', (done) => {
+    it('should return 404 if no budget is found', (done) => {
       chai.request(server)
         .put(`${resourceUrl}/${new Types.ObjectId()}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send(budget2)
         .end((err, response) => {
-          response.should.have.status(500);
+          response.should.have.status(404);
 
           done();
         });
@@ -357,7 +365,7 @@ describe('Budget', () => {
   describe('Delete Budget - DELETE /api/v1/budget/:id', () => {
     it('should delete a budget', (done) => {
       chai.request(server)
-        .delete(`${resourceUrl}/${budget2._id}`)
+        .delete(`${resourceUrl}/${budget2.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(200);
@@ -377,7 +385,7 @@ describe('Budget', () => {
 
     it('should return 401 when the user is not authenticated', (done) => {
       chai.request(server)
-        .delete(`${resourceUrl}/${budget1._id}`)
+        .delete(`${resourceUrl}/${budget1.id}`)
         .end((err, response) => {
           response.should.have.status(401);
 
@@ -387,7 +395,7 @@ describe('Budget', () => {
 
     it('should be able to delete another user\'s budget if is admin', (done) => {
       chai.request(server)
-        .delete(`${resourceUrl}/${budget3._id}`)
+        .delete(`${resourceUrl}/${budget3.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(200);
@@ -415,7 +423,7 @@ describe('Budget', () => {
       );
 
       chai.request(server)
-        .delete(`${resourceUrl}/${budget1._id}`)
+        .delete(`${resourceUrl}/${budget1.id}`)
         .set('Authorization', `Bearer ${token}`)
         .end((err, response) => {
           response.should.have.status(403);
@@ -424,12 +432,12 @@ describe('Budget', () => {
         });
     });
 
-    it('should return 500 if no budget is found', (done) => {
+    it('should return 404 if no budget is found', (done) => {
       chai.request(server)
         .delete(`${resourceUrl}/${new Types.ObjectId()}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
-          response.should.have.status(500);
+          response.should.have.status(404);
 
           done();
         });
@@ -439,7 +447,7 @@ describe('Budget', () => {
       const stub = sinon.stub(budgetModel, 'findByIdAndDelete').throws(new Error('Error'));
 
       chai.request(server)
-        .delete(`${resourceUrl}/${budget1._id}`)
+        .delete(`${resourceUrl}/${budget1.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(500);
