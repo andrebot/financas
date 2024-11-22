@@ -4,11 +4,12 @@ import { Types } from 'mongoose';
 import server from '../../src/server/server';
 import { transaction1, transaction2, transaction3, account1, adminUser } from './connectDB';
 import { createAccessToken } from '../../src/server/managers/authenticationManager';
-import transactionModel, { INVESTMENT_TYPES, TRANSACTION_TYPES } from '../../src/server/resources/models/transactionModel';
+import transactionModel from '../../src/server/resources/models/transactionModel';
+import { INVESTMENT_TYPES, TRANSACTION_TYPES } from '../../src/server/types';
 
 const resourceUrl = '/api/v1/transaction';
 
-describe('Goal', () => {
+describe('Transactions', () => {
   let accessToken: string;
 
   beforeEach(async () => {
@@ -17,7 +18,7 @@ describe('Goal', () => {
       'admin',
       adminUser.firstName,
       adminUser.lastName,
-      adminUser._id,
+      adminUser.id!,
     );
   });
 
@@ -82,7 +83,7 @@ describe('Goal', () => {
   describe('Retrieve Transaction - GET /api/v1/transaction/:id', () => {
     it('should return the transaction', (done) => {
       chai.request(server)
-        .get(`${resourceUrl}/${transaction1._id}`)
+        .get(`${resourceUrl}/${transaction1.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(200);
@@ -94,7 +95,7 @@ describe('Goal', () => {
           response.body.should.have.property('date', transaction1.date.toISOString());
           response.body.should.have.property('value', transaction1.value);
           response.body.should.have.property('isCredit', transaction1.isCredit);
-          response.body.should.have.property('user', adminUser._id.toString());
+          response.body.should.have.property('user', adminUser.id);
 
           done();
         });
@@ -114,7 +115,7 @@ describe('Goal', () => {
 
     it('should return 401 when the user is not authenticated', (done) => {
       chai.request(server)
-        .get(`${resourceUrl}/${transaction1._id}`)
+        .get(`${resourceUrl}/${transaction1.id}`)
         .end((err, response) => {
           response.should.have.status(401);
           done();
@@ -122,10 +123,10 @@ describe('Goal', () => {
     });
 
     it('should return 500 when an error occurs', (done) => {
-      const stub = sinon.stub(transactionModel, 'findById').throws(new Error('Error'));
+      const stub = sinon.stub(transactionModel, 'findOne').throws(new Error('Error'));
 
       chai.request(server)
-        .get(`${resourceUrl}/${transaction1._id}`)
+        .get(`${resourceUrl}/${transaction1.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(500);
@@ -141,12 +142,12 @@ describe('Goal', () => {
         name: 'New Transaction',
         category: 'New Category',
         parentCategory: 'New Parent Category',
-        account: account1._id,
+        account: account1.id,
         type: TRANSACTION_TYPES.TRANSFER,
         date: new Date(),
         value: 100,
         isCredit: false,
-        user: adminUser._id,
+        user: adminUser.id,
       };
 
       chai.request(server)
@@ -157,7 +158,7 @@ describe('Goal', () => {
           response.should.have.status(200);
           response.body.should.be.an('object');
           response.body.should.have.property('name', newTransaction.name);
-          response.body.should.have.property('user', newTransaction.user.toString());
+          response.body.should.have.property('user', newTransaction.user);
 
           done();
         });
@@ -168,12 +169,12 @@ describe('Goal', () => {
         name: 'New Transaction',
         category: 'New Category',
         parentCategory: 'New Parent Category',
-        account: account1._id,
+        account: account1.id,
         type: TRANSACTION_TYPES.TRANSFER,
         date: new Date(),
         value: 100,
         isCredit: false,
-        user: adminUser._id,
+        user: adminUser.id,
         InvestmentType: INVESTMENT_TYPES.LCI,
         goalsList: [{
           goal: new Types.ObjectId(),
@@ -190,7 +191,7 @@ describe('Goal', () => {
           response.should.have.status(200);
           response.body.should.be.an('object');
           response.body.should.have.property('name', newTransaction.name);
-          response.body.should.have.property('user', newTransaction.user.toString());
+          response.body.should.have.property('user', newTransaction.user);
           response.body.should.have.property('goalsList');
           response.body.goalsList.should.be.an('array');
           response.body.goalsList.should.have.lengthOf(1);
@@ -234,7 +235,7 @@ describe('Goal', () => {
       };
 
       chai.request(server)
-        .put(`${resourceUrl}/${transaction1._id}`)
+        .put(`${resourceUrl}/${transaction1.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send(updatedTransaction)
         .end((err, response) => {
@@ -248,7 +249,7 @@ describe('Goal', () => {
 
     it('should return 401 when the user is not authenticated', (done) => {
       chai.request(server)
-        .put(`${resourceUrl}/${transaction1._id}`)
+        .put(`${resourceUrl}/${transaction1.id}`)
         .send(transaction2)
         .end((err, response) => {
           response.should.have.status(401);
@@ -258,7 +259,7 @@ describe('Goal', () => {
 
     it('should throw 500 when no information is provided', (done) => {
       chai.request(server)
-        .put(`${resourceUrl}/${transaction1._id}`)
+        .put(`${resourceUrl}/${transaction1.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(500);
@@ -268,7 +269,7 @@ describe('Goal', () => {
 
     it('should throw 500 when provided an empty object to update', (done) => {
       chai.request(server)
-        .put(`${resourceUrl}/${transaction1._id}`)
+        .put(`${resourceUrl}/${transaction1.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send({})
         .end((err, response) => {
@@ -279,13 +280,22 @@ describe('Goal', () => {
 
     it('should be able to update another user\'s transaction if is admin', (done) => {
       chai.request(server)
-        .put(`${resourceUrl}/${transaction3._id}`)
+        .put(`${resourceUrl}/${transaction3.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send(transaction2)
         .end((err, response) => {
           response.should.have.status(200);
           response.body.should.be.an('object');
           response.body.should.have.property('name', transaction2.name);
+
+          transaction3.name = transaction2.name;
+          transaction3.category = transaction2.category;
+          transaction3.parentCategory = transaction2.parentCategory;
+          transaction3.account = transaction2.account;
+          transaction3.type = transaction2.type;
+          transaction3.date = transaction2.date;
+          transaction3.value = transaction2.value;
+          transaction3.isCredit = transaction2.isCredit;
 
           done();
         });
@@ -301,7 +311,7 @@ describe('Goal', () => {
       );
 
       chai.request(server)
-        .put(`${resourceUrl}/${transaction3._id}`)
+        .put(`${resourceUrl}/${transaction3.id}`)
         .set('Authorization', `Bearer ${token}`)
         .send(transaction2)
         .end((err, response) => {
@@ -310,13 +320,13 @@ describe('Goal', () => {
         });
     });
 
-    it('should return 500 if no transaction is found', (done) => {
+    it('should return 404 if no transaction is found', (done) => {
       chai.request(server)
         .put(`${resourceUrl}/${new Types.ObjectId()}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send(transaction2)
         .end((err, response) => {
-          response.should.have.status(500);
+          response.should.have.status(404);
           done();
         });
     });
@@ -325,13 +335,13 @@ describe('Goal', () => {
   describe('Delete Goal - DELETE /api/v1/transaction/:id', () => {
     it('should delete a transaction', (done) => {
       chai.request(server)
-        .delete(`${resourceUrl}/${transaction2._id}`)
+        .delete(`${resourceUrl}/${transaction2.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(200);
           response.body.should.be.an('object');
           response.body.should.have.property('name', transaction2.name);
-          response.body.should.have.property('user', adminUser._id.toString());
+          response.body.should.have.property('user', adminUser.id);
 
           done();
         });
@@ -339,7 +349,7 @@ describe('Goal', () => {
 
     it('should return 401 when the user is not authenticated', (done) => {
       chai.request(server)
-        .delete(`${resourceUrl}/${transaction1._id}`)
+        .delete(`${resourceUrl}/${transaction1.id}`)
         .end((err, response) => {
           response.should.have.status(401);
           done();
@@ -348,14 +358,14 @@ describe('Goal', () => {
 
     it('should be able to delete another user\'s transaction if is admin', (done) => {
       chai.request(server)
-        .delete(`${resourceUrl}/${transaction3._id}`)
+        .delete(`${resourceUrl}/${transaction3.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(200);
           response.body.should.be.an('object');
           response.body.should.have.property('name', transaction3.name);
           response.body.should.have.property('user');
-          response.body.user.should.not.equal(adminUser._id.toString());
+          response.body.user.should.not.equal(adminUser.id);
 
           done();
         });
@@ -371,7 +381,7 @@ describe('Goal', () => {
       );
 
       chai.request(server)
-        .delete(`${resourceUrl}/${transaction1._id}`)
+        .delete(`${resourceUrl}/${transaction1.id}`)
         .set('Authorization', `Bearer ${token}`)
         .end((err, response) => {
           response.should.have.status(403);
@@ -379,12 +389,12 @@ describe('Goal', () => {
         });
     });
 
-    it('should return 500 if no transaction is found', (done) => {
+    it('should return 404 if no transaction is found', (done) => {
       chai.request(server)
         .delete(`${resourceUrl}/${new Types.ObjectId()}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
-          response.should.have.status(500);
+          response.should.have.status(404);
           done();
         });
     });
@@ -393,7 +403,7 @@ describe('Goal', () => {
       const stub = sinon.stub(transactionModel, 'findByIdAndDelete').throws(new Error('Error'));
 
       chai.request(server)
-        .delete(`${resourceUrl}/${transaction1._id}`)
+        .delete(`${resourceUrl}/${transaction1.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(500);

@@ -7,6 +7,6 @@ const {
   router,
 } = contentRouteFactory(TransactionController, 'transaction');
 
-router.get('/types', createTokenValidation(), TransactionController.getTransactionTypes);
+router.get('/types', createTokenValidation(), TransactionController.getTransactionTypes.bind(TransactionController));
 
 export default { urlPrefix, router };
