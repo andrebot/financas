@@ -15,7 +15,7 @@ describe('Account', () => {
       'admin',
       adminUser.firstName,
       adminUser.lastName,
-      adminUser._id,
+      adminUser.id!,
     );
   });
 
@@ -80,7 +80,7 @@ describe('Account', () => {
   describe('Retrieve Account - GET /api/v1/account/:id', () => {
     it('should return the account', (done) => {
       chai.request(server)
-        .get(`/api/v1/account/${account1._id}`)
+        .get(`/api/v1/account/${account1.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(200);
@@ -113,7 +113,7 @@ describe('Account', () => {
 
     it('should return 401 when the user is not authenticated', (done) => {
       chai.request(server)
-        .get(`/api/v1/account/${account1._id}`)
+        .get(`/api/v1/account/${account1.id}`)
         .end((err, response) => {
           response.should.have.status(401);
           done();
@@ -121,10 +121,10 @@ describe('Account', () => {
     });
 
     it('should return 500 when an error occurs', (done) => {
-      const stub = sinon.stub(accountModel, 'findById').throws(new Error('Error'));
+      const stub = sinon.stub(accountModel, 'findOne').throws(new Error('Error'));
 
       chai.request(server)
-        .get(`/api/v1/account/${account1._id}`)
+        .get(`/api/v1/account/${account1.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(500);
@@ -141,7 +141,7 @@ describe('Account', () => {
         agency: '1234',
         accountNumber: '123',
         currency: 'BRL',
-        user: adminUser._id,
+        user: adminUser.id,
       };
 
       chai.request(server)
@@ -198,7 +198,7 @@ describe('Account', () => {
       };
 
       chai.request(server)
-        .put(`/api/v1/account/${account1._id}`)
+        .put(`/api/v1/account/${account1.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send(updatedAccount)
         .end((err, response) => {
@@ -218,7 +218,7 @@ describe('Account', () => {
 
     it('should return 401 when the user is not authenticated', (done) => {
       chai.request(server)
-        .put(`/api/v1/account/${account1._id}`)
+        .put(`/api/v1/account/${account1.id}`)
         .send(account2)
         .end((err, response) => {
           response.should.have.status(401);
@@ -228,7 +228,7 @@ describe('Account', () => {
 
     it('should throw 500 when no information is provided', (done) => {
       chai.request(server)
-        .put(`/api/v1/account/${account1._id}`)
+        .put(`/api/v1/account/${account1.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(500);
@@ -238,7 +238,7 @@ describe('Account', () => {
 
     it('should throw 500 when provided an empty object to update', (done) => {
       chai.request(server)
-        .put(`/api/v1/account/${account1._id}`)
+        .put(`/api/v1/account/${account1.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send({})
         .end((err, response) => {
@@ -249,7 +249,7 @@ describe('Account', () => {
 
     it('should be able to update another user\'s account if is admin', (done) => {
       chai.request(server)
-        .put(`/api/v1/account/${account3._id}`)
+        .put(`/api/v1/account/${account3.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send(account2)
         .end((err, response) => {
@@ -259,6 +259,11 @@ describe('Account', () => {
           response.body.should.have.property('agency', account2.agency);
           response.body.should.have.property('accountNumber', account2.accountNumber);
           response.body.should.have.property('currency', account2.currency);
+
+          account3.name = account2.name;
+          account3.agency = account2.agency;
+          account3.accountNumber = account2.accountNumber;
+          account3.currency = account2.currency;
 
           done();
         });
@@ -274,7 +279,7 @@ describe('Account', () => {
       );
 
       chai.request(server)
-        .put(`/api/v1/account/${account3._id}`)
+        .put(`/api/v1/account/${account3.id}`)
         .set('Authorization', `Bearer ${token}`)
         .send(account2)
         .end((err, response) => {
@@ -283,13 +288,27 @@ describe('Account', () => {
         });
     });
 
-    it('should return 500 if no account is found', (done) => {
+    it('should return 404 if no account is found', (done) => {
       chai.request(server)
         .put(`/api/v1/account/${new Types.ObjectId()}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send(account2)
         .end((err, response) => {
+          response.should.have.status(404);
+          done();
+        });
+    });
+
+    it('should return 500 when an error occurs', (done) => {
+      const stub = sinon.stub(accountModel, 'findOneAndUpdate').throws(new Error('Error'));
+
+      chai.request(server)
+        .put(`/api/v1/account/${account1.id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(account2)
+        .end((err, response) => {
           response.should.have.status(500);
+          stub.restore();
           done();
         });
     });
@@ -298,7 +317,7 @@ describe('Account', () => {
   describe('Delete Account - DELETE /api/v1/account/:id', () => {
     it('should delete an account', (done) => {
       chai.request(server)
-        .delete(`/api/v1/account/${account2._id}`)
+        .delete(`/api/v1/account/${account2.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(200);
@@ -317,7 +336,7 @@ describe('Account', () => {
 
     it('should return 401 when the user is not authenticated', (done) => {
       chai.request(server)
-        .delete(`/api/v1/account/${account1._id}`)
+        .delete(`/api/v1/account/${account1.id}`)
         .end((err, response) => {
           response.should.have.status(401);
           done();
@@ -326,7 +345,7 @@ describe('Account', () => {
 
     it('should be able to delete another user\'s account if is admin', (done) => {
       chai.request(server)
-        .delete(`/api/v1/account/${account3._id}`)
+        .delete(`/api/v1/account/${account3.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(200);
@@ -353,7 +372,7 @@ describe('Account', () => {
       );
 
       chai.request(server)
-        .delete(`/api/v1/account/${account1._id}`)
+        .delete(`/api/v1/account/${account1.id}`)
         .set('Authorization', `Bearer ${token}`)
         .end((err, response) => {
           response.should.have.status(403);
@@ -361,12 +380,12 @@ describe('Account', () => {
         });
     });
 
-    it('should return 500 if no account is found', (done) => {
+    it('should return 404 if no account is found', (done) => {
       chai.request(server)
         .delete(`/api/v1/account/${new Types.ObjectId()}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
-          response.should.have.status(500);
+          response.should.have.status(404);
           done();
         });
     });
@@ -375,7 +394,7 @@ describe('Account', () => {
       const stub = sinon.stub(accountModel, 'findByIdAndDelete').throws(new Error('Error'));
 
       chai.request(server)
-        .delete(`/api/v1/account/${account1._id}`)
+        .delete(`/api/v1/account/${account1.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(500);
