@@ -17,7 +17,7 @@ describe('Goal', () => {
       'admin',
       adminUser.firstName,
       adminUser.lastName,
-      adminUser._id,
+      adminUser.id!,
     );
   });
 
@@ -82,7 +82,7 @@ describe('Goal', () => {
   describe('Retrieve Goal - GET /api/v1/goal/:id', () => {
     it('should return the goal', (done) => {
       chai.request(server)
-        .get(`${resourceUrl}/${goal1._id}`)
+        .get(`${resourceUrl}/${goal1.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(200);
@@ -90,7 +90,7 @@ describe('Goal', () => {
           response.body.should.have.property('name', goal1.name);
           response.body.should.have.property('value', goal1.value);
           response.body.should.have.property('dueDate', goal1.dueDate.toISOString());
-          response.body.should.have.property('user', adminUser._id.toString());
+          response.body.should.have.property('user', adminUser.id);
 
           done();
         });
@@ -110,7 +110,7 @@ describe('Goal', () => {
 
     it('should return 401 when the user is not authenticated', (done) => {
       chai.request(server)
-        .get(`${resourceUrl}/${goal1._id}`)
+        .get(`${resourceUrl}/${goal1.id}`)
         .end((err, response) => {
           response.should.have.status(401);
           done();
@@ -118,10 +118,10 @@ describe('Goal', () => {
     });
 
     it('should return 500 when an error occurs', (done) => {
-      const stub = sinon.stub(goalModel, 'findById').throws(new Error('Error'));
+      const stub = sinon.stub(goalModel, 'findOne').throws(new Error('Error'));
 
       chai.request(server)
-        .get(`${resourceUrl}/${goal1._id}`)
+        .get(`${resourceUrl}/${goal1.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(500);
@@ -137,7 +137,7 @@ describe('Goal', () => {
         name: 'Test Account',
         value: 400,
         dueDate: new Date(),
-        user: adminUser._id,
+        user: adminUser.id,
       };
 
       chai.request(server)
@@ -148,7 +148,7 @@ describe('Goal', () => {
           response.should.have.status(200);
           response.body.should.be.an('object');
           response.body.should.have.property('name', newGoal.name);
-          response.body.should.have.property('user', newGoal.user.toString());
+          response.body.should.have.property('user', newGoal.user);
 
           done();
         });
@@ -186,7 +186,7 @@ describe('Goal', () => {
       };
 
       chai.request(server)
-        .put(`${resourceUrl}/${goal1._id}`)
+        .put(`${resourceUrl}/${goal1.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send(updatedGoal)
         .end((err, response) => {
@@ -200,7 +200,7 @@ describe('Goal', () => {
 
     it('should return 401 when the user is not authenticated', (done) => {
       chai.request(server)
-        .put(`${resourceUrl}/${goal1._id}`)
+        .put(`${resourceUrl}/${goal1.id}`)
         .send(goal2)
         .end((err, response) => {
           response.should.have.status(401);
@@ -210,7 +210,7 @@ describe('Goal', () => {
 
     it('should throw 500 when no information is provided', (done) => {
       chai.request(server)
-        .put(`${resourceUrl}/${goal1._id}`)
+        .put(`${resourceUrl}/${goal1.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(500);
@@ -220,7 +220,7 @@ describe('Goal', () => {
 
     it('should throw 500 when provided an empty object to update', (done) => {
       chai.request(server)
-        .put(`${resourceUrl}/${goal1._id}`)
+        .put(`${resourceUrl}/${goal1.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send({})
         .end((err, response) => {
@@ -231,13 +231,15 @@ describe('Goal', () => {
 
     it('should be able to update another user\'s goal if is admin', (done) => {
       chai.request(server)
-        .put(`${resourceUrl}/${goal3._id}`)
+        .put(`${resourceUrl}/${goal3.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send(goal2)
         .end((err, response) => {
           response.should.have.status(200);
           response.body.should.be.an('object');
           response.body.should.have.property('name', goal2.name);
+
+          goal3.name = goal2.name;
 
           done();
         });
@@ -253,7 +255,7 @@ describe('Goal', () => {
       );
 
       chai.request(server)
-        .put(`${resourceUrl}/${goal3._id}`)
+        .put(`${resourceUrl}/${goal3.id}`)
         .set('Authorization', `Bearer ${token}`)
         .send(goal2)
         .end((err, response) => {
@@ -262,13 +264,27 @@ describe('Goal', () => {
         });
     });
 
-    it('should return 500 if no goal is found', (done) => {
+    it('should return 404 if no goal is found', (done) => {
       chai.request(server)
         .put(`${resourceUrl}/${new Types.ObjectId()}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send(goal2)
         .end((err, response) => {
+          response.should.have.status(404);
+          done();
+        });
+    });
+
+    it('should return 500 when an error occurs', (done) => {
+      const stub = sinon.stub(goalModel, 'findOneAndUpdate').throws(new Error('Error'));
+
+      chai.request(server)
+        .put(`${resourceUrl}/${goal1.id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(goal2)
+        .end((err, response) => {
           response.should.have.status(500);
+          stub.restore();
           done();
         });
     });
@@ -277,13 +293,13 @@ describe('Goal', () => {
   describe('Delete Goal - DELETE /api/v1/goal/:id', () => {
     it('should delete a goal', (done) => {
       chai.request(server)
-        .delete(`${resourceUrl}/${goal2._id}`)
+        .delete(`${resourceUrl}/${goal2.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(200);
           response.body.should.be.an('object');
           response.body.should.have.property('name', goal2.name);
-          response.body.should.have.property('user', adminUser._id.toString());
+          response.body.should.have.property('user', adminUser.id);
 
           done();
         });
@@ -291,7 +307,7 @@ describe('Goal', () => {
 
     it('should return 401 when the user is not authenticated', (done) => {
       chai.request(server)
-        .delete(`${resourceUrl}/${goal1._id}`)
+        .delete(`${resourceUrl}/${goal1.id}`)
         .end((err, response) => {
           response.should.have.status(401);
           done();
@@ -300,14 +316,14 @@ describe('Goal', () => {
 
     it('should be able to delete another user\'s goal if is admin', (done) => {
       chai.request(server)
-        .delete(`${resourceUrl}/${goal3._id}`)
+        .delete(`${resourceUrl}/${goal3.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(200);
           response.body.should.be.an('object');
           response.body.should.have.property('name', goal3.name);
           response.body.should.have.property('user');
-          response.body.user.should.not.equal(adminUser._id.toString());
+          response.body.user.should.not.equal(adminUser.id);
 
           done();
         });
@@ -323,7 +339,7 @@ describe('Goal', () => {
       );
 
       chai.request(server)
-        .delete(`${resourceUrl}/${goal1._id}`)
+        .delete(`${resourceUrl}/${goal1.id}`)
         .set('Authorization', `Bearer ${token}`)
         .end((err, response) => {
           response.should.have.status(403);
@@ -331,12 +347,12 @@ describe('Goal', () => {
         });
     });
 
-    it('should return 500 if no goal is found', (done) => {
+    it('should return 404 if no goal is found', (done) => {
       chai.request(server)
         .delete(`${resourceUrl}/${new Types.ObjectId()}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
-          response.should.have.status(500);
+          response.should.have.status(404);
           done();
         });
     });
@@ -345,7 +361,7 @@ describe('Goal', () => {
       const stub = sinon.stub(goalModel, 'findByIdAndDelete').throws(new Error('Error'));
 
       chai.request(server)
-        .delete(`${resourceUrl}/${goal1._id}`)
+        .delete(`${resourceUrl}/${goal1.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .end((err, response) => {
           response.should.have.status(500);

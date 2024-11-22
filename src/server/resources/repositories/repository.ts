@@ -73,7 +73,11 @@ export class Repository<T extends Document, K> implements IRepository<T, K> {
       if (this.isQueryCondition(value)) {
         translatedQuery[key] = this.translateCondition(value);
       } else {
-        translatedQuery[key] = value as FilterQuery<K>[Extract<keyof K, string>];
+        if (key === 'id') {
+          translatedQuery['_id' as keyof FilterQuery<K>] = value;
+        } else {
+          translatedQuery[key] = value as FilterQuery<K>[Extract<keyof K, string>];
+        }
       }
     }
 

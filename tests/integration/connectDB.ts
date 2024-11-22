@@ -1,12 +1,23 @@
 import mongoose, { Types } from 'mongoose';
 import bcrypt from 'bcrypt';
 import { MongoMemoryServer } from 'mongodb-memory-server';
-import UserModel, { IUser } from '../../src/server/resources/models/userModel';
-import AccountModel, { IAccount } from '../../src/server/resources/models/accountModel';
-import categoryModel, { ICategory } from '../../src/server/resources/models/categoryModel';
-import GoalModel, { IGoal } from '../../src/server/resources/models/goalModel';
-import BudgetModel, { IBudget, BUDGET_TYPES } from '../../src/server/resources/models/budgetModel';
-import transactionModel, { ITransaction, INVESTMENT_TYPES, TRANSACTION_TYPES } from '../../src/server/resources/models/transactionModel';
+import UserModel, { IUserDocument } from '../../src/server/resources/models/userModel';
+import AccountModel, { IAccountDocument } from '../../src/server/resources/models/accountModel';
+import categoryModel, { ICategoryDocument } from '../../src/server/resources/models/categoryModel';
+import GoalModel, { IGoalDocument } from '../../src/server/resources/models/goalModel';
+import BudgetModel, { IBudgetDocument } from '../../src/server/resources/models/budgetModel';
+import transactionModel, { ITransactionDocument } from '../../src/server/resources/models/transactionModel';
+import {
+  IUser,
+  IAccount,
+  ICategory,
+  IGoal,
+  IBudget,
+  ITransaction,
+  BUDGET_TYPES,
+  TRANSACTION_TYPES,
+  INVESTMENT_TYPES,
+} from '../../src/server/types';
 
 export const adminUser = {
   email: 'admin@example.com',
@@ -119,7 +130,7 @@ export const transaction2 = {
   isCredit: false,
   investmentType: INVESTMENT_TYPES.LCI,
   goalsList: [{
-    goal: new mongoose.Types.ObjectId(),
+    goal: new mongoose.Types.ObjectId().toString(),
     goalName: 'Test Goal 1',
     percentage: 0.5,
   }],
@@ -134,7 +145,7 @@ export const transaction3 = {
   isCredit: false,
   investmentType: INVESTMENT_TYPES.LCA,
   goalsList: [{
-    goal: new mongoose.Types.ObjectId(),
+    goal: new mongoose.Types.ObjectId().toString(),
     goalName: 'Test Goal 2',
     percentage: 0.5,
   }],
@@ -156,60 +167,60 @@ export const disconnectDatabase = async () => {
 
 export const createAdminUser = async () => {
   adminUser.password = await bcrypt.hash('adminPassword', bcrypt.genSaltSync(10));
-  const savedUSer: IUser = new UserModel(adminUser)
+  const savedUSer: IUserDocument = new UserModel(adminUser)
 
   await savedUSer.save();
-  adminUser._id = savedUSer._id;
+  adminUser.id = savedUSer._id.toString();
 };
 
-export const createAccount = async (account: IAccount, userID: Types.ObjectId) => {
-  const newAccount = new AccountModel({
+export const createAccount = async (account: IAccount, userID: string) => {
+  const newAccount: IAccountDocument = new AccountModel({
     ...account,
     user: userID,
   });
   await newAccount.save();
 
-  account._id = newAccount._id;
+  account.id = newAccount._id.toString();
 };
 
-export const createCategory = async (category: ICategory, userID: Types.ObjectId, parentCategory?: Types.ObjectId) => {
-  const newCategory = new categoryModel({
+export const createCategory = async (category: ICategory, userID: string, parentCategory?: string) => {
+  const newCategory: ICategoryDocument = new categoryModel({
     ...category,
     user: userID,
     parentCategory,
   });
   await newCategory.save();
 
-  category._id = newCategory._id;
+  category.id = newCategory._id.toString();
 };
 
-export const createGoal = async (goal: IGoal, userID: Types.ObjectId) => {
-  const newGoal = new GoalModel({
+export const createGoal = async (goal: IGoal, userID: string) => {
+  const newGoal: IGoalDocument = new GoalModel({
     ...goal,
     user: userID,
   });
   await newGoal.save();
 
-  goal._id = newGoal._id;
+  goal.id = newGoal._id.toString();
 };
 
-export const createTransaction = async (transaction: ITransaction, userID: Types.ObjectId, accountID: Types.ObjectId) => {
-  const newTransaction = new transactionModel({
+export const createTransaction = async (transaction: ITransaction, userID: string, accountID: string) => {
+  const newTransaction: ITransactionDocument = new transactionModel({
     ...transaction,
     user: userID,
     account: accountID,
   });
   await newTransaction.save();
 
-  transaction._id = newTransaction._id;
+  transaction.id = newTransaction._id.toString();
 }
 
-export const createBudget = async (budget: IBudget, userID: Types.ObjectId) => {
-  const newBudget = new BudgetModel({
+export const createBudget = async (budget: IBudget, userID: string) => {
+  const newBudget: IBudgetDocument = new BudgetModel({
     ...budget,
     user: userID,
   });
   await newBudget.save();
 
-  budget._id = newBudget._id;
+  budget.id = newBudget._id.toString();
 };

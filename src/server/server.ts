@@ -4,7 +4,7 @@ import path from 'path';
 import cors from 'cors';
 import * as dotenv from 'dotenv';
 import logger from './utils/logger';
-import config from './config/server';
+import { PORT } from './config/server';
 import setRoutes from './routes';
 
 dotenv.config();
@@ -13,7 +13,7 @@ const app = express();
 
 app.use(cors({
   origin(origin, callback): void {
-    const origins = [`http://localhost:${config.PORT}`, '*'];
+    const origins = [`http://localhost:${PORT}`, '*'];
     callback(null, origin || origins);
   },
   methods: ['GET', 'PUT', 'POST', 'PATCH', 'OPTIONS', 'DELETE'],
