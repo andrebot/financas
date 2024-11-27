@@ -5,9 +5,11 @@ import { Repository } from '../../../../src/server/resources/repositories/reposi
 
 interface IMockModel {
   name: string;
+  user?: string;
+  id?: string;
 }
 
-interface IMockModelDocument extends IMockModel, Document {}
+interface IMockModelDocument extends Omit<IMockModel, 'id'>, Document {}
 
 const findStub = sinon.stub();
 const findByIdStub = sinon.stub();
@@ -92,7 +94,7 @@ describe('Repository', () => {
     const result = await repository.update('1', { name: 'test' });
 
     should().exist(result);
-    findByIdAndUpdateStub.should.have.been.calledOnceWithExactly('1', { name: 'test' }, { new: true });
+    findByIdAndUpdateStub.should.have.been.calledOnceWithExactly('1', { name: 'test' }, { new: true, runValidators: true });
     result!.should.be.deep.equal({ name: 'test' });
   });
 
@@ -118,10 +120,16 @@ describe('Repository', () => {
     });
 
     it('should search for one document', async () => {
-      const result = await repository.findOne({ name: 'test' });
+      let result = await repository.findOne({ name: 'test' });
 
       should().exist(result);
       findOneStub.should.have.been.calledOnceWithExactly({ name: 'test' });
+      result!.should.be.deep.equal({ name: 'test' });
+
+      result = await repository.findOne({ user: 'test', id: '1' });
+
+      should().exist(result);
+      findOneStub.should.have.been.calledWithExactly({ user: 'test', _id: '1' });
       result!.should.be.deep.equal({ name: 'test' });
     });
 
