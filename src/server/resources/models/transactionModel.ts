@@ -25,7 +25,6 @@ const TransactionSchema = new Schema<ITransactionDocument>({
   type: { type: String, enum: Object.values(TRANSACTION_TYPES), required: true },
   date: { type: Date, required: true },
   value: { type: Number, required: true },
-  isCredit: { type: Boolean, required: true },
   investmentType: { type: String, enum: Object.values(INVESTMENT_TYPES), required: false },
   user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   goalsList: {

@@ -227,7 +227,7 @@ export enum INVESTMENT_TYPES {
 }
 
 export interface IGoalItem {
-  goal: string;
+  goal: IGoal;
   goalName: string;
   percentage: number;
 }
@@ -241,7 +241,6 @@ export interface ITransaction {
   type: TRANSACTION_TYPES;
   date: Date;
   value: number;
-  isCredit: boolean;
   investmentType: INVESTMENT_TYPES;
   user: string;
   goalsList: IGoalItem[];
@@ -268,6 +267,10 @@ export interface IGoal {
    * Goal owner
    */
   user: string;
+  /**
+   * Saved value of the goal
+   */
+  savedValue: number;
 }
 
 export interface ICategory {
@@ -336,6 +339,46 @@ export interface IBudget {
   user: string;
 }
 
+export interface IMonthlyBalance {
+  /**
+   * Unique identifier
+   */
+  id?: string;
+  /**
+   * Monthly balance owner
+   */
+  user: string;
+  /**
+   * Monthly balance account
+   */
+  account: string;
+  /**
+   * Month of the monthly balance
+   */
+  month: number;
+  /**
+   * Year of the monthly balance
+   */
+  year: number;
+  /**
+   * Opening balance of the monthly balance
+   */
+  openingBalance: number;
+  /**
+   * Closing balance of the monthly balance
+   */
+  closingBalance: number;
+  /**
+   * Transactions of the monthly balance
+   */
+  transactions: ITransaction[];
+}
+
+export type BulkGoalsUpdate = {
+  goalId: string;
+  amount: number;
+};
+
 export interface QueryCondition<T> {
   equals?: T;
   not?: T | QueryCondition<T>;
@@ -353,6 +396,5 @@ export interface QueryCondition<T> {
 export type QueryFilter<T> = {
   [P in keyof T]?: T[P] | QueryCondition<T[P]>;
 };
-
 
 /* eslint-enable no-unused-vars */

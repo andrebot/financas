@@ -97,3 +97,18 @@ export function checkVoidUser(user: UserPayload | undefined, modelName: string, 
     throw new Error(`User not authenticated to ${action} ${modelName}`);
   }
 }
+
+/**
+ * Calculate the last month
+ *
+ * @param year - The year
+ * @param month - The month
+ * @returns The last month
+ */
+export function calculateLastMonth(year: number, month: number): { year: number, month: number } {
+  if (month === 1) {
+    return { year: year - 1, month: 12 };
+  }
+
+  return { year, month: month - 1 };
+}

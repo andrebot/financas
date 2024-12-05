@@ -30,7 +30,7 @@ const operatorMap: Record<string, string> = {
 };
 
 export class Repository<T extends Document, K> implements IRepository<T, K> {
-  private model: Model<T>;
+  protected model: Model<T>;
   modelName: string;
 
   constructor(model: Model<T>) {
@@ -38,10 +38,23 @@ export class Repository<T extends Document, K> implements IRepository<T, K> {
     this.modelName = model.modelName;
   }
 
+  /**
+   * Checks if the value is a query condition.
+   *
+   * @param value - The value to check.
+   * @returns True if the value is a query condition, false otherwise.
+   */
   private isQueryCondition(value: any): value is QueryCondition<any> {
     return typeof value === 'object' && value !== null && !(value instanceof Array);
   }
 
+  /**
+   * Translates a single query condition to MongoDB query condition.
+   *
+   * @param key - The query condition to translate.
+   * @param value - The value of the query condition.
+   * @param translatedCondition - The translated query condition.
+   */
   private translate(key: string, value: any, translatedCondition: any) {
     if (key in operatorMap) {
       translatedCondition[operatorMap[key]] = value;
@@ -54,6 +67,12 @@ export class Repository<T extends Document, K> implements IRepository<T, K> {
     }
   }
 
+  /**
+   * Translates a single query condition to MongoDB query condition.
+   *
+   * @param condition - The query condition to translate.
+   * @returns The translated query condition.
+   */
   private translateCondition(condition: QueryCondition<any>): any {
     const translatedCondition: any = {};
 
@@ -64,6 +83,12 @@ export class Repository<T extends Document, K> implements IRepository<T, K> {
     return translatedCondition;
   }
 
+  /**
+   * Translates the query to MongoDB query.
+   *
+   * @param query - The query to translate.
+   * @returns The translated query.
+   */
   private translateFilter(query: QueryFilter<K>): FilterQuery<T> {
     const translatedQuery: FilterQuery<K> = {};
 
