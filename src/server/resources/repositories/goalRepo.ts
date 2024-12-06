@@ -1,11 +1,11 @@
 import { AnyBulkWriteOperation } from 'mongodb';
 import { Repository } from './repository';
 import GoalModel, { IGoalDocument } from '../models/goalModel';
-import { IGoal, ITransaction, BulkGoalsUpdate } from '../../types';
+import { IGoal, BulkGoalsUpdate } from '../../types';
 
-class GoalRepo extends Repository<IGoalDocument, IGoal> {
-  constructor() {
-    super(GoalModel);
+export class GoalRepo extends Repository<IGoalDocument, IGoal> {
+  constructor(goalModel: typeof GoalModel = GoalModel) {
+    super(goalModel);
   }
 
   /**

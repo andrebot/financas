@@ -1,12 +1,12 @@
 import ContentManager from './contentManager';
-import budgetRepo from '../resources/repositories/budgetRepo';
+import BudgetRepo from '../resources/repositories/budgetRepo';
 import TransactionRepo from '../resources/repositories/transactionRepo';
 import type { IBudget } from '../types';
 
 export class BudgetManager extends ContentManager<IBudget> {
   private transactionRepo: typeof TransactionRepo;
 
-  constructor() {
+  constructor(budgetRepo: typeof BudgetRepo = BudgetRepo) {
     super(budgetRepo);
 
     this.transactionRepo = TransactionRepo;

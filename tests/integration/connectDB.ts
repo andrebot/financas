@@ -118,7 +118,6 @@ export const transaction1 = {
   type: TRANSACTION_TYPES.WITHDRAW,
   date: new Date(),
   value: 100,
-  isCredit: false,
 } as ITransaction;
 export const transaction2 = {
   name: 'Test Transaction 2',
@@ -127,14 +126,13 @@ export const transaction2 = {
   type: TRANSACTION_TYPES.INVESTMENT,
   date: new Date(),
   value: 200,
-  isCredit: false,
   investmentType: INVESTMENT_TYPES.LCI,
   goalsList: [{
     goal: new mongoose.Types.ObjectId().toString(),
     goalName: 'Test Goal 1',
     percentage: 0.5,
   }],
-} as ITransaction;
+} as unknown as ITransaction;
 export const transaction3 = {
   name: 'Test Transaction 3',
   category: 'Test Category 3',
@@ -142,14 +140,13 @@ export const transaction3 = {
   type: TRANSACTION_TYPES.INVESTMENT,
   date: new Date(),
   value: 300,
-  isCredit: false,
   investmentType: INVESTMENT_TYPES.LCA,
   goalsList: [{
     goal: new mongoose.Types.ObjectId().toString(),
     goalName: 'Test Goal 2',
     percentage: 0.5,
   }],
-} as ITransaction;
+} as unknown as ITransaction;
 
 // Establish a connection to the in-memory database
 export const connectToDatabase = async () => {

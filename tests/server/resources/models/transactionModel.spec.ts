@@ -60,10 +60,6 @@ describe('Transaction Model', () => {
     checkRequiredField(transaction, 'value');
   });
 
-  it('should be invalid if isCredit is empty', () => {
-    checkRequiredField(transaction, 'isCredit', 'Boolean');
-  });
-
   it('should be invalid if investmentType is not in the enum', () => {
     transaction.investmentType = ('invalid' as INVESTMENT_TYPES);
     const error = transaction.validateSync();

@@ -1,5 +1,12 @@
 import { should } from 'chai';
-import { removeEmptyProperties, isObjectEmptyOrNull } from '../../../src/server/utils/misc';
+import {
+  removeEmptyProperties,
+  isObjectEmptyOrNull,
+  checkVoidPayload,
+  checkVoidInstance,
+  checkVoidUser,
+  calculateLastMonth,
+} from '../../../src/server/utils/misc';
 
 describe('misc Utilities', () => {
   describe('removeEmptyProperties', () => {
@@ -155,6 +162,122 @@ describe('misc Utilities', () => {
   
     it('should return false for a `RegExp` object', () => {
       isObjectEmptyOrNull(/test/i).should.be.false;
+    });
+  });
+
+  describe('checkVoidPayload', () => {
+    it('should throw an error if the payload is empty', () => {
+      try {
+        checkVoidPayload({}, 'test', 'test');
+      } catch (error) {
+        (error as Error).should.be.an('error');
+        (error as Error).message.should.contain('No information provided to test test');
+      }
+    });
+
+    it('should throw an error if the payload is undefined', () => {
+      try {
+        checkVoidPayload(undefined, 'test', 'test');
+      } catch (error) {
+        (error as Error).should.be.an('error');
+        (error as Error).message.should.contain('No information provided to test test');
+      }
+    });
+
+    it('should throw an error if the payload is null', () => {
+      try {
+        checkVoidPayload(null, 'test', 'test');
+      } catch (error) {
+        (error as Error).should.be.an('error');
+        (error as Error).message.should.contain('No information provided to test test');
+      }
+    });
+
+    it('should not throw an error if the payload is not empty', () => {
+      try {
+        checkVoidPayload({ a: 1 }, 'test', 'test');
+      } catch (error) {
+        should().fail();
+      }
+    });
+  });
+
+  describe('checkVoidInstance', () => {
+    it('should throw an error if the instance is undefined', () => {
+      try {
+        checkVoidInstance(undefined, 'test', 'test');
+      } catch (error) {
+        (error as Error).should.be.an('error');
+        (error as Error).message.should.contain('test not found with id test');
+      }
+    });
+
+    it('should throw an error if the instance is null', () => {
+      try {
+        checkVoidInstance(null, 'test', 'test');
+      } catch (error) {
+        (error as Error).should.be.an('error');
+        (error as Error).message.should.contain('test not found with id test');
+      }
+    });
+
+    it('should throw an error if the instance is empty', () => {
+      try {
+        checkVoidInstance({}, 'test', 'test');
+      } catch (error) {
+        (error as Error).should.be.an('error');
+        (error as Error).message.should.contain('test not found with id test');
+      }
+    });
+
+    it('should not throw an error if the instance is not empty', () => {
+      try {
+        checkVoidInstance({ a: 1 }, 'test', 'test');
+      } catch (error) {
+        should().fail();
+      }
+    });
+  });
+
+  describe('checkVoidUser', () => {
+    it('should throw an error if the user is undefined', () => {
+      try {
+        checkVoidUser(undefined, 'test', 'test');
+      } catch (error) {
+        (error as Error).should.be.an('error');
+        (error as Error).message.should.contain('User not authenticated to test test');
+      }
+    });
+
+    it('should throw an error if the user is empty', () => {
+      try {
+        checkVoidUser({}, 'test', 'test');
+      } catch (error) {
+        (error as Error).should.be.an('error');
+        (error as Error).message.should.contain('User not authenticated to test test');
+      }
+    });
+
+    it('should not throw an error if the user is not empty', () => {
+      try {
+        checkVoidUser({ id: '1' }, 'test', 'test');
+      } catch (error) {
+        should().fail();
+      }
+    });
+  });
+
+  describe('calculateLastMonth', () => {
+    it('should return the previous year and december if the month is january', () => {
+      const { year, month } = calculateLastMonth(2020, 1);
+      year.should.be.equal(2019);
+      month.should.be.equal(12);
+    });
+
+    it('should return the same year and previous month if the month is not january', () => {
+      const { year, month } = calculateLastMonth(2020, 2);
+      year.should.be.equal(2020);
+      month.should.be.equal(1);
     });
   });
 });

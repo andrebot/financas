@@ -241,7 +241,7 @@ export interface ITransaction {
   type: TRANSACTION_TYPES;
   date: Date;
   value: number;
-  investmentType: INVESTMENT_TYPES;
+  investmentType?: INVESTMENT_TYPES;
   user: string;
   goalsList: IGoalItem[];
 }
