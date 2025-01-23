@@ -48,6 +48,7 @@ describe('TransactionManager', () => {
     monthlyBalanceRepo = {
       findOne: sinon.stub(),
       save: sinon.stub(),
+      update: sinon.stub(),
     };
     transactionManager = new TransactionManager(transactionRepo as any, budgetRepo as any, goalRepo as any, monthlyBalanceRepo as any);
   });
@@ -62,19 +63,19 @@ describe('TransactionManager', () => {
     });
 
     it('should create a normal transaction and create the monthly balance if it does not exist', async () => {
+      transactionRepo.save.resolves(transaction);
       await transactionManager.createContent(transaction);
   
       monthlyBalanceRepo.findOne.should.have.been.calledTwice;
       monthlyBalanceRepo.findOne.should.have.been.calledWith({
         user: transaction.user,
         account: transaction.account,
-        month: transaction.date.getMonth() + 1,
-        year: transaction.date.getFullYear(),
+        month: (transaction.date as Date).getMonth() + 1,
+        year: (transaction.date as Date).getFullYear(),
       });
   
       monthlyBalanceRepo.save.should.have.been.calledOnce;
-      goalRepo.incrementGoalsInBulk.should.have.been.calledOnce;
-      goalRepo.incrementGoalsInBulk.should.have.been.calledWith([]);
+      goalRepo.incrementGoalsInBulk.should.have.not.been.called;
       budgetRepo.updateBudgetsByNewTransaction.should.have.been.calledOnce;
       transactionRepo.save.should.have.been.calledOnce;
       transactionRepo.save.should.have.been.calledWith(transaction);
@@ -82,16 +83,17 @@ describe('TransactionManager', () => {
   
     it('should create a normal transaction and update the monthly balance if it exists', async () => {
       monthlyBalanceRepo.findOne.resolves(monthlyBalance);
+      transactionRepo.save.resolves(transaction);
   
       await transactionManager.createContent(transaction);
   
       monthlyBalanceRepo.findOne.should.have.been.calledOnce;
+      monthlyBalanceRepo.update.should.have.been.calledOnce;
       monthlyBalance.transactions.should.have.length(1);
       monthlyBalance.transactions[0].should.deep.equal(transaction);
       monthlyBalance.closingBalance.should.equal(transaction.value);
   
-      goalRepo.incrementGoalsInBulk.should.have.been.calledOnce;
-      goalRepo.incrementGoalsInBulk.should.have.been.calledWith([]);
+      goalRepo.incrementGoalsInBulk.should.have.not.been.called;
       budgetRepo.updateBudgetsByNewTransaction.should.have.been.calledOnce;
       transactionRepo.save.should.have.been.calledOnce;
       transactionRepo.save.should.have.been.calledWith(transaction);
@@ -100,6 +102,7 @@ describe('TransactionManager', () => {
     it('should create a normal transaction and create the monthly balance if it does not exist using the last month', async () => {
       monthlyBalanceRepo.findOne.onFirstCall().resolves();
       monthlyBalanceRepo.findOne.onSecondCall().resolves(monthlyBalance);
+      transactionRepo.save.resolves(transaction);
   
       await transactionManager.createContent(transaction);
   
@@ -108,14 +111,13 @@ describe('TransactionManager', () => {
       monthlyBalanceRepo.save.should.have.been.calledWith({
         user: transaction.user,
         account: transaction.account,
-        month: transaction.date.getMonth() + 1,
-        year: transaction.date.getFullYear(),
+        month: (transaction.date as Date).getMonth() + 1,
+        year: (transaction.date as Date).getFullYear(),
         openingBalance: monthlyBalance.closingBalance,
         closingBalance: monthlyBalance.closingBalance + transaction.value,
         transactions: [transaction],
       });
-      goalRepo.incrementGoalsInBulk.should.have.been.calledOnce;
-      goalRepo.incrementGoalsInBulk.should.have.been.calledWith([]);
+      goalRepo.incrementGoalsInBulk.should.have.not.been.called;
       budgetRepo.updateBudgetsByNewTransaction.should.have.been.calledOnce;
       transactionRepo.save.should.have.been.calledOnce;
       transactionRepo.save.should.have.been.calledWith(transaction);
@@ -128,6 +130,7 @@ describe('TransactionManager', () => {
         { goal: { id: '1' } as IGoal, goalName: 'test', percentage: 100 },
         { goal: { id: '2' } as IGoal, goalName: 'test', percentage: 200 },
       ];
+      transactionRepo.save.resolves(transaction);
   
       await transactionManager.createContent(transaction);
   
@@ -136,8 +139,8 @@ describe('TransactionManager', () => {
       monthlyBalanceRepo.save.should.have.been.calledWith({
         user: transaction.user,
         account: transaction.account,
-        month: transaction.date.getMonth() + 1,
-        year: transaction.date.getFullYear(),
+        month: (transaction.date as Date).getMonth() + 1,
+        year: (transaction.date as Date).getFullYear(),
         openingBalance: monthlyBalance.closingBalance,
         closingBalance: monthlyBalance.closingBalance + transaction.value,
         transactions: [transaction],
@@ -186,13 +189,12 @@ describe('TransactionManager', () => {
       monthlyBalanceRepo.findOne.should.have.been.calledWith({
         user: transaction.user,
         account: transaction.account,
-        month: transaction.date.getMonth() + 1,
-        year: transaction.date.getFullYear(),
+        month: (transaction.date as Date).getMonth() + 1,
+        year: (transaction.date as Date).getFullYear(),
       });
-      monthlyBalanceRepo.save.should.have.been.calledOnce;
-      monthlyBalanceRepo.save.should.have.been.calledWith(monthlyBalance);
-      goalRepo.incrementGoalsInBulk.should.have.been.calledOnce;
-      goalRepo.incrementGoalsInBulk.should.have.been.calledWith([]);
+      monthlyBalanceRepo.update.should.have.been.calledOnce;
+      monthlyBalanceRepo.update.should.have.been.calledWith(monthlyBalance.id!, monthlyBalance);
+      goalRepo.incrementGoalsInBulk.should.have.not.been.called;
       budgetRepo.updateBudgetsByNewTransaction.should.have.been.calledOnce;
       transactionRepo.findByIdAndDelete.should.have.been.calledOnce;
       transactionRepo.findByIdAndDelete.should.have.been.calledWith('1');
@@ -251,10 +253,10 @@ describe('TransactionManager', () => {
 
       await transactionManager.updateContent('1', updatedTransaction, 'test');
 
-      monthlyBalanceRepo.save.should.have.been.calledTwice;
-      monthlyBalanceRepo.save.should.have.been.calledWith(monthlyBalance);
+      monthlyBalanceRepo.update.should.have.been.calledTwice;
+      monthlyBalanceRepo.update.should.have.been.calledWith(monthlyBalance.id!, monthlyBalance);
       monthlyBalanceRepo.findOne.should.have.been.calledTwice;
-      goalRepo.incrementGoalsInBulk.should.have.been.calledTwice;
+      goalRepo.incrementGoalsInBulk.should.have.not.been.called;
       budgetRepo.updateBudgetsByNewTransaction.should.have.been.calledTwice;
       transactionRepo.update.should.have.been.calledOnce;
       transactionRepo.update.should.have.been.calledWith('1', updatedTransaction);

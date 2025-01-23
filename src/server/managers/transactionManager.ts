@@ -5,7 +5,7 @@ import BudgetRepo from '../resources/repositories/budgetRepo';
 import GoalRepo from '../resources/repositories/goalRepo';
 import { TRANSACTION_TYPES, INVESTMENT_TYPES } from '../types';
 import type { ITransaction, IMonthlyBalance, BulkGoalsUpdate } from '../types';
-import { calculateLastMonth } from '../utils/misc';
+import { calculateLastMonth, parseDate } from '../utils/misc';
 
 export class TransactionManager extends ContentManager<ITransaction> {
   private budgetRepo: typeof BudgetRepo;
@@ -46,7 +46,8 @@ export class TransactionManager extends ContentManager<ITransaction> {
    * @returns The last month balance.
    */
   private async getLastMonthBalance(content: ITransaction): Promise<IMonthlyBalance> {
-    const lastMonth = calculateLastMonth(content.date.getFullYear(), content.date.getMonth() + 1);
+    const contentDate = parseDate(content.date);
+    const lastMonth = calculateLastMonth(contentDate.getFullYear(), contentDate.getMonth() + 1);
     let lastMonthBalance = await this.monthlyBalanceRepo.findOne({
       user: content.user,
       account: content.account,
@@ -75,11 +76,12 @@ export class TransactionManager extends ContentManager<ITransaction> {
    * @param content - The transaction to update the monthly balance for.
    */
   private async addTransactionToMonthlyBalance(content: ITransaction): Promise<void> {
+    const contentDate = parseDate(content.date);
     let monthlyBalance = await this.monthlyBalanceRepo.findOne({
       user: content.user,
       account: content.account,
-      month: content.date.getMonth() + 1,
-      year: content.date.getFullYear(),
+      month: contentDate.getMonth() + 1,
+      year: contentDate.getFullYear(),
     });
 
     if (!monthlyBalance) {
@@ -88,18 +90,21 @@ export class TransactionManager extends ContentManager<ITransaction> {
       monthlyBalance = {
         user: content.user,
         account: content.account,
-        month: content.date.getMonth() + 1,
-        year: content.date.getFullYear(),
+        month: contentDate.getMonth() + 1,
+        year: contentDate.getFullYear(),
         openingBalance: lastMonthBalance.closingBalance,
         closingBalance: lastMonthBalance.closingBalance + content.value,
         transactions: [content],
       };
+
+      await this.monthlyBalanceRepo.save(monthlyBalance);
     } else {
       monthlyBalance.transactions.push(content);
       monthlyBalance.closingBalance = monthlyBalance.closingBalance + content.value;
+
+      await this.monthlyBalanceRepo.update(monthlyBalance.id!, monthlyBalance);
     }
 
-    await this.monthlyBalanceRepo.save(monthlyBalance);
   }
 
   /**
@@ -109,6 +114,10 @@ export class TransactionManager extends ContentManager<ITransaction> {
    * @param transaction - The transaction to update the goals by.
    */
   private async updateGoalsByTransaction(transaction: ITransaction): Promise<void> {
+    if (!transaction.goalsList || transaction.goalsList.length === 0) {
+      return;
+    }
+
     const goalsToUpdate = transaction.goalsList.map((goal) => {
       let addValue = transaction.value * goal.percentage;
 
@@ -129,17 +138,18 @@ export class TransactionManager extends ContentManager<ITransaction> {
    * @param transaction - The transaction to subtract from the monthly balance.
    */
   private async subtractTransactionFromMonthlyBalance(transaction: ITransaction): Promise<void> {
+    const contentDate = parseDate(transaction.date);
     const monthlyBalance = await this.monthlyBalanceRepo.findOne({
       user: transaction.user,
       account: transaction.account,
-      month: transaction.date.getMonth() + 1,
-      year: transaction.date.getFullYear(),
+      month: contentDate.getMonth() + 1,
+      year: contentDate.getFullYear(),
     });
 
     if (monthlyBalance) {
       monthlyBalance.closingBalance = monthlyBalance.closingBalance - transaction.value;
       monthlyBalance.transactions = monthlyBalance.transactions.filter((t) => t.id !== transaction.id);
-      await this.monthlyBalanceRepo.save(monthlyBalance);
+      await this.monthlyBalanceRepo.update(monthlyBalance.id!, monthlyBalance);
     } else {
       throw new Error(`Monthly balance for transaction ${transaction.id} not found. Cannot execute subtract action.`);
     }
@@ -186,14 +196,15 @@ export class TransactionManager extends ContentManager<ITransaction> {
    * @returns The created transaction.
    */
   async createContent(content: ITransaction): Promise<ITransaction> {
-    await this.addTransactionToOtherModels(content);
+    const savedTransaction = await super.createContent(content);
+    await this.addTransactionToOtherModels(savedTransaction);
 
     // Create investments here later
     // if (content.type === TRANSACTION_TYPES.INVESTMENT) {
     //   await investmentRepo.updateInvestmentsByTransaction(content);
     // }
 
-    return super.createContent(content);
+    return savedTransaction;
   }
 
   /**

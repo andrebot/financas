@@ -20,6 +20,14 @@ const MonthlyBalanceSchema = new Schema<IMonthlyBalanceDocument>({
   openingBalance: { type: Number, required: true },
   closingBalance: { type: Number, required: true },
   transactions: { type: [Schema.Types.ObjectId], ref: 'Transaction', required: true },
+}, {
+  toJSON: {
+    transform: (doc, ret) => {
+      ret.id = ret._id.toString();
+      delete ret._id;
+      return ret;
+    },
+  },
 });
 
 export default model<IMonthlyBalanceDocument>('MonthlyBalance', MonthlyBalanceSchema);

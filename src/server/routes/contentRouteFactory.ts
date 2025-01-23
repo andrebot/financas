@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import createTokenValidation from '../utils/authorization';
-import { IContentController } from '../types';
+import type { IContentController } from '../types';
 
 export default function contentRouterFactory(controller: IContentController, urlPrefix: string) {
   const router = Router();

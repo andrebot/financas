@@ -112,3 +112,16 @@ export function calculateLastMonth(year: number, month: number): { year: number,
 
   return { year, month: month - 1 };
 }
+
+/**
+   * Parses a date to a Date object.
+   *
+   * @remarks
+   * This is necessary because the date can be passed as a string in the request body.
+   *
+   * @param date - The date to parse.
+   * @returns The parsed date.
+   */
+export function parseDate(date: Date | string): Date {
+  return date instanceof Date ? date : new Date(date);
+}

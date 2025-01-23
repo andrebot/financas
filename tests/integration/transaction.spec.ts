@@ -92,9 +92,8 @@ describe('Transactions', () => {
           response.body.should.have.property('category', transaction1.category);
           response.body.should.have.property('parentCategory', transaction1.parentCategory);
           response.body.should.have.property('type', transaction1.type);
-          response.body.should.have.property('date', transaction1.date.toISOString());
+          response.body.should.have.property('date', (transaction1.date as Date).toISOString());
           response.body.should.have.property('value', transaction1.value);
-          response.body.should.have.property('isCredit', transaction1.isCredit);
           response.body.should.have.property('user', adminUser.id);
 
           done();
@@ -146,7 +145,6 @@ describe('Transactions', () => {
         type: TRANSACTION_TYPES.TRANSFER,
         date: new Date(),
         value: 100,
-        isCredit: false,
         user: adminUser.id,
       };
 
@@ -173,11 +171,10 @@ describe('Transactions', () => {
         type: TRANSACTION_TYPES.TRANSFER,
         date: new Date(),
         value: 100,
-        isCredit: false,
         user: adminUser.id,
         InvestmentType: INVESTMENT_TYPES.LCI,
         goalsList: [{
-          goal: new Types.ObjectId(),
+          goal: new Types.ObjectId().toString(),
           goalName: 'Test Goal 1',
           percentage: 0.5,
         }],
@@ -279,23 +276,25 @@ describe('Transactions', () => {
     });
 
     it('should be able to update another user\'s transaction if is admin', (done) => {
+      const transaction2Copy = { ...transaction2 } as Partial<typeof transaction2>;
+      delete transaction2Copy.goalsList;
+
       chai.request(server)
         .put(`${resourceUrl}/${transaction3.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
-        .send(transaction2)
+        .send(transaction2Copy)
         .end((err, response) => {
           response.should.have.status(200);
           response.body.should.be.an('object');
-          response.body.should.have.property('name', transaction2.name);
+          response.body.should.have.property('name', transaction2Copy.name);
 
-          transaction3.name = transaction2.name;
-          transaction3.category = transaction2.category;
-          transaction3.parentCategory = transaction2.parentCategory;
-          transaction3.account = transaction2.account;
-          transaction3.type = transaction2.type;
-          transaction3.date = transaction2.date;
-          transaction3.value = transaction2.value;
-          transaction3.isCredit = transaction2.isCredit;
+          transaction3.name = transaction2Copy.name!;
+          transaction3.category = transaction2Copy.category!;
+          transaction3.parentCategory = transaction2Copy.parentCategory!;
+          transaction3.account = transaction2Copy.account!;
+          transaction3.type = transaction2Copy.type!;
+          transaction3.date = transaction2Copy.date!;
+          transaction3.value = transaction2Copy.value!;
 
           done();
         });

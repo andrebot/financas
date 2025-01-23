@@ -16,7 +16,6 @@ describe('Transaction Model', () => {
       type: TRANSACTION_TYPES.WITHDRAW,
       date: new Date(),
       value: 100,
-      isCredit: false,
       user: new mongoose.Types.ObjectId().toString(),
       goalsList: [],
     });

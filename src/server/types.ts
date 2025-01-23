@@ -239,7 +239,7 @@ export interface ITransaction {
   parentCategory: string;
   account: string;
   type: TRANSACTION_TYPES;
-  date: Date;
+  date: Date | string	;
   value: number;
   investmentType?: INVESTMENT_TYPES;
   user: string;

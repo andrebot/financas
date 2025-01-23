@@ -1,4 +1,5 @@
 import { AnyBulkWriteOperation } from 'mongodb';
+import mongoose from 'mongoose';
 import { Repository } from './repository';
 import GoalModel, { IGoalDocument } from '../models/goalModel';
 import { IGoal, BulkGoalsUpdate } from '../../types';
@@ -19,13 +20,16 @@ export class GoalRepo extends Repository<IGoalDocument, IGoal> {
     const goalsToUpdate = bulkGoalsUpdate.map(({ goalId, amount }) => {
       return {
         updateOne: {
-          filter: { _id: goalId },
+          filter: { _id: new mongoose.Types.ObjectId(goalId) },
           update: { $inc: { amount } },
+          upsert: true,
         },
       };
     }) as unknown as AnyBulkWriteOperation<IGoalDocument>[];
 
-    await this.model.bulkWrite(goalsToUpdate);
+    if (goalsToUpdate.length > 0) {
+      await this.model.collection.bulkWrite(goalsToUpdate as any);
+    }
   }
 }
 

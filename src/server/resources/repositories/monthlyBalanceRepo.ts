@@ -1,4 +1,4 @@
-import MonthlyBalanceModel, { IMonthlyBalanceDocument } from '../models/MonthlyBalanceModel';
+import MonthlyBalanceModel, { IMonthlyBalanceDocument } from '../models/monthlyBalanceModel';
 import { Repository } from './repository';
 import { IMonthlyBalance } from '../../types';
 

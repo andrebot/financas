@@ -6,6 +6,7 @@ import {
   checkVoidInstance,
   checkVoidUser,
   calculateLastMonth,
+  parseDate,
 } from '../../../src/server/utils/misc';
 
 describe('misc Utilities', () => {
@@ -278,6 +279,21 @@ describe('misc Utilities', () => {
       const { year, month } = calculateLastMonth(2020, 2);
       year.should.be.equal(2020);
       month.should.be.equal(1);
+    });
+  });
+
+  describe('parseDate', () => {
+    it('should return the same date if it is already a date', () => {
+      const date = new Date();
+      parseDate(date).should.be.equal(date);
+    });
+
+    it('should return the same date if it is a string', () => {
+      const date = new Date().toISOString();
+      const result = parseDate(date);
+
+      result.should.be.an.instanceOf(Date);
+      result.toISOString().should.be.equal(date);
     });
   });
 });
