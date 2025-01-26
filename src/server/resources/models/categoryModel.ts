@@ -1,12 +1,14 @@
 import {
   Schema,
   model,
-    Document,
-    ObjectId,
+  Document,
+  ObjectId,
+  Types,
 } from 'mongoose';
 import { ICategory } from '../../types';
 
 export interface ICategoryDocument extends Omit<ICategory, 'id' | 'user' | 'parentCategory'>, Document {
+  _id: Types.ObjectId;
   user: ObjectId;
   parentCategory: ObjectId;
 }

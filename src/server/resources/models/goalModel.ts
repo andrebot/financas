@@ -3,10 +3,12 @@ import {
   model,
   Document,
   ObjectId,
+  Types,
 } from 'mongoose';
 import { IGoal } from '../../types';
 
 export interface IGoalDocument extends Omit<IGoal, 'id' | 'user'>, Document {
+  _id: Types.ObjectId;
   user: ObjectId;
 }
 

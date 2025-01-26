@@ -110,15 +110,15 @@ export class Repository<T extends Document, K> implements IRepository<T, K> {
   }
 
   findById(id: string): Promise<K | null> {
-    return this.model.findById(id);
+    return this.model.findById(id).lean() as Promise<K | null>;
   }
 
   findByIdAndDelete(id: string): Promise<K | null> {
-    return this.model.findByIdAndDelete(id).lean();
+    return this.model.findByIdAndDelete(id).lean() as Promise<K | null>;
   }
 
   find(query: QueryFilter<K> = {}): Promise<K[]> {
-    return this.model.find(this.translateFilter(query)).lean();
+    return this.model.find(this.translateFilter(query)).lean() as Promise<K[]>;
   }
 
   findOne(query: QueryFilter<K>): Promise<K | null> {
@@ -126,16 +126,16 @@ export class Repository<T extends Document, K> implements IRepository<T, K> {
       throw new Error('Cannot search for one instance with empty query');
     }
 
-    return this.model.findOne(this.translateFilter(query)).lean();
+    return this.model.findOne(this.translateFilter(query)).lean() as Promise<K | null>;
   }
 
   save(entity?: K): Promise<K> {
     const instance = new this.model(entity);
 
-    return instance.save().then((instance) => instance.toObject());
+    return instance.save().then((instance) => instance.toObject()) as Promise<K>;
   }
 
   update(id: string, entity: Partial<K>): Promise<K | null> {
-    return this.model.findByIdAndUpdate(id, entity as any, { new: true, runValidators: true }).lean();
+    return this.model.findByIdAndUpdate(id, entity as any, { new: true, runValidators: true }).lean() as Promise<K | null>;
   }
 }

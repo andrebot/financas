@@ -3,10 +3,12 @@ import {
   model,
   Document,
   ObjectId,
+  Types,
 } from 'mongoose';
 import { IBudget, BUDGET_TYPES } from '../../types';
 
 export interface IBudgetDocument extends Omit<IBudget, 'id' | 'user'>, Document {
+  _id: Types.ObjectId;
   user: ObjectId;
 }
 

@@ -51,7 +51,9 @@ describe('Repository', () => {
   });
 
   it('should find document by id', async () => {
-    findByIdStub.resolves({ name: 'test' });
+    findByIdStub.returns({
+      lean: sinon.stub().returns(Promise.resolve({ name: 'test' })),
+    });
 
     const result = await repository.findById('1');
 

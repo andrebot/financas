@@ -8,13 +8,7 @@ import {
 import { regExpEmail } from '../../utils/validators';
 import { IUser } from '../../types';
 
-export interface IUserDocument extends Omit<IUser, 'id'>, Document {};
-
-/**
- * Type for the User. It is a Document and a FlatRecord of the IUser to follow
- * the schema and a _id of type ObjectId on Mongoose
- */
-type DocType = Document<unknown, unknown, FlatRecord<IUserDocument>> & FlatRecord<IUserDocument> & {
+export interface IUserDocument extends Omit<IUser, 'id'>, Document {
   _id: Types.ObjectId;
 };
 
@@ -26,7 +20,11 @@ type DocType = Document<unknown, unknown, FlatRecord<IUserDocument>> & FlatRecor
  * @param ret - Record of the user
  * @returns - Record of the user
  */
-function transformUserObject(doc: DocType, ret: Record<string, any>) {
+function transformUserObject(
+  doc: Document<unknown, {}, FlatRecord<IUserDocument>>,
+  ret: Record<string, any>,
+  options: any,
+) {
   const { ...newObject } = ret;
 
   delete newObject.password;
