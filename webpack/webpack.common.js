@@ -10,6 +10,10 @@ module.exports = {
         use: 'ts-loader',
         exclude: /node_modules/,
       },
+      {
+        test: /\.(png|jpg|jpeg|gif|svg)$/i,
+        type: 'asset/resource',
+      },
       // Add additional rules for other file types if needed
     ],
   },
@@ -24,5 +28,6 @@ module.exports = {
   output: {
     filename:  '[name].[contenthash].js',
     path: path.resolve(__dirname, '..', 'src/server/public'),
+    clean: true,
   },
 };
