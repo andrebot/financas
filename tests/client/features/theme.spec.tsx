@@ -1,4 +1,4 @@
-import themeReducer, { toggleTheme } from '../../../../src/client/features/theme/themeSlice';
+import themeReducer, { toggleTheme } from '../../../src/client/features/themeSlice';
 
 describe('themeSlice', () => {
   it('should return the initial state', () => {

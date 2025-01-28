@@ -4,7 +4,6 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import PropTypes from 'prop-types';
 import { UserType, AuthContextType } from '../types';
 
 type AuthProviderProps = {
@@ -32,17 +31,6 @@ function AuthProvider({ children }: AuthProviderProps) {
 
   return <AuthContext.Provider value={authValue}>{children}</AuthContext.Provider>;
 }
-
-AuthProvider.propTypes = {
-  children: PropTypes.oneOfType([
-    PropTypes.arrayOf(PropTypes.node),
-    PropTypes.node,
-  ]),
-};
-
-AuthProvider.defaultProps = {
-  children: undefined,
-};
 
 /**
  * This hook will provide the context for the user logged into the application

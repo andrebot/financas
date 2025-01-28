@@ -1,6 +1,6 @@
-import { store } from '../../../src/client/app/store';
-import themeReducer, { toggleTheme } from '../../../src/client/features/theme/themeSlice';
-import backendAPISlice from '../../../src/client/features/apiSlice';
+import { store } from '../../../src/client/features/store';
+import themeReducer, { toggleTheme } from '../../../src/client/features/themeSlice';
+import { apiSlice } from '../../../src/client/features/testAPI';
 
 jest.mock('@reduxjs/toolkit/query/react', () => {
   const originalModule = jest.requireActual('@reduxjs/toolkit/query/react');
@@ -15,7 +15,7 @@ describe('Redux Store', () => {
     const state = store.getState();
 
     expect(state.theme).toEqual(themeReducer(undefined, { type: undefined }));
-    expect(state[backendAPISlice.reducerPath]).toEqual(backendAPISlice.reducer(undefined, { type: undefined }));
+    expect(state[apiSlice.reducerPath]).toEqual(apiSlice.reducer(undefined, { type: undefined }));
   });
 
   it('should handle actions from theme reducer', () => {

@@ -1,6 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
-import themeReducer from '../features/theme/themeSlice';
-import backendAPISlice from '../features/apiSlice';
+import themeReducer from './themeSlice';
+import { apiSlice } from './testAPI';
 
 /**
  * Configuring store for the application.
@@ -8,10 +8,10 @@ import backendAPISlice from '../features/apiSlice';
 export const store = configureStore({
   reducer: {
     theme: themeReducer,
-    [backendAPISlice.reducerPath]: backendAPISlice.reducer,
+    [apiSlice.reducerPath]: apiSlice.reducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware()
-    .concat(backendAPISlice.middleware),
+    .concat(apiSlice.middleware),
 });
 
 /**

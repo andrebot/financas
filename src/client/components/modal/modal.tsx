@@ -6,7 +6,6 @@ import React, {
   ReactNode,
 } from 'react';
 import Modal from '@mui/material/Modal';
-import PropTypes from 'prop-types';
 
 import ModalWrapper from './styledComponent';
 
@@ -68,14 +67,3 @@ export default function ModalProvider({ children }: ModalProviderProps) {
     </ModalContext.Provider>
   );
 }
-
-ModalProvider.propTypes = {
-  children: PropTypes.oneOfType([
-    PropTypes.arrayOf(PropTypes.node),
-    PropTypes.node,
-  ]),
-};
-
-ModalProvider.defaultProps = {
-  children: null,
-};

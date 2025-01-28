@@ -1,7 +1,7 @@
 import React from 'react';
 import { Provider } from 'react-redux';
 import { useAppDispatch, useAppSelector } from '../../../src/client/hooks/index';
-import { store } from '../../../src/client/app/store';
+import { store } from '../../../src/client/features/store';
 import { renderHook } from '@testing-library/react';
 
 jest.mock('@reduxjs/toolkit/query/react', () => {

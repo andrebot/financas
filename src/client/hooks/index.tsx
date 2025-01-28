@@ -1,5 +1,5 @@
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
-import { RootState, AppDispatch } from '../app/store';
+import { RootState, AppDispatch } from '../features/store';
 
 /**
  * This do an automatic typing of the dispatch and selector of this application
