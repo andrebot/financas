@@ -6,9 +6,10 @@ import App from './app';
 import { store } from './features/store';
 
 const rootElement = document.getElementById('app');
+const root = rootElement ? createRoot(rootElement) : null;
 
-if (rootElement) {
-  createRoot(rootElement).render(
+if (root) {
+  root.render(
     <Provider store={store}>
       <App />
     </Provider>,

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/authContext';
-import LoadingPage from '../pages/loadingPage';
+import LoginPage from '../pages/login';
 import config from '../config/apiConfig';
 
 /**
@@ -20,7 +20,7 @@ export default function ProtectedRoute(): React.JSX.Element | undefined {
   }, [user, navigate]);
 
   if (!user) {
-    return <LoadingPage />;
+    return <LoginPage />;
   }
 
   return <Outlet />;

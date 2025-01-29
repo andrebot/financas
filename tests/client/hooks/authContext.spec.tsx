@@ -9,8 +9,12 @@ describe('AuthProvider and useAuth', () => {
 
     return (
       <>
-        <div>{user.firstName} {user.lastName}</div>
-        <button onClick={() => setUser({ ...user, firstName: 'Updated' })}>Update Name</button>
+        <div>{user?.firstName} {user?.lastName}</div>
+        <button onClick={() => user && setUser({ 
+          ...user, 
+          firstName: 'Updated',
+          lastName: user.lastName // Ensure lastName is always defined
+        })}>Update Name</button>
       </>
     );
   };

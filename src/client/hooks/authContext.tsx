@@ -20,12 +20,7 @@ const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
  * @returns The provider component for the authorization feature
  */
 function AuthProvider({ children }: AuthProviderProps) {
-  const [user, setUser] = useState<UserType>({
-    firstName: 'Andre',
-    lastName: 'Almeida',
-    role: 'admin',
-    email: 'ab.rodriguesalmeida@gmail.com',
-  });
+  const [user, setUser] = useState<UserType | undefined>();
 
   const authValue = useMemo(() => ({ user, setUser }), [user]);
 
