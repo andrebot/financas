@@ -28,6 +28,11 @@ export default function Login(): React.JSX.Element {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  /**
+   * Trigger the snack message for the errors.
+   *
+   * @param error - Error from login mutation
+   */
   function handleError(error: FetchBaseQueryError | SerializedError) {
     if ('data' in error) {
       enqueueSnackbar((error.data as any).error, { variant: 'error' });
@@ -36,6 +41,9 @@ export default function Login(): React.JSX.Element {
     }
   }
 
+  /**
+   * Handle the login process.
+   */
   async function handleLogin() {
     try {
       const response = await login({
@@ -51,10 +59,16 @@ export default function Login(): React.JSX.Element {
     }
   }
 
+  /**
+   * Moves the user to the register page.
+   */
   function handleRegister() {
     navigate('/register');
   }
 
+  /**
+   * Moves the user to the forgot password page.
+   */
   function handleForgotPassword() {
     if (!isLoading) {
       navigate('/forgot-password');
