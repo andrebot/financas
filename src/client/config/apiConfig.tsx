@@ -8,5 +8,6 @@ export default {
   user: {
     loginPage: '/login',
     logout: '/logout',
+    registerPage: '/register',
   },
 };

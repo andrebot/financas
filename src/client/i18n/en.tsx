@@ -10,6 +10,19 @@ export default {
     clickHere: 'Click here',
     email: 'Email',
     password: 'Password',
-    loginInternalError: 'Internal error. Please try again later.',
+    internalError: 'Internal error. Please try again later.',
+    registerTitle: 'Register',
+    confirmPassword: 'Confirm password',
+    passwordsDoNotMatch: 'Passwords do not match',
+    passwordInvalid: 'Password must be at least 10 characters long, with at least one lowercase letter, one uppercase letter, one number and one special character in the set !@#',
+    emailInvalid: 'Email is not valid',
+    firstName: 'First name',
+    lastName: 'Last name',
+    invalidUser: 'Username or password is invalid',
+    duplicateUser: 'Email already registered',
+    unknownError: 'Unexpected error occurred on the server. Please try again later.',
+    reviewDataProvided: 'Please review the data provided.',
   },
 };
+
+

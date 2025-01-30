@@ -10,9 +10,12 @@ import {
   refreshTokens,
   resetPassword,
   changePassword,
+  register,
 } from '../managers/authenticationManager';
 import { handleError, isValidObjectId } from '../utils/responseHandlers';
-import { RequestWithUser } from '../types';
+import { REFRESH_TOKEN_EXPIRATION_COOKIE, TOKEN_HTTPS_ONLY } from '../config/auth';
+import { API_PREFIX } from '../config/server';
+import type { RequestWithUser } from '../types';
 
 /**
  * Function to create a user. It will create a new user with the provided data
@@ -38,6 +41,38 @@ export async function createUserController(req: Request, res: Response) {
     );
 
     return res.send(user);
+  } catch (error) {
+    return handleError(error as Error, res);
+  }
+}
+
+/**
+ * Function to register a new user. It will create a new user and return the user and tokens
+ *
+ * @param req - The request object
+ * @param res - The response object
+ * @returns - The user and tokens as an object
+ */
+export async function registerController(req: Request, res: Response) {
+  const {
+    email,
+    password,
+    firstName,
+    lastName,
+  } = req.body;
+
+  try {
+    const { user, tokens } = await register(email, password, firstName, lastName);
+
+    res.cookie('refreshToken', tokens.refreshToken, {
+      httpOnly: false,
+      secure: false,
+      // sameSite: 'lax',
+      // path: `${API_PREFIX}/refresh-tokens`,
+      maxAge: REFRESH_TOKEN_EXPIRATION_COOKIE,
+    });
+
+    return res.send({ user, accessToken: tokens.accessToken });
   } catch (error) {
     return handleError(error as Error, res);
   }

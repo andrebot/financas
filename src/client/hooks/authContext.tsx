@@ -3,8 +3,11 @@ import React, {
   useContext,
   useMemo,
   useState,
+  useEffect,
 } from 'react';
-import { UserType, AuthContextType } from '../types';
+import Cookies from 'js-cookie';
+import { jwtDecode } from 'jwt-decode';
+import type { UserType, AuthContextType } from '../types';
 
 type AuthProviderProps = {
   children: ReactNode;
@@ -21,10 +24,35 @@ const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
  */
 function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<UserType | undefined>();
+  const [accessToken, setAccessToken] = useState<string | undefined>();
 
-  const authValue = useMemo(() => ({ user, setUser }), [user]);
+  useEffect(() => {
+    try {
+      const refreshToken = Cookies.get('refreshToken');
 
-  return <AuthContext.Provider value={authValue}>{children}</AuthContext.Provider>;
+      if (refreshToken) {
+        const {
+          id,
+          email,
+          firstName,
+          lastName,
+          role,
+        }: UserType = jwtDecode(refreshToken);
+
+        setUser({
+          id,
+          email,
+          firstName,
+          lastName,
+          role,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to decode refresh token:', error);
+    }
+  }, []);
+
+  return <AuthContext.Provider value={{ user, setUser, accessToken, setAccessToken }}>{children}</AuthContext.Provider>;
 }
 
 /**

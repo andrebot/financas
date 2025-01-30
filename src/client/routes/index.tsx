@@ -1,9 +1,10 @@
 import React from 'react';
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Outlet } from 'react-router-dom';
 import apiConfig from '../config/apiConfig';
 import ProtectedRoute from './protectedRoute';
 import MainPage from '../pages/mainPage';
 import Login from '../pages/login';
+import Register from '../pages/register';
 
 /**
  * Instanciating the routes
@@ -11,14 +12,20 @@ import Login from '../pages/login';
 export default createBrowserRouter([
   {
     path: '/',
-    element: <ProtectedRoute />,
+    element: <div><Outlet /></div>,
     children: [{
       path: '',
-      element: <MainPage />,
-      children: [],
+      element: <ProtectedRoute />,
+      children: [{
+        path: '',
+        element: <MainPage />,
+      }],
     }, {
       path: apiConfig.user.loginPage,
       element: <Login />,
+    }, {
+      path: apiConfig.user.registerPage,
+      element: <Register />,
     }],
   },
 ]);

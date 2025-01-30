@@ -59,10 +59,14 @@ export function createAccessToken(
  * Function to create a refresh token
  *
  * @param email - Email of the user to be added to the token
+ * @param role - Role of the user to be added to the token
+ * @param firstName - First name of the user to be added to the token
+ * @param lastName - Last name of the user to be added to the token
+ * @param id - Id of the user to be added to the token
  * @returns - the Refresh Token as a string
  */
-export function createRefreshToken(email: string): string {
-  return createToken({ email }, REFRESH_TOKEN_EXPIRATION, REFRESH_TOKEN_SECRET);
+export function createRefreshToken(email: string, role: 'admin' | 'user', firstName: string, lastName: string, id: string): string {
+  return createToken({ email, role, firstName, lastName, id }, REFRESH_TOKEN_EXPIRATION, REFRESH_TOKEN_SECRET);
 }
 
 /**
@@ -170,6 +174,23 @@ export async function deleteUser(id: string): Promise<IUser> {
   });
 }
 
+export async function register(email: string, password: string, firstName: string, lastName: string): Promise<{ user: IUser, tokens: Tokens }> {
+  const role = 'user';
+  const newUser = await createUser(email, password, firstName, lastName, role);
+  const accessToken = createAccessToken(email, role, firstName, lastName, newUser.id!);
+  const refreshToken = createRefreshToken(email, role, firstName, lastName, newUser.id!);
+
+  addToken(refreshToken);
+
+  return {
+    user: newUser,
+    tokens: {
+      accessToken,
+      refreshToken,
+    },
+  };
+}
+
 /**
  * Function to login. It will find the user by email and compare the password provided
  *
@@ -195,7 +216,7 @@ export async function login(searchEmail: string, password: string): Promise<Toke
 
     if (isMatch) {
       const accessToken = createAccessToken(email, role, firstName, lastName, id!);
-      const refreshToken = createRefreshToken(email);
+      const refreshToken = createRefreshToken(email, role, firstName, lastName, id!);
 
       addToken(refreshToken);
 
@@ -263,7 +284,7 @@ export async function refreshTokens(refreshToken: string): Promise<Tokens> {
 
       return {
         accessToken: createAccessToken(email, role, firstName, lastName, id!),
-        refreshToken: createRefreshToken(email),
+        refreshToken: createRefreshToken(email, role, firstName, lastName, id!),
       };
     }
 

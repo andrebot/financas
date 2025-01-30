@@ -580,7 +580,7 @@ describe('Authentication', () => {
     let accessToken: string;
 
     beforeEach(() => {
-      refreshToken = createRefreshToken(adminUser.email);
+      refreshToken = createRefreshToken(adminUser.email, 'admin', adminUser.firstName, adminUser.lastName, adminUser.id!);
       accessToken = createAccessToken(
         adminUser.email,
         'admin',
@@ -636,7 +636,7 @@ describe('Authentication', () => {
 
     it('should return 500 if cannot find the user', (done) => {
       const badEmail = 'naotem@gmail.com';
-      refreshToken = createRefreshToken(badEmail);
+      refreshToken = createRefreshToken(badEmail, 'admin', 'admin', 'admin', new Types.ObjectId().toHexString());
       addToken(refreshToken);
 
       chai.request(server)

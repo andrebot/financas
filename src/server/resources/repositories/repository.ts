@@ -1,7 +1,8 @@
 import { Model, FilterQuery, Document } from 'mongoose';
+import logger from '../../utils/logger';
 import { IRepository } from './IRepository';
-import { QueryFilter, QueryCondition } from '../../types';
 import { removeEmptyProperties, isObjectEmptyOrNull } from '../../utils/misc';
+import type { QueryFilter, QueryCondition, ErrorHandler } from '../../types';
 
 /**
  * Map of query operators to MongoDB operators.
@@ -29,13 +30,19 @@ const operatorMap: Record<string, string> = {
   gte: '$gte',
 };
 
+function defaultErrorHandler(error: Error): Error {
+  return error;
+}
+
 export class Repository<T extends Document, K> implements IRepository<T, K> {
   protected model: Model<T>;
+  protected errorHandler: ErrorHandler;
   modelName: string;
 
-  constructor(model: Model<T>) {
+  constructor(model: Model<T>, errorHandler: ErrorHandler = defaultErrorHandler) {
     this.model = model;
     this.modelName = model.modelName;
+    this.errorHandler = errorHandler;
   }
 
   /**
@@ -129,10 +136,17 @@ export class Repository<T extends Document, K> implements IRepository<T, K> {
     return this.model.findOne(this.translateFilter(query)).lean() as Promise<K | null>;
   }
 
-  save(entity?: K): Promise<K> {
-    const instance = new this.model(entity);
+  async save(entity?: K): Promise<K> {
+    try {
+      const instance = new this.model(entity);
 
-    return instance.save().then((instance) => instance.toObject()) as Promise<K>;
+      const result = await instance.save();
+
+      return result.toObject() as K;
+    } catch (error) {
+      logger.error(error);
+      throw this.errorHandler(error as Error);
+    }
   }
 
   update(id: string, entity: Partial<K>): Promise<K | null> {

@@ -8,9 +8,11 @@ import type { IContentController } from '../types';
 
 export default class ContentController<T extends Content> implements IContentController {
   protected manager: ContentManager<T>;
+  protected errorHandler: (error: Error, res: Response) => Response;
 
-  constructor(manager: ContentManager<T>) {
+  constructor(manager: ContentManager<T>, errorHandler: (error: Error, res: Response) => Response = handleError) {
     this.manager = manager;
+    this.errorHandler = errorHandler;
   }
 
   async createContent(req: RequestWithUser, res: Response) {
@@ -22,7 +24,7 @@ export default class ContentController<T extends Content> implements IContentCon
 
       return res.send(content);
     } catch (error) {
-      return handleError(error as Error, res);
+      return this.errorHandler(error as Error, res);
     }
   }
 
@@ -56,7 +58,7 @@ export default class ContentController<T extends Content> implements IContentCon
 
       return res.send(content);
     } catch (error) {
-      return handleError(error as Error, res);
+      return this.errorHandler(error as Error, res);
     }
   }
 
@@ -91,7 +93,7 @@ export default class ContentController<T extends Content> implements IContentCon
 
       return res.send(content);
     } catch (error) {
-      return handleError(error as Error, res);
+      return this.errorHandler(error as Error, res);
     }
   }
 
@@ -110,7 +112,7 @@ export default class ContentController<T extends Content> implements IContentCon
 
       return res.send(content);
     } catch (error) {
-      return handleError(error as Error, res);
+      return this.errorHandler(error as Error, res);
     }
   }
 
@@ -132,7 +134,7 @@ export default class ContentController<T extends Content> implements IContentCon
 
       return res.send(content);
     } catch (error) {
-      return handleError(error as Error, res);
+      return this.errorHandler(error as Error, res);
     }
   }
 }

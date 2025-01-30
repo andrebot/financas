@@ -1,7 +1,7 @@
 import { Express } from 'express';
 import { readdirSync } from 'fs';
 import path from 'path';
-
+import { API_PREFIX } from '../config/server';
 import logger from '../utils/logger';
 
 /**
@@ -28,8 +28,8 @@ export default function setRoutes(app: Express, basePath = __dirname): void {
       const { urlPrefix, router } = require(filePath).default;
 
       if (urlPrefix && router) {
-        app.use(`/api/v1/${urlPrefix}`, router);
-        logger.info(`Route added: /api/v1/${urlPrefix}`);
+        app.use(`${API_PREFIX}/${urlPrefix}`, router);
+        logger.info(`Route added: ${API_PREFIX}/${urlPrefix}`);
       } else {
         logger.error(`file ${file} does not have a valid route configuration. Skipping...`);
       }

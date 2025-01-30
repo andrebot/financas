@@ -397,4 +397,6 @@ export type QueryFilter<T> = {
   [P in keyof T]?: T[P] | QueryCondition<T[P]>;
 };
 
+export type ErrorHandler = (error: Error) => void;
+
 /* eslint-enable no-unused-vars */

@@ -10,6 +10,7 @@ import {
   getUserController,
   resetPasswordController,
   changePasswordController,
+  registerController,
 } from '../controllers/authorization';
 import createTokenValidation from '../utils/authorization';
 
@@ -17,6 +18,7 @@ const router = express.Router();
 
 router.post('/', createTokenValidation(true), createUserController);
 router.get('/', createTokenValidation(true), listUsersController);
+router.post('/register', registerController);
 router.post('/login', loginController);
 router.post('/logout', createTokenValidation(), logoutController);
 router.post('/refresh-tokens', refreshTokensController);
