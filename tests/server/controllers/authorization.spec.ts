@@ -1,10 +1,12 @@
 import sinon from 'sinon';
 import proxyquire from 'proxyquire';
 import chai from 'chai';
+import { REFRESH_TOKEN_EXPIRATION_COOKIE } from '../../../src/server/config/auth';
 
 type MockResponse = {
   send: sinon.SinonStub;
   status: sinon.SinonStub;
+  cookie: sinon.SinonStub;
 };
 
 type MockRequest = {
@@ -39,6 +41,7 @@ const authManagerStub = {
   refreshTokens: sinon.stub().resolves(),
   resetPassword: sinon.stub().resolves(),
   changePassword: sinon.stub().resolves(),
+  register: sinon.stub().resolves(),
 };
 
 const {
@@ -52,6 +55,7 @@ const {
   getUserController,
   resetPasswordController,
   changePasswordController,
+  registerController,
 } = proxyquire('../../../src/server/controllers/authorization', {
   '../managers/authenticationManager': authManagerStub,
 });
@@ -64,6 +68,7 @@ describe('AuthorizationController', () => {
     response = {
       send: sinon.stub(),
       status: sinon.stub().returnsThis(),
+      cookie: sinon.stub(),
     };
     request = {
       body: {
@@ -93,6 +98,7 @@ describe('AuthorizationController', () => {
     authManagerStub.refreshTokens.resetHistory();
     authManagerStub.resetPassword.resetHistory();
     authManagerStub.changePassword.resetHistory();
+    authManagerStub.register.resetHistory();
   });
 
   it('should be able to create an user successfully', async () => {
@@ -544,6 +550,62 @@ describe('AuthorizationController', () => {
 
     try {
       await changePasswordController(request, response);
+
+      chai.assert.fail('Should have thrown an error');
+    } catch (error) {
+      response.status.should.have.been.calledWith(500);
+      response.send.should.have.been.calledWith({ error: 'Test error' });
+    }
+  });
+
+  it('should be able to register an user successfully', async () => {
+    authManagerStub.register.resolves({
+      user: {
+        email: request.body.email,
+        firstName: request.body.firstName,
+        lastName: request.body.lastName,
+        role: 'user',
+        id: '123',
+      },
+      tokens: {
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+      },
+    });
+
+    try {
+      await registerController(request, response);
+
+      response.send.should.have.been.calledOnce;
+      authManagerStub.register.should.have.been.calledOnce;
+      authManagerStub.register.should.have.been.calledWith(request.body.email, request.body.password, request.body.firstName, request.body.lastName);
+      response.cookie.should.have.been.calledOnce;
+      response.cookie.should.have.been.calledWith('refreshToken', 'refresh-token', {
+        httpOnly: false,
+        secure: false,
+        maxAge: REFRESH_TOKEN_EXPIRATION_COOKIE,
+      });
+      response.send.should.have.been.calledWith({
+        user: {
+          email: request.body.email,
+          firstName: request.body.firstName,
+          lastName: request.body.lastName,
+          role: 'user',
+          id: '123',
+        },
+        accessToken: 'access-token',
+      });
+    } catch (error) {
+      console.error(error);
+      chai.assert.fail('Should not have thrown an error');
+    }
+  });
+
+  it('should be able to handle an error when registering an user', async () => {
+    authManagerStub.register.rejects(new Error('Test error'));
+
+    try {
+      await registerController(request, response);
 
       chai.assert.fail('Should have thrown an error');
     } catch (error) {

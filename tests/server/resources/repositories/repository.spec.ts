@@ -88,6 +88,18 @@ describe('Repository', () => {
     result!.should.be.deep.equal(mockReturn);
   });
 
+  it('should handle an error if the document is not saved', async () => {
+    const mockReturn = { name: 'test' };
+    saveStub.rejects(new Error('Test error'));
+
+    try {
+      await repository.save(mockReturn);
+      chai.assert.fail('Should have thrown an error');
+    } catch (error) {
+      (error as Error).message.should.contain('Test error');
+    }
+  });
+
   it('should update document', async () => {
     findByIdAndUpdateStub.returns({
       lean: sinon.stub().resolves({ name: 'test' }),

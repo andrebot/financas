@@ -54,6 +54,7 @@ const {
   createUser,
   updateUser,
   listUsers,
+  register,
   logout,
   login,
 } = proxyquire('../../../src/server/managers/authenticationManager', {
@@ -117,9 +118,8 @@ describe('AuthenticationManager', function () {
 
     const token = createRefreshToken(email);
 
-    const expectedPayload = { email };
     jwtSignStub.should.have.been.calledOnce;
-    jwtSignStub.firstCall.args[0].should.deep.equal(expectedPayload);
+    jwtSignStub.firstCall.args[0].should.have.property('email', email);
     jwtSignStub.firstCall.args[2].should.have.property('expiresIn', REFRESH_TOKEN_EXPIRATION);
     should().exist(token);
     token.should.be.a('string');
@@ -369,7 +369,7 @@ describe('AuthenticationManager', function () {
     should().exist(tokens.refreshToken);
     jwtSignStub.should.have.been.calledTwice;
     jwtSignStub.should.have.been.calledWith(
-      { email: mockUser.email },
+      { email: mockUser.email, role: mockUser.role, firstName: mockUser.firstName, lastName: mockUser.lastName, id: mockUser.id },
       REFRESH_TOKEN_SECRET,
       { issuer: ISSUER, expiresIn: REFRESH_TOKEN_EXPIRATION },
     );
@@ -624,6 +624,52 @@ describe('AuthenticationManager', function () {
       bcryptMock.genSaltSync.should.have.not.been.called;
       bcryptMock.hashSync.should.have.not.been.called;
       (error as Error).message.should.contain('No user was found with email: 1');
+    }
+  });
+
+  it('should be able to register an user', async function() {
+    const mockUser = {
+      email: 'test@gmail.com',
+      firstName: 'test',
+      lastName: 'user',
+      role: 'user',
+      id: '1',
+      password: 'Naru-chan88',
+    };
+
+    jwtSignStub.returns('token');
+
+    UserRepo.save.resolves(mockUser);
+
+    const result = await register(mockUser.email, mockUser.password, mockUser.firstName, mockUser.lastName);
+
+    should().exist(result);
+    result.user.should.exist;
+    result.tokens.should.exist;
+    result.user.email.should.be.equal(mockUser.email);
+    result.user.firstName.should.be.equal(mockUser.firstName);
+    result.user.lastName.should.be.equal(mockUser.lastName);
+    result.tokens.accessToken.should.be.a('string');
+    result.tokens.refreshToken.should.be.a('string');
+  });
+
+  it('should throw an error if the user is not created', async function() {
+    const mockUser = {
+      email: 'test@gmail.com',
+      firstName: 'test',
+      lastName: 'user',
+      role: 'user',
+      id: '1',
+      password: 'Naru-chan88',
+    };
+
+    UserRepo.save.rejects(new Error('Test error'));
+
+    try {
+      await register(mockUser.email, mockUser.password, mockUser.firstName, mockUser.lastName);
+      chai.assert.fail('Should have thrown an error');
+    } catch (error) {
+      (error as Error).message.should.contain('Test error');
     }
   });
 });

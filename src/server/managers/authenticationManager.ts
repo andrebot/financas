@@ -174,6 +174,17 @@ export async function deleteUser(id: string): Promise<IUser> {
   });
 }
 
+/**
+ * Function to register a user. It will create a new user and return the user and tokens
+ *
+ * @throws - Error if creating the user fails
+ *
+ * @param email - Email of the user to be registered
+ * @param password - Password of the user to be registered
+ * @param firstName - First name of the user to be registered
+ * @param lastName - Last name of the user to be registered
+ * @returns - the User and Tokens as an object
+ */
 export async function register(email: string, password: string, firstName: string, lastName: string): Promise<{ user: IUser, tokens: Tokens }> {
   const role = 'user';
   const newUser = await createUser(email, password, firstName, lastName, role);

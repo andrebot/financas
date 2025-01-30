@@ -30,6 +30,12 @@ const operatorMap: Record<string, string> = {
   gte: '$gte',
 };
 
+/**
+ * Default error handler. Just returns the error.
+ *
+ * @param error - The error to handle.
+ * @returns The error.
+ */
 function defaultErrorHandler(error: Error): Error {
   return error;
 }
@@ -116,18 +122,42 @@ export class Repository<T extends Document, K> implements IRepository<T, K> {
     return removeEmptyProperties(translatedQuery) || {};
   }
 
+  /**
+   * Finds a document by id.
+   *
+   * @param id - The id of the document to find.
+   * @returns The document.
+   */
   findById(id: string): Promise<K | null> {
     return this.model.findById(id).lean() as Promise<K | null>;
   }
 
+  /**
+   * Finds a document by id and deletes it.
+   *
+   * @param id - The id of the document to delete.
+   * @returns The deleted document.
+   */
   findByIdAndDelete(id: string): Promise<K | null> {
     return this.model.findByIdAndDelete(id).lean() as Promise<K | null>;
   }
 
+  /**
+   * Finds documents by query.
+   *
+   * @param query - The query to find the documents.
+   * @returns The documents.
+   */
   find(query: QueryFilter<K> = {}): Promise<K[]> {
     return this.model.find(this.translateFilter(query)).lean() as Promise<K[]>;
   }
 
+  /**
+   * Finds a single document by query.
+   *
+   * @param query - The query to find the document.
+   * @returns The document.
+   */
   findOne(query: QueryFilter<K>): Promise<K | null> {
     if (isObjectEmptyOrNull(query)) {
       throw new Error('Cannot search for one instance with empty query');
@@ -136,6 +166,12 @@ export class Repository<T extends Document, K> implements IRepository<T, K> {
     return this.model.findOne(this.translateFilter(query)).lean() as Promise<K | null>;
   }
 
+  /**
+   * Saves a document.
+   *
+   * @param entity - The document to save.
+   * @returns The saved document.
+   */
   async save(entity?: K): Promise<K> {
     try {
       const instance = new this.model(entity);
@@ -149,6 +185,13 @@ export class Repository<T extends Document, K> implements IRepository<T, K> {
     }
   }
 
+  /**
+   * Updates a document by id.
+   *
+   * @param id - The id of the document to update.
+   * @param entity - The document to update.
+   * @returns The updated document.
+   */
   update(id: string, entity: Partial<K>): Promise<K | null> {
     return this.model.findByIdAndUpdate(id, entity as any, { new: true, runValidators: true }).lean() as Promise<K | null>;
   }
