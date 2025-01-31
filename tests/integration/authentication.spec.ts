@@ -159,7 +159,7 @@ describe('Authentication', () => {
         .send(newUser)
         .end((err, res) => {
           res.should.have.status(500);
-          res.body.should.have.property('error').eql('E11000 duplicate key error collection: test.users index: email_1 dup key: { email: "admin@example.com" }');
+          res.body.should.have.property('error').eql('duplicateUser');
           done();
         });
     });
@@ -524,11 +524,15 @@ describe('Authentication', () => {
         .post('/api/v1/user/login')	
         .send({ email: adminUser.email, password: 'adminPassword' })	
         .end((err, res) => {	
-          res.should.have.status(200);	
-          res.body.should.have.property('accessToken');	
-          res.body.should.have.property('refreshToken');
+          res.should.have.status(200);
+          res.body.should.have.property('accessToken');
+          res.body.should.have.property('user');
+          res.headers.should.have.property('set-cookie');
 
-          loginTokens = res.body;
+          loginTokens = {
+            accessToken: res.body.accessToken,
+            refreshToken: res.headers['set-cookie'][0].split(';')[0].split('=')[1],
+          };
           done();	
         });	
     });
@@ -812,6 +816,86 @@ describe('Authentication', () => {
           res.should.have.status(200);
           res.body.should.have.property('message').eql(`New password sent to ${adminUser.email}`);
 
+          done();
+        });
+    });
+  });
+
+  describe('Registering a new user - POST /api/v1/user/register', () => {
+    it('should be able to register a new user successfully', (done) => {
+      chai.request(server)
+        .post('/api/v1/user/register')
+        .send(newUser)
+        .end((err, res) => {
+          res.should.have.status(200);
+          res.body.should.have.property('user');
+          res.body.should.have.property('accessToken');
+          res.headers.should.have.property('set-cookie');
+
+          newUser.id = res.body.user.id;
+          done();
+        });
+    });
+
+    it('should return 400 if the email is already in use', (done) => {
+      chai.request(server)
+        .post('/api/v1/user/register')
+        .send(newUser)
+        .end((err, res) => {
+          res.should.have.status(500);
+          res.body.should.have.property('error').eql('duplicateUser');
+          done();
+        });
+    });
+
+    it('should return 500 if the password is not strong enough', (done) => {
+      const newUser = {...adminUser, password: 'password'};
+
+      chai.request(server)
+        .post('/api/v1/user/register')
+        .send(newUser)
+        .end((err, res) => {
+          res.should.have.status(500);
+          res.body.should.have.property('error').eql('Password does not follow the rules');
+          done();
+        });
+    });
+
+    it('should return 500 if the email is not valid', (done) => {
+      const newUser = {...adminUser, password: 'Jaka-jan32', email: 'email'};
+
+      chai.request(server)
+        .post('/api/v1/user/register')
+        .send(newUser)
+        .end((err, res) => {
+          res.should.have.status(500);
+          res.body.should.have.property('error').eql('user validation failed: email: Path `email` is invalid (email).');
+          done();
+        });
+    });
+
+    it('should return 500 if the firstName is missing', (done) => {
+      const newUser = {...adminUser, password: 'Jaka-jan32', firstName: ''};
+
+      chai.request(server)
+        .post('/api/v1/user/register')
+        .send(newUser)
+        .end((err, res) => {
+          res.should.have.status(500);
+          res.body.should.have.property('error').eql('user validation failed: firstName: Path `firstName` is required.');
+          done();
+        });
+    });
+
+    it('should return 500 if the lastName is missing', (done) => {
+      const newUser = {...adminUser, password: 'Jaka-jan32', lastName: ''};
+
+      chai.request(server)
+        .post('/api/v1/user/register')
+        .send(newUser)
+        .end((err, res) => {
+          res.should.have.status(500);
+          res.body.should.have.property('error').eql('user validation failed: lastName: Path `lastName` is required.');
           done();
         });
     });

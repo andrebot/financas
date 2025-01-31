@@ -17,7 +17,7 @@ export function errorHandler(error: Error): Error {
     return new Error('duplicateUser');
   }
 
-  return new Error('unknownError');
+  return error;
 };
 
 export default new Repository<IUserDocument, IUser>(UserModel, errorHandler);

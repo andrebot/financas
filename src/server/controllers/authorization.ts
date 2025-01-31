@@ -190,9 +190,17 @@ export async function loginController(req: Request, res: Response) {
   }
 
   try {
-    const tokens = await login(email, password);
+    const { accessToken, refreshToken, user } = await login(email, password);
 
-    return res.send(tokens);
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: false,
+      secure: false,
+      // sameSite: 'lax',
+      // path: `${API_PREFIX}/refresh-tokens`,
+      maxAge: REFRESH_TOKEN_EXPIRATION_COOKIE,
+    });
+
+    return res.send({ accessToken, user });
   } catch (error) {
     return handleError(error as Error, res);
   }

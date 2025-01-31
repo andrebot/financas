@@ -15,7 +15,7 @@ import {
   REFRESH_TOKEN_EXPIRATION,
 } from '../config/auth';
 import sendNotification from '../utils/notification';
-import type { IUser } from '../types';
+import type { IUser, LoginResponse } from '../types';
 
 /**
  * Function to create a token
@@ -212,7 +212,7 @@ export async function register(email: string, password: string, firstName: strin
  * @param password - Password of the user to be compared
  * @returns - the Tokens as an object
  */
-export async function login(searchEmail: string, password: string): Promise<Tokens> {
+export async function login(searchEmail: string, password: string): Promise<LoginResponse> {
   const user = await UserRepo.findOne({ email: searchEmail });
 
   if (user) {
@@ -234,6 +234,7 @@ export async function login(searchEmail: string, password: string): Promise<Toke
       return {
         accessToken,
         refreshToken,
+        user,
       };
     }
 
