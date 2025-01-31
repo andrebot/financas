@@ -8,27 +8,33 @@ import type { LoginBody, LoginResponse, RegisterBody, RefreshTokenResponse } fro
 
 type ApiBuilder = EndpointBuilder<BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError, {}, FetchBaseQueryMeta>, never, "loginApi">
 
+export const loginMutation = (body: LoginBody) => ({
+  url: '/login',
+  method: 'POST',
+  body,
+})
+
+export const registerMutation = (body: RegisterBody) => ({
+  url: '/register',
+  method: 'POST',
+  body,
+})
+
+export const refreshTokenQuery = () => ({
+  url: '/refresh-tokens',
+  method: 'POST',
+})
+
 export default function testBuilder(builder: ApiBuilder) {
   return {
     login: builder.mutation<LoginResponse, LoginBody>({
-      query: (body: LoginBody) => ({
-        url: '/login',
-        method: 'POST',
-        body,
-      }),
+      query: loginMutation,
     }),
     register: builder.mutation<LoginResponse, RegisterBody>({
-      query: (body: RegisterBody) => ({
-        url: '/register',
-        method: 'POST',
-        body,
-      }),
+      query: registerMutation,
     }),
     refreshToken: builder.query<RefreshTokenResponse, void>({
-      query: () => ({
-        url: '/refresh-tokens',
-        method: 'POST',
-      }),
+      query: refreshTokenQuery,
     }),
   };
 }

@@ -19,4 +19,7 @@ module.exports = {
   ],
   coverageDirectory: 'client-cov',
   coverageReporters: ['html', 'text-summary'],
+  moduleNameMapper: {
+    '\\.(jpg|jpeg|png|gif|webp|svg)$': '<rootDir>/tests/client/assetsMocks/fileMock.js',
+  },
 };

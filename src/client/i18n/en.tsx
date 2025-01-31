@@ -18,6 +18,7 @@ export default {
     emailInvalid: 'Email is not valid',
     firstName: 'First name',
     lastName: 'Last name',
+    registerSuccess: 'Registration successful!',
     invalidUser: 'Username or password is invalid',
     duplicateUser: 'Email already registered',
     unknownError: 'Unexpected error occurred on the server. Please try again later.',
