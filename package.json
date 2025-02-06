@@ -24,7 +24,8 @@
     "test:client": "jest --coverage",
     "test:all": "npm run test:server && npm run test:server:integration && npm run test:client",
     "test:server-file": "NODE_ENV=test node tests/runTestFile.js",
-    "dev": "NODE_ENV=development npm-run-all --parallel build-client:watch server-up"
+    "dev": "NODE_ENV=development npm-run-all --parallel build-client:watch server-up",
+    "test:client:file": "jest --watch"
   },
   "nyc": {
     "extends": "@istanbuljs/nyc-config-typescript",

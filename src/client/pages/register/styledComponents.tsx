@@ -25,13 +25,13 @@ const RegisterContainer = styled('div')(({ theme }: StyleCompProp) => ({
   gap: '20px',
 }));
 
-const RowInput = styled('div')(({ theme }: StyleCompProp) => ({
+const RowInput = styled('div')(() => ({
   display: 'flex',
   flexDirection: 'row',
   gap: '10px',
 }));
 
-const TextFieldStyled = styled(TextField)(({ theme }: StyleCompProp) => ({
+const TextFieldStyled = styled(TextField)(() => ({
   flexGrow: '1',
 }));
 

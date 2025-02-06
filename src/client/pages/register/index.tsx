@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TextField, Button } from '@mui/material';
 import { enqueueSnackbar } from 'notistack';
 import { CircularProgress } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import PasswordField from '../../components/form/passwordField';
 import { useAuth } from '../../hooks/authContext';
 import { useRegisterMutation } from '../../features/login';
 import { RegisterMainDiv, RegisterContainer, RowInput, TextFieldStyled } from './styledComponents';
@@ -14,40 +15,21 @@ import type { SerializedError } from '@reduxjs/toolkit';
 export default function Register(): React.JSX.Element {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
+  const [registerData, setRegisterData] = useState({
+    email: '',
+    password: '',
+    confirmPassword: '',
+    firstName: '',
+    lastName: '',
+  });
   const [isConfirmPasswordValid, setIsConfirmPasswordValid] = useState(true);
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
   const [isPasswordValid, setIsPasswordValid] = useState(true);
   const [passwordError, setPasswordError] = useState('');
   const [isEmailValid, setIsEmailValid] = useState(true);
   const [emailError, setEmailError] = useState('');
-  const [emailTouched, setEmailTouched] = useState(false);
-  const [passwordTouched, setPasswordTouched] = useState(false);
   const [register, { isLoading, isSuccess }] = useRegisterMutation();
   const { setUser, setAccessToken } = useAuth();
-
-  /**
-   * Checks if the password is valid every time the password is touched.
-   */
-  useEffect(() => {
-    if (passwordTouched) {
-      checkPasswordConfirmation();
-      checkPasswordValidity();
-    }
-  }, [password, confirmPassword, passwordTouched]);
-
-  /**
-   * Checks if the email is valid every time the email is touched.
-   */
-  useEffect(() => {
-    if (emailTouched) {
-      checkEmailValidity();
-    }
-  }, [email, emailTouched]);
 
   /**
    * Handles the error when the register fails, mainly for sending the error
@@ -69,7 +51,14 @@ export default function Register(): React.JSX.Element {
    * @returns True if the form is valid, false otherwise.
    */
   function isFormValid(): boolean {
-    return isEmailValid && isPasswordValid && isConfirmPasswordValid && email.length > 0 && password.length > 0 && confirmPassword.length > 0 && firstName.length > 0 && lastName.length > 0;
+    return registerData.email.length > 0 &&
+      registerData.password.length > 0 &&
+      registerData.confirmPassword.length > 0 &&
+      registerData.firstName.length > 0 &&
+      registerData.lastName.length > 0 &&
+      isEmailValid &&
+      isPasswordValid &&
+      isConfirmPasswordValid;;
   }
 
   /**
@@ -77,7 +66,7 @@ export default function Register(): React.JSX.Element {
    *
    * @param response - The response from the register mutation.
    */
-  function registerUser(response: any) {
+  function updateAppWithUser(response: any) {
     if ('data' in response) {
       const {
         user: {
@@ -109,18 +98,19 @@ export default function Register(): React.JSX.Element {
    */
   async function handleRegister() {
     if (!isFormValid()) {
-      checkPasswordConfirmation();
-      checkPasswordValidity();
-      checkEmailValidity();
+      checkPasswordConfirmation(registerData.confirmPassword);
+      checkPasswordValidity(registerData.password);
+      checkEmailValidity(registerData.email);
       enqueueSnackbar(t('reviewDataProvided'), { variant: 'error' });
 
       return;
     }
 
     try {
-      const response = await register({ email, password, firstName, lastName });
+      const { confirmPassword, ...formData } = registerData;
+      const response = await register(formData);
 
-      registerUser(response);
+      updateAppWithUser(response);
     } catch (error) {
       enqueueSnackbar(t('internalError'), { variant: 'error' });
     }
@@ -128,8 +118,10 @@ export default function Register(): React.JSX.Element {
 
   /**
    * Checks if the password is valid.
+   * 
+   * @param password - The password to check.
    */
-  function checkPasswordValidity() {
+  function checkPasswordValidity(password: string) {
     if (!regExpPassword.test(password)) {
       setIsPasswordValid(false);
       setPasswordError(t('passwordInvalid'));
@@ -141,9 +133,11 @@ export default function Register(): React.JSX.Element {
 
   /**
    * Checks if the password confirmation is valid.
+   * 
+   * @param confirmPassword - The password confirmation to check.
    */
-  function checkPasswordConfirmation() {
-    if (password !== confirmPassword) {
+  function checkPasswordConfirmation(confirmPassword: string) {
+    if (registerData.password !== confirmPassword) {
       setIsConfirmPasswordValid(false);
       setConfirmPasswordError(t('passwordsDoNotMatch'));
     } else {
@@ -154,8 +148,10 @@ export default function Register(): React.JSX.Element {
 
   /**
    * Checks if the email is valid.
+   * 
+   * @param email - The email to check.
    */
-  function checkEmailValidity() {
+  function checkEmailValidity(email: string) {
     if (!regExpEmail.test(email)) {
       setIsEmailValid(false);
       setEmailError(t('emailInvalid'));
@@ -168,16 +164,17 @@ export default function Register(): React.JSX.Element {
   /**
    * Handles the event for the input change.
    *
-   * @param setter - The setter for the input value.
-   * @param touchedSetter - The setter for the input touched value.
+   * @param attribute - The attribute to check.
+   * @param checkValidity - The validity check function.
+   * 
    * @returns The event handler for the input change.
    */
-  function handleEventForInputChange(setter: (value: string) => void, touchedSetter?: (value: boolean) => void) {
+  function handleEventForInputChange(attribute: keyof typeof registerData, checkValidity?: (value: string) => void) {
     return (event: React.ChangeEvent<HTMLInputElement>) => {
-      setter(event.target.value);
+      setRegisterData({ ...registerData, [attribute]: event.target.value });
 
-      if (touchedSetter) {
-        touchedSetter(true);
+      if (checkValidity) {
+        checkValidity(event.target.value);
       }
     };
   }
@@ -191,15 +188,15 @@ export default function Register(): React.JSX.Element {
             label={t('firstName')}
             variant="outlined"
             type="text"
-            value={firstName}
-            onChange={handleEventForInputChange(setFirstName)}
+            value={registerData.firstName}
+            onChange={handleEventForInputChange('firstName')}
           />
           <TextFieldStyled
             label={t('lastName')}
             variant="outlined"
             type="text"
-            value={lastName}
-            onChange={handleEventForInputChange(setLastName)}
+            value={registerData.lastName}
+            onChange={handleEventForInputChange('lastName')}
           />
         </RowInput>
         <TextField
@@ -208,28 +205,24 @@ export default function Register(): React.JSX.Element {
           label={t('email')}
           variant="outlined"
           type="email"
-          value={email}
-          onChange={handleEventForInputChange(setEmail, setEmailTouched)}
+          value={registerData.email}
+          onChange={handleEventForInputChange('email', checkEmailValidity)}
         />
-        <TextField
+        <PasswordField
           error={!isPasswordValid}
           helperText={passwordError}
           label={t('password')}
-          variant="outlined"
-          type="password"
-          value={password}
-          onChange={handleEventForInputChange(setPassword, setPasswordTouched)}
+          value={registerData.password}
+          onChange={handleEventForInputChange('password', checkPasswordValidity)}
         />
-        <TextField
+        <PasswordField
           error={!isConfirmPasswordValid}
           helperText={confirmPasswordError}
           label={t('confirmPassword')}
-          variant="outlined"
-          type="password"
-          value={confirmPassword}
-          onChange={handleEventForInputChange(setConfirmPassword)}
+          value={registerData.confirmPassword}
+          onChange={handleEventForInputChange('confirmPassword', checkPasswordConfirmation)}
         />
-        <Button variant="contained" color="primary" disabled={isLoading || isSuccess} onClick={handleRegister}>
+        <Button name="register" variant="contained" color="primary" disabled={isLoading || isSuccess} onClick={handleRegister}>
           {isLoading || isSuccess ? <CircularProgress size={20} /> : t('register')}
         </Button>
       </RegisterContainer>

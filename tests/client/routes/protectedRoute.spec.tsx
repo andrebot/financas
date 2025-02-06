@@ -2,12 +2,12 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { I18nextProvider } from 'react-i18next';;
+import { Provider } from 'react-redux';
 import i18n from '../../../src/client/i18n';
 import ProtectedRoute from '../../../src/client/routes/protectedRoute';
 import { useAuth } from '../../../src/client/hooks/authContext';
 import config from '../../../src/client/config/apiConfig';
 import { store } from '../../../src/client/features/store';
-import { Provider } from 'react-redux';
 jest.mock('../../../src/client/hooks/authContext', () => ({
   useAuth: jest.fn(),
 }));

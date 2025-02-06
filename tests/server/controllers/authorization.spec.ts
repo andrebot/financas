@@ -282,10 +282,24 @@ describe('AuthorizationController', () => {
   });
 
   it('should be able to login an user successfully', async () => {
+    authManagerStub.login.resolves({
+      accessToken: 'access-token',
+      refreshToken: 'refresh-token',
+      user: {
+        email: request.body.email,
+      },
+    });
+
     try {
       await loginController(request, response);
 
       response.send.should.have.been.calledOnce;
+      response.cookie.should.have.been.calledOnce;
+      response.cookie.should.have.been.calledWith('refreshToken', 'refresh-token', {
+        httpOnly: false,
+        secure: false,
+        maxAge: REFRESH_TOKEN_EXPIRATION_COOKIE,
+      });
       authManagerStub.login.should.have.been.calledOnce;
       authManagerStub.login.should.have.been.calledWith(request.body.email, request.body.password);
     } catch (error) {
