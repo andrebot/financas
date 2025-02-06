@@ -82,9 +82,6 @@ export default function Register(): React.JSX.Element {
       setUser({ email, firstName, lastName, role, id });
       setAccessToken(accessToken);
       enqueueSnackbar(t('registerSuccess'), { variant: 'success' });
-      setTimeout(() => {
-        navigate('/');
-      }, 2000);
     } else if ('error' in response) {
       handleError(response.error);
     } else {

@@ -6,14 +6,15 @@ import { CircularProgress } from '@mui/material';
 import { useLoginMutation } from '../../features/login';
 import { useAuth } from '../../hooks/authContext';
 import {
-  LoginMainDiv,
-  LoginContainer,
-  LoginStyledWrapper,
   LoginImageContainer,
-  LoginImage,
+  LoginStyledWrapper,
+  LoginPasswordField,
   LoginFormContainer,
-  LoginButton,
+  LoginContainer,
   LoginTextField,
+  LoginMainDiv,
+  LoginButton,
+  LoginImage,
   ForgotLink,
 } from './styledComponents';
 import Money1 from '../../assets/monay1.png';
@@ -29,7 +30,7 @@ export default function Login(): React.JSX.Element {
   const [login, { isLoading }] = useLoginMutation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { user } = useAuth();
+  const { user, setUser, setAccessToken } = useAuth();
 
   /**
    * Redirects the user to the home page if they are already logged in.
@@ -65,6 +66,10 @@ export default function Login(): React.JSX.Element {
 
       if ('error' in response) {
         handleError(response.error);
+      } else {
+        setUser(response.data.user);
+        setAccessToken(response.data.accessToken);
+        enqueueSnackbar(t('loginSuccess'), { variant: 'success' });
       }
     } catch (error) {
       enqueueSnackbar(t('internalError'), { variant: 'error' });
@@ -84,6 +89,17 @@ export default function Login(): React.JSX.Element {
   function handleForgotPassword() {
     if (!isLoading) {
       navigate('/forgot-password');
+    }
+  }
+
+  /**
+   * Handles the enter key to login
+   *
+   * @param e - Keyboard event
+   */
+  function handleEnterKey(e: React.KeyboardEvent<HTMLDivElement>) {
+    if (e.key === 'Enter') {
+      handleLogin();
     }
   }
 
@@ -109,13 +125,13 @@ export default function Login(): React.JSX.Element {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            onKeyDown={handleEnterKey}
           />
-          <LoginTextField
+          <LoginPasswordField
             label={t('password')}
-            variant="outlined"
-            type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={handleEnterKey}
           />
           <LoginButton variant="contained" color="primary" disabled={isLoading} onClick={handleLogin}>
             {isLoading ? <CircularProgress size={20} color="inherit" /> : t('login')}

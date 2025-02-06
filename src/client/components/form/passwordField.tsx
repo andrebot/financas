@@ -24,14 +24,18 @@ export default function PasswordField({
   label,
   value,
   onChange,
-  error,
-  helperText,
+  onKeyDown = () => {},
+  className,
+  error = false,
+  helperText = '',
 }: {
   label: string;
   value: string;
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  error: boolean;
-  helperText: string;
+  onKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
+  className?: string;
+  error?: boolean;
+  helperText?: string;
 }) {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -44,9 +48,11 @@ export default function PasswordField({
 
   return (
     <TextField
+      className={className}
       type={showPassword ? 'text' : 'password'}
       value={value}
       onChange={onChange}
+      onKeyDown={onKeyDown}
       error={error}
       helperText={helperText}
       InputProps={{

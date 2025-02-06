@@ -23,5 +23,6 @@ export default {
     duplicateUser: 'Email já registrado',
     unknownError: 'Um erro inesperado ocorreu no servidor. Por favor, tente novamente mais tarde.',
     reviewDataProvided: 'Por favor, revise os dados fornecidos.',
+    loginSuccess: 'Login realizado com sucesso!',
   },
 };

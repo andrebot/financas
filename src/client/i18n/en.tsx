@@ -23,6 +23,7 @@ export default {
     duplicateUser: 'Email already registered',
     unknownError: 'Unexpected error occurred on the server. Please try again later.',
     reviewDataProvided: 'Please review the data provided.',
+    loginSuccess: 'Login successful!',
   },
 };
 
