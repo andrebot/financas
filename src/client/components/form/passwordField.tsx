@@ -42,24 +42,6 @@ export default function PasswordField({
     setShowPassword(!showPassword);
   }
 
-  /**
-   * Handles the mouse down event for the show password button.
-   * 
-   * @param event - The mouse down event.
-   */
-  function handleMouseDownPassword(event: React.MouseEvent<HTMLButtonElement>) {
-    event.preventDefault();
-  }
-
-  /**
-   * Handles the mouse up event for the show password button.
-   * 
-   * @param event - The mouse up event.
-   */
-  function handleMouseUpPassword(event: React.MouseEvent<HTMLButtonElement>) {
-    event.preventDefault();
-  }
-
   return (
     <TextField
       type={showPassword ? 'text' : 'password'}
@@ -73,8 +55,6 @@ export default function PasswordField({
             <IconButton
               aria-label={showPassword ? 'hide the password' : 'display the password'}
               onClick={handleClickShowPassword}
-              onMouseDown={handleMouseDownPassword}
-              onMouseUp={handleMouseUpPassword}
               edge="end"
             >
               {showPassword ? <VisibilityOff /> : <Visibility />}
