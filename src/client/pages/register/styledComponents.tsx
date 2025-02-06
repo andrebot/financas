@@ -23,12 +23,21 @@ const RegisterContainer = styled('div')(({ theme }: StyleCompProp) => ({
   paddingRight: '20px',
   paddingBottom: '20px',
   gap: '20px',
+  [theme.breakpoints.between('xs', 'md')]: {
+    width: '100%',
+  },
+  [theme.breakpoints.between('md', 'lg')]: {
+    width: '50%',
+  },
 }));
 
-const RowInput = styled('div')(() => ({
+const RowInput = styled('div')(({ theme }: StyleCompProp) => ({
   display: 'flex',
   flexDirection: 'row',
   gap: '10px',
+  [theme.breakpoints.between('xs', 'md')]: {
+    flexDirection: 'column',
+  },
 }));
 
 const TextFieldStyled = styled(TextField)(() => ({
