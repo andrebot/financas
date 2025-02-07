@@ -7,7 +7,7 @@ import PasswordField from '../../components/form/passwordField';
 import { useAuth } from '../../hooks/authContext';
 import { useRegisterMutation } from '../../features/login';
 import { RegisterMainDiv, RegisterContainer, RowInput, TextFieldStyled } from './styledComponents';
-import { regExpEmail, regExpPassword } from '../../utils/validators';
+import { regExpEmail, regExpPassword, regExpName } from '../../utils/validators';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import type { SerializedError } from '@reduxjs/toolkit';
 
@@ -26,6 +26,10 @@ export default function Register(): React.JSX.Element {
   const [passwordError, setPasswordError] = useState('');
   const [isEmailValid, setIsEmailValid] = useState(true);
   const [emailError, setEmailError] = useState('');
+  const [isFirstNameValid, setIsFirstNameValid] = useState(true);
+  const [firstNameError, setFirstNameError] = useState('');
+  const [isLastNameValid, setIsLastNameValid] = useState(true);
+  const [lastNameError, setLastNameError] = useState('');
   const [register, { isLoading, isSuccess }] = useRegisterMutation();
   const { setUser, setAccessToken } = useAuth();
 
@@ -56,7 +60,9 @@ export default function Register(): React.JSX.Element {
       registerData.lastName.length > 0 &&
       isEmailValid &&
       isPasswordValid &&
-      isConfirmPasswordValid;;
+      isConfirmPasswordValid &&
+      isFirstNameValid &&
+      isLastNameValid;
   }
 
   /**
@@ -96,6 +102,8 @@ export default function Register(): React.JSX.Element {
       checkPasswordConfirmation(registerData.confirmPassword);
       checkPasswordValidity(registerData.password);
       checkEmailValidity(registerData.email);
+      checkFirstNameValidity(registerData.firstName);
+      checkLastNameValidity(registerData.lastName);
       enqueueSnackbar(t('reviewDataProvided'), { variant: 'error' });
 
       return;
@@ -157,6 +165,42 @@ export default function Register(): React.JSX.Element {
   }
 
   /**
+   * Checks if the first name is valid.
+   * 
+   * @param firstName - The first name to check.
+   */
+  function checkFirstNameValidity(firstName: string) {
+    if (firstName.length === 0) {
+      setIsFirstNameValid(false);
+      setFirstNameError(t('firstNameRequired'));
+    } else if (!regExpName.test(firstName)) {
+      setIsFirstNameValid(false);
+      setFirstNameError(t('nameInvalid'));
+    } else {
+      setIsFirstNameValid(true);
+      setFirstNameError('');
+    }
+  }
+
+  /**
+   * Checks if the last name is valid.
+   * 
+   * @param lastName - The last name to check.
+   */
+  function checkLastNameValidity(lastName: string) {
+    if (lastName.length === 0) {
+      setIsLastNameValid(false);
+      setLastNameError(t('lastNameRequired'));
+    } else if (!regExpName.test(lastName)) {
+      setIsLastNameValid(false);
+      setLastNameError(t('nameInvalid'));
+    } else {
+      setIsLastNameValid(true);
+      setLastNameError('');
+    }
+  }
+
+  /**
    * Handles the event for the input change.
    *
    * @param attribute - The attribute to check.
@@ -180,18 +224,22 @@ export default function Register(): React.JSX.Element {
         <h1>{t('register')}</h1>
         <RowInput>
           <TextFieldStyled
+            error={!isFirstNameValid}
+            helperText={firstNameError}
             label={t('firstName')}
             variant="outlined"
             type="text"
             value={registerData.firstName}
-            onChange={handleEventForInputChange('firstName')}
+            onChange={handleEventForInputChange('firstName', checkFirstNameValidity)}
           />
           <TextFieldStyled
+            error={!isLastNameValid}
+            helperText={lastNameError}
             label={t('lastName')}
             variant="outlined"
             type="text"
             value={registerData.lastName}
-            onChange={handleEventForInputChange('lastName')}
+            onChange={handleEventForInputChange('lastName', checkLastNameValidity)}
           />
         </RowInput>
         <TextField

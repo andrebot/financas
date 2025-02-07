@@ -8,3 +8,9 @@ export const regExpEmail = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|
  * one lowercase letter, one uppercase letter, one number and one special character in the set !@#
  */
 export const regExpPassword = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#-])[a-zA-Z\d!@#-]{10,}$/;
+
+/**
+ * regExpName - Regular expression for name validation. It requires at least one letter, it allow
+ * spaces, hyphens and accents.
+ */
+export const regExpName = /^[a-zA-ZÀ-ÿ\s-]+$/;

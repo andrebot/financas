@@ -299,6 +299,66 @@ describe('Register Component', () => {
     });
   });
 
+  it('should render an error when the first name is not valid', async () => {
+    render(
+      <I18nextProvider i18n={i18n}>
+        <RegisterPage />
+      </I18nextProvider>
+    );
+
+    const { lastNameInput, firstNameInput, emailInput, passwordInput, confirmPasswordInput } = getFormInputs();
+    const registerButton = screen.getByRole('button', { name: /register/i });
+    await populateFormInputs({ lastNameInput, firstNameInput, emailInput, passwordInput, confirmPasswordInput });
+
+    fireEvent.change(firstNameInput, { target: { value: '1234567890' } });
+    fireEvent.click(registerButton);
+
+    await waitFor(() => {
+      expect(firstNameInput).toHaveValue('1234567890');
+      expect(enqueueSnackbar).toHaveBeenCalledWith(i18nKeys.translation.reviewDataProvided, { variant: 'error' });
+      expect(screen.getByText(i18nKeys.translation.nameInvalid)).toBeInTheDocument();
+    });
+
+    fireEvent.change(firstNameInput, { target: { value: '' } });
+    fireEvent.click(registerButton);
+
+    await waitFor(() => {
+      expect(firstNameInput).toHaveValue('');
+      expect(enqueueSnackbar).toHaveBeenCalledWith(i18nKeys.translation.reviewDataProvided, { variant: 'error' });
+      expect(screen.getByText(i18nKeys.translation.firstNameRequired)).toBeInTheDocument();
+    });
+  });
+
+  it('should render an error when the last name is not valid', async () => {
+    render(
+      <I18nextProvider i18n={i18n}>
+        <RegisterPage />
+      </I18nextProvider>
+    );
+
+    const { lastNameInput, firstNameInput, emailInput, passwordInput, confirmPasswordInput } = getFormInputs();
+    const registerButton = screen.getByRole('button', { name: /register/i });
+    await populateFormInputs({ lastNameInput, firstNameInput, emailInput, passwordInput, confirmPasswordInput });
+
+    fireEvent.change(lastNameInput, { target: { value: '1234567890' } });
+    fireEvent.click(registerButton);
+
+    await waitFor(() => {
+      expect(lastNameInput).toHaveValue('1234567890');
+      expect(enqueueSnackbar).toHaveBeenCalledWith(i18nKeys.translation.reviewDataProvided, { variant: 'error' });
+      expect(screen.getByText(i18nKeys.translation.nameInvalid)).toBeInTheDocument();
+    });
+
+    fireEvent.change(lastNameInput, { target: { value: '' } });
+    fireEvent.click(registerButton);
+
+    await waitFor(() => {
+      expect(lastNameInput).toHaveValue('');
+      expect(enqueueSnackbar).toHaveBeenCalledWith(i18nKeys.translation.reviewDataProvided, { variant: 'error' });
+      expect(screen.getByText(i18nKeys.translation.lastNameRequired)).toBeInTheDocument();
+    });
+  });
+
   it('should disable and show loading spinner if the register is in progress', async () => {
     (useRegisterMutation as jest.Mock).mockReturnValue([mockRegisterMutation, { isLoading: true, isSuccess: false }]);
 

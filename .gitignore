@@ -3,3 +3,10 @@ node_modules
 coverage
 client-cov
 src/server/public
+reports
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

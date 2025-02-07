@@ -30,6 +30,9 @@ export default {
     waitForEmail: 'Please wait for the email to be sent to reset your password.',
     backToLogin: 'Back to login',
     emailRequired: 'Email is required',
+    firstNameRequired: 'First name is required',
+    lastNameRequired: 'Last name is required',
+    nameInvalid: 'Name is not valid',
   },
 };
 

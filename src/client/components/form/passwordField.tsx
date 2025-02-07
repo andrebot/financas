@@ -55,6 +55,7 @@ export default function PasswordField({
       onKeyDown={onKeyDown}
       error={error}
       helperText={helperText}
+      label={label}
       InputProps={{
         endAdornment: (
           <InputAdornment position="end">
@@ -68,7 +69,6 @@ export default function PasswordField({
           </InputAdornment>
         ),
       }}
-      label={label}
     />
   );
 }
