@@ -37,3 +37,11 @@ export type RegisterBody = {
   firstName: string;
   lastName: string;
 }
+
+export type ResetPasswordBody = {
+  email: string;
+}
+
+export type ResetPasswordResponse = {
+  message: string;
+}

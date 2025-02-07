@@ -9,5 +9,6 @@ export default {
     loginPage: '/login',
     logout: '/logout',
     registerPage: '/register',
+    resetPasswordPage: '/reset-password',
   },
 };

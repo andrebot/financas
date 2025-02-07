@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { TextField, Button } from '@mui/material';
 import { enqueueSnackbar } from 'notistack';
 import { CircularProgress } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
 import PasswordField from '../../components/form/passwordField';
 import { useAuth } from '../../hooks/authContext';
 import { useRegisterMutation } from '../../features/login';
@@ -14,7 +13,6 @@ import type { SerializedError } from '@reduxjs/toolkit';
 
 export default function Register(): React.JSX.Element {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const [registerData, setRegisterData] = useState({
     email: '',
     password: '',

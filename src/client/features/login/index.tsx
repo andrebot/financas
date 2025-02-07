@@ -12,4 +12,9 @@ export const loginApi = createApi({
   endpoints,
 });
 
-export const { useLoginMutation, useRegisterMutation, useRefreshTokenQuery } = loginApi;
+export const {
+  useLoginMutation,
+  useRegisterMutation,
+  useRefreshTokenQuery,
+  useResetPasswordMutation,
+} = loginApi;

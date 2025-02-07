@@ -4,7 +4,14 @@ import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import { FetchBaseQueryMeta } from "@reduxjs/toolkit/query";
 import { FetchArgs } from "@reduxjs/toolkit/query";
 
-import type { LoginBody, LoginResponse, RegisterBody, RefreshTokenResponse } from '../../types/authContextType';
+import type {
+  LoginBody,
+  LoginResponse,
+  RegisterBody,
+  RefreshTokenResponse,
+  ResetPasswordBody,
+  ResetPasswordResponse,
+} from '../../types/authContextType';
 
 type ApiBuilder = EndpointBuilder<BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError, {}, FetchBaseQueryMeta>, never, "loginApi">
 
@@ -25,6 +32,12 @@ export const refreshTokenQuery = () => ({
   method: 'POST',
 })
 
+export const resetPasswordMutation = (body: ResetPasswordBody) => ({
+  url: '/reset-password',
+  method: 'POST',
+  body,
+})
+
 export default function testBuilder(builder: ApiBuilder) {
   return {
     login: builder.mutation<LoginResponse, LoginBody>({
@@ -35,6 +48,9 @@ export default function testBuilder(builder: ApiBuilder) {
     }),
     refreshToken: builder.query<RefreshTokenResponse, void>({
       query: refreshTokenQuery,
+    }),
+    resetPassword: builder.mutation<ResetPasswordResponse, ResetPasswordBody>({
+      query: resetPasswordMutation,
     }),
   };
 }

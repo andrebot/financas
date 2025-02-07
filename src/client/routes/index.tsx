@@ -5,7 +5,7 @@ import ProtectedRoute from './protectedRoute';
 import MainPage from '../pages/mainPage';
 import Login from '../pages/login';
 import Register from '../pages/register';
-
+import ResetPassword from '../pages/resetPassword';
 /**
  * Instanciating the routes
  */
@@ -26,6 +26,9 @@ export default createBrowserRouter([
     }, {
       path: apiConfig.user.registerPage,
       element: <Register />,
+    }, {
+      path: apiConfig.user.resetPasswordPage,
+      element: <ResetPassword />,
     }],
   },
 ]);

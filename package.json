@@ -19,6 +19,7 @@
     "lint:server:fix": "eslint --fix src/server/**/*.ts",
     "lint:client:fix": "eslint --fix src/client/**/*.tsx",
     "create-route": "node scripts/createRoute.js",
+    "create-page": "node scripts/createPage.js",
     "test:server": "NODE_ENV=test nyc mocha -r ts-node/register 'tests/server/**/*.spec.ts' --exit",
     "test:server:integration": "NODE_ENV=test mocha -r ts-node/register --file ./tests/integration/testSetup.ts 'tests/integration/**/*.spec.ts' --exit",
     "test:client": "jest --coverage",

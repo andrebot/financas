@@ -88,7 +88,7 @@ export default function Login(): React.JSX.Element {
    */
   function handleForgotPassword() {
     if (!isLoading) {
-      navigate('/forgot-password');
+      navigate('/reset-password');
     }
   }
 

@@ -4,7 +4,7 @@ import { StyleCompProp } from '../../types';
 import { Button, TextField, Link } from '@mui/material';
 import PasswordField from '../../components/form/passwordField';
 
-const LoginMainDiv = styled('div')(({ theme }: StyleCompProp) => ({
+export const LoginMainDiv = styled('div')(({ theme }: StyleCompProp) => ({
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
@@ -13,7 +13,7 @@ const LoginMainDiv = styled('div')(({ theme }: StyleCompProp) => ({
   backgroundColor: theme.palette.background.default,
 }));
 
-const LoginContainer = styled('div')(({ theme }: StyleCompProp) => ({
+export const LoginContainer = styled('div')(({ theme }: StyleCompProp) => ({
   display: 'flex',
   flexDirection: 'row',
   backgroundColor: theme.palette.primary.contrastText,
@@ -35,7 +35,7 @@ const LoginContainer = styled('div')(({ theme }: StyleCompProp) => ({
   },
 }));
 
-const LoginStyledWrapper = styled('div')(({ theme }: StyleCompProp) => ({
+export const LoginStyledWrapper = styled('div')(({ theme }: StyleCompProp) => ({
   backgroundImage: `url(${bgImage})`,
   backgroundSize: 'cover',
   height: '100%',
@@ -49,7 +49,7 @@ const LoginStyledWrapper = styled('div')(({ theme }: StyleCompProp) => ({
   },
 }));
 
-const LoginImageContainer = styled('div')(() => ({
+export const LoginImageContainer = styled('div')(() => ({
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
@@ -57,7 +57,7 @@ const LoginImageContainer = styled('div')(() => ({
   gap: '10px',
 }));
 
-const LoginImage = styled('img')(({ theme }: StyleCompProp) => ({
+export const LoginImage = styled('img')(({ theme }: StyleCompProp) => ({
   width: '80%',
   height: '30%',
   flexGrow: 0,
@@ -71,7 +71,7 @@ const LoginImage = styled('img')(({ theme }: StyleCompProp) => ({
   },
 }));
 
-const LoginFormContainer = styled('div')(() => ({
+export const LoginFormContainer = styled('div')(() => ({
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
@@ -81,31 +81,18 @@ const LoginFormContainer = styled('div')(() => ({
   padding: '40px',
 }))
 
-const LoginButton = styled(Button)(() => ({
+export const LoginButton = styled(Button)(() => ({
   width: '100%',
 }));
 
-const LoginTextField = styled(TextField)(() => ({
+export const LoginTextField = styled(TextField)(() => ({
   width: '100%',
 }));
 
-const LoginPasswordField = styled(PasswordField)(() => ({
+export const LoginPasswordField = styled(PasswordField)(() => ({
   width: '100%',
 }));
 
-const ForgotLink = styled(Link)(() => ({
+export const ForgotLink = styled(Link)(() => ({
   cursor: 'pointer',
 }));
-
-export {
-  LoginImageContainer,
-  LoginStyledWrapper,
-  LoginPasswordField,
-  LoginFormContainer,
-  LoginContainer,
-  LoginTextField,
-  LoginMainDiv,
-  LoginButton,
-  LoginImage,
-  ForgotLink,
-};

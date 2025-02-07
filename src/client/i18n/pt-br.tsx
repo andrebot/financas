@@ -24,5 +24,10 @@ export default {
     unknownError: 'Um erro inesperado ocorreu no servidor. Por favor, tente novamente mais tarde.',
     reviewDataProvided: 'Por favor, revise os dados fornecidos.',
     loginSuccess: 'Login realizado com sucesso!',
+    resetPasswordTitle: 'Redefinir senha',
+    resetPasswordSuccess: 'Senha redefinida com sucesso!',
+    resetPassword: 'Redefinir Senha',
+    waitForEmail: 'Por favor, aguarde o email ser enviado para redefinir sua senha.',
+    backToLogin: 'Voltar para o login',
   },
 };

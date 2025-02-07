@@ -24,6 +24,11 @@ export default {
     unknownError: 'Unexpected error occurred on the server. Please try again later.',
     reviewDataProvided: 'Please review the data provided.',
     loginSuccess: 'Login successful!',
+    resetPasswordTitle: 'Reset Password',
+    resetPasswordSuccess: 'Password reset successful!',
+    resetPassword: 'Reset Password',
+    waitForEmail: 'Please wait for the email to be sent to reset your password.',
+    backToLogin: 'Back to login',
   },
 };
 

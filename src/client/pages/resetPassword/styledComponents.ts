@@ -1,17 +1,16 @@
+
 import { styled } from '@mui/material/styles';
-import { TextField } from '@mui/material';
 import type { StyleCompProp } from '../../types';
 
-export const RegisterMainDiv = styled('div')(({ theme }: StyleCompProp) => ({
+export const ResetPasswordMain = styled('div')(() => ({
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
   height: '100vh',
-  backgroundColor: theme.palette.background.default,
 }));
 
-export const RegisterContainer = styled('div')(({ theme }: StyleCompProp) => ({
+export const ResetPasswordContainer = styled('div')(({ theme }: StyleCompProp) => ({
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'center',
@@ -29,17 +28,4 @@ export const RegisterContainer = styled('div')(({ theme }: StyleCompProp) => ({
   [theme.breakpoints.between('md', 'lg')]: {
     width: '50%',
   },
-}));
-
-export const RowInput = styled('div')(({ theme }: StyleCompProp) => ({
-  display: 'flex',
-  flexDirection: 'row',
-  gap: '10px',
-  [theme.breakpoints.between('xs', 'md')]: {
-    flexDirection: 'column',
-  },
-}));
-
-export const TextFieldStyled = styled(TextField)(() => ({
-  flexGrow: '1',
 }));
