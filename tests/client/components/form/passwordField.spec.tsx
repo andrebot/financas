@@ -17,4 +17,10 @@ describe('PasswordField', () => {
 
     expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'text');
   });
+
+  it('should trigger the default keydown event when the enter key is pressed', () => {
+    render(<PasswordField label="Password" value="" onChange={() => {}} error={true} helperText="Error" />);
+
+    fireEvent.keyDown(screen.getByLabelText('Password'), { key: 'Enter', code: 'Enter' });
+  });
 });

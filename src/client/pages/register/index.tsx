@@ -219,7 +219,7 @@ export default function Register(): React.JSX.Element {
           value={registerData.confirmPassword}
           onChange={handleEventForInputChange('confirmPassword', checkPasswordConfirmation)}
         />
-        <Button name="register" variant="contained" color="primary" disabled={isLoading || isSuccess} onClick={handleRegister}>
+        <Button aria-label="register" variant="contained" color="primary" disabled={isLoading || isSuccess} onClick={handleRegister}>
           {isLoading || isSuccess ? <CircularProgress size={20} /> : t('register')}
         </Button>
       </RegisterContainer>

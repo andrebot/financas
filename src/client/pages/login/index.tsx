@@ -133,10 +133,10 @@ export default function Login(): React.JSX.Element {
             onChange={(e) => setPassword(e.target.value)}
             onKeyDown={handleEnterKey}
           />
-          <LoginButton variant="contained" color="primary" disabled={isLoading} onClick={handleLogin}>
+          <LoginButton aria-label="login" variant="contained" color="primary" disabled={isLoading} onClick={handleLogin}>
             {isLoading ? <CircularProgress size={20} color="inherit" /> : t('login')}
           </LoginButton>
-          <LoginButton variant="contained" color="secondary" disabled={isLoading} onClick={handleRegister}>
+          <LoginButton aria-label="register" variant="contained" color="secondary" disabled={isLoading} onClick={handleRegister}>
             {isLoading ? <CircularProgress size={20} color="inherit" /> : t('register')}
           </LoginButton>
           <p>

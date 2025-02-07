@@ -11,7 +11,6 @@ import { useAuth } from '../../../../src/client/hooks/authContext';
 import { useRegisterMutation } from '../../../../src/client/features/login';
 import { getFormInputs, populateFormInputs, mockRegisterData } from './utils';
 
-// Mock dependencies except i18n
 jest.mock('react-router-dom', () => ({
   useNavigate: jest.fn(),
 }));
@@ -136,7 +135,6 @@ describe('Register Component', () => {
 
     await waitFor(() => {
       expect(enqueueSnackbar).toHaveBeenCalledWith(i18nKeys.translation.registerSuccess, { variant: 'success' });
-      // expect(mockNavigate).toHaveBeenCalledWith('/');
     });
   });
   
@@ -299,5 +297,15 @@ describe('Register Component', () => {
     await waitFor(() => {
       expect(enqueueSnackbar).toHaveBeenCalledWith(i18nKeys.translation.internalError, { variant: 'error' });
     });
+  });
+
+  it('should disable and show loading spinner if the register is in progress', async () => {
+    (useRegisterMutation as jest.Mock).mockReturnValue([mockRegisterMutation, { isLoading: true, isSuccess: false }]);
+
+    render(<I18nextProvider i18n={i18n}><RegisterPage /></I18nextProvider>);
+
+    const registerButton = screen.getByRole('button', { name: /register/i });
+
+    expect(registerButton).toBeDisabled();
   });
 });
