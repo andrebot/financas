@@ -138,7 +138,7 @@ describe('LoadingPage', () => {
 
     fireEvent.click(forgotPasswordLink);
 
-    expect(mockNavigate).toHaveBeenCalledWith('/forgot-password');
+    expect(mockNavigate).toHaveBeenCalledWith('/reset-password');
   });
 
   it('should trigger login when enter key is pressed on the password input', async () => {

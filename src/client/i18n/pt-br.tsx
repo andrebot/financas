@@ -29,5 +29,6 @@ export default {
     resetPassword: 'Redefinir Senha',
     waitForEmail: 'Por favor, aguarde o email ser enviado para redefinir sua senha.',
     backToLogin: 'Voltar para o login',
+    emailRequired: 'Email é obrigatório',
   },
 };

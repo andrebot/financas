@@ -329,7 +329,9 @@ export async function resetPassword(email: string): Promise<boolean> {
     return true;
   }
 
-  throw new Error(`No user was found with email: ${email}`);
+  Logger.error(`No user was found with email: ${email}`);
+
+  throw new Error('Could not reset password. Try again later.');
 }
 
 /**

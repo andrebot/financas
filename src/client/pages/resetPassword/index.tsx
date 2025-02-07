@@ -13,17 +13,46 @@ export default function ResetPassword(): React.JSX.Element {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [resetPassword, { isLoading, isSuccess }] = useResetPasswordMutation();
 
   /**
    * Makes a request to reset the password and deals with the response
    */
   async function handleResetPassword() {
+    if (email === '') {
+      enqueueSnackbar(t('emailRequired'), { variant: 'error' });
+      setEmailError(t('emailRequired'));
+      return;
+    } else {
+      setEmailError('');
+    }
+
     try {
-      await resetPassword({ email });
-      enqueueSnackbar(t('resetPasswordSuccess'), { variant: 'success' });
+      const response = await resetPassword({ email });
+
+      if ('data' in response) {
+        enqueueSnackbar(response.data.message, { variant: 'success' });
+      } else {
+        enqueueSnackbar(t('internalError'), { variant: 'error' });
+      }
     } catch (error) {
-      enqueueSnackbar(t('resetPasswordError'), { variant: 'error' });
+      enqueueSnackbar(t('internalError'), { variant: 'error' });
+    }
+  }
+
+  /**
+   * Handles the email change event to avoid empty email
+   *
+   * @param e - The change event
+   */
+  function onChangeEmail(e: React.ChangeEvent<HTMLInputElement>) {
+    setEmail(e.target.value);
+
+    if (e.target.value === '') {
+      setEmailError(t('emailRequired'));
+    } else {
+      setEmailError('');
     }
   }
 
@@ -49,9 +78,12 @@ export default function ResetPassword(): React.JSX.Element {
               variant="outlined"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={onChangeEmail}
+              error={!!emailError}
+              helperText={emailError}
             />
             <Button
+              aria-label={t('resetPassword')}
               variant="contained"
               color="primary"
               onClick={handleResetPassword}

@@ -788,7 +788,7 @@ describe('Authentication', () => {
         .send({ email: badEmail })
         .end((err, res) => {
           res.should.have.status(500);
-          res.body.should.have.property('error').eql(`No user was found with email: ${badEmail}`);
+          res.body.should.have.property('error').eql('Could not reset password. Try again later.');
           done();
         });
     });

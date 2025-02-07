@@ -2,6 +2,7 @@ import testBuilder, {
   loginMutation,
   registerMutation,
   refreshTokenQuery,
+  resetPasswordMutation,
 } from '../../../../src/client/features/login/endpoints';
 
 const mockBuilder = {
@@ -19,8 +20,9 @@ describe('login endpoints', () => {
     expect(tBuilder.login).toBeDefined();
     expect(tBuilder.register).toBeDefined();
     expect(tBuilder.refreshToken).toBeDefined();
+    expect(tBuilder.resetPassword).toBeDefined();
     expect(mockBuilder.query).toHaveBeenCalledTimes(1);
-    expect(mockBuilder.mutation).toHaveBeenCalledTimes(2);
+    expect(mockBuilder.mutation).toHaveBeenCalledTimes(3);
   });
 
   it('should correctly prepare the login mutation request', () => {
@@ -57,5 +59,17 @@ describe('login endpoints', () => {
     expect(refreshTokenQueryExecuted).toBeDefined();
     expect(refreshTokenQueryExecuted.url).toBe('/refresh-tokens');
     expect(refreshTokenQueryExecuted.method).toBe('POST');
+  });
+
+  it('should correctly prepare the reset password mutation request', () => {
+    const body = {
+      email: 'test@test.com',
+    };
+    const resetPasswordMutationExecuted = resetPasswordMutation(body);
+
+    expect(resetPasswordMutationExecuted).toBeDefined();
+    expect(resetPasswordMutationExecuted.url).toBe('/reset-password');
+    expect(resetPasswordMutationExecuted.method).toBe('POST');
+    expect(resetPasswordMutationExecuted.body).toEqual(body);
   });
 });

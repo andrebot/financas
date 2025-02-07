@@ -29,6 +29,7 @@ export default {
     resetPassword: 'Reset Password',
     waitForEmail: 'Please wait for the email to be sent to reset your password.',
     backToLogin: 'Back to login',
+    emailRequired: 'Email is required',
   },
 };
 
