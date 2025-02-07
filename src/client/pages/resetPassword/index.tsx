@@ -32,7 +32,7 @@ export default function ResetPassword(): React.JSX.Element {
       const response = await resetPassword({ email });
 
       if ('data' in response) {
-        enqueueSnackbar(response.data.message, { variant: 'success' });
+        enqueueSnackbar(t('resetPasswordSuccess'), { variant: 'success' });
       } else {
         enqueueSnackbar(t('internalError'), { variant: 'error' });
       }

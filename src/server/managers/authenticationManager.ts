@@ -238,7 +238,8 @@ export async function login(searchEmail: string, password: string): Promise<Logi
       };
     }
 
-    throw new Error('Password was not a match');
+    Logger.error(new Error(`Password was not a match for user: ${email}`));
+    throw new Error('invalidUser');
   }
 
   throw new Error('User not found');

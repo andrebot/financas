@@ -34,6 +34,8 @@ export default defineConfig({
 
   globalTeardown: './tests/end2end/globalTeardown.ts',
 
+  globalSetup: './tests/end2end/globalSetup.ts',
+
   /* Configure projects for major browsers */
   projects: [
     {

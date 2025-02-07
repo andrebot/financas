@@ -48,7 +48,7 @@ export default function Login(): React.JSX.Element {
    */
   function handleError(error: FetchBaseQueryError | SerializedError) {
     if ('data' in error) {
-      enqueueSnackbar((error.data as any).error, { variant: 'error' });
+      enqueueSnackbar(t((error.data as any).error), { variant: 'error' });
     } else {
       enqueueSnackbar(t('internalError'), { variant: 'error' });
     }

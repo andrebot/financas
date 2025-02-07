@@ -8,6 +8,28 @@ export const testUser = {
   password: 'Maro-cja99',
 };
 
+export const loginUser = {
+  email: 'delete.me.login@gmail.com',
+  firstName: 'John',
+  lastName: 'Doe',
+  password: '$2b$10$28bW5R9ZyYOe/I3erH71/e8nWKmgd1ddiKbpPSFBjhaFIJJFDYRcS',
+  createdAt: new Date('2025-02-06T20:35:00.065Z'),
+  updatedAt: new Date('2025-02-06T20:35:00.065Z'),
+  __v: 0
+};
+
+export const resetPasswordUser = {
+  email: 'delete.me.reset@gmail.com',
+  firstName: 'John',
+  lastName: 'Doe',
+  password: '$2b$10$28bW5R9ZyYOe/I3erH71/e8nWKmgd1ddiKbpPSFBjhaFIJJFDYRcS',
+  createdAt: new Date('2025-02-06T20:35:00.065Z'),
+  updatedAt: new Date('2025-02-06T20:35:00.065Z'),
+  __v: 0
+};
+
+export const loginUserPassword = 'Maro-cja99';
+
 export async function fillRegisterForm(page: Page, info: typeof testUser = testUser) {
   await page.getByLabel(i18nKeys.translation.firstName).fill(info.firstName);
   await page.getByLabel(i18nKeys.translation.lastName).fill(info.lastName);

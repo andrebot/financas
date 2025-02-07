@@ -16,6 +16,7 @@ import { handleError, isValidObjectId } from '../utils/responseHandlers';
 import { REFRESH_TOKEN_EXPIRATION_COOKIE, TOKEN_HTTPS_ONLY } from '../config/auth';
 import { API_PREFIX } from '../config/server';
 import type { RequestWithUser } from '../types';
+import Logger from '../utils/logger';
 
 /**
  * Function to create a user. It will create a new user with the provided data
@@ -186,7 +187,8 @@ export async function loginController(req: Request, res: Response) {
   } = req.body;
 
   if (!email || !password || !regExpEmail.test(email)) {
-    return handleError(new Error('Invalid email or password'), res, 400);
+    Logger.error(new Error('Invalid email or password'));
+    return handleError(new Error('invalidUser'), res, 400);
   }
 
   try {

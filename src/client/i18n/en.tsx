@@ -27,7 +27,7 @@ export default {
     resetPasswordTitle: 'Reset Password',
     resetPasswordSuccess: 'Password reset successful!',
     resetPassword: 'Reset Password',
-    waitForEmail: 'Please wait for the email to be sent to reset your password.',
+    waitForEmail: 'Please wait for the email to be sent with instructions.',
     backToLogin: 'Back to login',
     emailRequired: 'Email is required',
     firstNameRequired: 'First name is required',

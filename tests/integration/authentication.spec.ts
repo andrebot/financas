@@ -481,7 +481,7 @@ describe('Authentication', () => {
         .send({ email: 'andre.almeida', password: 'Maka-jan32' })
         .end((err, res) => {
           res.should.have.status(400);
-          res.body.should.have.property('error').eql('Invalid email or password');
+          res.body.should.have.property('error').eql('invalidUser');
           done();
         });
     });
@@ -492,7 +492,7 @@ describe('Authentication', () => {
         .send({ password: 'Maka-jan32' })
         .end((err, res) => {
           res.should.have.status(400);
-          res.body.should.have.property('error').eql('Invalid email or password');
+          res.body.should.have.property('error').eql('invalidUser');
           done();
         });
     });
@@ -503,7 +503,7 @@ describe('Authentication', () => {
         .send({ email: 'andre.almeida@gmail.com' })
         .end((err, res) => {
           res.should.have.status(400);
-          res.body.should.have.property('error').eql('Invalid email or password');
+          res.body.should.have.property('error').eql('invalidUser');
           done();
         });
     });
@@ -514,7 +514,7 @@ describe('Authentication', () => {
         .send({ email: adminUser.email, password: 'wrong password' })
         .end((err, res) => {
           res.should.have.status(500);
-          res.body.should.have.property('error').eql('Password was not a match');
+          res.body.should.have.property('error').eql('invalidUser');
           done();
         });
     });

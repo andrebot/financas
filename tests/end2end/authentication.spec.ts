@@ -1,7 +1,15 @@
 import { test, expect } from '@playwright/test';
 
 import i18nKeys from '../../src/client/i18n/en';
-import { goToRegisterPageFromLoginPage, fillRegisterForm, checkFailedForm, testUser } from './authUtils';
+import {
+  goToRegisterPageFromLoginPage,
+  fillRegisterForm,
+  checkFailedForm,
+  testUser,
+  loginUser,
+  loginUserPassword,
+  resetPasswordUser,
+} from './authUtils';
 
 test('should register successfully and not allow to register again', async ({ page }) => {
   await test.step('Register successfully', async () => {
@@ -11,7 +19,7 @@ test('should register successfully and not allow to register again', async ({ pa
     await expect(page.getByText(i18nKeys.translation.registerSuccess)).toBeVisible();
   });
 
-  await test.step('Try to register again', async () => {
+  await test.step('Try to register again and fail', async () => {
     await page.context().clearCookies();
     await goToRegisterPageFromLoginPage(page);
     await fillRegisterForm(page);
@@ -58,4 +66,37 @@ test('should not allow user to register with names with invalid characters', asy
   await expect(page.getByText(i18nKeys.translation.reviewDataProvided)).toBeVisible();
 });
 
+test('should be able to login', async ({ page }) => {
+  await page.goto('http://localhost:3000/');
+  await page.getByLabel(i18nKeys.translation.email).fill(loginUser.email);
+  await page.getByRole('textbox', { name: i18nKeys.translation.password, exact: true }).fill(loginUserPassword);
+  await page.getByRole('button', { name: i18nKeys.translation.login }).click();
+  await expect(page.getByText(i18nKeys.translation.loginSuccess)).toBeVisible();
+});
 
+test('should not be able to login with invalid email', async ({ page }) => {
+  await page.goto('http://localhost:3000/');
+  await page.getByLabel(i18nKeys.translation.email).fill('invalid-email');
+  await page.getByRole('textbox', { name: i18nKeys.translation.password, exact: true }).fill(loginUserPassword);
+  await page.getByRole('button', { name: i18nKeys.translation.login }).click();
+  await expect(page.getByText(i18nKeys.translation.invalidUser)).toBeVisible();
+});
+
+test('should not be able to login with invalid password', async ({ page }) => {
+  await page.goto('http://localhost:3000/');
+  await page.getByLabel(i18nKeys.translation.email).fill(loginUser.email);
+  await page.getByRole('textbox', { name: i18nKeys.translation.password, exact: true }).fill('invalid-password');
+  await page.getByRole('button', { name: i18nKeys.translation.login }).click();
+  await expect(page.getByText(i18nKeys.translation.invalidUser)).toBeVisible();
+});
+
+test('should be able to reset password', async ({ page }) => {
+  await page.goto('http://localhost:3000/');
+  await page.locator(`text=${i18nKeys.translation.clickHere}`).click();
+  await page.getByLabel(i18nKeys.translation.email).fill(resetPasswordUser.email);
+  await page.getByRole('button', { name: i18nKeys.translation.resetPassword }).click();
+  await expect(page.getByText(i18nKeys.translation.resetPasswordSuccess)).toBeVisible();
+  await expect(page.getByText(i18nKeys.translation.waitForEmail)).toBeVisible();
+  await page.getByRole('button', { name: i18nKeys.translation.backToLogin }).click();
+  await expect(page.getByRole('heading', { name: i18nKeys.translation.login })).toBeVisible();
+});
