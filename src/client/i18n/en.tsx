@@ -33,6 +33,12 @@ export default {
     firstNameRequired: 'First name is required',
     lastNameRequired: 'Last name is required',
     nameInvalid: 'Name is not valid',
+    hello: 'Hello',
+    transactions: 'Transactions',
+    logoutSuccess: 'Logout successful!',
+    settings: 'Settings',
+    logout: 'Logout',
+    logoutFailed: 'Logout failed! We will close your session.',
   },
 };
 

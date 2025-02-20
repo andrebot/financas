@@ -7,6 +7,7 @@ import { adminUser } from './connectDB';
 import { createAccessToken, createRefreshToken } from '../../src/server/managers/authenticationManager';
 import UserModel from '../../src/server/resources/models/userModel';
 import { addToken, deleteToken } from '../../src/server/resources/repositories/tokenRepo';
+import { REFRESH_TOKEN_COOKIE_NAME } from '../../src/server/config/auth';
 
 describe('Authentication', () => {
   let newUser = {
@@ -538,47 +539,6 @@ describe('Authentication', () => {
     });
   });
 
-  describe('Logging out - POST /api/v1/user/logout', () => {
-    it('should return a 400 error if the refreshToken is empty', (done) => {
-      chai.request(server)
-        .post('/api/v1/user/logout')
-        .set('Authorization', `Bearer ${loginTokens.accessToken}`)
-        .send({ refreshToken: '' })
-        .end((err, res) => {
-          res.should.have.status(400);
-          res.body.should.have.property('error').eql('Empty refresh token');
-          done();
-        });
-    });
-
-    it('should be able to handle errors when verifying the token', (done) => {
-      const stub = sinon.stub(jwt, 'verify').onSecondCall().throws();
-
-      chai.request(server)
-        .post('/api/v1/user/logout')
-        .set('Authorization', `Bearer ${loginTokens.accessToken}`)
-        .send({ refreshToken: loginTokens.refreshToken })
-        .end((err, res) => {
-          res.should.have.status(403);
-
-          stub.restore();
-          done();
-        });
-    });
-
-    it('should be able to logout the user successfully', (done) => {
-      chai.request(server)
-        .post('/api/v1/user/logout')
-        .set('Authorization', `Bearer ${loginTokens.accessToken}`)
-        .send({ refreshToken: loginTokens.refreshToken })
-        .end((err, res) => {
-          res.should.have.status(200);
-          res.body.should.have.property('message').eql('Logged out');
-          done();
-        });
-    });
-  });
-
   describe('Refreshing Tokens - POST /api/v1/user/refresh-tokens', () => {
     let refreshToken: string;
     let accessToken: string;
@@ -616,7 +576,7 @@ describe('Authentication', () => {
 
       chai.request(server)
         .post('/api/v1/user/refresh-tokens')
-        .send({ refreshToken })
+        .set('Cookie', `${REFRESH_TOKEN_COOKIE_NAME}=${loginTokens.refreshToken}`)
         .end((err, res) => {
           res.should.have.status(500);
 
@@ -626,14 +586,16 @@ describe('Authentication', () => {
     });
 
     it('should be able to refresh the tokens successfully if refreshToken is valid', (done) => {
+      const stub = sinon.stub(jwt, 'verify').callsFake(() => ({ email: adminUser.email }));
+      
       chai.request(server)
         .post('/api/v1/user/refresh-tokens')
-        .send({ refreshToken })
+        .set('Cookie', `${REFRESH_TOKEN_COOKIE_NAME}=${loginTokens.refreshToken}`)
         .end((err, res) => {
           res.should.have.status(200);
           res.body.should.have.property('accessToken');
           res.body.should.have.property('refreshToken');
-
+          stub.restore();
           done();
         });
     });
@@ -645,7 +607,7 @@ describe('Authentication', () => {
 
       chai.request(server)
         .post('/api/v1/user/refresh-tokens')
-        .send({ refreshToken })
+        .set('Cookie', `${REFRESH_TOKEN_COOKIE_NAME}=${refreshToken}`)
         .end((err, res) => {
           res.should.have.status(500);
           res.body.should.have.property('error').eql(`No user was found with email: ${badEmail}`);
@@ -659,12 +621,51 @@ describe('Authentication', () => {
 
       chai.request(server)
         .post('/api/v1/user/refresh-tokens')
-        .send({ refreshToken })
+        .set('Cookie', `${REFRESH_TOKEN_COOKIE_NAME}=${loginTokens.refreshToken}`)
         .end((err, res) => {
           res.should.have.status(500);
           res.body.should.have.property('error').eql('Error');
 
           stub.restore();
+          done();
+        });
+    });
+  });
+
+  describe('Logging out - POST /api/v1/user/logout', () => {
+    it('should return a 400 error if the refreshToken is empty', (done) => {
+      chai.request(server)
+        .post('/api/v1/user/logout')
+        .set('Authorization', `Bearer ${loginTokens.accessToken}`)
+        .send({ refreshToken: '' })
+        .end((err, res) => {
+          res.should.have.status(400);
+          res.body.should.have.property('error').eql('Empty refresh token');
+          done();
+        });
+    });
+
+    it('should be able to handle errors when verifying the token', (done) => {
+      const stub = sinon.stub(jwt, 'verify').onFirstCall().throws();
+
+      chai.request(server)
+        .post('/api/v1/user/logout')
+        .set('Cookie', `${REFRESH_TOKEN_COOKIE_NAME}=${loginTokens.refreshToken}`)
+        .end((err, res) => {
+          res.should.have.status(200);
+
+          stub.restore();
+          done();
+        });
+    });
+
+    it('should be able to logout the user successfully', (done) => {
+      chai.request(server)
+        .post('/api/v1/user/logout')
+        .set('Cookie', `${REFRESH_TOKEN_COOKIE_NAME}=${loginTokens.refreshToken}`)
+        .end((err, res) => {
+          res.should.have.status(200);
+          res.body.should.have.property('message').eql('Logged out');
           done();
         });
     });

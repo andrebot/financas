@@ -10,7 +10,7 @@ import type {
   RegisterBody,
   RefreshTokenResponse,
   ResetPasswordBody,
-  ResetPasswordResponse,
+  DefaultServerResponse,
 } from '../../types/authContextType';
 
 type ApiBuilder = EndpointBuilder<BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError, {}, FetchBaseQueryMeta>, never, "loginApi">
@@ -19,24 +19,29 @@ export const loginMutation = (body: LoginBody) => ({
   url: '/login',
   method: 'POST',
   body,
-})
+});
 
 export const registerMutation = (body: RegisterBody) => ({
   url: '/register',
   method: 'POST',
   body,
-})
+});
 
 export const refreshTokenQuery = () => ({
   url: '/refresh-tokens',
   method: 'POST',
-})
+});
 
 export const resetPasswordMutation = (body: ResetPasswordBody) => ({
   url: '/reset-password',
   method: 'POST',
   body,
-})
+});
+
+export const logoutMutation = () => ({
+  url: '/logout',
+  method: 'POST',
+});
 
 export default function testBuilder(builder: ApiBuilder) {
   return {
@@ -49,8 +54,11 @@ export default function testBuilder(builder: ApiBuilder) {
     refreshToken: builder.query<RefreshTokenResponse, void>({
       query: refreshTokenQuery,
     }),
-    resetPassword: builder.mutation<ResetPasswordResponse, ResetPasswordBody>({
+    resetPassword: builder.mutation<DefaultServerResponse, ResetPasswordBody>({
       query: resetPasswordMutation,
+    }),
+    logout: builder.mutation<DefaultServerResponse, void>({
+      query: logoutMutation,
     }),
   };
 }

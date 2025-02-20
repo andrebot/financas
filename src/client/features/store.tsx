@@ -1,6 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import themeReducer from './themeSlice';
 import { loginApi } from './login';
+import authReducer from './authSlice';
 
 /**
  * Configuring store for the application.
@@ -8,6 +9,7 @@ import { loginApi } from './login';
 export const store = configureStore({
   reducer: {
     theme: themeReducer,
+    auth: authReducer,
     [loginApi.reducerPath]: loginApi.reducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware()

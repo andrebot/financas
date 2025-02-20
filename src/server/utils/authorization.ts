@@ -40,7 +40,7 @@ function checkAdminAccess(user: UserPayload, isAdmin: boolean): void {
  * @param isAdmin - Whether the user must be an admin
  * @returns The token validation middleware
  */
-export default function createTokenValidation(isAdmin: boolean = false):
+export function createAccessTokenValidation(isAdmin: boolean = false):
 TokenValidationMiddleware {
   /**
    * Token validation middleware function. It checks if the token is valid and if
@@ -59,7 +59,7 @@ TokenValidationMiddleware {
    * @param next - The next function
    * @returns void
    */
-  return function tokenValidator(req: RequestWithUser, res: Response, next: NextFunction): void {
+  return function accessTokenValidator(req: RequestWithUser, res: Response, next: NextFunction): void {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
 

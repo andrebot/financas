@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TextField, Button } from '@mui/material';
 import { enqueueSnackbar } from 'notistack';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { setAccessToken } from '../../features/authSlice';
+import { TextField, Button } from '@mui/material';
 import { CircularProgress } from '@mui/material';
 import PasswordField from '../../components/form/passwordField';
 import { useAuth } from '../../hooks/authContext';
@@ -13,6 +16,7 @@ import type { SerializedError } from '@reduxjs/toolkit';
 
 export default function Register(): React.JSX.Element {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [registerData, setRegisterData] = useState({
     email: '',
     password: '',
@@ -31,7 +35,8 @@ export default function Register(): React.JSX.Element {
   const [isLastNameValid, setIsLastNameValid] = useState(true);
   const [lastNameError, setLastNameError] = useState('');
   const [register, { isLoading, isSuccess }] = useRegisterMutation();
-  const { setUser, setAccessToken } = useAuth();
+  const { setUser } = useAuth();
+  const dispatch = useDispatch();
 
   /**
    * Handles the error when the register fails, mainly for sending the error
@@ -84,8 +89,9 @@ export default function Register(): React.JSX.Element {
       } = response.data;
 
       setUser({ email, firstName, lastName, role, id });
-      setAccessToken(accessToken);
+      dispatch(setAccessToken(accessToken));
       enqueueSnackbar(t('registerSuccess'), { variant: 'success' });
+      navigate('/');
     } else if ('error' in response) {
       handleError(response.error);
     } else {

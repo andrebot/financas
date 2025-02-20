@@ -33,5 +33,11 @@ export default {
     firstNameRequired: 'Nome é obrigatório',
     lastNameRequired: 'Sobrenome é obrigatório',
     nameInvalid: 'Nome não é válido',
+    hello: 'Olá',
+    transactions: 'Transações',
+    logoutSuccess: 'Logout realizado com sucesso!',
+    settings: 'Configurações',
+    logout: 'Sair',
+    logoutFailed: 'Logout falhou! Vamos fechar sua sessão.',
   },
 };

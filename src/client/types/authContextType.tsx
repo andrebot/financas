@@ -4,8 +4,6 @@ import { UserType } from './user';
 export type AuthContextType = {
   user: UserType | undefined;
   setUser: React.Dispatch<React.SetStateAction<UserType | undefined>>;
-  accessToken: string | undefined;
-  setAccessToken: React.Dispatch<React.SetStateAction<string | undefined>>;
 }
 
 export type LoginBody = {
@@ -42,6 +40,6 @@ export type ResetPasswordBody = {
   email: string;
 }
 
-export type ResetPasswordResponse = {
+export type DefaultServerResponse = {
   message: string;
 }

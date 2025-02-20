@@ -12,21 +12,21 @@ import {
   changePasswordController,
   registerController,
 } from '../controllers/authorization';
-import createTokenValidation from '../utils/authorization';
+import { createAccessTokenValidation } from '../utils/authorization';
 
 const router = express.Router();
 
-router.post('/', createTokenValidation(true), createUserController);
-router.get('/', createTokenValidation(true), listUsersController);
+router.post('/', createAccessTokenValidation(true), createUserController);
+router.get('/', createAccessTokenValidation(true), listUsersController);
 router.post('/register', registerController);
 router.post('/login', loginController);
-router.post('/logout', createTokenValidation(), logoutController);
+router.post('/logout', logoutController);
 router.post('/refresh-tokens', refreshTokensController);
-router.get('/:userId', createTokenValidation(), getUserController);
-router.put('/:userId', createTokenValidation(), updateUserController);
-router.delete('/:userId', createTokenValidation(true), deleteUserController);
+router.get('/:userId', createAccessTokenValidation(), getUserController);
+router.put('/:userId', createAccessTokenValidation(), updateUserController);
+router.delete('/:userId', createAccessTokenValidation(true), deleteUserController);
 router.post('/reset-password', resetPasswordController);
-router.post('/change-password', createTokenValidation(), changePasswordController);
+router.post('/change-password', createAccessTokenValidation(), changePasswordController);
 
 export default {
   urlPrefix: 'user',

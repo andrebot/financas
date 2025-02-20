@@ -422,7 +422,7 @@ describe('AuthenticationManager', function () {
     try {
       await login(mockUser.email, 'errada');
     } catch (error) {
-      (error as Error).message.should.contain('Password was not a match');
+      (error as Error).message.should.contain('invalidUser');
       jwtSignStub.should.have.not.been.called;
     }
   });

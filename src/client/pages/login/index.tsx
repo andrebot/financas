@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { enqueueSnackbar } from 'notistack';
+import { useDispatch } from 'react-redux';
 import { CircularProgress } from '@mui/material';
 import { useLoginMutation } from '../../features/login';
 import { useAuth } from '../../hooks/authContext';
@@ -20,7 +21,7 @@ import {
 import Money1 from '../../assets/monay1.png';
 import Money2 from '../../assets/monay2.png';
 import Money3 from '../../assets/monay3.png';
-
+import { setAccessToken } from '../../features/authSlice';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import type { SerializedError } from '@reduxjs/toolkit';
 
@@ -30,7 +31,8 @@ export default function Login(): React.JSX.Element {
   const [login, { isLoading }] = useLoginMutation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { user, setUser, setAccessToken } = useAuth();
+  const { user, setUser } = useAuth();
+  const dispatch = useDispatch();
 
   /**
    * Redirects the user to the home page if they are already logged in.
@@ -68,7 +70,7 @@ export default function Login(): React.JSX.Element {
         handleError(response.error);
       } else {
         setUser(response.data.user);
-        setAccessToken(response.data.accessToken);
+        dispatch(setAccessToken(response.data.accessToken));
         enqueueSnackbar(t('loginSuccess'), { variant: 'success' });
       }
     } catch (error) {

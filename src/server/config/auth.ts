@@ -9,6 +9,7 @@ interface AuthConfig {
   REFRESH_TOKEN_EXPIRATION: string;
   REFRESH_TOKEN_EXPIRATION_COOKIE: number;
   TOKEN_HTTPS_ONLY: boolean;
+  REFRESH_TOKEN_COOKIE_NAME: string;
 }
 
 const AUTH = exportConfig<AuthConfig>({
@@ -21,6 +22,7 @@ const AUTH = exportConfig<AuthConfig>({
     REFRESH_TOKEN_EXPIRATION: '1d',
     REFRESH_TOKEN_EXPIRATION_COOKIE: 24 * 60 * 60 * 1000,
     TOKEN_HTTPS_ONLY: true,
+    REFRESH_TOKEN_COOKIE_NAME: 'refreshToken',
   },
   development: {
     TOKEN_HTTP_ONLY: false,
@@ -36,4 +38,5 @@ export const {
   REFRESH_TOKEN_EXPIRATION,
   REFRESH_TOKEN_EXPIRATION_COOKIE,
   TOKEN_HTTPS_ONLY,
+  REFRESH_TOKEN_COOKIE_NAME,
 } = AUTH;

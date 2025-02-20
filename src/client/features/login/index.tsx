@@ -1,14 +1,13 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import {
+  createApi,
+} from '@reduxjs/toolkit/query/react';
 import endpoints from './endpoints';
-import config from '../../config/apiConfig';
-import { prepareNonAuthHeaders } from '../prepareHeaders';
+import baseQueryWithReauth from '../baseQueryWithAuth';
 
+// Figuring out how to refresh access token. GPT has a suggestion
 export const loginApi = createApi({
   reducerPath: 'loginApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: config.api.user,
-    prepareHeaders: prepareNonAuthHeaders,
-  }),
+  baseQuery: baseQueryWithReauth,
   endpoints,
 });
 
@@ -17,4 +16,5 @@ export const {
   useRegisterMutation,
   useRefreshTokenQuery,
   useResetPasswordMutation,
+  useLogoutMutation,
 } = loginApi;

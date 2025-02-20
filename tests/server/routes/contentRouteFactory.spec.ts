@@ -1,5 +1,4 @@
 import sinon from 'sinon';
-import { Model } from 'mongoose';
 import { Router } from 'express';
 import contentRouteFactory from  '../../../src/server/routes/contentRouteFactory';
 
@@ -49,7 +48,7 @@ describe(('contentRouteFactory'), () => {
   it('should return a router with the correct middleware', () => {
     newRouter.router.stack.forEach((layer: any) => {
       layer.route.stack.should.have.lengthOf(2);
-      layer.route.stack[0].handle.name.should.equal('tokenValidator');
+      layer.route.stack[0].handle.name.should.equal('accessTokenValidator');
     });
   });
 });

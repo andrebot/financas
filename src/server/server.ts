@@ -6,7 +6,7 @@ import * as dotenv from 'dotenv';
 import logger from './utils/logger';
 import { PORT } from './config/server';
 import setRoutes from './routes';
-
+import cookieParser from 'cookie-parser';
 dotenv.config();
 
 const app = express();
@@ -25,6 +25,8 @@ app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false,
 }));
+
+app.use(cookieParser());
 
 app.use('/', express.static(path.resolve(__dirname, 'public')));
 app.use(express.json({ limit: '2mb' }));

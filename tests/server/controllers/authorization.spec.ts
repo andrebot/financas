@@ -1,7 +1,7 @@
 import sinon from 'sinon';
 import proxyquire from 'proxyquire';
 import chai from 'chai';
-import { REFRESH_TOKEN_EXPIRATION_COOKIE } from '../../../src/server/config/auth';
+import { REFRESH_TOKEN_EXPIRATION_COOKIE, REFRESH_TOKEN_COOKIE_NAME } from '../../../src/server/config/auth';
 
 type MockResponse = {
   send: sinon.SinonStub;
@@ -19,6 +19,7 @@ type MockRequest = {
     oldPassword: string;
     newPassword: string;
   };
+  cookies: Record<string, string>;
   params: {
     userId: string;
   };
@@ -83,6 +84,7 @@ describe('AuthorizationController', () => {
       params: {
         userId: '507f1f77bcf86cd799439011',
       },
+      cookies: {},
       query: {},
       user: {
         email: 'test@gmail.com',
@@ -323,12 +325,13 @@ describe('AuthorizationController', () => {
 
   it('should be able to handle an invalid email when logging in an user', async () => {
     request.body.email = 'invalid-email';
+    request.body.password = 'Malo-ban76';
 
     try {
       await loginController(request, response);
 
       response.status.should.have.been.calledWith(400);
-      response.send.should.have.been.calledWith({ error: 'Invalid email or password' });
+      response.send.should.have.been.calledWith({ error: 'invalidUser' });
     } catch (error) {
       console.error(error);
       chai.assert.fail('Should not have thrown an error');
@@ -342,7 +345,7 @@ describe('AuthorizationController', () => {
       await loginController(request, response);
 
       response.status.should.have.been.calledWith(400);
-      response.send.should.have.been.calledWith({ error: 'Invalid email or password' });
+      response.send.should.have.been.calledWith({ error: 'invalidUser' });
     } catch (error) {
       console.error(error);
       chai.assert.fail('Should not have thrown an error');
@@ -356,7 +359,7 @@ describe('AuthorizationController', () => {
       await loginController(request, response);
 
       response.status.should.have.been.calledWith(400);
-      response.send.should.have.been.calledWith({ error: 'Invalid email or password' });
+      response.send.should.have.been.calledWith({ error: 'invalidUser' });
     } catch (error) {
       console.error(error);
       chai.assert.fail('Should not have thrown an error');
@@ -364,13 +367,17 @@ describe('AuthorizationController', () => {
   });
 
   it('should be able to logout an user successfully', async () => {
+    request.cookies = {
+      [REFRESH_TOKEN_COOKIE_NAME]: 'refresh-token',
+    };
+
     try {
       await logoutController(request, response);
 
       response.send.should.have.been.calledOnce;
       response.send.should.have.been.calledWith({ message: 'Logged out' });
       authManagerStub.logout.should.have.been.calledOnce;
-      authManagerStub.logout.should.have.been.calledWith(request.body.refreshToken);
+      authManagerStub.logout.should.have.been.calledWith(request.cookies[REFRESH_TOKEN_COOKIE_NAME]);
     } catch (error) {
       console.error(error);
       chai.assert.fail('Should not have thrown an error');
@@ -379,6 +386,9 @@ describe('AuthorizationController', () => {
 
   it('should be able to handle an error when logging out an user', async () => {
     authManagerStub.logout.rejects(new Error('Test error'));
+    request.cookies = {
+      [REFRESH_TOKEN_COOKIE_NAME]: 'refresh-token',
+    };
 
     try {
       await logoutController(request, response);
@@ -405,6 +415,10 @@ describe('AuthorizationController', () => {
   });
 
   it('should be able to refresh tokens successfully', async () => {
+    request.cookies = {
+      [REFRESH_TOKEN_COOKIE_NAME]: 'refresh-token',
+    };
+
     try {
       await refreshTokensController(request, response);
 
@@ -419,6 +433,9 @@ describe('AuthorizationController', () => {
 
   it('should be able to handle an error when refreshing tokens', async () => {
     authManagerStub.refreshTokens.rejects(new Error('Test error'));
+    request.cookies = {
+      [REFRESH_TOKEN_COOKIE_NAME]: 'refresh-token',
+    };
 
     try {
       await refreshTokensController(request, response);

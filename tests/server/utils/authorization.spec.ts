@@ -5,15 +5,15 @@ import { RequestWithUser } from '../../../src/server/types';
 
 const jwtVerifyStub = sinon.stub();
 
-const createTokenValidation = proxyquire('../../../src/server/utils/authorization', {
+const { createAccessTokenValidation } = proxyquire('../../../src/server/utils/authorization', {
   'jsonwebtoken': { verify: jwtVerifyStub, '@global': true },
-}).default;
+});
 
 type MiddlewareType = (req: RequestWithUser, res: Response, next: NextFunction) => void
 
 describe('authorization helper', () => {
   it('should create a authorization middlware function', () => {
-    const result = createTokenValidation(true);
+    const result = createAccessTokenValidation(true);
     
     result.should.be.a('function');
   });
@@ -31,7 +31,7 @@ describe('authorization helper', () => {
     };
 
     beforeEach(() => {
-      middleware = createTokenValidation(true);
+      middleware = createAccessTokenValidation(true);
       req = {
         headers: { authorization: 'Bearer eyJhJ9.eyTE2MjM5MDIyfQ.SflK_5c', },
       } as RequestWithUser;
@@ -98,7 +98,7 @@ describe('authorization helper', () => {
     });
 
     it('should set user payload and call next if user is not an admin', () => {
-      middleware = createTokenValidation();
+      middleware = createAccessTokenValidation();
 
       middleware(req, res, next);
 

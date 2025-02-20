@@ -13,7 +13,7 @@ import {
   register,
 } from '../managers/authenticationManager';
 import { handleError, isValidObjectId } from '../utils/responseHandlers';
-import { REFRESH_TOKEN_EXPIRATION_COOKIE, TOKEN_HTTPS_ONLY } from '../config/auth';
+import { REFRESH_TOKEN_EXPIRATION_COOKIE, TOKEN_HTTPS_ONLY, REFRESH_TOKEN_COOKIE_NAME } from '../config/auth';
 import { API_PREFIX } from '../config/server';
 import type { RequestWithUser } from '../types';
 import Logger from '../utils/logger';
@@ -65,7 +65,7 @@ export async function registerController(req: Request, res: Response) {
   try {
     const { user, tokens } = await register(email, password, firstName, lastName);
 
-    res.cookie('refreshToken', tokens.refreshToken, {
+    res.cookie(REFRESH_TOKEN_COOKIE_NAME, tokens.refreshToken, {
       httpOnly: false,
       secure: false,
       // sameSite: 'lax',
@@ -194,7 +194,7 @@ export async function loginController(req: Request, res: Response) {
   try {
     const { accessToken, refreshToken, user } = await login(email, password);
 
-    res.cookie('refreshToken', refreshToken, {
+    res.cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {
       httpOnly: false,
       secure: false,
       // sameSite: 'lax',
@@ -217,7 +217,7 @@ export async function loginController(req: Request, res: Response) {
  */
 export async function logoutController(req: Request, res: Response) {
   try {
-    const { refreshToken } = req.body;
+    const refreshToken = req.cookies[REFRESH_TOKEN_COOKIE_NAME];
 
     if (!refreshToken) {
       return handleError(new Error('Empty refresh token'), res, 400);
@@ -240,7 +240,7 @@ export async function logoutController(req: Request, res: Response) {
  */
 export async function refreshTokensController(req: Request, res: Response) {
   try {
-    const { refreshToken } = req.body;
+    const refreshToken = req.cookies[REFRESH_TOKEN_COOKIE_NAME];
 
     if (!refreshToken) {
       return handleError(new Error('Empty refresh token'), res, 400);

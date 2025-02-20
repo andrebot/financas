@@ -23,7 +23,6 @@ const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
  */
 function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<UserType | undefined>();
-  const [accessToken, setAccessToken] = useState<string | undefined>();
 
   useEffect(() => {
     try {
@@ -51,7 +50,7 @@ function AuthProvider({ children }: AuthProviderProps) {
     }
   }, []);
 
-  return <AuthContext.Provider value={{ user, setUser, accessToken, setAccessToken }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, setUser }}>{children}</AuthContext.Provider>;
 }
 
 /**

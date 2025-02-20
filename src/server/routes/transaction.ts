@@ -1,5 +1,5 @@
 import contentRouteFactory from './contentRouteFactory';
-import createTokenValidation from '../utils/authorization';
+import { createAccessTokenValidation } from '../utils/authorization';
 import TransactionController from '../controllers/transactionController';
 
 const {
@@ -7,6 +7,6 @@ const {
   router,
 } = contentRouteFactory(TransactionController, 'transaction');
 
-router.get('/types', createTokenValidation(), TransactionController.getTransactionTypes.bind(TransactionController));
+router.get('/types', createAccessTokenValidation(), TransactionController.getTransactionTypes.bind(TransactionController));
 
 export default { urlPrefix, router };
