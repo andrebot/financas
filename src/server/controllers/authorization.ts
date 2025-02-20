@@ -66,7 +66,7 @@ export async function registerController(req: Request, res: Response) {
     const { user, tokens } = await register(email, password, firstName, lastName);
 
     res.cookie(REFRESH_TOKEN_COOKIE_NAME, tokens.refreshToken, {
-      httpOnly: false,
+      httpOnly: TOKEN_HTTPS_ONLY,
       secure: false,
       // sameSite: 'lax',
       // path: `${API_PREFIX}/refresh-tokens`,

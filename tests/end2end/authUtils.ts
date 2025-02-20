@@ -4,7 +4,7 @@ import i18nKeys from "../../src/client/i18n/en";
 export const testUser = {
   firstName: 'John',
   lastName: 'Doe',
-  email: `delete.me@gmail.com`,
+  email: `delete.me.${Date.now()}@gmail.com`,
   password: 'Maro-cja99',
 };
 

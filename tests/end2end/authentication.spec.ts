@@ -16,6 +16,7 @@ test('should register successfully and not allow to register again', async ({ pa
     await goToRegisterPageFromLoginPage(page);
     await fillRegisterForm(page);
     await page.getByRole('button', { name: i18nKeys.translation.register }).click();
+    await page.waitForLoadState('domcontentloaded');
     await expect(page.getByText(i18nKeys.translation.registerSuccess)).toBeVisible();
   });
 
@@ -68,9 +69,11 @@ test('should not allow user to register with names with invalid characters', asy
 
 test('should be able to login', async ({ page }) => {
   await page.goto('http://localhost:3000/');
+  await page.getByLabel(i18nKeys.translation.email).click();
   await page.getByLabel(i18nKeys.translation.email).fill(loginUser.email);
   await page.getByRole('textbox', { name: i18nKeys.translation.password, exact: true }).fill(loginUserPassword);
   await page.getByRole('button', { name: i18nKeys.translation.login }).click();
+  await page.waitForLoadState('domcontentloaded');
   await expect(page.getByText(i18nKeys.translation.loginSuccess)).toBeVisible();
 });
 
