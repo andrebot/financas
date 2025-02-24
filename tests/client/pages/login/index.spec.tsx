@@ -3,7 +3,9 @@ import '@testing-library/jest-dom';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
 import { enqueueSnackbar } from 'notistack';
+import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { setAccessToken } from '../../../../src/client/features/authSlice';
 import i18n from '../../../../src/client/i18n';
 import i18nKeys from '../../../../src/client/i18n/en';
 import Login from '../../../../src/client/pages/login'; // Adjust the path as necessary
@@ -20,6 +22,11 @@ jest.mock('notistack', () => ({
   enqueueSnackbar: jest.fn(),
 }));
 
+jest.mock('react-redux', () => ({
+  ...jest.requireActual('react-redux'),
+  useDispatch: jest.fn(),
+}));
+
 jest.mock('../../../../src/client/hooks/authContext', () => ({
   useAuth: jest.fn(),
 }));
@@ -28,12 +35,16 @@ jest.mock('../../../../src/client/features/login', () => ({
   useLoginMutation: jest.fn(),
 }));
 
+jest.mock('../../../../src/client/features/authSlice', () => ({
+  setAccessToken: jest.fn(),
+}));
+
 describe('LoadingPage', () => {
   let unmount: () => void;
   let mockNavigate = jest.fn();
   let mockLoginMutation = jest.fn();
   let mockSetUser = jest.fn();
-  let mockSetAccessToken = jest.fn();
+  let mockDispatch = jest.fn();
 
   beforeEach(() => {
     jest.resetAllMocks();
@@ -41,9 +52,9 @@ describe('LoadingPage', () => {
     (useNavigate as jest.Mock).mockReturnValue(mockNavigate);
     (useAuth as jest.Mock).mockReturnValue({
       setUser: mockSetUser,
-      setAccessToken: mockSetAccessToken,
     });
     (useLoginMutation as jest.Mock).mockReturnValue([mockLoginMutation, { isLoading: false, isSuccess: false }]);
+    (useDispatch as jest.Mock).mockReturnValue(mockDispatch);
 
     const { unmount: unmountLogin } = render(<I18nextProvider i18n={i18n}><Login /></I18nextProvider>);
 
@@ -68,7 +79,8 @@ describe('LoadingPage', () => {
         password: mockPassword,
       });
       expect(mockSetUser).toHaveBeenCalledWith(mockLoginData as UserType);
-      expect(mockSetAccessToken).toHaveBeenCalledWith(mockAccessToken);
+      expect(mockDispatch).toHaveBeenCalled();
+      expect(setAccessToken).toHaveBeenCalledWith(mockAccessToken);
       expect(enqueueSnackbar).toHaveBeenCalledWith(i18nKeys.translation.loginSuccess, { variant: 'success' });
     });
   });

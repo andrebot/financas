@@ -11,6 +11,7 @@ module.exports = {
     '<rootDir>/src/client/**/*.tsx',
     '!<rootDir>/src/client/**/*.d.ts',
     '!<rootDir>/src/client/**/styledComponent.tsx',
+    '!<rootDir>/src/client/**/styledComponents.tsx',
     '!<rootDir>/src/client/config/*.tsx',
     '!<rootDir>/src/client/i18n/index.tsx',
     '!<rootDir>/src/client/types/*.tsx',

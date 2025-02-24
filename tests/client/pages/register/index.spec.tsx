@@ -3,6 +3,7 @@ import '@testing-library/jest-dom';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
 import { enqueueSnackbar } from 'notistack';
+import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import i18n from '../../../../src/client/i18n';
 import i18nKeys from '../../../../src/client/i18n/en';
@@ -19,6 +20,11 @@ jest.mock('notistack', () => ({
   enqueueSnackbar: jest.fn(),
 }));
 
+jest.mock('react-redux', () => ({
+  ...jest.requireActual('react-redux'),
+  useDispatch: jest.fn(),
+}));
+
 jest.mock('../../../../src/client/hooks/authContext', () => ({
   useAuth: jest.fn(),
 }));
@@ -32,6 +38,7 @@ describe('Register Component', () => {
   let mockRegisterMutation = jest.fn();
   let mockSetUser = jest.fn();
   let mockSetAccessToken = jest.fn();
+  let mockDispatch = jest.fn();
 
   beforeEach(() => {
     jest.resetAllMocks();
@@ -42,6 +49,7 @@ describe('Register Component', () => {
       setAccessToken: mockSetAccessToken,
     });
     (useRegisterMutation as jest.Mock).mockReturnValue([mockRegisterMutation, { isLoading: false, isSuccess: false }]);
+    (useDispatch as jest.Mock).mockReturnValue(mockDispatch);
   });
 
   it('renders the Register form correctly', () => {
@@ -135,6 +143,7 @@ describe('Register Component', () => {
 
     await waitFor(() => {
       expect(enqueueSnackbar).toHaveBeenCalledWith(i18nKeys.translation.registerSuccess, { variant: 'success' });
+      expect(mockSetUser).toHaveBeenCalled();
     });
   });
   

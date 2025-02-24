@@ -3,6 +3,7 @@ import testBuilder, {
   registerMutation,
   refreshTokenQuery,
   resetPasswordMutation,
+  logoutMutation,
 } from '../../../../src/client/features/login/endpoints';
 
 const mockBuilder = {
@@ -22,7 +23,7 @@ describe('login endpoints', () => {
     expect(tBuilder.refreshToken).toBeDefined();
     expect(tBuilder.resetPassword).toBeDefined();
     expect(mockBuilder.query).toHaveBeenCalledTimes(1);
-    expect(mockBuilder.mutation).toHaveBeenCalledTimes(3);
+    expect(mockBuilder.mutation).toHaveBeenCalledTimes(4);
   });
 
   it('should correctly prepare the login mutation request', () => {
@@ -71,5 +72,13 @@ describe('login endpoints', () => {
     expect(resetPasswordMutationExecuted.url).toBe('/reset-password');
     expect(resetPasswordMutationExecuted.method).toBe('POST');
     expect(resetPasswordMutationExecuted.body).toEqual(body);
+  });
+
+  it('should correctly prepare the logout mutation request', () => {
+    const logoutMutationExecuted = logoutMutation();
+
+    expect(logoutMutationExecuted).toBeDefined();
+    expect(logoutMutationExecuted.url).toBe('/logout');
+    expect(logoutMutationExecuted.method).toBe('POST');
   });
 });

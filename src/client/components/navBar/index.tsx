@@ -49,6 +49,10 @@ export default function NavBar() {
     }
   }
 
+  function closeDrawer() {
+    setIsDrawerOpen(false);
+  }
+
   return (
     <AppBar position="static">
       <Toolbar>
@@ -59,11 +63,11 @@ export default function NavBar() {
           Financas
         </NavTitle>
       </Toolbar>
-      <Drawer anchor="left" open={isDrawerOpen} onClose={() => setIsDrawerOpen(false)}>
+      <Drawer anchor="left" open={isDrawerOpen} onClose={closeDrawer}>
         <DrawerContainer
           role="presentation" 
-          onClick={() => setIsDrawerOpen(false)} 
-          onKeyDown={() => setIsDrawerOpen(false)}
+          onClick={closeDrawer} 
+          onKeyDown={closeDrawer}
         >
           <List>
             <CustomListItem text={`${t('hello')}, ${user?.firstName}`}>
