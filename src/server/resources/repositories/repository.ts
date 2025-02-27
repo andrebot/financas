@@ -200,7 +200,9 @@ export class Repository<T extends Document, K> implements IRepository<T, K> {
    * @param entity - The document to update.
    * @returns The updated document.
    */
-  update(id: string, entity: Partial<K>): Promise<K | null> {
-    return this.model.findByIdAndUpdate(id, entity as any, { new: true, runValidators: true }).lean() as Promise<K | null>;
+  async update(id: string, entity: Partial<K>): Promise<K | null> {
+    const result = await this.model.findByIdAndUpdate(id, entity as any, { new: true, runValidators: true });
+
+    return result ? (result.toObject() as K) : null;
   }
 }

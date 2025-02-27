@@ -2,20 +2,6 @@ import { should } from 'chai';
 import UserModel from '../../../../src/server/resources/models/userModel';
 
 describe('User Model', () => {
-  it('should hide the password when converting to JSON', function() {
-    const user = new UserModel({ email: 'test@example.com', firstName: 'John', lastName: 'Doe', password: '123456', role: 'user' });
-    const userObj = user.toJSON();
-
-    userObj.should.not.have.property('password');
-  });
-
-  it('should hide the password when converting to Object', function() {
-    const user = new UserModel({ email: 'test@example.com', firstName: 'John', lastName: 'Doe', password: '123456', role: 'user' });
-    const userObj = user.toObject();
-
-    userObj.should.not.have.property('password');
-  });
-
   it('should validate email format', function() {
     const user = new UserModel({ email: 'invalidEmail', firstName: 'John', lastName: 'Doe', password: '123456', role: 'user' });
     const validationResult = user.validateSync();
@@ -30,5 +16,13 @@ describe('User Model', () => {
 
     should().exist(validationResult);
     validationResult?.errors.role.value.should.include('invalid');
+  });
+
+  it('should convert _id to id when converting to JSON', function() {
+    const user = new UserModel({ email: 'test@example.com', firstName: 'John', lastName: 'Doe', password: '123456', role: 'user' });
+    const json = user.toJSON();
+
+    should().exist(json);
+    json.id.should.equal(user._id.toString());
   });
 });

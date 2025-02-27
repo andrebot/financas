@@ -562,7 +562,7 @@ describe('Authentication', () => {
 
     it('should return a 400 error if the refreshToken is empty', (done) => {
       chai.request(server)
-        .post('/api/v1/user/refresh-tokens')
+        .get('/api/v1/user/refresh-tokens')
         .send({ refreshToken: '' })
         .end((err, res) => {
           res.should.have.status(400);
@@ -575,7 +575,7 @@ describe('Authentication', () => {
       const stub = sinon.stub(jwt, 'verify').throws();
 
       chai.request(server)
-        .post('/api/v1/user/refresh-tokens')
+        .get('/api/v1/user/refresh-tokens')
         .set('Cookie', `${REFRESH_TOKEN_COOKIE_NAME}=${loginTokens.refreshToken}`)
         .end((err, res) => {
           res.should.have.status(500);
@@ -589,7 +589,7 @@ describe('Authentication', () => {
       const stub = sinon.stub(jwt, 'verify').callsFake(() => ({ email: adminUser.email }));
       
       chai.request(server)
-        .post('/api/v1/user/refresh-tokens')
+        .get('/api/v1/user/refresh-tokens')
         .set('Cookie', `${REFRESH_TOKEN_COOKIE_NAME}=${loginTokens.refreshToken}`)
         .end((err, res) => {
           res.should.have.status(200);
@@ -606,7 +606,7 @@ describe('Authentication', () => {
       addToken(refreshToken);
 
       chai.request(server)
-        .post('/api/v1/user/refresh-tokens')
+        .get('/api/v1/user/refresh-tokens')
         .set('Cookie', `${REFRESH_TOKEN_COOKIE_NAME}=${refreshToken}`)
         .end((err, res) => {
           res.should.have.status(500);
@@ -620,7 +620,7 @@ describe('Authentication', () => {
       const stub = sinon.stub(UserModel, 'findOne').throws();
 
       chai.request(server)
-        .post('/api/v1/user/refresh-tokens')
+        .get('/api/v1/user/refresh-tokens')
         .set('Cookie', `${REFRESH_TOKEN_COOKIE_NAME}=${loginTokens.refreshToken}`)
         .end((err, res) => {
           res.should.have.status(500);

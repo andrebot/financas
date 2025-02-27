@@ -19,7 +19,7 @@ describe('Authentication routes', () => {
       { method: 'get', path: '/' },
       { method: 'post', path: '/login' },
       { method: 'post', path: '/logout' },
-      { method: 'post', path: '/refresh-tokens' },
+      { method: 'get', path: '/refresh-tokens' },
       { method: 'put', path: '/:userId' },
       { method: 'get', path: '/:userId' },
       { method: 'delete', path: '/:userId' },

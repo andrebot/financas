@@ -81,15 +81,23 @@ export function createRefreshToken(email: string, role: 'admin' | 'user', firstN
  * @param role - Role of the user to be added to the database
  * @returns - the User as an object
  */
-export async function createUser(email: string, password: string, firstName: string, lastName: string, role: 'admin' | 'user' = 'user'): Promise<IUser> {
+export async function createUser(
+  email: string,
+  password: string,
+  firstName: string,
+  lastName: string,
+  role: 'admin' | 'user' = 'user',
+): Promise<Omit<IUser, 'password'>> {
   if (regExpPassword.test(password)) {
-    return await UserRepo.save({
+    const { password: _, ...newUser } = await UserRepo.save({
       email,
       password: bcrypt.hashSync(password, bcrypt.genSaltSync(WORK_FACTOR)),
       firstName,
       lastName,
       role,
     });
+
+    return newUser;
   }
 
   throw new Error('Password does not follow the rules');
@@ -131,7 +139,7 @@ export async function updateUser(
   requestingUser: UserPayload | undefined,
   id: string,
   payload: UserPayload,
-): Promise<Omit<IUser, 'password'> | null> {
+): Promise<Omit<IUser, 'password'>> {
   const user = await UserRepo.findById(id);
 
   validateUpdateUser(requestingUser, user, payload);
@@ -144,7 +152,7 @@ export async function updateUser(
 
   if (email) {
     user!.email = email;
-  }
+  } 
 
   if (firstName) {
     user!.firstName = firstName;
@@ -154,19 +162,16 @@ export async function updateUser(
     user!.lastName = lastName;
   }
 
+  // user is always not null because we checked for it above
   const updatedUser = await UserRepo.update(id, user!);
 
-  if (updatedUser) {
-    return {
-      id: updatedUser?.id,
-      email: updatedUser?.email!,
-      firstName: updatedUser?.firstName!,
-      lastName: updatedUser?.lastName!,
-      role: updatedUser?.role!,
-    };
-  }
-
-  return null;
+  return {
+    id: updatedUser!.id,
+    email: updatedUser!.email,
+    firstName: updatedUser!.firstName,
+    lastName: updatedUser!.lastName,
+    role: updatedUser!.role,
+  };
 }
 
 /**
@@ -208,7 +213,12 @@ export async function deleteUser(id: string): Promise<IUser> {
  * @param lastName - Last name of the user to be registered
  * @returns - the User and Tokens as an object
  */
-export async function register(email: string, password: string, firstName: string, lastName: string): Promise<{ user: IUser, tokens: Tokens }> {
+export async function register(
+  email: string,
+  password: string,
+  firstName: string,
+  lastName: string,
+): Promise<{ user: Omit<IUser, 'password'>, tokens: Tokens }> {
   const role = 'user';
   const newUser = await createUser(email, password, firstName, lastName, role);
   const accessToken = createAccessToken(email, role, firstName, lastName, newUser.id!);

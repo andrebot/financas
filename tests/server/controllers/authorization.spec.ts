@@ -612,7 +612,7 @@ describe('AuthorizationController', () => {
       authManagerStub.register.should.have.been.calledWith(request.body.email, request.body.password, request.body.firstName, request.body.lastName);
       response.cookie.should.have.been.calledOnce;
       response.cookie.should.have.been.calledWith('refreshToken', 'refresh-token', {
-        httpOnly: false,
+        httpOnly: true,
         secure: false,
         maxAge: REFRESH_TOKEN_EXPIRATION_COOKIE,
       });

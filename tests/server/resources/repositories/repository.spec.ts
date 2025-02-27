@@ -44,6 +44,7 @@ describe('Repository', () => {
     findByIdAndDeleteStub.reset();
     findOneStub.reset();
     saveStub.reset();
+    findByIdAndUpdateStub.reset();
   });
 
   it('should be a class', () => {
@@ -52,7 +53,7 @@ describe('Repository', () => {
 
   it('should find document by id', async () => {
     findByIdStub.returns({
-      lean: sinon.stub().returns(Promise.resolve({ name: 'test' })),
+      toObject: sinon.stub().returns(Promise.resolve({ name: 'test' })),
     });
 
     const result = await repository.findById('1');
@@ -64,7 +65,7 @@ describe('Repository', () => {
 
   it('should find document by id and delete', async () => {
     findByIdAndDeleteStub.returns({
-      lean: sinon.stub().resolves({ name: 'test' }),
+      toObject: sinon.stub().resolves({ name: 'test' }),
     });
 
     const result = await repository.findByIdAndDelete('1');
@@ -102,7 +103,7 @@ describe('Repository', () => {
 
   it('should update document', async () => {
     findByIdAndUpdateStub.returns({
-      lean: sinon.stub().resolves({ name: 'test' }),
+      toObject: sinon.stub().resolves({ name: 'test' }),
     });
 
     const result = await repository.update('1', { name: 'test' });
@@ -112,16 +113,38 @@ describe('Repository', () => {
     result!.should.be.deep.equal({ name: 'test' });
   });
 
+  it('should return null if document to delete is not found', async () => {
+    findByIdAndDeleteStub.resolves(null);
+
+    const result = await repository.findByIdAndDelete('1');
+
+    should().not.exist(result);
+  });
+
+  it('should return null if the document by id to find is not found', async () => {
+    findByIdStub.resolves(null);
+
+    const result = await repository.findById('1');
+
+    should().not.exist(result);
+  });
+
+  it('should return null if the document to update is not found', async () => {
+    findByIdAndUpdateStub.resolves(null);
+
+    const result = await repository.update('1', { name: 'test' });
+
+    should().not.exist(result);
+  });
+
   describe('Queries', () => {
     beforeEach(() => {
       findStub.reset();
       findOneStub.reset();
 
-      findStub.returns({
-        lean: sinon.stub().resolves([{ name: 'test' }]),
-      });
+      findStub.resolves([{ toObject: sinon.stub().returns({ name: 'test' }) }]);
       findOneStub.returns({
-        lean: sinon.stub().resolves({ name: 'test' }),
+        toObject: sinon.stub().resolves({ name: 'test' }),
       });
     });
 
@@ -148,11 +171,21 @@ describe('Repository', () => {
     });
 
     it('should throw an error if query is empty', async () => {
-      (() => repository.findOne({})).should.throw('Cannot search for one instance with empty query');
+      try {
+        await repository.findOne({});
+        chai.assert.fail('Should have thrown an error');
+      } catch (error) {
+        (error as Error).message.should.contain('Cannot search for one instance with empty query');
+      }
     });
 
     it('should throw an error if query is null', async () => {
-      (() => repository.findOne(null as any)).should.throw('Cannot search for one instance with empty query');
+      try {
+        await repository.findOne(null as any);
+        chai.assert.fail('Should have thrown an error');
+      } catch (error) {
+        (error as Error).message.should.contain('Cannot search for one instance with empty query');
+      }
     });
 
     it('should search for documents by query', async () => {
@@ -252,7 +285,12 @@ describe('Repository', () => {
     });
 
     it('should throw an error if contains operator is used with undefined value and is the only query', async () => {
-      (() => repository.findOne({ name: { contains: undefined } })).should.throw('Cannot search for one instance with empty query');
+      try {
+        await repository.findOne({ name: { contains: undefined } });
+        chai.assert.fail('Should have thrown an error');
+      } catch (error) {
+        (error as Error).message.should.contain('Cannot search for one instance with empty query');
+      }
     });
 
     it('should ignore undefined values in query', async () => {
@@ -261,6 +299,14 @@ describe('Repository', () => {
       should().exist(result);
       findStub.should.have.been.calledOnceWithExactly({});
       result!.should.be.deep.equal([{ name: 'test' }]);
+    });
+
+    it('should return null if the one document to find is not found', async () => {
+      findOneStub.resolves(null);
+
+      const result = await repository.findOne({ name: 'test' });
+
+      should().not.exist(result);
     });
   });
 });
