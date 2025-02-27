@@ -39,6 +39,15 @@ export default {
     settings: 'Settings',
     logout: 'Logout',
     logoutFailed: 'Logout failed! We will close your session.',
+    settingInfoTitle: 'Info',
+    changePassword: 'Change Password',
+    cancel: 'Cancel',
+    save: 'Save',
+    settingsUpdated: 'Settings updated successfully!',
+    currentPassword: 'Current password',
+    newPassword: 'New password',
+    passwordMustBeDifferent: 'New password must be different from the current password',
+    passwordChangedSuccess: 'Password changed successfully!',
   },
 };
 

@@ -96,6 +96,27 @@ export async function createUser(email: string, password: string, firstName: str
 }
 
 /**
+ * Function to validate the update user. It will check if the user is an admin and if the user is trying to update another user
+ *
+ * @param requestingUser - The user that is requesting the update
+ * @param user - The user to be updated
+ * @param payload - The payload to be updated
+ */
+function validateUpdateUser(requestingUser: UserPayload | undefined, user: IUser | null, payload: UserPayload) {
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  if (!requestingUser || (requestingUser.role !== 'admin' && requestingUser.email !== user.email)) {
+    throw new Error('You do not have permission to update this user');
+  }
+
+  if (!payload || (!payload.email && !payload.firstName && !payload.lastName)) {
+    throw new Error('No information provided to be updated');
+  }
+}
+
+/**
  * Function to update a user. It will find the user by id and update the information provided
  *
  * @throws - Error if the user is not an admin and is trying to update another user
@@ -110,20 +131,10 @@ export async function updateUser(
   requestingUser: UserPayload | undefined,
   id: string,
   payload: UserPayload,
-): Promise<IUser | null> {
+): Promise<Omit<IUser, 'password'> | null> {
   const user = await UserRepo.findById(id);
 
-  if (!user) {
-    throw new Error('User not found');
-  }
-
-  if (!requestingUser || (requestingUser.role !== 'admin' && requestingUser.email !== user.email)) {
-    throw new Error('You do not have permission to update this user');
-  }
-
-  if (!payload || (!payload.email && !payload.firstName && !payload.lastName)) {
-    throw new Error('No information provided to be updated');
-  }
+  validateUpdateUser(requestingUser, user, payload);
 
   const {
     email,
@@ -132,18 +143,30 @@ export async function updateUser(
   } = payload;
 
   if (email) {
-    user.email = email;
+    user!.email = email;
   }
 
   if (firstName) {
-    user.firstName = firstName;
+    user!.firstName = firstName;
   }
 
   if (lastName) {
-    user.lastName = lastName;
+    user!.lastName = lastName;
   }
 
-  return await UserRepo.update(id, user);
+  const updatedUser = await UserRepo.update(id, user!);
+
+  if (updatedUser) {
+    return {
+      id: updatedUser?.id,
+      email: updatedUser?.email!,
+      firstName: updatedUser?.firstName!,
+      lastName: updatedUser?.lastName!,
+      role: updatedUser?.role!,
+    };
+  }
+
+  return null;
 }
 
 /**
@@ -234,7 +257,13 @@ export async function login(searchEmail: string, password: string): Promise<Logi
       return {
         accessToken,
         refreshToken,
-        user,
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+        },
       };
     }
 

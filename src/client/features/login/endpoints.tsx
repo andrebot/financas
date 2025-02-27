@@ -11,6 +11,9 @@ import type {
   RefreshTokenResponse,
   ResetPasswordBody,
   DefaultServerResponse,
+  UpdateUserBody,
+  UpdateUserResponse,
+  ChangePasswordBody,
 } from '../../types/authContextType';
 
 type ApiBuilder = EndpointBuilder<BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError, {}, FetchBaseQueryMeta>, never, "loginApi">
@@ -43,6 +46,18 @@ export const logoutMutation = () => ({
   method: 'POST',
 });
 
+export const updateUserMutation = ({ id, ...body }: UpdateUserBody) => ({
+  url: `/${id}`,
+  method: 'PUT',
+  body,
+});
+
+export const changePasswordMutation = (body: ChangePasswordBody) => ({
+  url: '/change-password',
+  method: 'POST',
+  body,
+});
+
 export default function testBuilder(builder: ApiBuilder) {
   return {
     login: builder.mutation<LoginResponse, LoginBody>({
@@ -59,6 +74,12 @@ export default function testBuilder(builder: ApiBuilder) {
     }),
     logout: builder.mutation<DefaultServerResponse, void>({
       query: logoutMutation,
+    }),
+    updateUser: builder.mutation<UpdateUserResponse, UpdateUserBody>({
+      query: updateUserMutation,
+    }),
+    changePassword: builder.mutation<DefaultServerResponse, ChangePasswordBody>({
+      query: changePasswordMutation,
     }),
   };
 }

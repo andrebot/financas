@@ -6,6 +6,8 @@ import MainPage from '../pages/mainPage';
 import Login from '../pages/login';
 import Register from '../pages/register';
 import ResetPassword from '../pages/resetPassword';
+import Settings from '../pages/settings';
+
 /**
  * Instanciating the routes
  */
@@ -19,6 +21,10 @@ export default createBrowserRouter([
       children: [{
         path: '',
         element: <MainPage />,
+        children: [{
+          path: 'settings',
+          element: <Settings />,
+        }],
       }],
     }, {
       path: apiConfig.user.loginPage,

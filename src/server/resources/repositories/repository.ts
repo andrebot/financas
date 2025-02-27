@@ -128,8 +128,10 @@ export class Repository<T extends Document, K> implements IRepository<T, K> {
    * @param id - The id of the document to find.
    * @returns The document.
    */
-  findById(id: string): Promise<K | null> {
-    return this.model.findById(id).lean() as Promise<K | null>;
+  async findById(id: string): Promise<K | null> {
+    const doc = await this.model.findById(id);
+
+    return doc ? (doc.toObject() as K) : null;
   }
 
   /**
@@ -138,8 +140,10 @@ export class Repository<T extends Document, K> implements IRepository<T, K> {
    * @param id - The id of the document to delete.
    * @returns The deleted document.
    */
-  findByIdAndDelete(id: string): Promise<K | null> {
-    return this.model.findByIdAndDelete(id).lean() as Promise<K | null>;
+  async findByIdAndDelete(id: string): Promise<K | null> {
+    const doc = await this.model.findByIdAndDelete(id);
+
+    return doc ? (doc.toObject() as K) : null;
   }
 
   /**
@@ -148,8 +152,10 @@ export class Repository<T extends Document, K> implements IRepository<T, K> {
    * @param query - The query to find the documents.
    * @returns The documents.
    */
-  find(query: QueryFilter<K> = {}): Promise<K[]> {
-    return this.model.find(this.translateFilter(query)).lean() as Promise<K[]>;
+  async find(query: QueryFilter<K> = {}): Promise<K[]> {
+    const docs = await this.model.find(this.translateFilter(query));
+
+    return docs.map((doc) => doc.toObject() as K);
   }
 
   /**
@@ -158,12 +164,14 @@ export class Repository<T extends Document, K> implements IRepository<T, K> {
    * @param query - The query to find the document.
    * @returns The document.
    */
-  findOne(query: QueryFilter<K>): Promise<K | null> {
+  async findOne(query: QueryFilter<K>): Promise<K | null> {
     if (isObjectEmptyOrNull(query)) {
       throw new Error('Cannot search for one instance with empty query');
     }
 
-    return this.model.findOne(this.translateFilter(query)).lean() as Promise<K | null>;
+    const doc = await this.model.findOne(this.translateFilter(query));
+
+    return doc ? (doc.toObject() as K) : null;
   }
 
   /**

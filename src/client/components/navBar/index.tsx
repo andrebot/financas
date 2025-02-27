@@ -49,6 +49,9 @@ export default function NavBar() {
     }
   }
 
+  /**
+   * Closes the drawer.
+   */
   function closeDrawer() {
     setIsDrawerOpen(false);
   }
@@ -82,7 +85,7 @@ export default function NavBar() {
           </List>
           <Divider />
           <List>
-            <CustomListItem text={t('settings')}>
+            <CustomListItem text={t('settings')} onClick={() => navigate('/settings')}>
               <SettingsIcon />
             </CustomListItem>
             <CustomListItem text={t('logout')} onClick={handleLogout}>

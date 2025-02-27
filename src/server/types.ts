@@ -31,7 +31,7 @@ export type LoginResponse = {
   /**
    * User object
    */
-  user: IUser;
+  user: Omit<IUser, 'password'>;
 };
 
 /**

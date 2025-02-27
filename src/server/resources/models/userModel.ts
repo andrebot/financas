@@ -27,7 +27,6 @@ function transformUserObject(
 ) {
   const { ...newObject } = ret;
 
-  delete newObject.password;
   newObject.id = newObject._id.toString();
   delete newObject._id;
 

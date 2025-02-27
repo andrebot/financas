@@ -43,3 +43,22 @@ export type ResetPasswordBody = {
 export type DefaultServerResponse = {
   message: string;
 }
+
+export type UpdateUserBody = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
+export type UpdateUserResponse = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+}
+
+export type ChangePasswordBody = {
+  oldPassword: string;
+  newPassword: string;
+}

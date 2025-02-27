@@ -22,7 +22,7 @@ const baseQueryWithReauth: BaseQueryFn<
   let result = await baseQuery(args, api, extraOptions);
 
   if (result.error && result.meta?.response?.status === 401) {
-    const refreshResult = await baseQuery('/refresh-token', api, extraOptions);
+    const refreshResult = await baseQuery('/refresh-tokens', api, extraOptions);
 
     if (refreshResult.data) {
       api.dispatch(setAccessToken((refreshResult.data as RefreshTokenResponse).accessToken))

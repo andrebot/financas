@@ -17,4 +17,6 @@ export const {
   useRefreshTokenQuery,
   useResetPasswordMutation,
   useLogoutMutation,
+  useUpdateUserMutation,
+  useChangePasswordMutation,
 } = loginApi;

@@ -1,5 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const { cache } = require('react');
 
 module.exports = {
   entry: path.resolve(__dirname, '..', 'src/client/index.tsx'),
@@ -16,6 +17,17 @@ module.exports = {
       },
       // Add additional rules for other file types if needed
     ],
+  },
+  cache: {
+    type: 'filesystem',
+    buildDependencies: {
+      config: [__filename],
+    },
+  },
+  optimization: {
+    splitChunks: {
+      chunks: 'all',
+    },
   },
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],

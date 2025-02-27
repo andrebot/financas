@@ -21,7 +21,7 @@ router.get('/', createAccessTokenValidation(true), listUsersController);
 router.post('/register', registerController);
 router.post('/login', loginController);
 router.post('/logout', logoutController);
-router.post('/refresh-tokens', refreshTokensController);
+router.get('/refresh-tokens', refreshTokensController);
 router.get('/:userId', createAccessTokenValidation(), getUserController);
 router.put('/:userId', createAccessTokenValidation(), updateUserController);
 router.delete('/:userId', createAccessTokenValidation(true), deleteUserController);
