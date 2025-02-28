@@ -29,6 +29,7 @@ type MockRequest = {
   user?: {
     email: string;
     role: string;
+    id: string;
   };
 };
 
@@ -89,6 +90,7 @@ describe('AuthorizationController', () => {
       user: {
         email: 'test@gmail.com',
         role: 'admin',
+        id: '507f1f77bcf86cd799439011',
       }
     };
     authManagerStub.createUser.resetHistory();
@@ -277,6 +279,26 @@ describe('AuthorizationController', () => {
 
       response.status.should.have.been.calledWith(400);
       response.send.should.have.been.calledWith({ error: 'Invalid id' });
+    } catch (error) {
+      console.error(error);
+      chai.assert.fail('Should not have thrown an error');
+    }
+  });
+
+  it('should not let a non admin user delete another user', async () => {
+    request.user = {
+      email: 'user@example.com',
+      role: 'user',
+      id: '1',
+    };
+
+    request.params.userId = '2';
+
+    try {
+      await deleteUserController(request, response);
+
+      response.status.should.have.been.calledWith(403);
+      response.send.should.have.been.calledWith({ error: 'Current user does not have permission to delete this user' });
     } catch (error) {
       console.error(error);
       chai.assert.fail('Should not have thrown an error');

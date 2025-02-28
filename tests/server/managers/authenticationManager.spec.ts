@@ -125,74 +125,75 @@ describe('AuthenticationManager', function () {
     token.should.be.a('string');
   });
 
-  it('should create a user with hashed password and save to database', async function() {
-    const mockUser = {
-      email: 'user@example.com',
-      password: 'ValidPassword123!',
-      firstName: 'John',
-      lastName: 'Doe',
-      role: 'user',
-      id: '1',
-    };
-
-    UserRepo.save.resolves(mockUser);
-
-    const user = await createUser(
-      mockUser.email,
-      mockUser.password,
-      mockUser.firstName,
-      mockUser.lastName, 
-      mockUser.role,
-    );
-
-    bcryptMock.genSaltSync.should.have.been.calledOnce;
-    bcryptMock.hashSync.should.have.been.calledOnceWithExactly(mockUser.password, 'salt');
-    UserRepo.save.should.have.been.calledOnce;
-    UserRepo.save.firstCall.args[0].should.deep.equal({
-      email: mockUser.email,
-      password: 'hashedPassword',
-      firstName: mockUser.firstName,
-      lastName: mockUser.lastName,
-      role: mockUser.role,
+  describe('creating user', function() {
+    it('should create a user with hashed password and save to database', async function() {
+      const mockUser = {
+        email: 'user@example.com',
+        password: 'ValidPassword123!',
+        firstName: 'John',
+        lastName: 'Doe',
+        role: 'user',
+        id: '1',
+      };
+  
+      UserRepo.save.resolves(mockUser);
+  
+      const user = await createUser(
+        mockUser.email,
+        mockUser.password,
+        mockUser.firstName,
+        mockUser.lastName, 
+        mockUser.role,
+      );
+  
+      bcryptMock.genSaltSync.should.have.been.calledOnce;
+      bcryptMock.hashSync.should.have.been.calledOnceWithExactly(mockUser.password, 'salt');
+      UserRepo.save.should.have.been.calledOnce;
+      UserRepo.save.firstCall.args[0].should.deep.equal({
+        email: mockUser.email,
+        password: 'hashedPassword',
+        firstName: mockUser.firstName,
+        lastName: mockUser.lastName,
+        role: mockUser.role,
+      });
+      should().exist(user);
+      should().exist(user.email);
+      should().exist(user.firstName);
+      should().exist(user.lastName);
+      should().exist(user.role);
     });
-    should().exist(user);
-    should().exist(user.email);
-    should().exist(user.password);
-    should().exist(user.firstName);
-    should().exist(user.lastName);
-    should().exist(user.role);
-  });
 
-  it('should throw an error if password does not meet criteria', async function() {
-    const email = 'user@example.com';
-    const password = 'bad';
-    const firstName = 'John';
-    const lastName = 'Doe';
+    it('should throw an error if password does not meet criteria', async function() {
+      const email = 'user@example.com';
+      const password = 'bad';
+      const firstName = 'John';
+      const lastName = 'Doe';
+  
+      try {
+        await createUser(email, password, firstName, lastName);
+        chai.assert.fail('Expected error was not thrown');
+      } catch (error) {
+        (error as Error).should.be.an('error');
+        (error as Error).message.should.equal('Password does not follow the rules');
+      }
+    });
 
-    try {
-      await createUser(email, password, firstName, lastName);
-      chai.assert.fail('Expected error was not thrown');
-    } catch (error) {
-      (error as Error).should.be.an('error');
-      (error as Error).message.should.equal('Password does not follow the rules');
-    }
-  });
-
-  it('should throw an error if the user already exists', async function() {
-    const email = 'user@example.com';
-    const password = 'Naru-chan88';
-    const firstName = 'John';
-    const lastName = 'Doe';
-
-    UserRepo.save.throwsException('User already exists');
-
-    try {
-      await createUser(email, password, firstName, lastName);
-      chai.assert.fail('Expected error was not thrown');
-    } catch (error) {
-      (error as Error).should.be.an('error');
-      (error as Error).message.should.contain('User already exists');
-    }
+    it('should throw an error if the user already exists', async function() {
+      const email = 'user@example.com';
+      const password = 'Naru-chan88';
+      const firstName = 'John';
+      const lastName = 'Doe';
+  
+      UserRepo.save.throwsException('User already exists');
+  
+      try {
+        await createUser(email, password, firstName, lastName);
+        chai.assert.fail('Expected error was not thrown');
+      } catch (error) {
+        (error as Error).should.be.an('error');
+        (error as Error).message.should.contain('User already exists');
+      }
+    });
   });
 
   describe('updating user', function() {
@@ -324,352 +325,366 @@ describe('AuthenticationManager', function () {
     UserRepo.find.should.have.been.calledTwice;
   });
 
-  it('should be able to delete an user', async function() {
-    const userId = '1';
+  describe('deleting user', function() {
+    it('should be able to delete an user', async function() {
+      const userId = '1';
 
-    UserRepo.findByIdAndDelete.resolves({ id: userId });
+      UserRepo.findByIdAndDelete.resolves({ id: userId });
 
-    const deletedUser = await deleteUser(userId);
+      const deletedUser = await deleteUser(userId);
 
-    deletedUser.id.should.be.equal(userId);
-    UserRepo.findByIdAndDelete.should.have.been.calledWith(userId);
+      deletedUser.id.should.be.equal(userId);
+      UserRepo.findByIdAndDelete.should.have.been.calledWith(userId);
+    });
+
+    it('should throw an error if the user is not found', async function() {
+      UserRepo.findByIdAndDelete.resolves(null);
+
+      try {
+        await deleteUser('1');
+        chai.assert.fail('Should have thrown an error');
+      } catch (error) {
+        (error as Error).message.should.contain('User not found');
+      }
+    });
   });
 
-  it('should throw an error if the user is not found', async function() {
-    UserRepo.findByIdAndDelete.resolves(null);
+  describe('logging in', function() {
+    it('should successfully login the user', async function() {
+      const password = 'Meu-password23';
+      const mockUser = {
+        id: '1',
+        email: 'old@example.com',
+        firstName: 'Old',
+        lastName: 'User',
+        role: 'admin',
+        password,
+      };
 
-    try {
-      await deleteUser('1');
-      chai.assert.fail('Should have thrown an error');
-    } catch (error) {
-      (error as Error).message.should.contain('User not found');
-    }
+      jwtSignStub.returns('mockToken');
+
+      bcryptMock.compareSync.returns(true);
+      UserRepo.findOne.resolves(mockUser);
+
+      const tokens = await login(mockUser.email, mockUser.password);
+
+      should().exist(tokens);
+      should().exist(tokens.accessToken);
+      should().exist(tokens.refreshToken);
+      jwtSignStub.should.have.been.calledTwice;
+      jwtSignStub.should.have.been.calledWith(
+        { email: mockUser.email, role: mockUser.role, firstName: mockUser.firstName, lastName: mockUser.lastName, id: mockUser.id },
+        REFRESH_TOKEN_SECRET,
+        { issuer: ISSUER, expiresIn: REFRESH_TOKEN_EXPIRATION },
+      );
+
+      jwtSignStub.should.have.been.calledWith(
+        { 
+          email: mockUser.email,
+          firstName: mockUser.firstName,
+          lastName: mockUser.lastName,
+          role: mockUser.role,
+          id: mockUser.id,
+        },
+        ACCESS_TOKEN_SECRET,
+        { issuer: ISSUER, expiresIn: ACCESS_TOKEN_EXPIRATION },
+      );
+    });
+
+    it('should throw an error if the user is not found', async function() {
+      const mockUser = {
+        id: '1',
+        email: 'old@example.com',
+        firstName: 'Old',
+        lastName: 'User',
+        role: 'admin',
+        password: 'nada',
+      };
+
+      UserRepo.findOne.resolves(null);
+
+      try {
+        await login(mockUser.email, mockUser.password);
+      } catch (error) {
+        (error as Error).message.should.contain('User not found');
+        jwtSignStub.should.have.not.been.called;
+      }
+    });
+
+    it('should thrown an error if the passwords do not match', async function() {
+      const mockUser = {
+        id: '1',
+        email: 'old@example.com',
+        firstName: 'Old',
+        lastName: 'User',
+        role: 'admin',
+        password: 'nada',
+      };
+      
+      UserRepo.findOne.returns(mockUser);
+
+      try {
+        await login(mockUser.email, 'errada');
+      } catch (error) {
+        (error as Error).message.should.contain('invalidUser');
+        jwtSignStub.should.have.not.been.called;
+      }
+    });
   });
 
-  it('should successfully login the user', async function() {
-    const password = 'Meu-password23';
-    const mockUser = {
-      id: '1',
-      email: 'old@example.com',
-      firstName: 'Old',
-      lastName: 'User',
-      role: 'admin',
-      password,
-    };
+  describe('logging out', function() {
+    it('should be able to logout', async function() {
+      jwtVerifyStub.returns(true);
 
-    jwtSignStub.returns('mockToken');
-
-    bcryptMock.compareSync.returns(true);
-    UserRepo.findOne.resolves(mockUser);
-
-    const tokens = await login(mockUser.email, mockUser.password);
-
-    should().exist(tokens);
-    should().exist(tokens.accessToken);
-    should().exist(tokens.refreshToken);
-    jwtSignStub.should.have.been.calledTwice;
-    jwtSignStub.should.have.been.calledWith(
-      { email: mockUser.email, role: mockUser.role, firstName: mockUser.firstName, lastName: mockUser.lastName, id: mockUser.id },
-      REFRESH_TOKEN_SECRET,
-      { issuer: ISSUER, expiresIn: REFRESH_TOKEN_EXPIRATION },
-    );
-
-    jwtSignStub.should.have.been.calledWith(
-      { 
-        email: mockUser.email,
-        firstName: mockUser.firstName,
-        lastName: mockUser.lastName,
-        role: mockUser.role,
-        id: mockUser.id,
-      },
-      ACCESS_TOKEN_SECRET,
-      { issuer: ISSUER, expiresIn: ACCESS_TOKEN_EXPIRATION },
-    );
-  });
-
-  it('should throw an error if the user is not found', async function() {
-    const mockUser = {
-      id: '1',
-      email: 'old@example.com',
-      firstName: 'Old',
-      lastName: 'User',
-      role: 'admin',
-      password: 'nada',
-    };
-
-    UserRepo.findOne.resolves(null);
-
-    try {
-      await login(mockUser.email, mockUser.password);
-    } catch (error) {
-      (error as Error).message.should.contain('User not found');
-      jwtSignStub.should.have.not.been.called;
-    }
-  });
-
-  it('should thrown an error if the passwords do not match', async function() {
-    const mockUser = {
-      id: '1',
-      email: 'old@example.com',
-      firstName: 'Old',
-      lastName: 'User',
-      role: 'admin',
-      password: 'nada',
-    };
-    
-    UserRepo.findOne.returns(mockUser);
-
-    try {
-      await login(mockUser.email, 'errada');
-    } catch (error) {
-      (error as Error).message.should.contain('invalidUser');
-      jwtSignStub.should.have.not.been.called;
-    }
-  });
-
-  it('should be able to logout', async function() {
-    jwtVerifyStub.returns(true);
-
-    const result = await logout('token');
-
-    should().exist(result);
-    result.should.be.true;
-    jwtVerifyStub.should.have.been.calledOnce;
-    jwtVerifyStub.should.have.been.calledWith('token', REFRESH_TOKEN_SECRET, { complete: true });
-  });
-
-  it('should thrown error if logining out with invalid token', async function() {
-    jwtVerifyStub.throws(new Error('Verify false'));
-
-    const result = await logout('token');
-
-    should().exist(result);
-    result.should.be.false;
-  });
-
-  it('should return a new refresh and access token when token is valid', async function() {
-    const accessToken = 'anotherTestToken';
-    const cryptToken = 'mockToken';
-    const user = { 
-      email: 'test@gmail.com',
-      firstName: 'test',
-      lastName: 'user',
-      role: 'admin',
-      id: '1',
-    };
-
-    jwtVerifyStub.returns({ payload: { email: 'test@gmail.com' } });
-    jwtSignStub.returns(accessToken);
-    UserRepo.findOne.resolves(user);
-    addToken(cryptToken);
-
-    const tokens = await refreshTokens(cryptToken) as Tokens;
-
-    should().exist(tokens);
-    tokens.accessToken.should.exist;
-    tokens.refreshToken.should.exist;
-    tokens.accessToken.should.be.a('string');
-    tokens.refreshToken.should.be.a('string');
-
-    deleteToken(cryptToken);
-  });
-
-  it('should throw an error if token is invalid when refreshing tokens', async function() {
-    const errorMessage = 'InvalidToken';
-
-    jwtVerifyStub.throws(new Error(errorMessage))
-
-    try {
-      await refreshTokens('mockToken');
-      chai.assert.fail('Should have thrown an error');
-    } catch (error) {
-      (error as Error).message.should.be.a('string');
-      (error as Error).message.should.contain(errorMessage);
-    }
-  });
-
-  it('should throw an error if user is not found when refreshing tokens', async function() {
-    const token = { email: 'test@gmail.com' };
-    jwtVerifyStub.returns(token);
-    UserRepo.findOne.resolves(null);
-
-    try {
-      await refreshTokens('mockToken');
-      chai.assert.fail('Should have thrown an error');
-    } catch (error) {
-      (error as Error).message.should.be.a('string');
-      (error as Error).message.should.contain(`No user was found with email: ${token.email}`);
-    }
-  });
-
-  it('should throw an error if token is not in whitelist', async function() {
-    const token = { payload: { email: 'test@gmail.com' } };
-    const cryptToken = 'notValid';
-
-    jwtVerifyStub.returns(token);
-    addToken(cryptToken);
-
-    try {
-      await refreshTokens(cryptToken);
-      chai.assert.fail('Should have thrown an error');
-    } catch (error) {
-      (error as Error).message.should.be.a('string');
-      (error as Error).message.should.contain('Token is not valid');
-    }
-
-    deleteToken(cryptToken);
-  });
-
-  it('should reset the password and send a notification', async function() {
-    const mockUser = {
-      id: '1',
-      email: 'old@example.com',
-      firstName: 'Old',
-      lastName: 'User',
-      role: 'admin',
-    };
-    UserRepo.findOne.resolves(mockUser);
-    UserRepo.update.resolves(mockUser);
-
-    try {
-      const result = await resetPassword(mockUser.email);
+      const result = await logout('token');
 
       should().exist(result);
       result.should.be.true;
-      UserRepo.findOne.should.have.been.calledOnce;
-      UserRepo.update.should.have.been.calledOnce;
-      sendNotificationStub.should.have.been.calledOnce;
-      sendNotificationStub.should.have.been.calledWith(mockUser.email, sinon.match.string);
-    } catch (error) {
-      console.error(error);
-      chai.assert.fail('Should not have thrown an error');
-    }
-  });
+      jwtVerifyStub.should.have.been.calledOnce;
+      jwtVerifyStub.should.have.been.calledWith('token', REFRESH_TOKEN_SECRET, { complete: true });
+    });
 
-  it('should throw an error if the user is not found when resetting password', async function() {
-    UserRepo.findOne.resolves(null);
+    it('should thrown error if logining out with invalid token', async function() {
+      jwtVerifyStub.throws(new Error('Verify false'));
 
-    try {
-      await resetPassword('test@gmail.com');
-
-      chai.assert.fail('Should have thrown an error');
-    } catch (error) {
-      (error as Error).message.should.be.a('string');
-      (error as Error).message.should.contain('Could not reset password. Try again later.')
-    }
-  });
-
-  it('should change the password', async function() {
-    const mockUser = {
-      password: 'oldPassword',
-      save: sinon.stub().resolves(),
-    };
-
-    bcryptMock.compareSync.returns(true);
-    UserRepo.findOne.resolves(mockUser);
-    UserRepo.update.resolves(mockUser);
-
-    try {
-      const result = await changePassword('1', 'oldPassword', 'newPassword');
+      const result = await logout('token');
 
       should().exist(result);
-      result.should.be.true;
-      UserRepo.findOne.should.have.been.calledOnce;
-      UserRepo.update.should.have.been.calledOnce;
-      bcryptMock.compareSync.should.have.been.calledOnce;
-      bcryptMock.compareSync.should.have.been.calledWith('oldPassword', 'oldPassword');
-      bcryptMock.genSaltSync.should.have.been.calledOnce;
-      bcryptMock.hashSync.should.have.been.calledOnce;
-    } catch (error) {
-      console.error(error);
-      chai.assert.fail('Should not have thrown an error');
-    }
+      result.should.be.false;
+    });
   });
+  
+  describe('refreshing tokens', function() {
+    it('should return a new refresh and access token when token is valid', async function() {
+      const accessToken = 'anotherTestToken';
+      const cryptToken = 'mockToken';
+      const user = { 
+        email: 'test@gmail.com',
+        firstName: 'test',
+        lastName: 'user',
+        role: 'admin',
+        id: '1',
+      };
 
-  it('should throw error if the old password does not match', async function() {
-    const mockUser = {
-      password: 'anotherPassword',
-      save: sinon.stub().resolves(),
-    };
+      jwtVerifyStub.returns({ payload: { email: 'test@gmail.com' } });
+      jwtSignStub.returns(accessToken);
+      UserRepo.findOne.resolves(user);
+      addToken(cryptToken);
 
-    bcryptMock.compareSync.returns(false);
-    UserRepo.findOne.resolves(mockUser);
+      const tokens = await refreshTokens(cryptToken) as Tokens;
 
-    try {
-      await changePassword('1', 'oldPassword', 'newPassword');
+      should().exist(tokens);
+      tokens.accessToken.should.exist;
+      tokens.refreshToken.should.exist;
+      tokens.accessToken.should.be.a('string');
+      tokens.refreshToken.should.be.a('string');
 
-      chai.assert.fail('Should have thrown an error');
-    } catch (error) {
-      UserRepo.findOne.should.have.been.calledOnce;
-      bcryptMock.compareSync.should.have.been.calledOnce;
-      bcryptMock.compareSync.should.have.been.calledWith('oldPassword', 'anotherPassword');
-      bcryptMock.genSaltSync.should.have.not.been.called;
-      bcryptMock.hashSync.should.have.not.been.called;
-      UserRepo.update.should.have.not.been.called;
-      (error as Error).message.should.contain('Invalid Password');
-    }
+      deleteToken(cryptToken);
+    });
+
+    it('should throw an error if token is invalid when refreshing tokens', async function() {
+      const errorMessage = 'InvalidToken';
+
+      jwtVerifyStub.throws(new Error(errorMessage))
+
+      try {
+        await refreshTokens('mockToken');
+        chai.assert.fail('Should have thrown an error');
+      } catch (error) {
+        (error as Error).message.should.be.a('string');
+        (error as Error).message.should.contain(errorMessage);
+      }
+    });
+
+    it('should throw an error if user is not found when refreshing tokens', async function() {
+      const token = { email: 'test@gmail.com' };
+      jwtVerifyStub.returns(token);
+      UserRepo.findOne.resolves(null);
+
+      try {
+        await refreshTokens('mockToken');
+        chai.assert.fail('Should have thrown an error');
+      } catch (error) {
+        (error as Error).message.should.be.a('string');
+        (error as Error).message.should.contain(`No user was found with email: ${token.email}`);
+      }
+    });
+
+    it('should throw an error if token is not in whitelist', async function() {
+      const token = { payload: { email: 'test@gmail.com' } };
+      const cryptToken = 'notValid';
+
+      jwtVerifyStub.returns(token);
+      addToken(cryptToken);
+
+      try {
+        await refreshTokens(cryptToken);
+        chai.assert.fail('Should have thrown an error');
+      } catch (error) {
+        (error as Error).message.should.be.a('string');
+        (error as Error).message.should.contain('Token is not valid');
+      }
+
+      deleteToken(cryptToken);
+    });
   });
+  
+  describe('resetting password', function() {
+    it('should reset the password and send a notification', async function() {
+      const mockUser = {
+        id: '1',
+        email: 'old@example.com',
+        firstName: 'Old',
+        lastName: 'User',
+        role: 'admin',
+      };
+      UserRepo.findOne.resolves(mockUser);
+      UserRepo.update.resolves(mockUser);
 
-  it('should throw error if the user is not found', async function() {
-    UserRepo.findOne.resolves(null);
+      try {
+        const result = await resetPassword(mockUser.email);
 
-    try {
-      await changePassword('1', 'oldPassword', 'newPassword');
+        should().exist(result);
+        result.should.be.true;
+        UserRepo.findOne.should.have.been.calledOnce;
+        UserRepo.update.should.have.been.calledOnce;
+        sendNotificationStub.should.have.been.calledOnce;
+        sendNotificationStub.should.have.been.calledWith(mockUser.email, sinon.match.string);
+      } catch (error) {
+        console.error(error);
+        chai.assert.fail('Should not have thrown an error');
+      }
+    });
 
-      chai.assert.fail('Should have thrown an error');
+    it('should throw an error if the user is not found when resetting password', async function() {
+      UserRepo.findOne.resolves(null);
 
-    } catch (error) {
-      UserRepo.findOne.should.have.been.calledOnce;
-      bcryptMock.compareSync.should.have.not.been.called;
-      bcryptMock.genSaltSync.should.have.not.been.called;
-      bcryptMock.hashSync.should.have.not.been.called;
-      (error as Error).message.should.contain('No user was found with email: 1');
-    }
+      try {
+        await resetPassword('test@gmail.com');
+
+        chai.assert.fail('Should have thrown an error');
+      } catch (error) {
+        (error as Error).message.should.be.a('string');
+        (error as Error).message.should.contain('Could not reset password. Try again later.')
+      }
+    });
   });
+  
+  describe('changing password', function() {
+    it('should change the password', async function() {
+      const mockUser = {
+        password: 'oldPassword',
+        save: sinon.stub().resolves(),
+      };
 
-  it('should be able to register an user', async function() {
-    const mockUser = {
-      email: 'test@gmail.com',
-      firstName: 'test',
-      lastName: 'user',
-      role: 'user',
-      id: '1',
-      password: 'Naru-chan88',
-    };
+      bcryptMock.compareSync.returns(true);
+      UserRepo.findOne.resolves(mockUser);
+      UserRepo.update.resolves(mockUser);
 
-    jwtSignStub.returns('token');
+      try {
+        const result = await changePassword('1', 'oldPassword', 'newPassword');
 
-    UserRepo.save.resolves(mockUser);
+        should().exist(result);
+        result.should.be.true;
+        UserRepo.findOne.should.have.been.calledOnce;
+        UserRepo.update.should.have.been.calledOnce;
+        bcryptMock.compareSync.should.have.been.calledOnce;
+        bcryptMock.compareSync.should.have.been.calledWith('oldPassword', 'oldPassword');
+        bcryptMock.genSaltSync.should.have.been.calledOnce;
+        bcryptMock.hashSync.should.have.been.calledOnce;
+      } catch (error) {
+        console.error(error);
+        chai.assert.fail('Should not have thrown an error');
+      }
+    });
 
-    const result = await register(mockUser.email, mockUser.password, mockUser.firstName, mockUser.lastName);
+    it('should throw error if the old password does not match', async function() {
+      const mockUser = {
+        password: 'anotherPassword',
+        save: sinon.stub().resolves(),
+      };
 
-    should().exist(result);
-    result.user.should.exist;
-    result.tokens.should.exist;
-    result.user.email.should.be.equal(mockUser.email);
-    result.user.firstName.should.be.equal(mockUser.firstName);
-    result.user.lastName.should.be.equal(mockUser.lastName);
-    result.tokens.accessToken.should.be.a('string');
-    result.tokens.refreshToken.should.be.a('string');
+      bcryptMock.compareSync.returns(false);
+      UserRepo.findOne.resolves(mockUser);
+
+      try {
+        await changePassword('1', 'oldPassword', 'newPassword');
+
+        chai.assert.fail('Should have thrown an error');
+      } catch (error) {
+        UserRepo.findOne.should.have.been.calledOnce;
+        bcryptMock.compareSync.should.have.been.calledOnce;
+        bcryptMock.compareSync.should.have.been.calledWith('oldPassword', 'anotherPassword');
+        bcryptMock.genSaltSync.should.have.not.been.called;
+        bcryptMock.hashSync.should.have.not.been.called;
+        UserRepo.update.should.have.not.been.called;
+        (error as Error).message.should.contain('Invalid Password');
+      }
+    });
+
+    it('should throw error if the user is not found', async function() {
+      UserRepo.findOne.resolves(null);
+
+      try {
+        await changePassword('1', 'oldPassword', 'newPassword');
+
+        chai.assert.fail('Should have thrown an error');
+
+      } catch (error) {
+        UserRepo.findOne.should.have.been.calledOnce;
+        bcryptMock.compareSync.should.have.not.been.called;
+        bcryptMock.genSaltSync.should.have.not.been.called;
+        bcryptMock.hashSync.should.have.not.been.called;
+        (error as Error).message.should.contain('No user was found with email: 1');
+      }
+    });
   });
+  
+  describe('registering user', function() {
+    it('should be able to register an user', async function() {
+      const mockUser = {
+        email: 'test@gmail.com',
+        firstName: 'test',
+        lastName: 'user',
+        role: 'user',
+        id: '1',
+        password: 'Naru-chan88',
+      };
 
-  it('should throw an error if the user is not created', async function() {
-    const mockUser = {
-      email: 'test@gmail.com',
-      firstName: 'test',
-      lastName: 'user',
-      role: 'user',
-      id: '1',
-      password: 'Naru-chan88',
-    };
+      jwtSignStub.returns('token');
 
-    UserRepo.save.rejects(new Error('Test error'));
+      UserRepo.save.resolves(mockUser);
 
-    try {
-      await register(mockUser.email, mockUser.password, mockUser.firstName, mockUser.lastName);
-      chai.assert.fail('Should have thrown an error');
-    } catch (error) {
-      (error as Error).message.should.contain('Test error');
-    }
+      const result = await register(mockUser.email, mockUser.password, mockUser.firstName, mockUser.lastName);
+
+      should().exist(result);
+      result.user.should.exist;
+      result.tokens.should.exist;
+      result.user.email.should.be.equal(mockUser.email);
+      result.user.firstName.should.be.equal(mockUser.firstName);
+      result.user.lastName.should.be.equal(mockUser.lastName);
+      result.tokens.accessToken.should.be.a('string');
+      result.tokens.refreshToken.should.be.a('string');
+    });
+
+    it('should throw an error if the user is not created', async function() {
+      const mockUser = {
+        email: 'test@gmail.com',
+        firstName: 'test',
+        lastName: 'user',
+        role: 'user',
+        id: '1',
+        password: 'Naru-chan88',
+      };
+
+      UserRepo.save.rejects(new Error('Test error'));
+
+      try {
+        await register(mockUser.email, mockUser.password, mockUser.firstName, mockUser.lastName);
+        chai.assert.fail('Should have thrown an error');
+      } catch (error) {
+        (error as Error).message.should.contain('Test error');
+      }
+    });
   });
 });
