@@ -179,7 +179,7 @@ export default function Settings(): React.JSX.Element {
         <Typography variant="h3">{t('settingInfoTitle')}</Typography>
         <HorizontalContainer>
           <TextFieldStyled
-            label={t('name')}
+            label={t('firstName')}
             variant="outlined"
             value={state.firstName}
             name="firstName"
@@ -188,7 +188,7 @@ export default function Settings(): React.JSX.Element {
             helperText={state.firstNameError}
           />
           <TextFieldStyled
-            label={t('surname')}
+            label={t('lastName')}
             variant="outlined"
             value={state.lastName}
             name="lastName"
@@ -226,6 +226,7 @@ export default function Settings(): React.JSX.Element {
             variant="contained"
             disabled={!state.isDirty || isLoading}
             onClick={handleSave}
+            aria-label="save"
           >
             {isLoading ? <CircularProgress size={20} color="inherit" /> : t('save')}
           </InfoButton>

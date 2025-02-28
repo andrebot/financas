@@ -2,13 +2,14 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'jsdom',
   testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/dist/'],
-  testMatch: ['<rootDir>/tests/client/**/*.spec.tsx'],
+  testMatch: ['<rootDir>/tests/client/**/*.spec.tsx', '<rootDir>/tests/client/**/*.spec.ts'],
   transform: {
     '^.+\\.(ts|tsx)$': ['ts-jest']
   },
   setupFilesAfterEnv: ['<rootDir>/tests/jest.setup.js'],
   collectCoverageFrom: [
     '<rootDir>/src/client/**/*.tsx',
+    '<rootDir>/src/client/**/*.ts',
     '!<rootDir>/src/client/**/*.d.ts',
     '!<rootDir>/src/client/**/styledComponent.tsx',
     '!<rootDir>/src/client/**/styledComponents.tsx',

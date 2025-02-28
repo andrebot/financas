@@ -112,4 +112,17 @@ describe('NavBar', () => {
       expect(navigateMock).toHaveBeenCalledWith('/login');
     });
   });
+
+  it('should go to the settings page when the settings button is clicked', () => {
+    render(
+      <I18nextProvider i18n={i18n}>
+        <NavBar />
+      </I18nextProvider>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'menu' }));
+    fireEvent.click(screen.getByText(i18nKeys.translation.settings));
+
+    expect(navigateMock).toHaveBeenCalledWith('/settings');
+  });
 });

@@ -4,6 +4,8 @@ import testBuilder, {
   refreshTokenQuery,
   resetPasswordMutation,
   logoutMutation,
+  updateUserMutation,
+  changePasswordMutation,
 } from '../../../../src/client/features/login/endpoints';
 
 const mockBuilder = {
@@ -22,8 +24,11 @@ describe('login endpoints', () => {
     expect(tBuilder.register).toBeDefined();
     expect(tBuilder.refreshToken).toBeDefined();
     expect(tBuilder.resetPassword).toBeDefined();
+    expect(tBuilder.logout).toBeDefined();
+    expect(tBuilder.updateUser).toBeDefined();
+    expect(tBuilder.changePassword).toBeDefined();
     expect(mockBuilder.query).toHaveBeenCalledTimes(1);
-    expect(mockBuilder.mutation).toHaveBeenCalledTimes(4);
+    expect(mockBuilder.mutation).toHaveBeenCalledTimes(6);
   });
 
   it('should correctly prepare the login mutation request', () => {
@@ -81,4 +86,42 @@ describe('login endpoints', () => {
     expect(logoutMutationExecuted.url).toBe('/logout');
     expect(logoutMutationExecuted.method).toBe('POST');
   });
+
+  it('should correctly prepare the update user mutation request', () => {
+    const body = {
+      email: 'test@test.com',
+      firstName: 'test',
+      lastName: 'test',
+      id: '1',
+    };
+
+    const updateUserMutationExecuted = updateUserMutation(body);
+
+    expect(updateUserMutationExecuted).toBeDefined();
+    expect(updateUserMutationExecuted.url).toBe(`/${body.id}`);
+    expect(updateUserMutationExecuted.method).toBe('PUT');
+    expect(updateUserMutationExecuted.body).toEqual({
+      email: body.email,
+      firstName: body.firstName,
+      lastName: body.lastName,
+    });
+  });
+
+  it('should correctly prepare the change password mutation request', () => {
+    const body = {
+      email: 'test@test.com',
+      password: 'test',
+      newPassword: 'newTest',
+      oldPassword: 'oldTest',
+    };
+
+    const changePasswordMutationExecuted = changePasswordMutation(body);
+
+    expect(changePasswordMutationExecuted).toBeDefined();
+    expect(changePasswordMutationExecuted.url).toBe('/change-password');
+    expect(changePasswordMutationExecuted.method).toBe('POST');
+    expect(changePasswordMutationExecuted.body).toEqual(body);
+  });
+  
+  
 });

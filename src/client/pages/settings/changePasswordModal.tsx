@@ -86,7 +86,8 @@ export default function ChangePasswordModal() {
     return state.currentPassword &&
       state.newPassword &&
       state.confirmPassword &&
-      state.newPassword === state.confirmPassword;
+      state.newPassword === state.confirmPassword &&
+      state.newPassword !== state.currentPassword;
   }
 
   /**
@@ -155,6 +156,7 @@ export default function ChangePasswordModal() {
       <Button variant="contained"
         disabled={!state.isDirty || isLoading}
         onClick={handleChangePassword}
+        aria-label="change-password-button"
       >{isLoading ? <CircularProgress size={20} color="inherit" /> : t('changePassword')}</Button>
       <Button variant="outlined" onClick={closeModal}>{t('cancel')}</Button>
     </ChangePasswordModalContainer>

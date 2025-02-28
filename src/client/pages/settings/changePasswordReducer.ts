@@ -11,7 +11,7 @@ export enum ActionType {
   SET_PROPERTY = 'SET_PROPERTY',
   SET_NEW_PASSWORD_ERROR = 'SET_NEW_PASSWORD_ERROR',
   SET_CONFIRM_PASSWORD_ERROR = 'SET_CONFIRM_PASSWORD_ERROR',
-}
+};
 
 export type Action = {
   type: ActionType.SET_PROPERTY;
