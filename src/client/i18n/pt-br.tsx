@@ -48,5 +48,7 @@ export default {
     newPassword: 'Nova senha',
     passwordMustBeDifferent: 'A nova senha deve ser diferente da senha atual',
     passwordChangedSuccess: 'Senha alterada com sucesso!',
+    deleteAccount: 'Deletar conta',
+    accountDeleted: 'Conta deletada com sucesso!',
   },
 };

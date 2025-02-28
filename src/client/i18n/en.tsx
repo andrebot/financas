@@ -48,6 +48,8 @@ export default {
     newPassword: 'New password',
     passwordMustBeDifferent: 'New password must be different from the current password',
     passwordChangedSuccess: 'Password changed successfully!',
+    deleteAccount: 'Delete Account',
+    accountDeleted: 'Account deleted successfully!',
   },
 };
 

@@ -24,7 +24,7 @@ router.post('/logout', logoutController);
 router.get('/refresh-tokens', refreshTokensController);
 router.get('/:userId', createAccessTokenValidation(), getUserController);
 router.put('/:userId', createAccessTokenValidation(), updateUserController);
-router.delete('/:userId', createAccessTokenValidation(true), deleteUserController);
+router.delete('/:userId', createAccessTokenValidation(), deleteUserController);
 router.post('/reset-password', resetPasswordController);
 router.post('/change-password', createAccessTokenValidation(), changePasswordController);
 

@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { useSnackbar } from 'notistack';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -20,34 +18,14 @@ import {
   DrawerContainer,
 } from './styledComponents';
 import { useAuth } from '../../hooks/authContext';
-import { useLogoutMutation } from '../../features/login';
-import { clearAccessToken } from '../../features/authSlice';
+import { useLogout } from '../../hooks/useLogout';
 
 export default function NavBar() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const { t } = useTranslation();
-  const { user, setUser } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const [logout] = useLogoutMutation();
-  const dispatch = useDispatch();
-  const { enqueueSnackbar } = useSnackbar();
-
-  /**
-   * Handles the logout process. It will clear the access token,
-   * the user and navigate to the login page even if the logout
-   * fails.
-   */
-  async function handleLogout() {
-    try {
-      await logout();
-    } catch (error) {
-      enqueueSnackbar(t('logoutFailed'), { variant: 'error' });
-    } finally {
-      setUser(undefined);
-      dispatch(clearAccessToken());
-      navigate('/login');
-    }
-  }
+  const { handleLogout } = useLogout();
 
   /**
    * Closes the drawer.

@@ -33,10 +33,6 @@ export const InfoButton = styled(Button)(() => ({
   flexGrow: '1',
 }));
 
-export const ChangePasswordButton = styled(Button)(() => ({
-  width: '100%',
-}));
-
 export const ChangePasswordModalContainer = styled(Paper)(({ theme }: StyleCompProp) => ({
   padding: '20px',
   display: 'flex',

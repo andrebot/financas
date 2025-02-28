@@ -58,6 +58,11 @@ export const changePasswordMutation = (body: ChangePasswordBody) => ({
   body,
 });
 
+export const deleteAccountMutation = (id: string) => ({
+  url: `/${id}`,
+  method: 'DELETE',
+});
+
 export default function testBuilder(builder: ApiBuilder) {
   return {
     login: builder.mutation<LoginResponse, LoginBody>({
@@ -80,6 +85,9 @@ export default function testBuilder(builder: ApiBuilder) {
     }),
     changePassword: builder.mutation<DefaultServerResponse, ChangePasswordBody>({
       query: changePasswordMutation,
+    }),
+    deleteAccount: builder.mutation<DefaultServerResponse, string>({
+      query: deleteAccountMutation,
     }),
   };
 }

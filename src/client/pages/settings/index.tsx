@@ -1,6 +1,10 @@
-import React, { useState, useReducer } from 'react';
+import React, { useReducer } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import Typography from '@mui/material/Typography';
+import TextField from '@mui/material/TextField';
+import CircularProgress from '@mui/material/CircularProgress';
+import Button from '@mui/material/Button';
 import { useSnackbar } from 'notistack';
 import { useAuth } from '../../hooks/authContext';
 import {
@@ -9,15 +13,13 @@ import {
   SettingsSection,
   TextFieldStyled,
   InfoButton,
-  ChangePasswordButton,
 } from './styledComponents';
-import { useUpdateUserMutation } from '../../features/login';
+import { useUpdateUserMutation, useDeleteAccountMutation } from '../../features/login';
 import { regExpEmail } from '../../utils/validators';
 import { reducer, initialState, ActionType } from './reducer';
 import { useModal } from '../../components/modal/modal';
 import ChangePasswordModal from './changePasswordModal';
-import TextField from '@mui/material/TextField';
-import CircularProgress from '@mui/material/CircularProgress';
+import { useLogout } from '../../hooks/useLogout';
 
 const {
   SET_EMAIL_ERROR,
@@ -32,6 +34,7 @@ export default function Settings(): React.JSX.Element {
   const { t } = useTranslation();
   const { user, setUser } = useAuth();
   const { enqueueSnackbar } = useSnackbar();
+  const { handleLogout } = useLogout();
   const [state, dispatch] = useReducer(reducer, {
     ...initialState,
     firstName: user?.firstName,
@@ -40,6 +43,7 @@ export default function Settings(): React.JSX.Element {
   } as typeof initialState);
   const { showModal } = useModal();
   const [updateUser, { isLoading }] = useUpdateUserMutation();
+  const [deleteAccount, { isLoading: isDeleting }] = useDeleteAccountMutation();
   const validatorMap = {
     email: validateEmail,
     firstName: (value: string) => validateName(value, 'firstNameRequired', SET_FIRST_NAME_ERROR),
@@ -173,6 +177,28 @@ export default function Settings(): React.JSX.Element {
     }
   }
 
+  /**
+   * Handles the delete account action.
+   * 
+   * @remarks
+   * It will call the delete account mutation and then logout the user.
+   */
+  async function handleDeleteAccount() {
+    try {
+      const result = await deleteAccount(user?.id!);
+
+      if ('data' in result) {
+        enqueueSnackbar(t('accountDeleted'), { variant: 'success' });
+      } else {
+        enqueueSnackbar(t('internalError'), { variant: 'error' });
+      }
+    } catch (error) {
+      enqueueSnackbar(t('internalError'), { variant: 'error' });
+    } finally {
+      handleLogout(false);
+    }
+  }
+
   return (
     <SettingsMain>
       <SettingsSection elevation={3}>
@@ -208,29 +234,38 @@ export default function Settings(): React.JSX.Element {
           error={!!state.emailError}
           helperText={state.emailError}
         />
-        <ChangePasswordButton
-          variant="contained"
-          onClick={openChangePasswordModal}
-        >
-          {t('changePassword')}
-        </ChangePasswordButton>
         <HorizontalContainer>
           <InfoButton
             variant="outlined"
             onClick={handleCancel}
-            disabled={isLoading}
+            disabled={isLoading || isDeleting}
           >
             {t('cancel')}
           </InfoButton>
           <InfoButton
             variant="contained"
-            disabled={!state.isDirty || isLoading}
+            disabled={!state.isDirty || isLoading || isDeleting}
             onClick={handleSave}
             aria-label="save"
           >
             {isLoading ? <CircularProgress size={20} color="inherit" /> : t('save')}
           </InfoButton>
         </HorizontalContainer>
+        <Button
+          fullWidth
+          variant="contained"
+          onClick={openChangePasswordModal}
+        >
+          {t('changePassword')}
+        </Button>
+        <Button
+          fullWidth
+          variant="contained"
+          color="error"
+          onClick={handleDeleteAccount}
+        >
+          {t('deleteAccount')}
+        </Button>
       </SettingsSection>
     </SettingsMain>
   );

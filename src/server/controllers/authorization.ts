@@ -19,6 +19,66 @@ import type { RequestWithUser } from '../types';
 import Logger from '../utils/logger';
 
 /**
+ * Function to validate the delete action. An user can only delete their own account or
+ * an admin can delete any account.
+ *
+ * @param req - The request object
+ * @param res - The response object
+ * @param userId - The id of the user to delete
+ * @returns - True if the action is valid, false otherwise
+ */
+function isDeleteActionValid(req: RequestWithUser, res: Response, userId: string) {
+  if (req.user?.role !== 'admin' && req.user?.id !== userId) {
+    handleError(new Error('Current user does not have permission to delete this user'), res, 403);
+
+    return false;
+  }
+
+  if (!userId || !isValidObjectId(userId)) {
+    handleError(new Error('Invalid id'), res, 400);
+
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Function to validate the login action. It will check if the email and password are valid
+ *
+ * @param email - The email of the user
+ * @param password - The password of the user
+ * @param res - The response object
+ * @returns - True if the action is valid, false otherwise
+ */
+function isLoginActionValid(email: string, password: string, res: Response) {
+  if (!email || !password || !regExpEmail.test(email)) {
+    Logger.error(new Error('Invalid email or password'));
+    handleError(new Error('invalidUser'), res, 400);
+
+    return false;
+  }
+
+  return true;
+}
+
+function isChangePasswordValid(email: string, oldPassword: string, newPassword: string, res: Response)  {
+  if (!email) {
+    handleError(new Error('Invalid user'), res, 400);
+
+    return false;
+  }
+
+  if (!oldPassword || !newPassword) {
+    handleError(new Error('Invalid password'), res, 400);
+
+    return false;
+  }
+
+  return true;
+}
+
+/**
  * Function to create a user. It will create a new user with the provided data
  *
  * @param req - The request object
@@ -157,12 +217,12 @@ export async function getUserController(req:Request, res: Response) {
  * @param res - The response object
  * @returns - The message as an object
  */
-export async function deleteUserController(req: Request, res: Response) {
+export async function deleteUserController(req: RequestWithUser, res: Response) {
   try {
     const { userId } = req.params;
 
-    if (!userId || !isValidObjectId(userId)) {
-      return handleError(new Error('Invalid id'), res, 400);
+    if (!isDeleteActionValid(req, res, userId)) {
+      return;
     }
 
     await deleteUser(userId);
@@ -186,9 +246,8 @@ export async function loginController(req: Request, res: Response) {
     password,
   } = req.body;
 
-  if (!email || !password || !regExpEmail.test(email)) {
-    Logger.error(new Error('Invalid email or password'));
-    return handleError(new Error('invalidUser'), res, 400);
+  if (!isLoginActionValid(email, password, res)) {
+    return;
   }
 
   try {
@@ -288,15 +347,11 @@ export async function changePasswordController(req: RequestWithUser, res: Respon
   try {
     const { oldPassword, newPassword } = req.body;
 
-    if (!req.user?.email) {
-      return handleError(new Error('Invalid user'), res, 400);
+    if (!isChangePasswordValid(req.user?.email!, oldPassword, newPassword, res)) {
+      return;
     }
 
-    if (!oldPassword || !newPassword) {
-      return handleError(new Error('Invalid password'), res, 400);
-    }
-
-    await changePassword(req.user?.email, oldPassword, newPassword);
+    await changePassword(req.user?.email!, oldPassword, newPassword);
 
     return res.send({ message: 'Password changed' });
   } catch (error) {

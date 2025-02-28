@@ -19,4 +19,5 @@ export const {
   useLogoutMutation,
   useUpdateUserMutation,
   useChangePasswordMutation,
+  useDeleteAccountMutation,
 } = loginApi;
