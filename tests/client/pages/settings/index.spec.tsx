@@ -4,12 +4,13 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
 import { useSnackbar } from 'notistack';
 import { useNavigate } from 'react-router-dom';
+import useLogout from '../../../../src/client/hooks/useLogout';
 import i18n from '../../../../src/client/i18n';
 import i18nKeys from '../../../../src/client/i18n/en';
 import SettingsPage from '../../../../src/client/pages/settings/index';
 import { useAuth } from '../../../../src/client/hooks/authContext';
 import { useModal } from '../../../../src/client/components/modal/modal';
-import { useUpdateUserMutation, useChangePasswordMutation } from '../../../../src/client/features/login';
+import { useUpdateUserMutation, useChangePasswordMutation, useDeleteAccountMutation } from '../../../../src/client/features/login';
 import { fillUpSettingsForm } from './utils';
 
 jest.mock('react-router-dom', () => ({
@@ -20,6 +21,8 @@ jest.mock('notistack', () => ({
   useSnackbar: jest.fn(),
 }));
 
+jest.mock('../../../../src/client/hooks/useLogout');
+
 jest.mock('../../../../src/client/hooks/authContext', () => ({
   useAuth: jest.fn(),
 }));
@@ -27,6 +30,7 @@ jest.mock('../../../../src/client/hooks/authContext', () => ({
 jest.mock('../../../../src/client/features/login', () => ({
   useUpdateUserMutation: jest.fn(),
   useChangePasswordMutation: jest.fn(),
+  useDeleteAccountMutation: jest.fn(),
 }));
 
 jest.mock('../../../../src/client/components/modal/modal', () => ({
@@ -37,9 +41,11 @@ describe('SettingsPage', () => {
   let mockNavigate = jest.fn();
   let mockUpdateUserMutation = jest.fn();
   let mockChangePasswordMutation = jest.fn();
+  let mockDeleteAccountMutation = jest.fn();
   let mockSnackbar = jest.fn();
   let mockSetUser = jest.fn();
   let mockShowModal = jest.fn();
+  let mockHandleLogout = jest.fn();
   let mockUser = {
     id: '1',
     email: 'test@test.com',
@@ -48,14 +54,16 @@ describe('SettingsPage', () => {
   };  
 
   beforeEach(() => {
-    mockNavigate.mockReset();
-    mockUpdateUserMutation.mockReset();
-    mockChangePasswordMutation.mockReset();
-    mockSetUser.mockReset();
+    jest.resetAllMocks();
 
     (useNavigate as jest.Mock).mockReturnValue(mockNavigate);
     (useUpdateUserMutation as jest.Mock).mockReturnValue([mockUpdateUserMutation, {}]);
     (useChangePasswordMutation as jest.Mock).mockReturnValue([mockChangePasswordMutation, {}]);
+    (useDeleteAccountMutation as jest.Mock).mockReturnValue([mockDeleteAccountMutation, {}]);
+    (useLogout as jest.Mock).mockReturnValue({
+      handleLogout: mockHandleLogout,
+      isLoggingOut: false,
+    });
     (useModal as jest.Mock).mockReturnValue({
       showModal: mockShowModal,
     });

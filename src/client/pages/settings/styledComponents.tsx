@@ -46,3 +46,14 @@ export const ChangePasswordModalContainer = styled(Paper)(({ theme }: StyleCompP
 export const ChangePasswordModalTitle = styled(Typography)(() => ({
   marginBottom: '20px',
 }));
+
+export const ConfirmDeleteAccountContainer = styled(Paper)(() => ({
+  padding: '20px',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '20px',
+}));
+
+export const ConfirmDeleteAccountTitle = styled(Typography)(() => ({
+  alignSelf: 'center',
+}));

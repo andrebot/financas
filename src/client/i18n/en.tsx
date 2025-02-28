@@ -50,6 +50,9 @@ export default {
     passwordChangedSuccess: 'Password changed successfully!',
     deleteAccount: 'Delete Account',
     accountDeleted: 'Account deleted successfully!',
+    confirmDeleteAccountTitle: 'Account Deletion',
+    confirmDeleteAccountDescription: 'Are you sure you want to delete your account? This action is irreversible.',
+    delete: 'Delete',
   },
 };
 

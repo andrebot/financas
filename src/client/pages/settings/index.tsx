@@ -1,6 +1,5 @@
 import React, { useReducer } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -19,7 +18,8 @@ import { regExpEmail } from '../../utils/validators';
 import { reducer, initialState, ActionType } from './reducer';
 import { useModal } from '../../components/modal/modal';
 import ChangePasswordModal from './changePasswordModal';
-import { useLogout } from '../../hooks/useLogout';
+import useLogout from '../../hooks/useLogout';
+import ConfirmDeleteAccount from './confirmDeleteAccountModal';
 
 const {
   SET_EMAIL_ERROR,
@@ -178,25 +178,10 @@ export default function Settings(): React.JSX.Element {
   }
 
   /**
-   * Handles the delete account action.
-   * 
-   * @remarks
-   * It will call the delete account mutation and then logout the user.
+   * Opens the confirm delete account modal.
    */
-  async function handleDeleteAccount() {
-    try {
-      const result = await deleteAccount(user?.id!);
-
-      if ('data' in result) {
-        enqueueSnackbar(t('accountDeleted'), { variant: 'success' });
-      } else {
-        enqueueSnackbar(t('internalError'), { variant: 'error' });
-      }
-    } catch (error) {
-      enqueueSnackbar(t('internalError'), { variant: 'error' });
-    } finally {
-      handleLogout(false);
-    }
+  function openConfirmDeleteAccountModal() {
+    showModal(<ConfirmDeleteAccount handleLogout={handleLogout} />);
   }
 
   return (
@@ -262,7 +247,7 @@ export default function Settings(): React.JSX.Element {
           fullWidth
           variant="contained"
           color="error"
-          onClick={handleDeleteAccount}
+          onClick={openConfirmDeleteAccountModal}
         >
           {t('deleteAccount')}
         </Button>

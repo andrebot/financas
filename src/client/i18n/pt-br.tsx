@@ -50,5 +50,8 @@ export default {
     passwordChangedSuccess: 'Senha alterada com sucesso!',
     deleteAccount: 'Deletar conta',
     accountDeleted: 'Conta deletada com sucesso!',
+    confirmDeleteAccountTitle: 'Exclusão de Conta',
+    confirmDeleteAccountDescription: 'Tem certeza que deseja excluir sua conta? Esta ação é irreversível.',
+    delete: 'Deletar',
   },
 };

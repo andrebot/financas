@@ -12,7 +12,7 @@ import { useLogoutMutation } from '../features/login';
  * the user and navigate to the login page even if the logout
  * fails.
  */
-export function useLogout() {
+export default function useLogout() {
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
   const { t } = useTranslation();

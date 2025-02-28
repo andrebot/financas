@@ -18,7 +18,7 @@ import {
   DrawerContainer,
 } from './styledComponents';
 import { useAuth } from '../../hooks/authContext';
-import { useLogout } from '../../hooks/useLogout';
+import useLogout from '../../hooks/useLogout';
 
 export default function NavBar() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);

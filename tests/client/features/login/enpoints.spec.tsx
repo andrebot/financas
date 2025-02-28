@@ -6,6 +6,7 @@ import testBuilder, {
   logoutMutation,
   updateUserMutation,
   changePasswordMutation,
+  deleteAccountMutation,
 } from '../../../../src/client/features/login/endpoints';
 
 const mockBuilder = {
@@ -27,8 +28,9 @@ describe('login endpoints', () => {
     expect(tBuilder.logout).toBeDefined();
     expect(tBuilder.updateUser).toBeDefined();
     expect(tBuilder.changePassword).toBeDefined();
+    expect(tBuilder.deleteAccount).toBeDefined();
     expect(mockBuilder.query).toHaveBeenCalledTimes(1);
-    expect(mockBuilder.mutation).toHaveBeenCalledTimes(6);
+    expect(mockBuilder.mutation).toHaveBeenCalledTimes(7);
   });
 
   it('should correctly prepare the login mutation request', () => {
@@ -122,6 +124,12 @@ describe('login endpoints', () => {
     expect(changePasswordMutationExecuted.method).toBe('POST');
     expect(changePasswordMutationExecuted.body).toEqual(body);
   });
-  
-  
+
+  it('should correctly prepare the delete account mutation request', () => {
+    const deleteAccountMutationExecuted = deleteAccountMutation('1');
+
+    expect(deleteAccountMutationExecuted).toBeDefined();
+    expect(deleteAccountMutationExecuted.url).toBe('/1');
+    expect(deleteAccountMutationExecuted.method).toBe('DELETE');
+  });
 });
