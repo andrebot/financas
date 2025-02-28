@@ -298,4 +298,18 @@ describe('SettingsPage', () => {
       expect(mockShowModal).toHaveBeenCalled();
     });
   });
+
+  it('should show the confirm delete account modal', async () => {
+    render(
+      <I18nextProvider i18n={i18n}>
+        <SettingsPage />
+      </I18nextProvider>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: i18nKeys.translation.deleteAccount }));
+
+    await waitFor(() => {
+      expect(mockShowModal).toHaveBeenCalled();
+    });
+  });
 });
