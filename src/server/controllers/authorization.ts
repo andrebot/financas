@@ -29,7 +29,7 @@ import Logger from '../utils/logger';
  */
 function isDeleteActionValid(req: RequestWithUser, res: Response, userId: string) {
   if (req.user?.role !== 'admin' && req.user?.id !== userId) {
-    handleError(new Error('Current user does not have permission to delete this user'), res, 403);
+    handleError(new Error('Current user does not have permission to delete this user'), res, 401);
 
     return false;
   }

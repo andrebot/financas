@@ -4,6 +4,7 @@ import chaiHttp from 'chai-http';
 import {
   connectToDatabase,
   createAdminUser,
+  createUserToDelete,
   createAccount,
   createCategory,
   createTransaction,
@@ -38,6 +39,8 @@ before(async () => {
   console.log('Database connected');
   await createAdminUser();
   console.log('Admin user created');
+  await createUserToDelete();
+  console.log('User to delete created');
   await createAccount(account1, adminUser.id!);
   await createAccount(account2, adminUser.id!);
   await createAccount(account3, new Types.ObjectId().toString());

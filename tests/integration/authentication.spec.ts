@@ -3,7 +3,7 @@ import sinon from 'sinon';
 import jwt from 'jsonwebtoken';
 import { Types } from 'mongoose';
 import server from '../../src/server/server';
-import { adminUser } from './connectDB';
+import { adminUser, userToDelete } from './connectDB';
 import { createAccessToken, createRefreshToken } from '../../src/server/managers/authenticationManager';
 import UserModel from '../../src/server/resources/models/userModel';
 import { addToken, deleteToken } from '../../src/server/resources/repositories/tokenRepo';
@@ -45,7 +45,7 @@ describe('Authentication', () => {
           res.should.have.status(200);
 
           res.body.should.be.a('array');
-          res.body.length.should.be.eql(1);
+          res.body.length.should.be.eql(2);
           done();
         });
     });
@@ -385,7 +385,7 @@ describe('Authentication', () => {
       );
     });
 
-    it('shoud return a 401 error if the user is not an admin', (done) => {
+    it('shoud return a 401 error if the user is not an admin trying to delete another user', (done) => {
       token = createAccessToken(
         newUser.email,
         'user',
@@ -395,10 +395,10 @@ describe('Authentication', () => {
       );
 
       chai.request(server)
-        .delete(`/api/v1/user/${newUser.id}`)
+        .delete(`/api/v1/user/${adminUser.id}`)
         .set('Authorization', `Bearer ${token}`)
         .end((err, res) => {
-          res.should.have.status(403);
+          res.should.have.status(401);
           done();
         });
     });
@@ -432,6 +432,33 @@ describe('Authentication', () => {
           res.should.have.status(200);
           res.body.should.have.property('message').eql(`User deleted: id ${newUser.id}`);
 
+          done();
+        });
+    });
+
+    it('should be able to delete a user if it is the same user that is not an admin', (done) => {
+      const toDeleteToken = createAccessToken(
+        userToDelete.email,
+        'user',
+        userToDelete.firstName,
+        userToDelete.lastName,
+        userToDelete.id!,
+      );
+
+      const toDeleteRefreshToken = createRefreshToken(
+        userToDelete.email,
+        'user',
+        userToDelete.firstName,
+        userToDelete.lastName,
+        userToDelete.id!,
+      );
+
+      chai.request(server)
+        .delete(`/api/v1/user/${userToDelete.id}`)
+        .set('Authorization', `Bearer ${toDeleteToken}`)
+        .set('Cookie', `${REFRESH_TOKEN_COOKIE_NAME}=${toDeleteRefreshToken}`)
+        .end((err, res) => {
+          res.should.have.status(200);
           done();
         });
     });

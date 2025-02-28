@@ -25,6 +25,14 @@ export const adminUser = {
   lastName: 'User',
   role: 'admin',
 } as IUser;
+export const userToDelete = {
+  email: 'user1@example.com',
+  firstName: 'User',
+  lastName: 'delete',
+  role: 'user',
+} as IUser;
+
+
 let mongoServer: MongoMemoryServer;
 
 export const account1 = {
@@ -168,6 +176,14 @@ export const createAdminUser = async () => {
 
   await savedUSer.save();
   adminUser.id = savedUSer._id.toString();
+};
+
+export const createUserToDelete = async () => {
+  userToDelete.password = await bcrypt.hash('Maro-fjik23', bcrypt.genSaltSync(10));
+  const savedUSer: IUserDocument = new UserModel(userToDelete)
+
+  await savedUSer.save();
+  userToDelete.id = savedUSer._id.toString();
 };
 
 export const createAccount = async (account: IAccount, userID: string) => {
