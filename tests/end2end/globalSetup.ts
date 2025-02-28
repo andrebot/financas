@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import * as dotenv from 'dotenv';
 import { loginUser, resetPasswordUser } from './authUtils';
+import { changeEmailUser, changePasswordUser } from './settingsPageUtils';
 
 dotenv.config();
 
@@ -8,5 +9,7 @@ export default async function globalSetup() {
   await mongoose.connect(process.env.DB_URL!);
   await mongoose.connection.db?.collection('users').insertOne(loginUser);
   await mongoose.connection.db?.collection('users').insertOne(resetPasswordUser);
+  await mongoose.connection.db?.collection('users').insertOne(changeEmailUser);
+  await mongoose.connection.db?.collection('users').insertOne(changePasswordUser);
   await mongoose.connection.close();
 }

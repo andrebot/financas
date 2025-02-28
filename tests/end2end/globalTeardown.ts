@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import * as dotenv from 'dotenv';
 import { loginUser, resetPasswordUser, testUser } from './authUtils';
+import { changeEmailUser, changePasswordUser } from './settingsPageUtils';
 
 dotenv.config();
 
@@ -9,6 +10,8 @@ export default async function globalTeardown() {
   await mongoose.connection.db?.collection('users').deleteOne({ email: testUser.email });
   await mongoose.connection.db?.collection('users').deleteOne({ email: loginUser.email });
   await mongoose.connection.db?.collection('users').deleteOne({ email: resetPasswordUser.email });
+  await mongoose.connection.db?.collection('users').deleteOne({ email: changeEmailUser.email });
+  await mongoose.connection.db?.collection('users').deleteOne({ email: changePasswordUser.email });
   console.log('Users deleted');
   await mongoose.connection.close();
 }
