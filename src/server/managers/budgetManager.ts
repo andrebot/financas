@@ -11,7 +11,7 @@ export class BudgetManager extends ContentManager<IBudget> {
 
     this.transactionRepo = TransactionRepo;
   }
- 
+
   /**
    * Calculate the spent value of the budget by
    * querying the transactions related to the budget
@@ -27,7 +27,9 @@ export class BudgetManager extends ContentManager<IBudget> {
       throw new Error('We need a budget to calculate the spent');
     }
 
-    const { user, categories, startDate, endDate } = budget;
+    const {
+      user, categories, startDate, endDate,
+    } = budget;
 
     const transactions = await this.transactionRepo.find({
       user,
@@ -44,7 +46,7 @@ export class BudgetManager extends ContentManager<IBudget> {
    * @param budgetId - The id of the budget to get
    * @returns {Promise<IBudget>} The budget with the spent value
    */
-  async getContent(id: string, userId?: string,): Promise<IBudget> {
+  async getContent(id: string, userId?: string): Promise<IBudget> {
     const budget = await this.repository.findOne({
       id,
       user: userId,

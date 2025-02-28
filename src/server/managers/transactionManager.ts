@@ -9,20 +9,22 @@ import { calculateLastMonth, parseDate } from '../utils/misc';
 
 export class TransactionManager extends ContentManager<ITransaction> {
   private budgetRepo: typeof BudgetRepo;
+
   private goalRepo: typeof GoalRepo;
+
   private monthlyBalanceRepo: typeof MonthlyBalanceRepo;
 
   /**
    * Fields in Transaction model that trigger recalculation in the system.
    */
   private readonly recalculationFields: Array<keyof ITransaction> = [
-    "value", // Impacts balances and budgets
-    "category", // Affects budget categorization
-    "parentCategory", // Affects budget categorization
-    "account", // Impacts account-specific balances
-    "date", // Determines monthly balance assignment
-    "goalsList", // Affects goal percentages or allocations
-    "type" // Determines how the transaction is treated (income, expense, etc.)
+    'value', // Impacts balances and budgets
+    'category', // Affects budget categorization
+    'parentCategory', // Affects budget categorization
+    'account', // Impacts account-specific balances
+    'date', // Determines monthly balance assignment
+    'goalsList', // Affects goal percentages or allocations
+    'type', // Determines how the transaction is treated (income, expense, etc.)
   ];
 
   constructor(
@@ -71,7 +73,8 @@ export class TransactionManager extends ContentManager<ITransaction> {
   }
 
   /**
-   * Updates the monthly balance for a transaction. If the monthly balance doesn't exist, it creates it.
+   * Updates the monthly balance for a transaction. If the monthly balance doesn't exist,
+   * it creates it.
    *
    * @param content - The transaction to update the monthly balance for.
    */
@@ -100,11 +103,10 @@ export class TransactionManager extends ContentManager<ITransaction> {
       await this.monthlyBalanceRepo.save(monthlyBalance);
     } else {
       monthlyBalance.transactions.push(content);
-      monthlyBalance.closingBalance = monthlyBalance.closingBalance + content.value;
+      monthlyBalance.closingBalance += content.value;
 
       await this.monthlyBalanceRepo.update(monthlyBalance.id!, monthlyBalance);
     }
-
   }
 
   /**
@@ -119,7 +121,7 @@ export class TransactionManager extends ContentManager<ITransaction> {
     }
 
     const goalsToUpdate = transaction.goalsList.map((goal) => {
-      let addValue = transaction.value * goal.percentage;
+      const addValue = transaction.value * goal.percentage;
 
       return {
         goalId: goal.goal.id,
@@ -147,8 +149,11 @@ export class TransactionManager extends ContentManager<ITransaction> {
     });
 
     if (monthlyBalance) {
-      monthlyBalance.closingBalance = monthlyBalance.closingBalance - transaction.value;
-      monthlyBalance.transactions = monthlyBalance.transactions.filter((t) => t.id !== transaction.id);
+      monthlyBalance.closingBalance -= transaction.value;
+      monthlyBalance.transactions = monthlyBalance.transactions.filter(
+        (t) => t.id !== transaction.id,
+      );
+
       await this.monthlyBalanceRepo.update(monthlyBalance.id!, monthlyBalance);
     } else {
       throw new Error(`Monthly balance for transaction ${transaction.id} not found. Cannot execute subtract action.`);
@@ -159,10 +164,13 @@ export class TransactionManager extends ContentManager<ITransaction> {
    * Checks if the payload contains any of the fields that trigger recalculation.
    *
    * @param payload - The payload to check.
-   * @returns True if the payload contains any of the fields that trigger recalculation, false otherwise.
+   * @returns True if the payload contains any of the fields that trigger recalculation,
+   * false otherwise.
    */
   private shouldTriggerRecalculation(payload: Partial<ITransaction>): boolean {
-    return Object.keys(payload).some((key) => this.recalculationFields.includes(key as keyof ITransaction));
+    return Object.keys(payload).some(
+      (key) => this.recalculationFields.includes(key as keyof ITransaction),
+    );
   }
 
   /**
@@ -240,7 +248,7 @@ export class TransactionManager extends ContentManager<ITransaction> {
     id: string,
     payload: Partial<ITransaction>,
     userId: string,
-    isAdmin?: boolean
+    isAdmin?: boolean,
   ): Promise<ITransaction | null> {
     const transaction = await this.repository.findById(id);
 
@@ -251,7 +259,8 @@ export class TransactionManager extends ContentManager<ITransaction> {
     if (this.shouldTriggerRecalculation(payload)) {
       const updatedContent = { ...transaction, ...payload };
 
-      // we remove and add the transaction to other models to ensure consistency and avoid missing updates
+      // we remove and add the transaction to other models to ensure consistency
+      // and avoid missing updates
       await this.deleteTransactionFromOtherModels(transaction);
       await this.addTransactionToOtherModels(updatedContent);
     }
@@ -267,11 +276,11 @@ export class TransactionManager extends ContentManager<ITransaction> {
   getTransactionTypes(): {
     transactionTypes: string[];
     investmentTypes: string[];
-  } {
+    } {
     return {
       transactionTypes: Object.values(TRANSACTION_TYPES),
       investmentTypes: Object.values(INVESTMENT_TYPES),
-    }
+    };
   }
 }
 

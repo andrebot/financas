@@ -12,15 +12,16 @@ import logger from './logger';
  * @returns - The response with the error message and status
  */
 export function handleError(error: Error, res: Response, status = 500) {
+  let newStatus = status;
   logger.error(error);
 
   if (error.message.includes('not found')) {
-    status = 404;
+    newStatus = 404;
   } else if (error.message.includes('is not allowed')) {
-    status = 403;
+    newStatus = 403;
   }
 
-  return res.status(status).send({ error: error.message });
+  return res.status(newStatus).send({ error: error.message });
 }
 
 /**

@@ -1,4 +1,4 @@
-import { UserPayload } from "../types";
+import { UserPayload } from '../types';
 
 /**
  * Checks if an object is empty or null.
@@ -45,16 +45,15 @@ export function removeEmptyProperties(obj: any): any {
     if (Array.isArray(obj)) {
       const cleanedArray = obj.map(removeEmptyProperties).filter((item) => item !== undefined);
       return cleanedArray.length > 0 ? cleanedArray : undefined;
-    } else {
-      const cleanedObject: Record<string, any> = {};
-      for (const [key, value] of Object.entries(obj)) {
-        const cleanedValue = removeEmptyProperties(value);
-        if (cleanedValue !== undefined) {
-          cleanedObject[key] = cleanedValue;
-        }
-      }
-      return Object.keys(cleanedObject).length > 0 ? cleanedObject : undefined;
     }
+    const cleanedObject: Record<string, any> = {};
+    for (const [key, value] of Object.entries(obj)) {
+      const cleanedValue = removeEmptyProperties(value);
+      if (cleanedValue !== undefined) {
+        cleanedObject[key] = cleanedValue;
+      }
+    }
+    return Object.keys(cleanedObject).length > 0 ? cleanedObject : undefined;
   }
 
   return obj;
@@ -92,7 +91,11 @@ export function checkVoidInstance(instance: any, modelName: string, id: string):
  * @param modelName - The name of the model
  * @param action - The action to check
  */
-export function checkVoidUser(user: UserPayload | undefined, modelName: string, action: string): void {
+export function checkVoidUser(
+  user: UserPayload | undefined,
+  modelName: string,
+  action: string,
+): void {
   if (!user || Object.keys(user).length === 0) {
     throw new Error(`User not authenticated to ${action} ${modelName}`);
   }

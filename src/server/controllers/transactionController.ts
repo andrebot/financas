@@ -1,8 +1,8 @@
+import type { Response } from 'express';
 import ContentController from './contentController';
 import TransactionManager from '../managers/transactionManager';
 import { checkVoidUser } from '../utils/misc';
 import { handleError } from '../utils/responseHandlers';
-import type { Response } from 'express';
 import type { RequestWithUser, ITransaction } from '../types';
 
 class TransactionController extends ContentController<ITransaction> {
@@ -16,7 +16,7 @@ class TransactionController extends ContentController<ITransaction> {
 
   getTransactionTypes(req: RequestWithUser, res: Response) {
     try {
-      const user = req.user;
+      const { user } = req;
 
       checkVoidUser(user, this.transactionManager.modelName, 'get');
       return res.send(this.transactionManager.getTransactionTypes());

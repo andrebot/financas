@@ -1,16 +1,19 @@
 import { Response } from 'express';
 import ContentManager from '../managers/contentManager';
 import { handleError } from '../utils/responseHandlers';
-import type { RequestWithUser } from '../types';
+import type { RequestWithUser, IContentController } from '../types';
 import type { Content } from '../managers/contentManager';
 import { checkVoidPayload, checkVoidUser } from '../utils/misc';
-import type { IContentController } from '../types';
 
 export default class ContentController<T extends Content> implements IContentController {
   protected manager: ContentManager<T>;
+
   protected errorHandler: (error: Error, res: Response) => Response;
 
-  constructor(manager: ContentManager<T>, errorHandler: (error: Error, res: Response) => Response = handleError) {
+  constructor(
+    manager: ContentManager<T>,
+    errorHandler: (error: Error, res: Response) => Response = handleError,
+  ) {
     this.manager = manager;
     this.errorHandler = errorHandler;
   }

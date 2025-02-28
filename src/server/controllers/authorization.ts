@@ -62,7 +62,12 @@ function isLoginActionValid(email: string, password: string, res: Response) {
   return true;
 }
 
-function isChangePasswordValid(email: string, oldPassword: string, newPassword: string, res: Response)  {
+function isChangePasswordValid(
+  email: string,
+  oldPassword: string,
+  newPassword: string,
+  res: Response,
+) {
   if (!email) {
     handleError(new Error('Invalid user'), res, 400);
 
@@ -217,7 +222,10 @@ export async function getUserController(req:Request, res: Response) {
  * @param res - The response object
  * @returns - The message as an object
  */
-export async function deleteUserController(req: RequestWithUser, res: Response) {
+export async function deleteUserController(
+  req: RequestWithUser,
+  res: Response,
+): Promise<void | Response> {
   try {
     const { userId } = req.params;
 
@@ -240,7 +248,7 @@ export async function deleteUserController(req: RequestWithUser, res: Response) 
  * @param res - The response object
  * @returns - The tokens as an object
  */
-export async function loginController(req: Request, res: Response) {
+export async function loginController(req: Request, res: Response): Promise<void | Response> {
   const {
     email,
     password,
@@ -343,7 +351,10 @@ export async function resetPasswordController(req: Request, res: Response) {
  * @param res - The response object
  * @returns - The message as an object
  */
-export async function changePasswordController(req: RequestWithUser, res: Response) {
+export async function changePasswordController(
+  req: RequestWithUser,
+  res: Response,
+): Promise<void | Response> {
   try {
     const { oldPassword, newPassword } = req.body;
 

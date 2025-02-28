@@ -59,7 +59,11 @@ TokenValidationMiddleware {
    * @param next - The next function
    * @returns void
    */
-  return function accessTokenValidator(req: RequestWithUser, res: Response, next: NextFunction): void {
+  return function accessTokenValidator(
+    req: RequestWithUser,
+    res: Response,
+    next: NextFunction,
+  ): void {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
 

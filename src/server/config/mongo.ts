@@ -3,7 +3,7 @@ import exportConfig from './configWrap';
 interface MongoConfig {
   DB_URL: string;
   MONGO_OPT?: Record<string, unknown>;
-};
+}
 
 const MONGO = exportConfig<MongoConfig>({
   default: {

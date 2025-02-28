@@ -6,7 +6,6 @@ import { RootState } from './store';
  */
 export type RTKApi = Pick<BaseQueryApi, 'getState' | 'extra' | 'endpoint' | 'type' | 'forced'>;
 
-
 /**
  * Prepare the headers for the API requests for simple
  * non authenticated requests

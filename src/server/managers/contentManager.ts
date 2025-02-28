@@ -6,6 +6,7 @@ export type Content = { user: string };
 
 export default class ContentManager<T extends Content> {
   protected repository: IRepository<T, T>;
+
   modelName: string;
 
   constructor(repository: IRepository<T, T>) {
@@ -141,8 +142,8 @@ export default class ContentManager<T extends Content> {
     id: string,
     userId?: string,
   ): Promise<T | null> {
-    return await this.repository.findOne({
-      id: id,
+    return this.repository.findOne({
+      id,
       user: userId,
     } as QueryFilter<T>);
   }

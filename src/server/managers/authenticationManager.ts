@@ -1,10 +1,11 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { QueryFilter } from '../types';
+import {
+  QueryFilter, Tokens, Token, UserPayload,
+} from '../types';
 import UserRepo from '../resources/repositories/userRepo';
 import { addToken, deleteToken, isValidToken } from '../resources/repositories/tokenRepo';
 import { regExpPassword } from '../utils/validators';
-import { Tokens, Token, UserPayload } from '../types';
 import Logger from '../utils/logger';
 import {
   WORK_FACTOR,
@@ -66,7 +67,9 @@ export function createAccessToken(
  * @returns - the Refresh Token as a string
  */
 export function createRefreshToken(email: string, role: 'admin' | 'user', firstName: string, lastName: string, id: string): string {
-  return createToken({ email, role, firstName, lastName, id }, REFRESH_TOKEN_EXPIRATION, REFRESH_TOKEN_SECRET);
+  return createToken({
+    email, role, firstName, lastName, id,
+  }, REFRESH_TOKEN_EXPIRATION, REFRESH_TOKEN_SECRET);
 }
 
 /**
@@ -104,13 +107,18 @@ export async function createUser(
 }
 
 /**
- * Function to validate the update user. It will check if the user is an admin and if the user is trying to update another user
+ * Function to validate the update user. It will check if the user is an admin and if the user
+ * is trying to update another user
  *
  * @param requestingUser - The user that is requesting the update
  * @param user - The user to be updated
  * @param payload - The payload to be updated
  */
-function validateUpdateUser(requestingUser: UserPayload | undefined, user: IUser | null, payload: UserPayload) {
+function validateUpdateUser(
+  requestingUser: UserPayload | undefined,
+  user: IUser | null,
+  payload: UserPayload,
+) {
   if (!user) {
     throw new Error('User not found');
   }
@@ -152,7 +160,7 @@ export async function updateUser(
 
   if (email) {
     user!.email = email;
-  } 
+  }
 
   if (firstName) {
     user!.firstName = firstName;
