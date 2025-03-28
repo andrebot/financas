@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 import { useTranslation } from 'react-i18next';
-import { render, screen, act, renderHook } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 import { useAuth } from '../../../src/client/hooks/authContext';
 import { useLogoutMutation } from '../../../src/client/features/login';
 import useLogout from '../../../src/client/hooks/useLogout';
@@ -22,7 +22,8 @@ jest.mock('react-i18next', () => ({
 }));
 
 jest.mock('react-redux', () => ({
-  useDispatch: jest.fn(),
+  ...jest.requireActual('react-redux'),
+  useDispatch: jest.fn()
 }));
 
 jest.mock('../../../src/client/hooks/authContext', () => ({
@@ -59,7 +60,7 @@ describe('useLogout', () => {
       setUser: mockSetUser,
     });
     (useLogoutMutation as jest.Mock).mockReturnValue([mockLogout, { isLoading: false }]);
-    (useDispatch as jest.Mock).mockReturnValue(mockDispatch);
+    (useDispatch as unknown as jest.Mock).mockReturnValue(mockDispatch);
     (useTranslation as jest.Mock).mockReturnValue({
       t: mockT,
     });

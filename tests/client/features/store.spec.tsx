@@ -14,8 +14,8 @@ describe('Redux Store', () => {
   it('should correctly configure the store with reducers', () => {
     const state = store.getState();
 
-    expect(state.theme).toEqual(themeReducer(undefined, { type: undefined }));
-    expect(state[loginApi.reducerPath]).toEqual(loginApi.reducer(undefined, { type: undefined }));
+    expect(state.theme).toEqual(themeReducer(undefined, { type: '@@INIT' }));
+    expect(state[loginApi.reducerPath]).toEqual(loginApi.reducer(undefined, { type: '@@INIT' }));
   });
 
   it('should handle actions from theme reducer', () => {

@@ -45,7 +45,7 @@ describe('NavBar', () => {
     jest.resetAllMocks();
 
     (useNavigate as jest.Mock).mockReturnValue(navigateMock);
-    (useDispatch as jest.Mock).mockReturnValue(dispatchMock);
+    (useDispatch as unknown as jest.Mock).mockReturnValue(dispatchMock);
     (useLogoutMutation as jest.Mock).mockReturnValue([logoutMutationMock, { isLoading: false, isSuccess: false }]);
     (useSnackbar as jest.Mock).mockReturnValue({ enqueueSnackbar: enqueueSnackbarMock });
     (useAuth as jest.Mock).mockReturnValue({ user: { id: 1, firstName: 'John' }, setUser: setUserMock });

@@ -10,14 +10,14 @@ import config from '../config/apiConfig';
  * If the user is not authenticated, it redirects to the login page.
  */
 export default function ProtectedRoute(): React.JSX.Element | undefined {
-  const { user, setUser } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!user) {
-      navigate(config.user.loginPage);
+      navigate(config.user.loginPage, { replace: true });
     }
-  }, [user, setUser, navigate]);
+  }, [user, navigate]);
 
   if (!user) {
     return <LoginPage />;

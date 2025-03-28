@@ -1,20 +1,17 @@
-import chai from 'chai';
 import englishTranslations from '../../../src/client/i18n/en';
 import ptTranslations from '../../../src/client/i18n/pt-br';
 
-const should = chai.should();
-
 describe('English Translations', () => {
   it('should have specific properties', () => {
-    should.exist(englishTranslations.translation);
-    should.exist(ptTranslations.translation);
+    expect(englishTranslations.translation).toBeDefined();
+    expect(ptTranslations.translation).toBeDefined();
 
-    englishTranslations.should.be.an('object');
-    ptTranslations.should.be.an('object');
+    expect(englishTranslations.translation).toBeInstanceOf(Object);
+    expect(ptTranslations.translation).toBeInstanceOf(Object);
 
-    Object.keys(englishTranslations.translation).length.should.equal(Object.keys(ptTranslations.translation).length);
+    expect(Object.keys(englishTranslations.translation).length).toEqual(Object.keys(ptTranslations.translation).length);
     Object.keys(englishTranslations.translation).forEach(key => {
-      ptTranslations.translation.should.have.property(key);
+      expect(ptTranslations.translation).toHaveProperty(key);
     });
   });
 });

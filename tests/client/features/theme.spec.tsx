@@ -2,7 +2,7 @@ import themeReducer, { toggleTheme } from '../../../src/client/features/themeSli
 
 describe('themeSlice', () => {
   it('should return the initial state', () => {
-    expect(themeReducer(undefined, { type: undefined })).toBe('dark');
+    expect(themeReducer(undefined, { type: '@@INIT' })).toBe('dark');
   });
 
   it('should toggle the theme from dark to light', () => {

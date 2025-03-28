@@ -54,7 +54,7 @@ describe('LoadingPage', () => {
       setUser: mockSetUser,
     });
     (useLoginMutation as jest.Mock).mockReturnValue([mockLoginMutation, { isLoading: false, isSuccess: false }]);
-    (useDispatch as jest.Mock).mockReturnValue(mockDispatch);
+    (useDispatch as unknown as jest.Mock).mockReturnValue(mockDispatch);
 
     const { unmount: unmountLogin } = render(<I18nextProvider i18n={i18n}><Login /></I18nextProvider>);
 

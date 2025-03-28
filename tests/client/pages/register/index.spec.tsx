@@ -49,7 +49,7 @@ describe('Register Component', () => {
       setAccessToken: mockSetAccessToken,
     });
     (useRegisterMutation as jest.Mock).mockReturnValue([mockRegisterMutation, { isLoading: false, isSuccess: false }]);
-    (useDispatch as jest.Mock).mockReturnValue(mockDispatch);
+    (useDispatch as unknown as jest.Mock).mockReturnValue(mockDispatch);
   });
 
   it('renders the Register form correctly', () => {

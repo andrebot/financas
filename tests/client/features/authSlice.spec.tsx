@@ -2,7 +2,7 @@ import authReducer, { setAccessToken, clearAccessToken } from '../../../src/clie
 
 describe('authSlice', () => {
   it('should return the initial state', () => {
-    expect(authReducer(undefined, { type: undefined })).toEqual({ accessToken: null });
+    expect(authReducer(undefined, { type: '@@INIT' })).toEqual({ accessToken: null });
   });
 
   it('should set the access token', () => {
