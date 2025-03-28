@@ -1,6 +1,5 @@
 import chai from 'chai';
 import sinonChai from 'sinon-chai';
-import chaiHttp from 'chai-http';
 import {
   connectToDatabase,
   createAdminUser,
@@ -31,7 +30,6 @@ import {
 import { Types } from 'mongoose';
 
 chai.use(sinonChai);
-chai.use(chaiHttp);
 chai.should();
 
 before(async () => {

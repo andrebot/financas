@@ -1,5 +1,6 @@
 import chai from 'chai';
 import sinon from 'sinon';
+import request from 'supertest';
 import jwt from 'jsonwebtoken';
 import { Types } from 'mongoose';
 import server from '../../src/server/server';
@@ -8,7 +9,6 @@ import { createAccessToken, createRefreshToken } from '../../src/server/managers
 import UserModel from '../../src/server/resources/models/userModel';
 import { addToken, deleteToken } from '../../src/server/resources/repositories/tokenRepo';
 import { REFRESH_TOKEN_COOKIE_NAME } from '../../src/server/config/auth';
-
 describe('Authentication', () => {
   let newUser = {
     id: '',
@@ -20,16 +20,14 @@ describe('Authentication', () => {
   let loginTokens: { accessToken: string, refreshToken: string };
 
   describe('Listing Users - GET /api/v1/user', () => {
-    it('should return a 401 error if the user is not authenticated', (done) => {
-      chai.request(server)
-        .get('/api/v1/user')
-        .end((err, res) => {
-          res.should.have.status(401);
-          done();
-        });
+    it('should return a 401 error if the user is not authenticated', async () => {
+      const response = await request(server)
+        .get('/api/v1/user');
+
+      response.status.should.be.eq(401);
     });
 
-    it('should list users successfully if the user is authenticated', (done) => {
+    it('should list users successfully if the user is authenticated', async () => {
       const token = createAccessToken(
         adminUser.email,
         'admin',
@@ -38,19 +36,16 @@ describe('Authentication', () => {
         adminUser.id!,
       );
 
-      chai.request(server)
+      const response = await request(server)
         .get('/api/v1/user')
-        .set('Authorization', `Bearer ${token}`)
-        .end((err, res) => {
-          res.should.have.status(200);
+        .set('Authorization', `Bearer ${token}`);
 
-          res.body.should.be.a('array');
-          res.body.length.should.be.eql(2);
-          done();
-        });
+      response.status.should.be.eq(200);
+      response.body.should.be.a('array');
+      response.body.length.should.be.eql(2);
     });
 
-    it('should return a 403 error if the user is authenticated but not an admin', (done) => {
+    it('should return a 403 error if the user is authenticated but not an admin', async () => {
       const token = createAccessToken(
         adminUser.email,
         'user',
@@ -59,16 +54,14 @@ describe('Authentication', () => {
         adminUser.id!,
       );
 
-      chai.request(server)
+      const response = await request(server)
         .get('/api/v1/user')
-        .set('Authorization', `Bearer ${token}`)
-        .end((err, res) => {
-          res.should.have.status(403);
-          done();
-        });
+        .set('Authorization', `Bearer ${token}`);
+
+      response.status.should.be.eq(403);
     });
 
-    it('should return a 500 error if an error occurs', (done) => {
+    it('should return a 500 error if an error occurs', async () => {
       const token = createAccessToken(
         adminUser.email,
         'admin',
@@ -78,16 +71,14 @@ describe('Authentication', () => {
       );
       const stub = sinon.stub(UserModel, 'find').throws();
 
-      chai.request(server)
+      const response = await request(server)
         .get('/api/v1/user')
-        .set('Authorization', `Bearer ${token}`)
-        .end((err, res) => {
-          res.should.have.status(500);
-          res.body.should.have.property('error').eql('Error');
+        .set('Authorization', `Bearer ${token}`);
 
-          stub.restore();
-          done();
-        });
+      response.status.should.be.eq(500);
+      response.body.should.have.property('error').eql('Error');
+
+      stub.restore();
     });
   });
 
@@ -104,35 +95,31 @@ describe('Authentication', () => {
       );
     });
 
-    it('should return a 401 error if the user is not authenticated', (done) => {
-      chai.request(server)
-        .post('/api/v1/user')
-        .end((err, res) => {
-          res.should.have.status(401);
-          done();
-        });
+    it('should return a 401 error if the user is not authenticated', async () => {
+      const response = await request(server)
+        .post('/api/v1/user');
+
+      response.status.should.be.eq(401);
     });
 
-    it('should create a user successfully if the user is an admin', (done) => {
-      chai.request(server)
+    it('should create a user successfully if the user is an admin', async () => {
+      const response = await request(server)
         .post('/api/v1/user')
         .set('Authorization', `Bearer ${token}`)
-        .send(newUser)
-        .end((err, res) => {
-          res.should.have.status(200);
-          res.body.should.have.property('email').eql(newUser.email);
-          res.body.should.have.property('firstName').eql(newUser.firstName);
-          res.body.should.have.property('lastName').eql(newUser.lastName);
-          res.body.should.have.property('role').eql('user');
-          res.body.should.have.property('id');
-          res.body.should.not.have.property('password');
+        .send(newUser);
 
-          newUser.id = res.body.id;
-          done();
-        });
+      response.status.should.be.eq(200);
+      response.body.should.have.property('email').eql(newUser.email);
+      response.body.should.have.property('firstName').eql(newUser.firstName);
+      response.body.should.have.property('lastName').eql(newUser.lastName);
+      response.body.should.have.property('role').eql('user');
+      response.body.should.have.property('id');
+      response.body.should.not.have.property('password');
+
+      newUser.id = response.body.id;
     });
 
-    it('should return a 403 error if the user is authenticated but not an admin', (done) => {
+    it('should return a 403 error if the user is authenticated but not an admin', async () => {
       const token = createAccessToken(
         adminUser.email,
         'user',
@@ -141,84 +128,72 @@ describe('Authentication', () => {
         adminUser.id!,
       );
 
-      chai.request(server)
+      const response = await request(server)
         .post('/api/v1/user')
         .set('Authorization', `Bearer ${token}`)
-        .send(newUser)
-        .end((err, res) => {
-          res.should.have.status(403);
-          done();
-        });
+        .send(newUser);
+
+      response.status.should.be.eq(403);
     });
 
-    it('should return an error 500 if the user already exists', (done) => {
+    it('should return an error 500 if the user already exists', async () => {
       const newUser = {...adminUser, password: 'Maka-jan32'};
 
-      chai.request(server)
+      const response = await request(server)
         .post('/api/v1/user')
         .set('Authorization', `Bearer ${token}`)
-        .send(newUser)
-        .end((err, res) => {
-          res.should.have.status(500);
-          res.body.should.have.property('error').eql('duplicateUser');
-          done();
-        });
+        .send(newUser);
+
+      response.status.should.be.eq(500);
+      response.body.should.have.property('error').eql('duplicateUser');
     });
 
-    it('should return error 500 if the password is not strong enough', (done) => {
+    it('should return error 500 if the password is not strong enough', async () => {
       const newUser = {...adminUser, password: 'password'};
 
-      chai.request(server)
+      const response = await request(server)
         .post('/api/v1/user')
         .set('Authorization', `Bearer ${token}`)
-        .send(newUser)
-        .end((err, res) => {
-          res.should.have.status(500);
-          res.body.should.have.property('error').eql('Password does not follow the rules');
-          done();
-        });
+        .send(newUser);
+
+      response.status.should.be.eq(500);
+      response.body.should.have.property('error').eql('Password does not follow the rules');
     });
 
-    it('should return error 500 if the email is not valid', (done) => {
+    it('should return error 500 if the email is not valid', async () => {
       const newUser = {...adminUser, email: 'test', password: 'Maka-jan32'};
 
-      chai.request(server)
+      const response = await request(server)
         .post('/api/v1/user')
         .set('Authorization', `Bearer ${token}`)
-        .send(newUser)
-        .end((err, res) => {
-          res.should.have.status(500);
-          res.body.should.have.property('error').eql('user validation failed: email: Path `email` is invalid (test).');
-          done();
-        });
+        .send(newUser);
+
+      response.status.should.be.eq(500);
+      response.body.should.have.property('error').eql('user validation failed: email: Path `email` is invalid (test).');
     });
 
-    it('should return error 500 if firstName is missing', (done) => {
+    it('should return error 500 if firstName is missing', async () => {
       const newUser = {...adminUser, firstName: '', password: 'Maka-jan32'};
 
-      chai.request(server)
+      const response = await request(server)
         .post('/api/v1/user')
         .set('Authorization', `Bearer ${token}`)
-        .send(newUser)
-        .end((err, res) => {
-          res.should.have.status(500);
-          res.body.should.have.property('error').eql('user validation failed: firstName: Path `firstName` is required.');
-          done();
-        });
+        .send(newUser);
+
+      response.status.should.be.eq(500);
+      response.body.should.have.property('error').eql('user validation failed: firstName: Path `firstName` is required.');
     });
 
-    it('should return error 500 if lastName is missing', (done) => {
+    it('should return error 500 if lastName is missing', async () => {
       const newUser = {...adminUser, lastName: '', password: 'Maka-jan32'};
 
-      chai.request(server)
+      const response = await request(server)
         .post('/api/v1/user')
         .set('Authorization', `Bearer ${token}`)
-        .send(newUser)
-        .end((err, res) => {
-          res.should.have.status(500);
-          res.body.should.have.property('error').eql('user validation failed: lastName: Path `lastName` is required.');
-          done();
-        });
+        .send(newUser);
+
+      response.status.should.be.eq(500);
+      response.body.should.have.property('error').eql('user validation failed: lastName: Path `lastName` is required.');
     });
   });
 
@@ -235,7 +210,7 @@ describe('Authentication', () => {
       );
     });
 
-    it('should be able to update an user if the user is an admin', (done) => {
+    it('should be able to update an user if the user is an admin', async () => {
       token = createAccessToken(
         adminUser.email,
         'admin',
@@ -245,18 +220,16 @@ describe('Authentication', () => {
       );
       adminUser.firstName.should.be.eql('Admin');
 
-      chai.request(server)
+      const response = await request(server)
         .put(`/api/v1/user/${adminUser.id!}`)
         .set('Authorization', `Bearer ${token}`)
-        .send({ firstName: 'Admin1' })
-        .end((err, res) => {
-          res.should.have.status(200);
-          res.body.should.have.property('firstName').eql('Admin1');
-          done();
-        });
+        .send({ firstName: 'Admin1' });
+
+      response.status.should.be.eq(200);
+      response.body.should.have.property('firstName').eql('Admin1');
     });
 
-    it('should not be able to update a user if it is not the same user', (done) => {
+    it('should not be able to update a user if it is not the same user', async () => {
       token = createAccessToken(
         'another@gmail.com',
         'user',
@@ -265,110 +238,89 @@ describe('Authentication', () => {
         new Types.ObjectId().toHexString(),
       );
 
-      chai.request(server)
+      const response = await request(server)
         .put(`/api/v1/user/${newUser.id!}`)
         .set('Authorization', `Bearer ${token}`)
-        .send({ firstName: 'Test2' })
-        .end((err, res) => {
-          res.should.have.status(403);
-          res.body.should.have.property('error').eql('You do not have permission to update this user');
-          done();
-        });
+        .send({ firstName: 'Test2' });
+
+      response.status.should.be.eq(403);
+      response.body.should.have.property('error').eql('You do not have permission to update this user');
     });
 
-    it('should not be able to update password of an user if it is the same user', (done) => {
-      chai.request(server)
+    it('should not be able to update password of an user if it is the same user', async () => {
+      const response = await request(server)
         .put(`/api/v1/user/${newUser.id}`)
         .set('Authorization', `Bearer ${token}`)
-        .send({ password: 'Gero-jun23' })
-        .end((err, res) => {
-          res.should.have.status(500);
+        .send({ password: 'Gero-jun23' });
 
-          done();
-        });
+      response.status.should.be.eq(500);
     });
 
-    it('should not be able to update role of an user if it is the same user', (done) => {
-      chai.request(server)
+    it('should not be able to update role of an user if it is the same user', async () => {
+      const response = await request(server)
         .put(`/api/v1/user/${newUser.id}`)
         .set('Authorization', `Bearer ${token}`)
-        .send({ role: 'admin' })
-        .end((err, res) => {
-          res.should.have.status(500);
+        .send({ role: 'admin' });
 
-          done();
-        });
+      response.status.should.be.eq(500);
     });
 
-    it('should be able to update firstName of an user if it is the same user', (done) => {
-      chai.request(server)
+    it('should be able to update firstName of an user if it is the same user', async () => {
+      const response = await request(server)
         .put(`/api/v1/user/${newUser.id}`)
         .set('Authorization', `Bearer ${token}`)
-        .send({ firstName: 'Test2' })
-        .end((err, res) => {
-          res.should.have.status(200);
-          res.body.should.have.property('firstName').eql('Test2');
+        .send({ firstName: 'Test2' });
 
-          done();
-        });
+      response.status.should.be.eq(200);
+      response.body.should.have.property('firstName').eql('Test2');
     });
 
-    it('should be able to update lastName of an user if it is the same user', (done) => {
-      chai.request(server)
+    it('should be able to update lastName of an user if it is the same user', async () => {
+      const response = await request(server)
         .put(`/api/v1/user/${newUser.id}`)
         .set('Authorization', `Bearer ${token}`)
-        .send({ lastName: 'bogabofa' })
-        .end((err, res) => {
-          res.should.have.status(200);
-          res.body.should.have.property('lastName').eql('bogabofa');
+        .send({ lastName: 'bogabofa' });
 
-          done();
-        });
+      response.status.should.be.eq(200);
+      response.body.should.have.property('lastName').eql('bogabofa');
     });
 
-    it('should be able to update email of an user if it is the same user', (done) => {
+    it('should be able to update email of an user if it is the same user', async () => {
       const newEmail = 'new@email.com';
 
-      chai.request(server)
+      const response = await request(server)
         .put(`/api/v1/user/${newUser.id}`)
         .set('Authorization', `Bearer ${token}`)
-        .send({ email: newEmail })
-        .end((err, res) => {
-          res.should.have.status(200);
-          res.body.should.have.property('email').eql(newEmail);
+        .send({ email: newEmail });
 
-          newUser.email = newEmail;
-          done();
-        });
+      response.status.should.be.eq(200);
+      response.body.should.have.property('email').eql(newEmail);
+
+      newUser.email = newEmail;
     });
 
-    it('should be able to handle errors when finding the user to be updated', (done) => {
+    it('should be able to handle errors when finding the user to be updated', async () => {
       const stub = sinon.stub(UserModel, 'findById').throws();
 
-      chai.request(server)
+      const response = await request(server)
         .put(`/api/v1/user/${newUser.id}`)
         .set('Authorization', `Bearer ${token}`)
-        .send({ email: 'nada@gmail.com' })
-        .end((err, res) => {
-          res.should.have.status(500);
-          res.body.should.have.property('error').eql('Error');
+        .send({ email: 'nada@gmail.com' });
 
-          stub.restore();
-          done();
-        });
+      response.status.should.be.eq(500);
+      response.body.should.have.property('error').eql('Error');
+
+      stub.restore();
     });
 
-    it('should throw an error if no user is found', (done) => {
-      chai.request(server)
+    it('should throw an error if no user is found', async () => {
+      const response = await request(server)
         .put(`/api/v1/user/34865234582734n523485n23487`)
         .set('Authorization', `Bearer ${token}`)
-        .send({ email: 'nada@gmail.com' })
-        .end((err, res) => {
-          res.should.have.status(500);
-          res.body.should.have.property('error').eql('Cast to ObjectId failed for value "34865234582734n523485n23487" (type string) at path "_id" for model "user"');
+        .send({ email: 'nada@gmail.com' });
 
-          done();
-        });
+      response.status.should.be.eq(500);
+      response.body.should.have.property('error').eql('Cast to ObjectId failed for value "34865234582734n523485n23487" (type string) at path "_id" for model "user"');
     });
   });
 
@@ -385,7 +337,7 @@ describe('Authentication', () => {
       );
     });
 
-    it('shoud return a 401 error if the user is not an admin trying to delete another user', (done) => {
+    it('shoud return a 401 error if the user is not an admin trying to delete another user', async () => {
       token = createAccessToken(
         newUser.email,
         'user',
@@ -394,49 +346,39 @@ describe('Authentication', () => {
         newUser.id!,
       );
 
-      chai.request(server)
+      const response = await request(server)
         .delete(`/api/v1/user/${adminUser.id}`)
-        .set('Authorization', `Bearer ${token}`)
-        .end((err, res) => {
-          res.should.have.status(401);
-          done();
-        });
+        .set('Authorization', `Bearer ${token}`);
+
+      response.status.should.be.eq(401);
     });
 
-    it('should return a 401 error if the user is not authenticated', (done) => {
-      chai.request(server)
-        .delete(`/api/v1/user/${newUser.id}`)
-        .end((err, res) => {
-          res.should.have.status(401);
-          done();
-        });
+    it('should return a 401 error if the user is not authenticated', async () => {
+      const response = await request(server)
+        .delete(`/api/v1/user/${newUser.id}`);
+
+      response.status.should.be.eq(401);
     });
 
-    it('should not be able to delete a user if the id it not valid', (done) => {
-      chai.request(server)
+    it('should not be able to delete a user if the id it not valid', async () => {
+      const response = await request(server)
         .delete(`/api/v1/user/34865234582734n523485n23487`)
-        .set('Authorization', `Bearer ${token}`)
-        .end((err, res) => {
-          res.should.have.status(400);
-          res.body.should.have.property('error').eql('Invalid id');
+        .set('Authorization', `Bearer ${token}`);
 
-          done();
-        });
+      response.status.should.be.eq(400);
+      response.body.should.have.property('error').eql('Invalid id');
     });
 
-    it('should be able to delete an user if it is an admin', (done) => {
-      chai.request(server)
+    it('should be able to delete an user if it is an admin', async () => {
+      const response = await request(server)
         .delete(`/api/v1/user/${newUser.id}`)
-        .set('Authorization', `Bearer ${token}`)
-        .end((err, res) => {
-          res.should.have.status(200);
-          res.body.should.have.property('message').eql(`User deleted: id ${newUser.id}`);
+        .set('Authorization', `Bearer ${token}`);
 
-          done();
-        });
+      response.status.should.be.eq(200);
+      response.body.should.have.property('message').eql(`User deleted: id ${newUser.id}`);
     });
 
-    it('should be able to delete a user if it is the same user that is not an admin', (done) => {
+    it('should be able to delete a user if it is the same user that is not an admin', async () => {
       const toDeleteToken = createAccessToken(
         userToDelete.email,
         'user',
@@ -453,116 +395,98 @@ describe('Authentication', () => {
         userToDelete.id!,
       );
 
-      chai.request(server)
+      const response = await request(server)
         .delete(`/api/v1/user/${userToDelete.id}`)
         .set('Authorization', `Bearer ${toDeleteToken}`)
-        .set('Cookie', `${REFRESH_TOKEN_COOKIE_NAME}=${toDeleteRefreshToken}`)
-        .end((err, res) => {
-          res.should.have.status(200);
-          done();
-        });
+        .set('Cookie', `${REFRESH_TOKEN_COOKIE_NAME}=${toDeleteRefreshToken}`);
+
+      response.status.should.be.eq(200);
+      response.body.should.have.property('message').eql(`User deleted: id ${userToDelete.id}`);
     });
 
-    it('should return 404 if the user is not found', (done) => {
-      chai.request(server)
+    it('should return 404 if the user is not found', async () => {
+      const response = await request(server)
         .delete(`/api/v1/user/${newUser.id}`)
-        .set('Authorization', `Bearer ${token}`)
-        .end((err, res) => {
-          res.should.have.status(404);
-          res.body.should.have.property('error').eql(`User not found ${newUser.id}`);
+        .set('Authorization', `Bearer ${token}`);
 
-          done();
-        });
+      response.status.should.be.eq(404);
+      response.body.should.have.property('error').eql(`User not found ${newUser.id}`);
     });
 
-    it('should return error if an error occurs', (done) => {
+    it('should return error if an error occurs', async () => {
       const stub = sinon.stub(UserModel, 'findByIdAndDelete').throws();
 
-      chai.request(server)
+      const response = await request(server)
         .delete(`/api/v1/user/${newUser.id}`)
-        .set('Authorization', `Bearer ${token}`)
-        .end((err, res) => {
-          res.should.have.status(500);
-          res.body.should.have.property('error').eql('Error');
+        .set('Authorization', `Bearer ${token}`);
 
-          stub.restore();
-          done();
-        });
+      response.status.should.be.eq(500);
+      response.body.should.have.property('error').eql('Error');
+
+      stub.restore();
     });
   });
 
   describe('Logging in - POST /api/v1/login', () => {
-    it('should return a 404 error if the user is not found', (done) => {
-      chai.request(server)
+    it('should return a 404 error if the user is not found', async () => {
+      const response = await request(server)
         .post('/api/v1/user/login')
-        .send({ email: 'andre.almeida@gmail.com', password: 'Maka-jan32' })
-        .end((err, res) => {
-          res.should.have.status(404);
-          res.body.should.have.property('error').eql('User not found');
-          done();
-        });
+        .send({ email: 'andre.almeida@gmail.com', password: 'Maka-jan32' });
+
+      response.status.should.be.eq(404);
+      response.body.should.have.property('error').eql('User not found');
     });
 
-    it('should return a 400 error if the email is not valid', (done) => {
-      chai.request(server)
+    it('should return a 400 error if the email is not valid', async () => {
+      const response = await request(server)
         .post('/api/v1/user/login')
-        .send({ email: 'andre.almeida', password: 'Maka-jan32' })
-        .end((err, res) => {
-          res.should.have.status(400);
-          res.body.should.have.property('error').eql('invalidUser');
-          done();
-        });
+        .send({ email: 'andre.almeida', password: 'Maka-jan32' });
+
+      response.status.should.be.eq(400);
+      response.body.should.have.property('error').eql('invalidUser');
     });
 
-    it('should return a 400 error if the email is empty', (done) => {
-      chai.request(server)
+    it('should return a 400 error if the email is empty', async () => {
+      const response = await request(server)
         .post('/api/v1/user/login')
-        .send({ password: 'Maka-jan32' })
-        .end((err, res) => {
-          res.should.have.status(400);
-          res.body.should.have.property('error').eql('invalidUser');
-          done();
-        });
+        .send({ password: 'Maka-jan32' });
+
+      response.status.should.be.eq(400);
+      response.body.should.have.property('error').eql('invalidUser');
     });
 
-    it('should return a 400 error if the password is empty', (done) => {
-      chai.request(server)
+    it('should return a 400 error if the password is empty', async () => {
+      const response = await request(server)
         .post('/api/v1/user/login')
-        .send({ email: 'andre.almeida@gmail.com' })
-        .end((err, res) => {
-          res.should.have.status(400);
-          res.body.should.have.property('error').eql('invalidUser');
-          done();
-        });
+        .send({ email: 'andre.almeida@gmail.com' });
+
+      response.status.should.be.eq(400);
+      response.body.should.have.property('error').eql('invalidUser');
     });
 
-    it('should return a 400 error if the password is not a match', (done) => {
-      chai.request(server)
+    it('should return a 400 error if the password is not a match', async () => {
+      const response = await request(server)
         .post('/api/v1/user/login')
-        .send({ email: adminUser.email, password: 'wrong password' })
-        .end((err, res) => {
-          res.should.have.status(500);
-          res.body.should.have.property('error').eql('invalidUser');
-          done();
-        });
+        .send({ email: adminUser.email, password: 'wrong password' });
+
+      response.status.should.be.eq(500);
+      response.body.should.have.property('error').eql('invalidUser');
     });
 
-    it('should return a 200 status and the tokens if the user is found', (done) => {	
-      chai.request(server)	
+    it('should return a 200 status and the tokens if the user is found', async () => {	
+      const response = await request(server)	
         .post('/api/v1/user/login')	
-        .send({ email: adminUser.email, password: 'adminPassword' })	
-        .end((err, res) => {	
-          res.should.have.status(200);
-          res.body.should.have.property('accessToken');
-          res.body.should.have.property('user');
-          res.headers.should.have.property('set-cookie');
+        .send({ email: adminUser.email, password: 'adminPassword' });	
 
-          loginTokens = {
-            accessToken: res.body.accessToken,
-            refreshToken: res.headers['set-cookie'][0].split(';')[0].split('=')[1],
-          };
-          done();	
-        });	
+      response.status.should.be.eq(200);
+      response.body.should.have.property('accessToken');
+      response.body.should.have.property('user');
+      response.headers.should.have.property('set-cookie');
+
+      loginTokens = {
+        accessToken: response.body.accessToken,
+        refreshToken: response.headers['set-cookie'][0].split(';')[0].split('=')[1],
+      };
     });
   });
 
@@ -587,114 +511,98 @@ describe('Authentication', () => {
       deleteToken(refreshToken);
     });
 
-    it('should return a 400 error if the refreshToken is empty', (done) => {
-      chai.request(server)
+    it('should return a 400 error if the refreshToken is empty', async () => {
+      const response = await request(server)
         .get('/api/v1/user/refresh-tokens')
-        .send({ refreshToken: '' })
-        .end((err, res) => {
-          res.should.have.status(400);
-          res.body.should.have.property('error').eql('Empty refresh token');
-          done();
-        });
+        .send({ refreshToken: '' });
+
+      response.status.should.be.eq(400);
+      response.body.should.have.property('error').eql('Empty refresh token');
     });
 
-    it('should be able to handle errors when verifying the token', (done) => {
+    it('should be able to handle errors when verifying the token', async () => {
       const stub = sinon.stub(jwt, 'verify').throws();
 
-      chai.request(server)
+      const response = await request(server)
         .get('/api/v1/user/refresh-tokens')
-        .set('Cookie', `${REFRESH_TOKEN_COOKIE_NAME}=${loginTokens.refreshToken}`)
-        .end((err, res) => {
-          res.should.have.status(500);
+        .set('Cookie', `${REFRESH_TOKEN_COOKIE_NAME}=${loginTokens.refreshToken}`);
 
-          stub.restore();
-          done();
-        });
+      response.status.should.be.eq(500);
+
+      stub.restore();
     });
 
-    it('should be able to refresh the tokens successfully if refreshToken is valid', (done) => {
+    it('should be able to refresh the tokens successfully if refreshToken is valid',  async () => {
       const stub = sinon.stub(jwt, 'verify').callsFake(() => ({ email: adminUser.email }));
       
-      chai.request(server)
+      const response = await request(server)  
         .get('/api/v1/user/refresh-tokens')
-        .set('Cookie', `${REFRESH_TOKEN_COOKIE_NAME}=${loginTokens.refreshToken}`)
-        .end((err, res) => {
-          res.should.have.status(200);
-          res.body.should.have.property('accessToken');
-          res.body.should.have.property('refreshToken');
-          stub.restore();
-          done();
-        });
+        .set('Cookie', `${REFRESH_TOKEN_COOKIE_NAME}=${loginTokens.refreshToken}`);
+
+      response.status.should.be.eq(200);
+      response.body.should.have.property('accessToken');
+      response.body.should.have.property('refreshToken');
+
+      stub.restore();
     });
 
-    it('should return 500 if cannot find the user', (done) => {
+    it('should return 500 if cannot find the user', async () => {
       const badEmail = 'naotem@gmail.com';
       refreshToken = createRefreshToken(badEmail, 'admin', 'admin', 'admin', new Types.ObjectId().toHexString());
       addToken(refreshToken);
 
-      chai.request(server)
+      const response = await request(server)
         .get('/api/v1/user/refresh-tokens')
-        .set('Cookie', `${REFRESH_TOKEN_COOKIE_NAME}=${refreshToken}`)
-        .end((err, res) => {
-          res.should.have.status(500);
-          res.body.should.have.property('error').eql(`No user was found with email: ${badEmail}`);
+        .set('Cookie', `${REFRESH_TOKEN_COOKIE_NAME}=${refreshToken}`);
 
-          done();
-        });
+      response.status.should.be.eq(500);
+      response.body.should.have.property('error').eql(`No user was found with email: ${badEmail}`);
     });
 
-    it('should return 500 if finding the user throws an error', (done) => {
+    it('should return 500 if finding the user throws an error', async () => {
       const stub = sinon.stub(UserModel, 'findOne').throws();
 
-      chai.request(server)
+      const response = await request(server)
         .get('/api/v1/user/refresh-tokens')
-        .set('Cookie', `${REFRESH_TOKEN_COOKIE_NAME}=${loginTokens.refreshToken}`)
-        .end((err, res) => {
-          res.should.have.status(500);
-          res.body.should.have.property('error').eql('Error');
+        .set('Cookie', `${REFRESH_TOKEN_COOKIE_NAME}=${loginTokens.refreshToken}`);
 
-          stub.restore();
-          done();
-        });
+      response.status.should.be.eq(500);
+      response.body.should.have.property('error').eql('Error');
+
+      stub.restore();
     });
   });
 
   describe('Logging out - POST /api/v1/user/logout', () => {
-    it('should return a 400 error if the refreshToken is empty', (done) => {
-      chai.request(server)
+    it('should return a 400 error if the refreshToken is empty', async () => {
+      const response = await request(server)
         .post('/api/v1/user/logout')
         .set('Authorization', `Bearer ${loginTokens.accessToken}`)
-        .send({ refreshToken: '' })
-        .end((err, res) => {
-          res.should.have.status(400);
-          res.body.should.have.property('error').eql('Empty refresh token');
-          done();
-        });
+        .send({ refreshToken: '' });
+
+      response.status.should.be.eq(400);
+      response.body.should.have.property('error').eql('Empty refresh token');
     });
 
-    it('should be able to handle errors when verifying the token', (done) => {
+    it('should be able to handle errors when verifying the token', async () => {
       const stub = sinon.stub(jwt, 'verify').onFirstCall().throws();
 
-      chai.request(server)
+      const response = await request(server)
         .post('/api/v1/user/logout')
-        .set('Cookie', `${REFRESH_TOKEN_COOKIE_NAME}=${loginTokens.refreshToken}`)
-        .end((err, res) => {
-          res.should.have.status(200);
+        .set('Cookie', `${REFRESH_TOKEN_COOKIE_NAME}=${loginTokens.refreshToken}`);
 
-          stub.restore();
-          done();
-        });
+      response.status.should.be.eq(200);
+
+      stub.restore();
     });
 
-    it('should be able to logout the user successfully', (done) => {
-      chai.request(server)
+    it('should be able to logout the user successfully', async () => {
+      const response = await request(server)
         .post('/api/v1/user/logout')
-        .set('Cookie', `${REFRESH_TOKEN_COOKIE_NAME}=${loginTokens.refreshToken}`)
-        .end((err, res) => {
-          res.should.have.status(200);
-          res.body.should.have.property('message').eql('Logged out');
-          done();
-        });
+        .set('Cookie', `${REFRESH_TOKEN_COOKIE_NAME}=${loginTokens.refreshToken}`);
+
+      response.status.should.be.eq(200);
+      response.body.should.have.property('message').eql('Logged out');
     });
   });
 
@@ -715,31 +623,27 @@ describe('Authentication', () => {
       );
     });
 
-    it('should return 400 if the oldPassword is empty', (done) => {
-      chai.request(server)
+    it('should return 400 if the oldPassword is empty', async () => {
+      const response = await request(server)
         .post('/api/v1/user/change-password')
         .set('Authorization', `Bearer ${token}`)
-        .send({ oldPassword: '', newPassword: 'Maka-jan32' })
-        .end((err, res) => {
-          res.should.have.status(400);
-          res.body.should.have.property('error').eql('Invalid password');
-          done();
-        });
+        .send({ oldPassword: '', newPassword: 'Maka-jan32' });
+
+      response.status.should.be.eq(400);
+      response.body.should.have.property('error').eql('Invalid password');
     });
 
-    it('should return 400 if the newPassword is empty', (done) => {
-      chai.request(server)
+    it('should return 400 if the newPassword is empty', async () => {
+      const response = await request(server)
         .post('/api/v1/user/change-password')
         .set('Authorization', `Bearer ${token}`)
-        .send({ oldPassword: 'adminPassword', newPassword: '' })
-        .end((err, res) => {
-          res.should.have.status(400);
-          res.body.should.have.property('error').eql('Invalid password');
-          done();
-        });
+        .send({ oldPassword: 'adminPassword', newPassword: '' });
+
+      response.status.should.be.eq(400);
+      response.body.should.have.property('error').eql('Invalid password');
     });
 
-    it('should return 500 if the user is not found', (done) => {
+    it('should return 500 if the user is not found', async () => {
       const badEmail = 'not@gmail.com';
       token = createAccessToken(
         badEmail,
@@ -749,183 +653,154 @@ describe('Authentication', () => {
         new Types.ObjectId().toHexString(),
       );
 
-      chai.request(server)
+      const response = await request(server)
         .post('/api/v1/user/change-password')
         .set('Authorization', `Bearer ${token}`)
-        .send({ oldPassword: 'adminPassword', newPassword: 'Maka-jan32' })
-        .end((err, res) => {
-          res.should.have.status(500);
-          res.body.should.have.property('error').eql(`No user was found with email: ${badEmail}`);
-          done();
-        });
+        .send({ oldPassword: 'adminPassword', newPassword: 'Maka-jan32' });
+
+      response.status.should.be.eq(500);
+      response.body.should.have.property('error').eql(`No user was found with email: ${badEmail}`);
     });
 
-    it('should return 500 if the password is not a match', (done) => {
-      chai.request(server)
+    it('should return 500 if the password is not a match', async () => {
+      const response = await request(server)
         .post('/api/v1/user/change-password')
         .set('Authorization', `Bearer ${token}`)
-        .send({ oldPassword: 'wrongPassword', newPassword: 'Maka-jan32' })
-        .end((err, res) => {
-          res.should.have.status(500);
-          res.body.should.have.property('error').eql('Invalid Password');
-          done();
-        });
+        .send({ oldPassword: 'wrongPassword', newPassword: 'Maka-jan32' });
+
+      response.status.should.be.eq(500);
+      response.body.should.have.property('error').eql('Invalid Password');
     });
 
-    it('should change password successfully', (done) => {
-      chai.request(server)
+    it('should change password successfully', async () => {
+      const response = await request(server)
         .post('/api/v1/user/change-password')
         .set('Authorization', `Bearer ${token}`)
-        .send({ oldPassword: 'adminPassword', newPassword: 'Maka-jan32' })
-        .end((err, res) => {
-          res.should.have.status(200);
-          res.body.should.have.property('message').eql('Password changed');
-          done();
-        });
+        .send({ oldPassword: 'adminPassword', newPassword: 'Maka-jan32' });
+
+      response.status.should.be.eq(200);
+      response.body.should.have.property('message').eql('Password changed');
     });
   });
 
   describe('Resetting Password - POST /api/v1/user/reset-password', () => {
-    it('should return 400 if the email is empty', (done) => {
-      chai.request(server)
+    it('should return 400 if the email is empty', async () => {
+      const response = await request(server)
         .post('/api/v1/user/reset-password')
-        .send({ email: '' })
-        .end((err, res) => {
-          res.should.have.status(400);
-          res.body.should.have.property('error').eql('Invalid email');
-          done();
-        });
+        .send({ email: '' });
+
+      response.status.should.be.eq(400);
+      response.body.should.have.property('error').eql('Invalid email');
     });
 
-    it('should return 400 if the email is not valid', (done) => {
-      chai.request(server)
+    it('should return 400 if the email is not valid', async () => {
+      const response = await request(server)
         .post('/api/v1/user/reset-password')
-        .send({ email: 'email' })
-        .end((err, res) => {
-          res.should.have.status(400);
-          res.body.should.have.property('error').eql('Invalid email');
-          done();
-        });
+        .send({ email: 'email' });
+
+      response.status.should.be.eq(400);
+      response.body.should.have.property('error').eql('Invalid email');
     });
 
-    it('should return 500 if the user is not found', (done) => {
+    it('should return 500 if the user is not found', async () => {
       const badEmail = 'not@gmail.com';
 
-      chai.request(server)
+      const response = await request(server)
         .post('/api/v1/user/reset-password')
-        .send({ email: badEmail })
-        .end((err, res) => {
-          res.should.have.status(500);
-          res.body.should.have.property('error').eql('Could not reset password. Try again later.');
-          done();
-        });
+        .send({ email: badEmail });
+
+      response.status.should.be.eq(500);
+      response.body.should.have.property('error').eql('Could not reset password. Try again later.');
     });
 
-    it('should return 500 if finding the user throws an error', (done) => {
+    it('should return 500 if finding the user throws an error', async () => {
       const stub = sinon.stub(UserModel, 'findOne').throws();
 
-      chai.request(server)
+      const response = await request(server)
         .post('/api/v1/user/reset-password')
-        .send({ email: adminUser.email })
-        .end((err, res) => {
-          res.should.have.status(500);
-          res.body.should.have.property('error').eql('Error');
+        .send({ email: adminUser.email });
 
-          stub.restore();
-          done();
-        });
+      response.status.should.be.eq(500);
+      response.body.should.have.property('error').eql('Error');
+
+      stub.restore();
     });
 
-    it('should return 200 if the password was reset', (done) => {
-      chai.request(server)
+    it('should return 200 if the password was reset', async () => {
+      const response = await request(server)
         .post('/api/v1/user/reset-password')
-        .send({ email: adminUser.email })
-        .end((err, res) => {
-          res.should.have.status(200);
-          res.body.should.have.property('message').eql(`New password sent to ${adminUser.email}`);
+        .send({ email: adminUser.email });
 
-          done();
-        });
+      response.status.should.be.eq(200);
+      response.body.should.have.property('message').eql(`New password sent to ${adminUser.email}`);
     });
   });
 
   describe('Registering a new user - POST /api/v1/user/register', () => {
-    it('should be able to register a new user successfully', (done) => {
-      chai.request(server)
+    it('should be able to register a new user successfully', async () => {
+      const response = await request(server)
         .post('/api/v1/user/register')
-        .send(newUser)
-        .end((err, res) => {
-          res.should.have.status(200);
-          res.body.should.have.property('user');
-          res.body.should.have.property('accessToken');
-          res.headers.should.have.property('set-cookie');
+        .send(newUser);
 
-          newUser.id = res.body.user.id;
-          done();
-        });
+      response.status.should.be.eq(200);
+      response.body.should.have.property('user');
+      response.body.should.have.property('accessToken');
+      response.headers.should.have.property('set-cookie');
+
+      newUser.id = response.body.user.id;
     });
 
-    it('should return 400 if the email is already in use', (done) => {
-      chai.request(server)
+    it('should return 400 if the email is already in use', async () => {
+      const response = await request(server)
         .post('/api/v1/user/register')
-        .send(newUser)
-        .end((err, res) => {
-          res.should.have.status(500);
-          res.body.should.have.property('error').eql('duplicateUser');
-          done();
-        });
+        .send(newUser);
+
+      response.status.should.be.eq(500);
+      response.body.should.have.property('error').eql('duplicateUser');
     });
 
-    it('should return 500 if the password is not strong enough', (done) => {
+    it('should return 500 if the password is not strong enough', async () => {
       const newUser = {...adminUser, password: 'password'};
 
-      chai.request(server)
+      const response = await request(server)
         .post('/api/v1/user/register')
-        .send(newUser)
-        .end((err, res) => {
-          res.should.have.status(500);
-          res.body.should.have.property('error').eql('Password does not follow the rules');
-          done();
-        });
+        .send(newUser);
+
+      response.status.should.be.eq(500);
+      response.body.should.have.property('error').eql('Password does not follow the rules');
     });
 
-    it('should return 500 if the email is not valid', (done) => {
+    it('should return 500 if the email is not valid', async () => {
       const newUser = {...adminUser, password: 'Jaka-jan32', email: 'email'};
 
-      chai.request(server)
+      const response = await request(server)
         .post('/api/v1/user/register')
-        .send(newUser)
-        .end((err, res) => {
-          res.should.have.status(500);
-          res.body.should.have.property('error').eql('user validation failed: email: Path `email` is invalid (email).');
-          done();
-        });
+        .send(newUser);
+
+      response.status.should.be.eq(500);
+      response.body.should.have.property('error').eql('user validation failed: email: Path `email` is invalid (email).');
     });
 
-    it('should return 500 if the firstName is missing', (done) => {
+    it('should return 500 if the firstName is missing', async () => {
       const newUser = {...adminUser, password: 'Jaka-jan32', firstName: ''};
 
-      chai.request(server)
+      const response = await request(server)
         .post('/api/v1/user/register')
-        .send(newUser)
-        .end((err, res) => {
-          res.should.have.status(500);
-          res.body.should.have.property('error').eql('user validation failed: firstName: Path `firstName` is required.');
-          done();
-        });
+        .send(newUser);
+
+      response.status.should.be.eq(500);
+      response.body.should.have.property('error').eql('user validation failed: firstName: Path `firstName` is required.');
     });
 
-    it('should return 500 if the lastName is missing', (done) => {
+    it('should return 500 if the lastName is missing', async () => {
       const newUser = {...adminUser, password: 'Jaka-jan32', lastName: ''};
 
-      chai.request(server)
+      const response = await request(server)
         .post('/api/v1/user/register')
-        .send(newUser)
-        .end((err, res) => {
-          res.should.have.status(500);
-          res.body.should.have.property('error').eql('user validation failed: lastName: Path `lastName` is required.');
-          done();
-        });
+        .send(newUser);
+
+      response.status.should.be.eq(500);
+      response.body.should.have.property('error').eql('user validation failed: lastName: Path `lastName` is required.');
     });
   });
 });
