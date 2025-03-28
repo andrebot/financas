@@ -1,0 +1,10 @@
+# Use the official MongoDB image as the base
+FROM mongo:latest
+
+# Optional: expose MongoDB port (default is 27017)
+EXPOSE 27017
+
+# Optional: add initialization scripts or configuration files
+# COPY ./init-db.js /docker-entrypoint-initdb.d/
+
+# The base image already defines the entrypoint and command
