@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
-import { RouterProvider, createMemoryRouter, createBrowserRouter } from 'react-router-dom';
+import { RouterProvider, createMemoryRouter, createBrowserRouter } from 'react-router';
 import { I18nextProvider } from 'react-i18next';
 import { Provider } from 'react-redux';
 import i18n from '../../../src/client/i18n';
@@ -15,8 +15,8 @@ jest.mock('../../../src/client/hooks/authContext', () => ({
 
 const mockNavigate = jest.fn();
 
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+jest.mock('react-router', () => ({
+  ...jest.requireActual('react-router'),
   useNavigate: () => mockNavigate,
   Outlet: () => <div data-testid="outlet"><p>test</p></div>
 }));
@@ -90,6 +90,6 @@ describe('ProtectedRoute', () => {
       </Provider>
     );
 
-    expect(mockNavigate).toHaveBeenCalledWith(config.user.loginPage, { replace: true });
+    expect(mockNavigate).toHaveBeenCalledWith(config.user.loginPage);
   });
 });

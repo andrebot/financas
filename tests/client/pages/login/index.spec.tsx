@@ -4,7 +4,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
 import { enqueueSnackbar } from 'notistack';
 import { useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { setAccessToken } from '../../../../src/client/features/authSlice';
 import i18n from '../../../../src/client/i18n';
 import i18nKeys from '../../../../src/client/i18n/en';
@@ -14,7 +14,7 @@ import { useLoginMutation } from '../../../../src/client/features/login';
 import { loginWithMockData, mockLoginData, mockPassword } from './util';
 import type { UserType } from '../../../../src/client/types/user';
 
-jest.mock('react-router-dom', () => ({
+jest.mock('react-router', () => ({
   useNavigate: jest.fn(),
 }));
 

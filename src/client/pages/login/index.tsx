@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { enqueueSnackbar } from 'notistack';
 import { useDispatch } from 'react-redux';
 import { CircularProgress } from '@mui/material';

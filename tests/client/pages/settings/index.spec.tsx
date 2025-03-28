@@ -3,7 +3,7 @@ import '@testing-library/jest-dom';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
 import { useSnackbar } from 'notistack';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import useLogout from '../../../../src/client/hooks/useLogout';
 import i18n from '../../../../src/client/i18n';
 import i18nKeys from '../../../../src/client/i18n/en';
@@ -13,7 +13,7 @@ import { useModal } from '../../../../src/client/components/modal/modal';
 import { useUpdateUserMutation, useChangePasswordMutation, useDeleteAccountMutation } from '../../../../src/client/features/login';
 import { fillUpSettingsForm } from './utils';
 
-jest.mock('react-router-dom', () => ({
+jest.mock('react-router', () => ({
   useNavigate: jest.fn(),
 }));
 

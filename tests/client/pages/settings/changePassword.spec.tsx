@@ -9,7 +9,7 @@ import ChangePasswordModal from '../../../../src/client/pages/settings/changePas
 import { useChangePasswordMutation } from '../../../../src/client/features/login';
 import { useModal } from '../../../../src/client/components/modal/modal';
 
-jest.mock('react-router-dom', () => ({
+jest.mock('react-router', () => ({
   useNavigate: jest.fn(),
 }));
 

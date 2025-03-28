@@ -4,7 +4,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
 import { enqueueSnackbar } from 'notistack';
 import { useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import i18n from '../../../../src/client/i18n';
 import i18nKeys from '../../../../src/client/i18n/en';
 import RegisterPage from '../../../../src/client/pages/register/index';
@@ -12,7 +12,7 @@ import { useAuth } from '../../../../src/client/hooks/authContext';
 import { useRegisterMutation } from '../../../../src/client/features/login';
 import { getFormInputs, populateFormInputs, mockRegisterData } from './utils';
 
-jest.mock('react-router-dom', () => ({
+jest.mock('react-router', () => ({
   useNavigate: jest.fn(),
 }));
 

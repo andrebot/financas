@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useSnackbar } from 'notistack';
 import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';

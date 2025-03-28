@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router';
 import { useAuth } from '../hooks/authContext';
 import LoginPage from '../pages/login';
 import config from '../config/apiConfig';
@@ -10,14 +10,14 @@ import config from '../config/apiConfig';
  * If the user is not authenticated, it redirects to the login page.
  */
 export default function ProtectedRoute(): React.JSX.Element | undefined {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!user) {
-      navigate(config.user.loginPage, { replace: true });
+      navigate(config.user.loginPage);
     }
-  }, [user, navigate]);
+  }, [user, setUser, navigate]);
 
   if (!user) {
     return <LoginPage />;

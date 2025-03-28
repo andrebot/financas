@@ -1,7 +1,7 @@
 import React from 'react';
 import '@testing-library/jest-dom';
 import { useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useSnackbar } from 'notistack';
 import { useTranslation } from 'react-i18next';
 import { renderHook } from '@testing-library/react';
@@ -9,7 +9,7 @@ import { useAuth } from '../../../src/client/hooks/authContext';
 import { useLogoutMutation } from '../../../src/client/features/login';
 import useLogout from '../../../src/client/hooks/useLogout';
 
-jest.mock('react-router-dom', () => ({
+jest.mock('react-router', () => ({
   useNavigate: jest.fn(),
 }));
 

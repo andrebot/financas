@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import '@testing-library/jest-dom';
 import { useSnackbar } from 'notistack';
 import { useDispatch } from 'react-redux';
@@ -12,8 +12,8 @@ import { useAuth } from '../../../../src/client/hooks/authContext';
 import { useLogoutMutation } from '../../../../src/client/features/login';
 import { clearAccessToken } from '../../../../src/client/features/authSlice';
 
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+jest.mock('react-router', () => ({
+  ...jest.requireActual('react-router'),
   useNavigate: jest.fn(),
 }));
 

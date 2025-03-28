@@ -1,5 +1,5 @@
 import React from 'react';
-import { RouterProvider } from 'react-router-dom';
+import { RouterProvider } from 'react-router';
 import { SnackbarProvider } from 'notistack';
 import { ThemeProvider } from '@mui/material/styles';
 import { LocalizationProvider } from '@mui/x-date-pickers';
@@ -8,7 +8,7 @@ import CssBaseLine from '@mui/material/CssBaseline';
 import './i18n';
 
 import createMuiTheme from './theme';
-import router from './routes';
+import Router from './routes';
 import { AuthProvider } from './hooks/authContext';
 import ModalProvider from './components/modal/modal';
 import { useAppSelector } from './hooks/index';
@@ -24,7 +24,7 @@ function App() {
           <SnackbarProvider maxSnack={3}>
             <ModalProvider>
               <CssBaseLine />
-              <RouterProvider router={router} />
+              <Router />
             </ModalProvider>
           </SnackbarProvider>
         </LocalizationProvider>

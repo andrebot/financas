@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { enqueueSnackbar } from 'notistack';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useDispatch } from 'react-redux';
 import { setAccessToken } from '../../features/authSlice';
 import { TextField, Button } from '@mui/material';
