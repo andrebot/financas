@@ -297,7 +297,7 @@ describe('AuthorizationController', () => {
     try {
       await deleteUserController(request, response);
 
-      response.status.should.have.been.calledWith(403);
+      response.status.should.have.been.calledWith(401);
       response.send.should.have.been.calledWith({ error: 'Current user does not have permission to delete this user' });
     } catch (error) {
       console.error(error);

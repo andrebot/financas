@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import jwt, { Secret, SignOptions } from 'jsonwebtoken';
 import {
   QueryFilter, Tokens, Token, UserPayload,
 } from '../types';
@@ -26,7 +26,7 @@ import type { IUser, LoginResponse } from '../types';
  * @param secret - Secret to be used to create the token
  * @returns - the Token as a string
  */
-export function createToken(payload: UserPayload, expiresIn: string, secret: string): string {
+export function createToken(payload: UserPayload, expiresIn: number, secret: Secret): string {
   return jwt.sign(payload, secret, { issuer: ISSUER, expiresIn });
 }
 

@@ -1,4 +1,4 @@
-import { EndpointBuilder } from "@reduxjs/toolkit/dist/query/endpointDefinitions";
+import { EndpointBuilder } from "@reduxjs/toolkit/dist/query";
 import { BaseQueryFn } from "@reduxjs/toolkit/query";
 import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import { FetchBaseQueryMeta } from "@reduxjs/toolkit/query";

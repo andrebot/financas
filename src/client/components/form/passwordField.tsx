@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import {
-  VisibilityOff,
-  Visibility,
-} from '@mui/icons-material';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import Visibility from '@mui/icons-material/Visibility';
 import {
   IconButton,
   InputAdornment,

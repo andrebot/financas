@@ -67,7 +67,7 @@ export default function Login(): React.JSX.Element {
       });
 
       if ('error' in response) {
-        handleError(response.error);
+        handleError(response.error as FetchBaseQueryError | SerializedError);
       } else {
         setUser(response.data.user);
         dispatch(setAccessToken(response.data.accessToken));

@@ -1,6 +1,11 @@
 {
   "watch": ["src/server"],
   "ext": "ts",
-  "exec": "ts-node src/server/index.ts",
-  "ignore": ["src/client", "node_modules"]
+  "ignore": [
+    "src/client",
+    "node_modules",
+    "**/*.spec.ts",
+    "tests"
+  ],
+  "exec": "node --inspect=9229 -r ts-node/register src/server/index.ts"
 }

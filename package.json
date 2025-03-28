@@ -8,7 +8,7 @@
   },
   "scripts": {
     "server-up": "nodemon --exec ts-node src/server/index.ts",
-    "server-debug": "nodemon --exec node --inspect=9229 -r ts-node/register src/server/index.ts",
+    "server-debug": "nodemon",
     "build-client": "webpack --config webpack/webpack.prod.js",
     "build-client:dev": "webpack --config webpack/webpack.dev.js",
     "build-client:watch": "webpack --config webpack/webpack.dev.js --watch",

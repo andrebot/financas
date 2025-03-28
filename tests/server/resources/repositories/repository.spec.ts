@@ -1,4 +1,4 @@
-import { should } from 'chai';
+import chai, { should } from 'chai';
 import sinon from 'sinon';
 import { Document } from 'mongoose';
 import { Repository } from '../../../../src/server/resources/repositories/repository';
