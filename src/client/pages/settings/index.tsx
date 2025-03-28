@@ -22,7 +22,6 @@ import useLogout from '../../hooks/useLogout';
 import ConfirmDeleteAccount from './confirmDeleteAccountModal';
 
 const {
-  SET_EMAIL_ERROR,
   SET_FIRST_NAME_ERROR,
   SET_LAST_NAME_ERROR,
   SET_PROPERTY,
@@ -45,25 +44,9 @@ export default function Settings(): React.JSX.Element {
   const [updateUser, { isLoading }] = useUpdateUserMutation();
   const [deleteAccount, { isLoading: isDeleting }] = useDeleteAccountMutation();
   const validatorMap = {
-    email: validateEmail,
     firstName: (value: string) => validateName(value, 'firstNameRequired', SET_FIRST_NAME_ERROR),
     lastName: (value: string) => validateName(value, 'lastNameRequired', SET_LAST_NAME_ERROR),
   };
-
-  /**
-   * Validates the email field.
-   * 
-   * @param email - The email value.
-   * @returns true if the email is valid, false otherwise.
-   */
-  function validateEmail(email: string) {
-    if (!regExpEmail.test(email)) {
-      dispatch({ type: SET_EMAIL_ERROR, payload: t('emailInvalid') });
-      return false;
-    }
-
-    return true;
-  }
 
   /**
    * Validates the name field.
@@ -215,9 +198,7 @@ export default function Settings(): React.JSX.Element {
           type="email"
           value={state.email}
           name="email"
-          onChange={handleFormChange}
-          error={!!state.emailError}
-          helperText={state.emailError}
+          disabled={true}
         />
         <HorizontalContainer>
           <InfoButton

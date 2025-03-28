@@ -4,6 +4,7 @@ coverage
 client-cov
 src/server/public
 reports
+.env
 
 # Playwright
 /test-results/

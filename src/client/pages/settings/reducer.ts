@@ -9,7 +9,6 @@ export const initialState = {
 };
 
 export enum ActionType {
-  SET_EMAIL_ERROR = 'SET_EMAIL_ERROR',
   SET_FIRST_NAME_ERROR = 'SET_FIRST_NAME_ERROR',
   SET_LAST_NAME_ERROR = 'SET_LAST_NAME_ERROR',
   SET_PROPERTY = 'SET_PROPERTY',
@@ -18,9 +17,6 @@ export enum ActionType {
 }
 
 export type Action = {
-  type: ActionType.SET_EMAIL_ERROR;
-  payload: string;
-} | {
   type: ActionType.SET_FIRST_NAME_ERROR;
   payload: string;
 } | {
@@ -63,8 +59,6 @@ export const reducer = (state: typeof initialState, action: Action) => {
         firstNameError: '',
         lastNameError: '',
       };
-    case 'SET_EMAIL_ERROR':
-      return { ...state, emailError: action.payload };
     case 'SET_FIRST_NAME_ERROR':
       return { ...state, firstNameError: action.payload };
     case 'SET_LAST_NAME_ERROR':

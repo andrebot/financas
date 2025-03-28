@@ -87,6 +87,7 @@ describe('SettingsPage', () => {
     expect(screen.getByLabelText(i18nKeys.translation.firstName)).toBeInTheDocument();
     expect(screen.getByLabelText(i18nKeys.translation.lastName)).toBeInTheDocument();
     expect(screen.getByLabelText(i18nKeys.translation.email)).toBeInTheDocument();
+    expect(screen.getByLabelText(i18nKeys.translation.email)).toBeDisabled();
     expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: i18nKeys.translation.cancel })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: i18nKeys.translation.changePassword })).toBeInTheDocument();
@@ -117,7 +118,7 @@ describe('SettingsPage', () => {
         id: mockUser.id,
         firstName: 'John',
         lastName: 'Doe',
-        email: 'john.doe@example.com',
+        email: mockUser.email,
       });
 
       expect(mockSnackbar).toHaveBeenCalledWith(i18nKeys.translation.settingsUpdated, {
@@ -128,7 +129,7 @@ describe('SettingsPage', () => {
         ...mockUser,
         firstName: 'John',
         lastName: 'Doe',
-        email: 'john.doe@example.com',
+        email: mockUser.email,
       });
     });
   });
@@ -179,23 +180,14 @@ describe('SettingsPage', () => {
     });
   });
 
-  it('should not be able to save if the email is invalid', async () => {
+  it('should not be able to edit email', async () => {
     render(
       <I18nextProvider i18n={i18n}>
         <SettingsPage />
       </I18nextProvider>
     );
 
-    fillUpSettingsForm({
-      ...mockUser,
-      email: 'invalid-email',
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /save/i }));
-
-    await waitFor(() => {
-      expect(mockUpdateUserMutation).not.toHaveBeenCalled();
-    });
+    expect(screen.getByLabelText(i18nKeys.translation.email)).toBeDisabled();
   });
 
   it('should not be able to save if the first name is invalid', async () => {

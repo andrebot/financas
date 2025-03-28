@@ -11,13 +11,10 @@ export const mockUser = {
 export function fillUpSettingsForm(formInfo: {
   firstName: string;
   lastName: string;
-  email: string;
 } = mockUser) {
   const firstNameInput = screen.getByLabelText(i18nKeys.translation.firstName);
   const lastNameInput = screen.getByLabelText(i18nKeys.translation.lastName);
-  const emailInput = screen.getByLabelText(i18nKeys.translation.email);
 
   fireEvent.change(firstNameInput, { target: { value: formInfo.firstName } });
   fireEvent.change(lastNameInput, { target: { value: formInfo.lastName } });
-  fireEvent.change(emailInput, { target: { value: formInfo.email } });
 }

@@ -25,12 +25,6 @@ describe('User settings reducer', () => {
     expect(result).toEqual({ ...initialState, email: 'john.doe@example.com', isDirty: true });
   });
 
-  it('should set the email error', () => {
-    const result = reducer(initialState, { type: ActionType.SET_EMAIL_ERROR, payload: 'Error' });
-
-    expect(result).toEqual({ ...initialState, emailError: 'Error' });
-  });
-
   it('should set the first name error', () => {
     const result = reducer(initialState, { type: ActionType.SET_FIRST_NAME_ERROR, payload: 'Error' });
 
