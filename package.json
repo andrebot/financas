@@ -78,6 +78,7 @@
     "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.2",
     "jwt-decode": "^4.0.0",
+    "lcov-summary": "^1.0.1",
     "mongoose": "^8.13.0",
     "node-fetch": "^3.3.2",
     "notistack": "^3.0.2",

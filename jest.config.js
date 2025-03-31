@@ -20,7 +20,7 @@ module.exports = {
     '!<rootDir>/src/client/routes/index.tsx',
   ],
   coverageDirectory: 'client-cov',
-  coverageReporters: ['html', 'text-summary'],
+  coverageReporters: ['html', 'text-summary', 'json-summary'],
   moduleNameMapper: {
     '\\.(jpg|jpeg|png|gif|webp|svg)$': '<rootDir>/tests/client/assetsMocks/fileMock.js',
   },

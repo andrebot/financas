@@ -22,3 +22,50 @@ jobs:
           sed -i "s|!\[Version\].*|![Version]($VERSION_BADGE_URL)|" README.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  update-coverage:
+    runs-on: ubuntu-latest
+    needs: [update-badges]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install lcov-summary
+        run: npm install -g lcov-summary
+
+      - name: Run server tests with coverage
+        run: npm run test:server
+
+      - name: Run client tests with coverage
+        run: npm run test:client
+
+      - name: Update Coverage Badges
+        run: |
+          # Get server coverage
+          SERVER_COVERAGE=$(lcov-summary coverage/lcov.info | grep "Total Coverage:" | awk '{print $3}' | tr -d '%')
+          
+          # Get client coverage
+          CLIENT_COVERAGE=$(cat client-cov/coverage-summary.json | jq -r '.total.lines.pct')
+          
+          # Determine badge colors
+          SERVER_COLOR=$([ $(echo "$SERVER_COVERAGE >= 80" | bc -l) -eq 1 ] && echo "brightgreen" || echo "red")
+          CLIENT_COLOR=$([ $(echo "$CLIENT_COVERAGE >= 80" | bc -l) -eq 1 ] && echo "brightgreen" || echo "red")
+          
+          # Create badge URLs
+          SERVER_BADGE_URL="https://img.shields.io/badge/server--coverage-$SERVER_COVERAGE%25-$SERVER_COLOR"
+          CLIENT_BADGE_URL="https://img.shields.io/badge/client--coverage-$CLIENT_COVERAGE%25-$CLIENT_COLOR"
+          
+          # Update README badges
+          sed -i "s|!\[Server Coverage\].*|![Server Coverage]($SERVER_BADGE_URL)|" README.md
+          sed -i "s|!\[Client Coverage\].*|![Client Coverage]($CLIENT_BADGE_URL)|" README.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
