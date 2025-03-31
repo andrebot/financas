@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
-import { login, testUser, loginUserPassword, goToRegisterPageFromLoginPage, fillRegisterForm } from './authUtils';
+import { login, goToRegisterPageFromLoginPage, fillRegisterForm } from './authUtils';
 import i18nKeys from '../../src/client/i18n/en';
-import { goToSettingsPage, changePasswordUser } from './settingsPageUtils';
+import { goToSettingsPage } from './settingsPageUtils';
 
 test('should allow user to change name', async ({ page }) => {
   const newName = `Andre-${Date.now()}`;
@@ -54,7 +54,7 @@ test('should not allow user to change to an empty name', async ({ page }) => {
 
 test('should not allow user to change to an empty last name', async ({ page }) => {
   await login(page);
-  
+
   await goToSettingsPage(page);
 
   await page.getByLabel(i18nKeys.translation.lastName).fill('');

@@ -12,6 +12,7 @@ export default async function globalTeardown() {
   await mongoose.connection.db?.collection('users').deleteOne({ email: resetPasswordUser.email });
   await mongoose.connection.db?.collection('users').deleteOne({ email: changeEmailUser.email });
   await mongoose.connection.db?.collection('users').deleteOne({ email: changePasswordUser.email });
+  await mongoose.connection.db?.collection('users').deleteMany({ email: { $regex: '.*delete.*@.*' } });
   console.log('Users deleted');
   await mongoose.connection.close();
 }

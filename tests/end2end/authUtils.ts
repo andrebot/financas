@@ -50,7 +50,8 @@ export async function checkFailedForm(page: Page, error: string) {
 
 export async function login(page: Page, email = loginUser.email, password = loginUserPassword) {
   await page.goto('http://localhost:3000/');
-  await page.getByLabel(i18nKeys.translation.email).fill(email);
+  await page.waitForTimeout(1000); // Webkit was being too fast and not finding the email input
+  await page.getByRole('textbox', { name: i18nKeys.translation.email, exact: true }).fill(email);
   await page.getByRole('textbox', { name: i18nKeys.translation.password, exact: true }).fill(password);
   await page.getByRole('button', { name: i18nKeys.translation.login }).click();
   await page.waitForLoadState('domcontentloaded');
