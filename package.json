@@ -1,6 +1,6 @@
 {
   "name": "financas",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "App to help me keep up with my finances",
   "main": "index.js",
   "engine": {
