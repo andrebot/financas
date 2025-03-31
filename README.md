@@ -1,7 +1,7 @@
 # Finanças
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
-![Server Coverage](https://img.shields.io/badge/server--coverage-0%25-red)
-![Client Coverage](https://img.shields.io/badge/client--coverage-0%25-red)
+![Version](https://img.shields.io/badge/version-1.0.1-brightgreen.svg)
+![Server Coverage](https://img.shields.io/badge/server--coverage-100.00%25-brightgreen)
+![Client Coverage](https://img.shields.io/badge/client--coverage-100%25-brightgreen)
 
 This APP is made to help you manage your finances and invest, by providing powerful tools to balance your relationship with money and givinging insightful help on building different types of investments portifolios.
 
