@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - master
+    paths-ignore:
+      - 'README.md'
 
 jobs:
   update-badges:
@@ -67,5 +69,15 @@ jobs:
           # Update README badges
           sed -i "s|!\[Server Coverage\].*|![Server Coverage]($SERVER_BADGE_URL)|" README.md
           sed -i "s|!\[Client Coverage\].*|![Client Coverage]($CLIENT_BADGE_URL)|" README.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit and Push changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add README.md
+          git commit -m "docs: Update coverage badges" || exit 0
+          git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

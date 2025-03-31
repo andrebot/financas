@@ -4,7 +4,7 @@
   "description": "App to help me keep up with my finances",
   "main": "index.js",
   "engine": {
-    "node": "^19.9.0"
+    "node": "^22.14.0"
   },
   "scripts": {
     "server-up": "nodemon --exec ts-node src/server/index.ts",
