@@ -15,24 +15,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Update Badges
-        run: |
-          # Add script or commands here to update badges in your README
-          # Update the project version badge
-          PROJECT_VERSION=$(node -pe "require('./package.json').version")
-          VERSION_BADGE_URL="https://img.shields.io/badge/version-$PROJECT_VERSION-brightgreen.svg"
-          sed -i "s|!\[Version\].*|![Version]($VERSION_BADGE_URL)|" README.md
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  update-coverage:
-    runs-on: ubuntu-latest
-    needs: [update-badges]
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
@@ -50,8 +32,12 @@ jobs:
       - name: Run client tests with coverage
         run: npm run test:client
 
-      - name: Update Coverage Badges
+      - name: Update Badges
         run: |
+          # Update version badge
+          PROJECT_VERSION=$(node -pe "require('./package.json').version")
+          VERSION_BADGE_URL="https://img.shields.io/badge/version-$PROJECT_VERSION-brightgreen.svg"
+          
           # Get server coverage
           SERVER_COVERAGE=$(lcov-summary coverage/lcov.info | grep "Total Coverage:" | awk '{print $3}' | tr -d '%')
           
@@ -67,17 +53,17 @@ jobs:
           CLIENT_BADGE_URL="https://img.shields.io/badge/client--coverage-$CLIENT_COVERAGE%25-$CLIENT_COLOR"
           
           # Update README badges
+          sed -i "s|!\[Version\].*|![Version]($VERSION_BADGE_URL)|" README.md
           sed -i "s|!\[Server Coverage\].*|![Server Coverage]($SERVER_BADGE_URL)|" README.md
           sed -i "s|!\[Client Coverage\].*|![Client Coverage]($CLIENT_BADGE_URL)|" README.md
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Commit and Push changes
-        run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add README.md
-          git commit -m "docs: Update coverage badges" || exit 0
-          git push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "docs: Update badges"
+          title: "docs: Update badges"
+          body: "Update version and coverage badges"
+          branch: "chore/update-badges"
+          base: "master"
+          delete-branch: true
