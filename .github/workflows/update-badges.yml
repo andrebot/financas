@@ -1,11 +1,10 @@
 name: Update Badges
 
 on:
-  push:
+  pull_request:
     branches:
       - master
-    paths-ignore:
-      - 'README.md'
+    types: [opened, synchronize, reopened]
 
 jobs:
   update-badges:
@@ -14,6 +13,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          ref: ${{ github.head_ref }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -32,7 +33,7 @@ jobs:
       - name: Run client tests with coverage
         run: npm run test:client
 
-      - name: Update Badges
+      - name: Update Coverage Badges
         run: |
           # Update version badge
           PROJECT_VERSION=$(node -pe "require('./package.json').version")
@@ -57,13 +58,12 @@ jobs:
           sed -i "s|!\[Server Coverage\].*|![Server Coverage]($SERVER_BADGE_URL)|" README.md
           sed -i "s|!\[Client Coverage\].*|![Client Coverage]($CLIENT_BADGE_URL)|" README.md
 
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "docs: Update badges"
-          title: "docs: Update badges"
-          body: "Update version and coverage badges"
-          branch: "chore/update-badges"
-          base: "master"
-          delete-branch: true
+      - name: Commit and Push changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add README.md
+          git commit -m "docs: Update coverage badges" || exit 0
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
