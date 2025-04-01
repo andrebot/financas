@@ -16,13 +16,13 @@ This APP is made to help you manage your finances and invest, by providing power
 7. Integrate with brazilian B3 stock market
 
 ## Infrastructure
-1. Build github actions for PR to run tests (unit tests, integration tests) and lint
+1. ~~Build github actions for PR to run tests (unit tests, integration tests) and lint~~
 2. Update pre-push github automation to not run tests
 3. Build github actions for PR merge on mester to run tests (all) and deploy
 
 ## Technical Debts
 1. Switch mongo to a SQL database
-2. Remove Query translation from Repository
+2. ~~Remove Query translation from Repository~~
 3. Remove Empty files to improve readability
 4. Revise all try-catch for better error handling
 5. Improve server logging for better log context
