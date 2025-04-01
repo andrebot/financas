@@ -52,7 +52,7 @@ export class TransactionManager extends ContentManager<ITransaction> {
     const lastMonth = calculateLastMonth(contentDate.getFullYear(), contentDate.getMonth() + 1);
     let lastMonthBalance = await this.monthlyBalanceRepo.findMonthlyBalance(
       content,
-      new Date(lastMonth.year, lastMonth.month - 1)
+      new Date(lastMonth.year, lastMonth.month - 1),
     );
 
     if (!lastMonthBalance) {

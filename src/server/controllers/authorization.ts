@@ -52,7 +52,7 @@ function isDeleteActionValid(req: RequestWithUser, res: Response, userId: string
  * @param res - The response object
  * @returns - True if the action is valid, false otherwise
  */
-function isLoginActionValid(email: string, password: string, res: Response) {
+function isLoginActionValid(email: string, password: string) {
   if (!email || !password || !regExpEmail.test(email)) {
     Logger.error(new Error('Invalid email or password'));
 
@@ -254,7 +254,7 @@ export async function loginController(req: Request, res: Response): Promise<Resp
     password,
   } = req.body;
 
-  if (!isLoginActionValid(email, password, res)) {
+  if (!isLoginActionValid(email, password)) {
     return res.status(400).send({ error: 'invalidUser' });
   }
 

@@ -1,4 +1,4 @@
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 import MonthlyBalanceModel, { IMonthlyBalanceDocument } from '../models/monthlyBalanceModel';
 import Repository from './repository';
 import { IMonthlyBalance, ITransaction } from '../../types';
@@ -21,7 +21,6 @@ export class MonthlyBalanceRepo extends Repository<IMonthlyBalanceDocument, IMon
     transaction: ITransaction,
     date: Date,
   ): Promise<IMonthlyBalance | null> {
-
     return this.Model.findOne({
       user: transaction.user,
       account: transaction.account,

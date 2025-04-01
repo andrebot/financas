@@ -68,10 +68,8 @@ describe('TransactionManager', () => {
   
       monthlyBalanceRepo.findMonthlyBalance.should.have.been.calledTwice;
       monthlyBalanceRepo.findMonthlyBalance.should.have.been.calledWith(
-        transaction.user,
-        transaction.account,
-        (transaction.date as Date).getMonth() + 1,
-        (transaction.date as Date).getFullYear(),
+        transaction,
+        transaction.date,
       );
   
       monthlyBalanceRepo.save.should.have.been.calledOnce;
@@ -187,10 +185,8 @@ describe('TransactionManager', () => {
 
       monthlyBalanceRepo.findMonthlyBalance.should.have.been.calledOnce;
       monthlyBalanceRepo.findMonthlyBalance.should.have.been.calledWith(
-        transaction.user,
-        transaction.account,
-        (transaction.date as Date).getMonth() + 1,
-        (transaction.date as Date).getFullYear(),
+        transaction,
+        transaction.date,
       );
       monthlyBalanceRepo.update.should.have.been.calledOnce;
       monthlyBalanceRepo.update.should.have.been.calledWith(monthlyBalance.id!, monthlyBalance);

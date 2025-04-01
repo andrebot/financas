@@ -7,13 +7,14 @@ This APP is made to help you manage your finances and invest, by providing power
 
 # To-dos
 ## Features
-1. Build Account CRUD page
-2. Build transactions page
-3. Build Investments page
-4. Build dashboard page
-5. Build User managements page for admin
-6. Build smart import for transactions
-7. Integrate with brazilian B3 stock market
+1. Add delete user feature in the APP
+2. Build Account CRUD page
+3. Build transactions page
+4. Build Investments page
+5. Build dashboard page
+6. Build User managements page for admin
+7. Build smart import for transactions
+8. Integrate with brazilian B3 stock market
 
 ## Infrastructure
 1. ~~Build github actions for PR to run tests (unit tests, integration tests) and lint~~

@@ -42,7 +42,7 @@ export default function Settings(): React.JSX.Element {
   } as typeof initialState);
   const { showModal } = useModal();
   const [updateUser, { isLoading }] = useUpdateUserMutation();
-  const [deleteAccount, { isLoading: isDeleting }] = useDeleteAccountMutation();
+  const [, { isLoading: isDeleting }] = useDeleteAccountMutation();
   const validatorMap = {
     firstName: (value: string) => validateName(value, 'firstNameRequired', SET_FIRST_NAME_ERROR),
     lastName: (value: string) => validateName(value, 'lastNameRequired', SET_LAST_NAME_ERROR),
