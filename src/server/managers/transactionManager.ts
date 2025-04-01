@@ -51,10 +51,8 @@ export class TransactionManager extends ContentManager<ITransaction> {
     const contentDate = parseDate(content.date);
     const lastMonth = calculateLastMonth(contentDate.getFullYear(), contentDate.getMonth() + 1);
     let lastMonthBalance = await this.monthlyBalanceRepo.findMonthlyBalance(
-      content.user,
-      content.account,
-      lastMonth.month,
-      lastMonth.year,
+      content,
+      new Date(lastMonth.year, lastMonth.month - 1)
     );
 
     if (!lastMonthBalance) {
@@ -81,10 +79,8 @@ export class TransactionManager extends ContentManager<ITransaction> {
   private async addTransactionToMonthlyBalance(content: ITransaction): Promise<void> {
     const contentDate = parseDate(content.date);
     let monthlyBalance = await this.monthlyBalanceRepo.findMonthlyBalance(
-      content.user,
-      content.account,
-      contentDate.getMonth() + 1,
-      contentDate.getFullYear(),
+      content,
+      contentDate,
     );
 
     if (!monthlyBalance) {
@@ -142,10 +138,8 @@ export class TransactionManager extends ContentManager<ITransaction> {
   private async subtractTransactionFromMonthlyBalance(transaction: ITransaction): Promise<void> {
     const contentDate = parseDate(transaction.date);
     const monthlyBalance = await this.monthlyBalanceRepo.findMonthlyBalance(
-      transaction.user,
-      transaction.account,
-      contentDate.getMonth() + 1,
-      contentDate.getFullYear(),
+      transaction,
+      contentDate,
     );
 
     if (monthlyBalance) {

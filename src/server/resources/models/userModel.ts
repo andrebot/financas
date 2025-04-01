@@ -21,7 +21,7 @@ export interface IUserDocument extends Omit<IUser, 'id'>, Document {
  * @returns - Record of the user
  */
 function transformUserObject(
-  doc: Document<unknown, {}, FlatRecord<IUserDocument>>,
+  doc: Document<unknown, {}, FlatRecord<unknown>>,
   ret: Record<string, any>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   options: any,

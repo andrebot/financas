@@ -5,13 +5,13 @@ import { checkVoidUser } from '../utils/misc';
 import { handleError } from '../utils/responseHandlers';
 import type { RequestWithUser, ITransaction } from '../types';
 
-class TransactionController extends ContentController<ITransaction> {
+export class TransactionController extends ContentController<ITransaction> {
   private transactionManager: typeof TransactionManager;
 
-  constructor() {
-    super(TransactionManager);
+  constructor(transactionManager: typeof TransactionManager = TransactionManager) {
+    super(transactionManager);
 
-    this.transactionManager = TransactionManager;
+    this.transactionManager = transactionManager;
   }
 
   getTransactionTypes(req: RequestWithUser, res: Response) {

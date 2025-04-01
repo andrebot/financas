@@ -1,7 +1,7 @@
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import MonthlyBalanceModel, { IMonthlyBalanceDocument } from '../models/monthlyBalanceModel';
 import Repository from './repository';
-import { IMonthlyBalance } from '../../types';
+import { IMonthlyBalance, ITransaction } from '../../types';
 
 export class MonthlyBalanceRepo extends Repository<IMonthlyBalanceDocument, IMonthlyBalance> {
   constructor(model: Model<IMonthlyBalanceDocument> = MonthlyBalanceModel) {
@@ -18,16 +18,15 @@ export class MonthlyBalanceRepo extends Repository<IMonthlyBalanceDocument, IMon
    * @returns The last monthly balance
    */
   findMonthlyBalance(
-    userId: string,
-    account: string,
-    month: number,
-    year: number,
+    transaction: ITransaction,
+    date: Date,
   ): Promise<IMonthlyBalance | null> {
+
     return this.Model.findOne({
-      user: userId,
-      account,
-      month,
-      year,
+      user: transaction.user,
+      account: transaction.account,
+      month: date.getMonth() + 1,
+      year: date.getFullYear(),
     });
   }
 }

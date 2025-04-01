@@ -7,6 +7,7 @@ import categoryModel, { ICategoryDocument } from '../../src/server/resources/mod
 import GoalModel, { IGoalDocument } from '../../src/server/resources/models/goalModel';
 import BudgetModel, { IBudgetDocument } from '../../src/server/resources/models/budgetModel';
 import transactionModel, { ITransactionDocument } from '../../src/server/resources/models/transactionModel';
+import MonthlyBalanceModel, { IMonthlyBalanceDocument } from '../../src/server/resources/models/monthlyBalanceModel';
 import {
   IUser,
   IAccount,
@@ -224,6 +225,31 @@ export const createTransaction = async (transaction: ITransaction, userID: strin
     account: accountID,
   });
   await newTransaction.save();
+
+  const monthlyBalance = await MonthlyBalanceModel.findOne({
+    user: newTransaction.user,
+    account: newTransaction.account,
+    month: (newTransaction.date as Date).getMonth() + 1,
+    year: (newTransaction.date as Date).getFullYear(),
+  });
+
+  if (monthlyBalance) {
+    monthlyBalance.closingBalance += newTransaction.value;
+    monthlyBalance.transactions.push(newTransaction._id as unknown as mongoose.Schema.Types.ObjectId);
+    await monthlyBalance.save();
+  } else {
+    const newMonthlyBalance: IMonthlyBalanceDocument = new MonthlyBalanceModel({
+      user: newTransaction.user,
+      account: newTransaction.account,
+      month: (newTransaction.date as Date).getMonth() + 1,
+      year: (newTransaction.date as Date).getFullYear(),
+      closingBalance: newTransaction.value,
+      openingBalance: 0,
+      transactions: [newTransaction],
+    });
+
+    await newMonthlyBalance.save();
+  }
 
   transaction.id = newTransaction._id.toString();
 }
