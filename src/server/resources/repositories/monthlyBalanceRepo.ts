@@ -3,7 +3,7 @@ import MonthlyBalanceModel, { IMonthlyBalanceDocument } from '../models/monthlyB
 import Repository from './repository';
 import { IMonthlyBalance } from '../../types';
 
-class MonthlyBalanceRepo extends Repository<IMonthlyBalanceDocument, IMonthlyBalance> {
+export class MonthlyBalanceRepo extends Repository<IMonthlyBalanceDocument, IMonthlyBalance> {
   constructor(model: Model<IMonthlyBalanceDocument> = MonthlyBalanceModel) {
     super(model);
   }

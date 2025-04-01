@@ -21,7 +21,7 @@ export function errorHandler(error: Error): Error {
   return error;
 }
 
-class UserRepo extends Repository<IUserDocument, IUser> {
+export class UserRepo extends Repository<IUserDocument, IUser> {
   constructor(model: Model<IUserDocument> = UserModel) {
     super(model, errorHandler);
   }

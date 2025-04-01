@@ -136,4 +136,30 @@ describe('Repository', () => {
 
     should().not.exist(result);
   });
+
+  it('should list all documents if no user is provided', async () => {
+    findStub.resolves([{
+      toObject: sinon.stub().resolves({ name: 'test' }),
+    }]);
+
+    const result = await repository.listAll();
+
+    result.should.be.instanceOf(Array);
+    result.should.have.lengthOf(1);
+    findStub.should.have.been.calledOnce;
+    findStub.should.have.been.calledWith({ user: undefined });
+  });
+
+  it('should list all documents related to a user if a user is provided', async () => {
+    findStub.resolves([{
+      toObject: sinon.stub().resolves({ name: 'test' }),
+    }]);
+
+    const result = await repository.listAll('1');
+
+    result.should.be.instanceOf(Array);
+    result.should.have.lengthOf(1);
+    findStub.should.have.been.calledOnce;
+    findStub.should.have.been.calledWith({ user: '1' });
+  });
 });

@@ -3,7 +3,7 @@ import Repository from './repository';
 import TransactionModel, { ITransactionDocument } from '../models/transactionModel';
 import { ITransaction } from '../../types';
 
-class TransactionRepo extends Repository<ITransactionDocument, ITransaction> {
+export class TransactionRepo extends Repository<ITransactionDocument, ITransaction> {
   constructor(model: Model<ITransactionDocument> = TransactionModel) {
     super(model);
   }

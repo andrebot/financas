@@ -55,6 +55,7 @@ const {
   updateUser,
   listUsers,
   register,
+  getUser,
   logout,
   login,
 } = proxyquire('../../../src/server/managers/authenticationManager', {
@@ -322,6 +323,16 @@ describe('AuthenticationManager', function () {
     await listUsers();
 
     UserRepo.listAll.should.have.been.calledOnce;
+  });
+
+  it('should retrieve an user by id', async function() {
+    const userId = '1';
+
+    UserRepo.findById.resolves({ id: userId });
+
+    const user = await getUser(userId);
+
+    should().exist(user);
   });
 
   describe('deleting user', function() {
