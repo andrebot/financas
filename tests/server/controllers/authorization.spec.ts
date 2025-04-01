@@ -37,6 +37,7 @@ const authManagerStub = {
   createUser: sinon.stub().resolves(),
   updateUser: sinon.stub().resolves(),
   listUsers: sinon.stub().resolves(),
+  getUser: sinon.stub().resolves(),
   deleteUser: sinon.stub().resolves(),
   login: sinon.stub().resolves(),
   logout: sinon.stub().resolves(),
@@ -103,6 +104,7 @@ describe('AuthorizationController', () => {
     authManagerStub.resetPassword.resetHistory();
     authManagerStub.changePassword.resetHistory();
     authManagerStub.register.resetHistory();
+    authManagerStub.getUser.resetHistory();
   });
 
   it('should be able to create an user successfully', async () => {
@@ -216,15 +218,15 @@ describe('AuthorizationController', () => {
       id: request.params.userId,
     };
 
-    authManagerStub.listUsers.resolves([user]);
+    authManagerStub.getUser.resolves(user);
 
     try {
       await getUserController(request, response);
 
       response.send.should.have.been.calledOnce;
       response.send.should.have.been.calledWith(user);
-      authManagerStub.listUsers.should.have.been.calledOnce;
-      authManagerStub.listUsers.should.have.been.calledWith({ id: request.params.userId });
+      authManagerStub.getUser.should.have.been.calledOnce;
+      authManagerStub.getUser.should.have.been.calledWith(request.params.userId);
     } catch (error) {
       console.error(error);
       chai.assert.fail('Should not have thrown an error');
@@ -232,7 +234,7 @@ describe('AuthorizationController', () => {
   });
 
   it('should be able to handle an error when retrieveing a user', async () => {
-    authManagerStub.listUsers.rejects(new Error('Test error'));
+    authManagerStub.getUser.rejects(new Error('Test error'));
 
     try {
       await getUserController(request, response);
@@ -546,7 +548,7 @@ describe('AuthorizationController', () => {
       await changePasswordController(request, response);
 
       response.status.should.have.been.calledWith(400);
-      response.send.should.have.been.calledWith({ error: 'Invalid user' });
+      response.send.should.have.been.calledWith({ error: 'Invalid old password or new password' });
     } catch (error) {
       console.error(error);
       chai.assert.fail('Should not have thrown an error');
@@ -560,7 +562,7 @@ describe('AuthorizationController', () => {
       await changePasswordController(request, response);
 
       response.status.should.have.been.calledWith(400);
-      response.send.should.have.been.calledWith({ error: 'Invalid password' });
+      response.send.should.have.been.calledWith({ error: 'Invalid old password or new password' });
     } catch (error) {
       console.error(error);
       chai.assert.fail('Should not have thrown an error');
@@ -574,7 +576,7 @@ describe('AuthorizationController', () => {
       await changePasswordController(request, response);
 
       response.status.should.have.been.calledWith(400);
-      response.send.should.have.been.calledWith({ error: 'Invalid password' });
+      response.send.should.have.been.calledWith({ error: 'Invalid old password or new password' });
     } catch (error) {
       console.error(error);
       chai.assert.fail('Should not have thrown an error');

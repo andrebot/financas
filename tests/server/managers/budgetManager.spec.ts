@@ -4,10 +4,10 @@ import proxyquire from 'proxyquire';
 import { IBudget } from '../../../src/server/types';
 
 const transactionRepoStub = {
-  find: sinon.stub().resolves([]),
+  findByCategoryWithDateRange: sinon.stub().resolves([]),
 };
 const budgetRepoStub = {
-  findOne: sinon.stub().resolves({
+  findById: sinon.stub().resolves({
     id: '1',
     user: '2',
   } as IBudget),
@@ -20,12 +20,12 @@ const budgetManager = proxyquire('../../../src/server/managers/budgetManager', {
 
 describe('Budget manager', () => {
   beforeEach(() => {
-    transactionRepoStub.find.reset();
-    budgetRepoStub.findOne.resetHistory();
+    transactionRepoStub.findByCategoryWithDateRange.reset();
+    budgetRepoStub.findById.reset();
   });
 
   it('should calculate the spent value of the budget', async () => {
-    transactionRepoStub.find.resolves([
+    transactionRepoStub.findByCategoryWithDateRange.resolves([
       { value: 100 },
       { value: 200 },
       { value: 300 },
@@ -51,10 +51,14 @@ describe('Budget manager', () => {
   });
 
   it('should get the budget with the spent value', async () => {
-    transactionRepoStub.find.resolves([
+    transactionRepoStub.findByCategoryWithDateRange.resolves([
       { value: 100 },
       { value: 200 },
     ]);
+    budgetRepoStub.findById.resolves({
+      id: '1',
+      user: '2',
+    } as IBudget);
 
     try {
       const budget = await budgetManager.getContent('1', '2');
@@ -62,17 +66,15 @@ describe('Budget manager', () => {
       budget.spent.should.equal(300);
       budget.id.should.equal('1');
       budget.user.should.equal('2');
-      budgetRepoStub.findOne.should.have.been.calledWith({
-        user: '2',
-        id: '1',
-      });
+      budgetRepoStub.findById.should.have.been.calledWith('1');
     } catch (error) {
       should().fail((error as Error).message);
     }
   });
 
   it('should throw an error if the budget is not found', async () => {
-    budgetRepoStub.findOne.resolves(null);
+    budgetRepoStub.findById.resolves(null);
+
     try {
       await budgetManager.getContent('1', '2');
     } catch (error) {

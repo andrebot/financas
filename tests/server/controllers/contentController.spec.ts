@@ -334,7 +334,6 @@ describe('Content Controller', () => {
 
         managerStub.listContent.should.have.been.calledOnce;
         managerStub.listContent.should.have.been.calledWith(
-          request.body,
           request.user?.id,
         );
         response.send.should.have.been.calledOnce;
@@ -353,7 +352,6 @@ describe('Content Controller', () => {
 
         managerStub.listContent.should.have.been.calledOnce;
         managerStub.listContent.should.have.been.calledWith(
-          request.body,
           request.user?.id,
         );
         response.status.should.have.been.calledOnce;
@@ -376,7 +374,6 @@ describe('Content Controller', () => {
         managerStub.getContent.should.have.been.calledOnce;
         managerStub.getContent.should.have.been.calledWith(
           request.params.id,
-          request.user?.id,
         );
         response.send.should.have.been.calledOnce;
         response.send.should.have.been.calledWith(request.body);
@@ -395,7 +392,6 @@ describe('Content Controller', () => {
         managerStub.getContent.should.have.been.calledOnce;
         managerStub.getContent.should.have.been.calledWith(
           request.params.id,
-          request.user?.id,
         );
         response.status.should.have.been.calledOnce;
         response.status.should.have.been.calledWith(500);

@@ -16,7 +16,7 @@ import {
 import { handleError, isValidObjectId } from '../utils/responseHandlers';
 import { REFRESH_TOKEN_EXPIRATION_COOKIE, TOKEN_HTTPS_ONLY, REFRESH_TOKEN_COOKIE_NAME } from '../config/auth';
 // import { API_PREFIX } from '../config/server';
-import type { RequestWithUser } from '../types';
+import type { RequestWithUser, UserPayload } from '../types';
 import Logger from '../utils/logger';
 
 /**
@@ -55,7 +55,6 @@ function isDeleteActionValid(req: RequestWithUser, res: Response, userId: string
 function isLoginActionValid(email: string, password: string, res: Response) {
   if (!email || !password || !regExpEmail.test(email)) {
     Logger.error(new Error('Invalid email or password'));
-    handleError(new Error('invalidUser'), res, 400);
 
     return false;
   }
@@ -73,11 +72,11 @@ function isLoginActionValid(email: string, password: string, res: Response) {
  * @returns - True if the action is valid, false otherwise
  */
 function isChangePasswordValid(
-  email: string,
+  user: UserPayload | undefined,
   oldPassword: string,
   newPassword: string,
 ) {
-  if (!email || !oldPassword || !newPassword) {
+  if (!user || !user.email || !oldPassword || !newPassword) {
     return false;
   }
 
@@ -256,7 +255,7 @@ export async function loginController(req: Request, res: Response): Promise<Resp
   } = req.body;
 
   if (!isLoginActionValid(email, password, res)) {
-    return res.status(400).json({ message: 'Invalid email or password' });
+    return res.status(400).send({ error: 'invalidUser' });
   }
 
   try {
@@ -358,8 +357,8 @@ export async function changePasswordController(
 ): Promise<Response> {
   const { oldPassword, newPassword } = req.body;
 
-  if (!isChangePasswordValid(req.user!.email!, oldPassword, newPassword)) {
-    return res.status(400).json({ message: 'Invalid old password or new password' });
+  if (!isChangePasswordValid(req.user, oldPassword, newPassword)) {
+    return res.status(400).send({ error: 'Invalid old password or new password' });
   }
 
   try {
