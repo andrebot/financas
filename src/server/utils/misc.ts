@@ -47,6 +47,7 @@ export function removeEmptyProperties(obj: any): any {
       return cleanedArray.length > 0 ? cleanedArray : undefined;
     }
     const cleanedObject: Record<string, any> = {};
+    // eslint-disable-next-line no-restricted-syntax
     for (const [key, value] of Object.entries(obj)) {
       const cleanedValue = removeEmptyProperties(value);
       if (cleanedValue !== undefined) {

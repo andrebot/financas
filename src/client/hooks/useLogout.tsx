@@ -37,7 +37,7 @@ export default function useLogout() {
       if (shouldCallLogoutApi) {
         await logout();
       }
-    } catch (error) {
+    } catch {
       enqueueSnackbar(t('logoutFailed'), { variant: 'error' });
     } finally {
       setUser(undefined);

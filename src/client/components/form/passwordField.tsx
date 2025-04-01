@@ -9,13 +9,13 @@ import {
 
 /**
  * A password field component that allows the user to input a password with a show password button.
- * 
+ *
  * @param label - The label of the password field.
  * @param value - The value of the password field.
  * @param onChange - The function to call when the password field changes.
  * @param error - Whether the password field has an error.
  * @param helperText - The helper text of the password field.
- * 
+ *
  * @returns The password field component.
  */
 export default function PasswordField({
@@ -23,7 +23,7 @@ export default function PasswordField({
   value,
   onChange,
   onKeyDown = () => {},
-  className,
+  className = '',
   error = false,
   helperText = '',
 }: {
@@ -40,9 +40,9 @@ export default function PasswordField({
   /**
    * Handles the click event for the show password button.
    */
-  function handleClickShowPassword() {
+  const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
-  }
+  };
 
   return (
     <TextField

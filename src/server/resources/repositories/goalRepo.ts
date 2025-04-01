@@ -1,6 +1,6 @@
 import { AnyBulkWriteOperation } from 'mongodb';
 import mongoose from 'mongoose';
-import { Repository } from './repository';
+import Repository from './repository';
 import GoalModel, { IGoalDocument } from '../models/goalModel';
 import { IGoal, BulkGoalsUpdate } from '../../types';
 
@@ -10,25 +10,23 @@ export class GoalRepo extends Repository<IGoalDocument, IGoal> {
   }
 
   /**
-   * Updates the goals by a transaction. If the transaction is an update, the old value is 
+   * Updates the goals by a transaction. If the transaction is an update, the old value is
    * provided to calculate the difference.
    *
    * @param transaction - The transaction to update the goals by
    * @param oldTransactionValue - The old value of the transaction
    */
   async incrementGoalsInBulk(bulkGoalsUpdate: BulkGoalsUpdate[]): Promise<void> {
-    const goalsToUpdate = bulkGoalsUpdate.map(({ goalId, amount }) => {
-      return {
-        updateOne: {
-          filter: { _id: new mongoose.Types.ObjectId(goalId) },
-          update: { $inc: { amount } },
-          upsert: true,
-        },
-      };
-    }) as unknown as AnyBulkWriteOperation<IGoalDocument>[];
+    const goalsToUpdate = bulkGoalsUpdate.map(({ goalId, amount }) => ({
+      updateOne: {
+        filter: { _id: new mongoose.Types.ObjectId(goalId) },
+        update: { $inc: { amount } },
+        upsert: true,
+      },
+    })) as unknown as AnyBulkWriteOperation<IGoalDocument>[];
 
     if (goalsToUpdate.length > 0) {
-      await this.model.collection.bulkWrite(goalsToUpdate as any);
+      await this.Model.collection.bulkWrite(goalsToUpdate as any);
     }
   }
 }

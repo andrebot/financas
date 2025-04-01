@@ -40,7 +40,7 @@ function checkAdminAccess(user: UserPayload, isAdmin: boolean): void {
  * @param isAdmin - Whether the user must be an admin
  * @returns The token validation middleware
  */
-export function createAccessTokenValidation(isAdmin: boolean = false):
+export default function createAccessTokenValidation(isAdmin: boolean = false):
 TokenValidationMiddleware {
   /**
    * Token validation middleware function. It checks if the token is valid and if

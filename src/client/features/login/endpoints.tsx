@@ -1,8 +1,8 @@
-import { EndpointBuilder } from "@reduxjs/toolkit/dist/query";
-import { BaseQueryFn } from "@reduxjs/toolkit/query";
-import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
-import { FetchBaseQueryMeta } from "@reduxjs/toolkit/query";
-import { FetchArgs } from "@reduxjs/toolkit/query";
+// eslint-disable-next-line import/no-unresolved
+import { EndpointBuilder } from '@reduxjs/toolkit/dist/query';
+import {
+  BaseQueryFn, FetchBaseQueryError, FetchBaseQueryMeta, FetchArgs,
+} from '@reduxjs/toolkit/query';
 
 import type {
   LoginBody,
@@ -16,7 +16,7 @@ import type {
   ChangePasswordBody,
 } from '../../types/authContextType';
 
-type ApiBuilder = EndpointBuilder<BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError, {}, FetchBaseQueryMeta>, never, "loginApi">
+type ApiBuilder = EndpointBuilder<BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError, {}, FetchBaseQueryMeta>, never, 'loginApi'>
 
 export const loginMutation = (body: LoginBody) => ({
   url: '/login',

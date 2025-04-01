@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
-import jwt, { Secret, SignOptions } from 'jsonwebtoken';
+import jwt, { Secret } from 'jsonwebtoken';
 import {
-  QueryFilter, Tokens, Token, UserPayload,
+  Tokens, Token, UserPayload,
 } from '../types';
 import UserRepo from '../resources/repositories/userRepo';
 import { addToken, deleteToken, isValidToken } from '../resources/repositories/tokenRepo';
@@ -92,6 +92,7 @@ export async function createUser(
   role: 'admin' | 'user' = 'user',
 ): Promise<Omit<IUser, 'password'>> {
   if (regExpPassword.test(password)) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _, ...newUser } = await UserRepo.save({
       email,
       password: bcrypt.hashSync(password, bcrypt.genSaltSync(WORK_FACTOR)),
@@ -188,8 +189,18 @@ export async function updateUser(
  * @param query - Query to be used to find the users
  * @returns - the Users as an array
  */
-export function listUsers(query: QueryFilter<IUser> = {}): Promise<IUser[]> {
-  return UserRepo.find(query);
+export function listUsers(): Promise<IUser[]> {
+  return UserRepo.listAll();
+}
+
+/**
+ * Function to get a user. It will find the user by id
+ *
+ * @param id - Id of the user to be found
+ * @returns - the User as an object
+ */
+export function getUser(id: string): Promise<IUser | null> {
+  return UserRepo.findById(id);
 }
 
 /**
@@ -254,7 +265,7 @@ export async function register(
  * @returns - the Tokens as an object
  */
 export async function login(searchEmail: string, password: string): Promise<LoginResponse> {
-  const user = await UserRepo.findOne({ email: searchEmail });
+  const user = await UserRepo.findByEmail(searchEmail);
 
   if (user) {
     const isMatch = bcrypt.compareSync(password, user.password);
@@ -331,7 +342,7 @@ export async function refreshTokens(refreshToken: string): Promise<Tokens> {
       refreshToken,
       REFRESH_TOKEN_SECRET,
     ) as UserPayload;
-    const user = await UserRepo.findOne({ email: tokenDecrypted.email });
+    const user = await UserRepo.findByEmail(tokenDecrypted.email!);
 
     if (user) {
       const {
@@ -364,7 +375,7 @@ export async function refreshTokens(refreshToken: string): Promise<Tokens> {
  * @returns - if the password was reset
  */
 export async function resetPassword(email: string): Promise<boolean> {
-  const user = await UserRepo.findOne({ email });
+  const user = await UserRepo.findByEmail(email);
 
   if (user) {
     const newPassword = Math.random().toString(36).slice(-8);
@@ -398,7 +409,7 @@ export async function changePassword(
   oldPassword: string,
   newPassword: string,
 ): Promise<boolean> {
-  const user = await UserRepo.findOne({ email });
+  const user = await UserRepo.findByEmail(email);
 
   if (user) {
     const isMatch = bcrypt.compareSync(oldPassword, user.password);

@@ -1,7 +1,7 @@
 import { styled } from '@mui/material/styles';
+import { Button, TextField, Link } from '@mui/material';
 import bgImage from '../../assets/loginSplash.jpg';
 import { StyleCompProp } from '../../types';
-import { Button, TextField, Link } from '@mui/material';
 import PasswordField from '../../components/form/passwordField';
 
 export const LoginMainDiv = styled('div')(({ theme }: StyleCompProp) => ({
@@ -79,7 +79,7 @@ export const LoginFormContainer = styled('div')(() => ({
   gap: '10px',
   flexGrow: 1,
   padding: '40px',
-}))
+}));
 
 export const LoginButton = styled(Button)(() => ({
   width: '100%',

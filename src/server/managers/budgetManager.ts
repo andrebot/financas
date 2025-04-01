@@ -31,11 +31,12 @@ export class BudgetManager extends ContentManager<IBudget> {
       user, categories, startDate, endDate,
     } = budget;
 
-    const transactions = await this.transactionRepo.find({
+    const transactions = await this.transactionRepo.findByCategoryWithDateRange(
       user,
-      category: { in: categories },
-      date: { gte: startDate, lte: endDate },
-    });
+      categories,
+      startDate,
+      endDate,
+    );
 
     return transactions.reduce((acc, curr) => acc + curr.value, 0);
   }
@@ -46,11 +47,8 @@ export class BudgetManager extends ContentManager<IBudget> {
    * @param budgetId - The id of the budget to get
    * @returns {Promise<IBudget>} The budget with the spent value
    */
-  async getContent(id: string, userId?: string): Promise<IBudget> {
-    const budget = await this.repository.findOne({
-      id,
-      user: userId,
-    });
+  async getContent(id: string): Promise<IBudget> {
+    const budget = await this.repository.findById(id);
 
     if (!budget) {
       return {} as IBudget;

@@ -1,9 +1,9 @@
 import { styled } from '@mui/material/styles';
 import Paper from '@mui/material/Paper';
-import type { StyleCompProp } from '../../types';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
+import type { StyleCompProp } from '../../types';
 
 export const SettingsMain = styled('div')(() => ({
   display: 'flex',

@@ -11,7 +11,7 @@ import logger from './logger';
  * @param status - The status to be returned. Default is 500
  * @returns - The response with the error message and status
  */
-export function handleError(error: Error, res: Response, status = 500) {
+export function handleError(error: Error, res: Response, status = 500): Response {
   let newStatus = status;
   logger.error(error);
 

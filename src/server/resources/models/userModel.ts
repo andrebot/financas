@@ -10,7 +10,7 @@ import { IUser } from '../../types';
 
 export interface IUserDocument extends Omit<IUser, 'id'>, Document {
   _id: Types.ObjectId;
-};
+}
 
 /**
  * Function to transform the user object by removing the password, since it should not be returned.
@@ -23,6 +23,7 @@ export interface IUserDocument extends Omit<IUser, 'id'>, Document {
 function transformUserObject(
   doc: Document<unknown, {}, FlatRecord<IUserDocument>>,
   ret: Record<string, any>,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   options: any,
 ) {
   const { ...newObject } = ret;

@@ -11,10 +11,11 @@ import {
   resetPassword,
   changePassword,
   register,
+  getUser,
 } from '../managers/authenticationManager';
 import { handleError, isValidObjectId } from '../utils/responseHandlers';
 import { REFRESH_TOKEN_EXPIRATION_COOKIE, TOKEN_HTTPS_ONLY, REFRESH_TOKEN_COOKIE_NAME } from '../config/auth';
-import { API_PREFIX } from '../config/server';
+// import { API_PREFIX } from '../config/server';
 import type { RequestWithUser } from '../types';
 import Logger from '../utils/logger';
 
@@ -62,21 +63,21 @@ function isLoginActionValid(email: string, password: string, res: Response) {
   return true;
 }
 
+/**
+ * Function to validate the change password action. It will check if
+ * the email and password are valid
+ *
+ * @param email - The email of the user
+ * @param oldPassword - The old password of the user
+ * @param newPassword - The new password of the user
+ * @returns - True if the action is valid, false otherwise
+ */
 function isChangePasswordValid(
   email: string,
   oldPassword: string,
   newPassword: string,
-  res: Response,
 ) {
-  if (!email) {
-    handleError(new Error('Invalid user'), res, 400);
-
-    return false;
-  }
-
-  if (!oldPassword || !newPassword) {
-    handleError(new Error('Invalid password'), res, 400);
-
+  if (!email || !oldPassword || !newPassword) {
     return false;
   }
 
@@ -182,7 +183,7 @@ export async function updateUserController(req: RequestWithUser, res: Response) 
 }
 
 /**
- * Function to list users. It will return a list of users based on the query parameters
+ * Function to list all users
  *
  * @param req - The request object
  * @param res - The response object
@@ -190,7 +191,7 @@ export async function updateUserController(req: RequestWithUser, res: Response) 
  */
 export async function listUsersController(req: Request, res: Response) {
   try {
-    const users = await listUsers(req.query);
+    const users = await listUsers();
 
     return res.send(users);
   } catch (error) {
@@ -207,9 +208,9 @@ export async function listUsersController(req: Request, res: Response) {
  */
 export async function getUserController(req:Request, res: Response) {
   try {
-    const users = await listUsers({ id: req.params.userId });
+    const user = await getUser(req.params.userId);
 
-    return res.send(users[0]);
+    return res.send(user);
   } catch (error) {
     return handleError(error as Error, res);
   }
@@ -225,12 +226,12 @@ export async function getUserController(req:Request, res: Response) {
 export async function deleteUserController(
   req: RequestWithUser,
   res: Response,
-): Promise<void | Response> {
+): Promise<Response> {
   try {
     const { userId } = req.params;
 
     if (!isDeleteActionValid(req, res, userId)) {
-      return;
+      return res.status(403).json({ message: 'Unauthorized' });
     }
 
     await deleteUser(userId);
@@ -248,14 +249,14 @@ export async function deleteUserController(
  * @param res - The response object
  * @returns - The tokens as an object
  */
-export async function loginController(req: Request, res: Response): Promise<void | Response> {
+export async function loginController(req: Request, res: Response): Promise<Response> {
   const {
     email,
     password,
   } = req.body;
 
   if (!isLoginActionValid(email, password, res)) {
-    return;
+    return res.status(400).json({ message: 'Invalid email or password' });
   }
 
   try {
@@ -282,7 +283,7 @@ export async function loginController(req: Request, res: Response): Promise<void
  * @param res - The response object
  * @returns - The message as an object
  */
-export async function logoutController(req: Request, res: Response) {
+export async function logoutController(req: Request, res: Response): Promise<Response> {
   try {
     const refreshToken = req.cookies[REFRESH_TOKEN_COOKIE_NAME];
 
@@ -305,7 +306,7 @@ export async function logoutController(req: Request, res: Response) {
  * @param res - The response object
  * @returns - The tokens as an object
  */
-export async function refreshTokensController(req: Request, res: Response) {
+export async function refreshTokensController(req: Request, res: Response): Promise<Response> {
   try {
     const refreshToken = req.cookies[REFRESH_TOKEN_COOKIE_NAME];
 
@@ -328,7 +329,7 @@ export async function refreshTokensController(req: Request, res: Response) {
  * @param res - The response object
  * @returns - The message as an object
  */
-export async function resetPasswordController(req: Request, res: Response) {
+export async function resetPasswordController(req: Request, res: Response): Promise<Response> {
   try {
     const { email } = req.body;
 
@@ -354,15 +355,15 @@ export async function resetPasswordController(req: Request, res: Response) {
 export async function changePasswordController(
   req: RequestWithUser,
   res: Response,
-): Promise<void | Response> {
+): Promise<Response> {
+  const { oldPassword, newPassword } = req.body;
+
+  if (!isChangePasswordValid(req.user!.email!, oldPassword, newPassword)) {
+    return res.status(400).json({ message: 'Invalid old password or new password' });
+  }
+
   try {
-    const { oldPassword, newPassword } = req.body;
-
-    if (!isChangePasswordValid(req.user?.email!, oldPassword, newPassword, res)) {
-      return;
-    }
-
-    await changePassword(req.user?.email!, oldPassword, newPassword);
+    await changePassword(req.user!.email!, oldPassword, newPassword);
 
     return res.send({ message: 'Password changed' });
   } catch (error) {

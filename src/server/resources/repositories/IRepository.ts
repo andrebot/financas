@@ -1,4 +1,5 @@
-import { QueryFilter } from '../../types';
+/* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 /**
  * Interface for a repository.
@@ -29,20 +30,12 @@ export interface IRepository<T, K> {
   findByIdAndDelete(id: string): Promise<K | null>;
 
   /**
-   * Finds documents based on the given query.
+   * Finds all documents.
    *
-   * @param query - The query to filter the documents.
+   * @param userId - The id of the user to filter the documents by.
    * @returns An array of found objects.
    */
-  find(query: QueryFilter<K>): Promise<K[]>;
-
-  /**
-   * Finds a single document based on the given query.
-   *
-   * @param query - The query to filter the document.
-   * @returns The found object or null if not found.
-   */
-  findOne(query: QueryFilter<K>): Promise<K | null>;
+  listAll(userId?: string): Promise<K[]>;
 
   /**
    * Saves a new document.

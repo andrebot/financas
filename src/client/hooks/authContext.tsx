@@ -3,9 +3,12 @@ import React, {
   useContext,
   useState,
   useEffect,
+  useMemo,
 } from 'react';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
+import { useSnackbar } from 'notistack';
+import { useTranslation } from 'react-i18next';
 import type { UserType, AuthContextType } from '../types';
 
 type AuthProviderProps = {
@@ -23,6 +26,9 @@ const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
  */
 function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<UserType | undefined>();
+  const valueMemo = useMemo(() => ({ user, setUser }), [user, setUser]);
+  const { enqueueSnackbar } = useSnackbar();
+  const { t } = useTranslation();
 
   useEffect(() => {
     try {
@@ -45,12 +51,12 @@ function AuthProvider({ children }: AuthProviderProps) {
           role,
         });
       }
-    } catch (error) {
-      console.error('Failed to decode refresh token:', error);
+    } catch {
+      enqueueSnackbar(t('decodeTokenError'), { variant: 'error' });
     }
   }, []);
 
-  return <AuthContext.Provider value={{ user, setUser }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={valueMemo}>{children}</AuthContext.Provider>;
 }
 
 /**

@@ -50,36 +50,38 @@ export default function Settings(): React.JSX.Element {
 
   /**
    * Validates the name field.
-   * 
+   *
    * @param name - The name value.
    * @param key - The key of the error action.
    * @param errorAction - The error action.
    */
-  function validateName(
+  const validateName = (
     name: string,
     key: string,
     errorAction: ActionType.SET_FIRST_NAME_ERROR | ActionType.SET_LAST_NAME_ERROR,
-  ) {
+  ) => {
     if (name.length === 0) {
       dispatch({ type: errorAction, payload: t(key) });
+
       return false;
     }
+
     return true;
-  }
+  };
 
   /**
    * Handles the change event for the input fields.
-   * 
+   *
    * @remarks
    * This method expects the input fields to have a name attribute matching
    * the keys of the state object and the validatorMap object.
    * ValidatorMap is a map of the input field names to the validation functions.
-   * 
+   *
    * @param e - The change event.
    */
-  function handleFormChange(e: React.ChangeEvent<HTMLInputElement>) {
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const key = e.target.name;
-    const value = e.target.value;
+    const { value } = e.target;
     const validator = validatorMap[key as keyof typeof validatorMap];
 
     if (validator) {
@@ -90,52 +92,54 @@ export default function Settings(): React.JSX.Element {
       type: SET_PROPERTY,
       payload: { key, value },
     });
-  }
+  };
 
   /**
    * Handles the cancel action. Resets the state to the initial state.
    */
-  function handleCancel() {
+  const handleCancel = () => {
     dispatch({
       type: RESET_STATE,
       payload: {
-        firstName: user?.firstName!,
-        lastName: user?.lastName!,
-        email: user?.email!,
+        firstName: user!.firstName,
+        lastName: user!.lastName,
+        email: user!.email,
       },
     });
-  }
+  };
 
   /**
    * Validates the form.
-   * 
+   *
    * @returns true if the form is valid, false otherwise.
    */
-  function validateForm() {
-    return state.firstName && state.lastName && state.email && regExpEmail.test(state.email);
-  }
+  const validateForm = () => {
+    const { firstName, lastName, email } = state;
+
+    return firstName && lastName && email && regExpEmail.test(email);
+  };
 
   /**
    * Opens the change password modal.
    */
-  function openChangePasswordModal() {
+  const openChangePasswordModal = () => {
     showModal(<ChangePasswordModal />);
-  }
+  };
 
   /**
    * Handles the save action. Validates the form and then updates the user in the state.
-   * 
+   *
    * @remarks
    * If any error occurs, the error message is displayed using the enqueueSnackbar function.
    */
-  async function handleSave() {
+  const handleSave = async () => {
     if (!state.isDirty || !validateForm()) {
       return;
     }
 
     try {
       const updatedUser = {
-        id: user?.id!,
+        id: user!.id,
         firstName: state.firstName,
         lastName: state.lastName,
         email: state.email,
@@ -155,17 +159,17 @@ export default function Settings(): React.JSX.Element {
       } else {
         enqueueSnackbar(t('internalError'), { variant: 'error' });
       }
-    } catch (error) {
+    } catch {
       enqueueSnackbar(t('internalError'), { variant: 'error' });
     }
-  }
+  };
 
   /**
    * Opens the confirm delete account modal.
    */
-  function openConfirmDeleteAccountModal() {
+  const openConfirmDeleteAccountModal = () => {
     showModal(<ConfirmDeleteAccount handleLogout={handleLogout} />);
-  }
+  };
 
   return (
     <SettingsMain>
@@ -198,7 +202,7 @@ export default function Settings(): React.JSX.Element {
           type="email"
           value={state.email}
           name="email"
-          disabled={true}
+          disabled
         />
         <HorizontalContainer>
           <InfoButton

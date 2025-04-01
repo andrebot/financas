@@ -12,7 +12,11 @@ import {
 import { useAuth } from '../../hooks/authContext';
 import { useDeleteAccountMutation } from '../../features/login';
 
-export default function ConfirmDeleteAccount({ handleLogout }: { handleLogout: (shouldCallLogoutApi: boolean) => void }) {
+export default function ConfirmDeleteAccount({
+  handleLogout,
+}: {
+  handleLogout: (shouldCallLogoutApi: boolean) => void;
+}) {
   const { t } = useTranslation();
   const { closeModal } = useModal();
   const { user } = useAuth();
@@ -20,26 +24,26 @@ export default function ConfirmDeleteAccount({ handleLogout }: { handleLogout: (
   const [deleteAccount, { isLoading }] = useDeleteAccountMutation();
   /**
    * Handles the delete account action.
-   * 
+   *
    * @remarks
    * It will call the delete account mutation and then logout the user.
    */
-  async function handleDeleteAccount() {
+  const handleDeleteAccount = async () => {
     try {
-      const result = await deleteAccount(user?.id!);
+      const result = await deleteAccount(user!.id);
 
       if ('data' in result) {
         enqueueSnackbar(t('accountDeleted'), { variant: 'success' });
       } else {
         enqueueSnackbar(t('internalError'), { variant: 'error' });
       }
-    } catch (error) {
+    } catch {
       enqueueSnackbar(t('internalError'), { variant: 'error' });
     } finally {
       handleLogout(false);
       closeModal();
     }
-  }
+  };
 
   return (
     <ConfirmDeleteAccountContainer elevation={3}>
@@ -56,4 +60,3 @@ export default function ConfirmDeleteAccount({ handleLogout }: { handleLogout: (
     </ConfirmDeleteAccountContainer>
   );
 }
-

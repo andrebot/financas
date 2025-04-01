@@ -15,7 +15,9 @@ export interface IMonthlyBalanceDocument extends Omit<IMonthlyBalance, 'id' | 'u
 const MonthlyBalanceSchema = new Schema<IMonthlyBalanceDocument>({
   user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   account: { type: Schema.Types.ObjectId, ref: 'Account', required: true },
-  month: { type: Number, required: true, min: 1, max: 12 },
+  month: {
+    type: Number, required: true, min: 1, max: 12,
+  },
   year: { type: Number, required: true },
   openingBalance: { type: Number, required: true },
   closingBalance: { type: Number, required: true },
@@ -23,9 +25,12 @@ const MonthlyBalanceSchema = new Schema<IMonthlyBalanceDocument>({
 }, {
   toJSON: {
     transform: (doc, ret) => {
-      ret.id = ret._id.toString();
-      delete ret._id;
-      return ret;
+      const newObject = { ...ret };
+
+      newObject.id = newObject._id.toString();
+      delete newObject._id;
+
+      return newObject;
     },
   },
 });

@@ -12,7 +12,7 @@ import AccountIcon from '@mui/icons-material/AccountCircle';
 import LogoutIcon from '@mui/icons-material/Logout';
 import SettingsIcon from '@mui/icons-material/Settings';
 import CustomListItem from './customListItem';
-import { 
+import {
   NavMenuIcon,
   NavTitle,
   DrawerContainer,
@@ -30,9 +30,9 @@ export default function NavBar() {
   /**
    * Closes the drawer.
    */
-  function closeDrawer() {
+  const closeDrawer = () => {
     setIsDrawerOpen(false);
-  }
+  };
 
   return (
     <AppBar position="static">
@@ -46,8 +46,8 @@ export default function NavBar() {
       </Toolbar>
       <Drawer anchor="left" open={isDrawerOpen} onClose={closeDrawer}>
         <DrawerContainer
-          role="presentation" 
-          onClick={closeDrawer} 
+          role="presentation"
+          onClick={closeDrawer}
           onKeyDown={closeDrawer}
         >
           <List>
