@@ -3,10 +3,11 @@ import helmet from 'helmet';
 import path from 'path';
 import cors from 'cors';
 import * as dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
 import logger from './utils/logger';
 import { PORT } from './config/server';
 import setRoutes from './routes';
-import cookieParser from 'cookie-parser';
+
 dotenv.config();
 
 const app = express();

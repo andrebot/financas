@@ -36,11 +36,11 @@ const jwtVerifyStub = sinon.stub();
 
 const UserRepo = {
   findById: sinon.stub(),
-  find: sinon.stub(),
   findByIdAndDelete: sinon.stub(),
-  findOne: sinon.stub(),
   save: sinon.stub(),
   update: sinon.stub(),
+  listAll: sinon.stub(),
+  findByEmail: sinon.stub(),
 }
 
 const {
@@ -55,6 +55,7 @@ const {
   updateUser,
   listUsers,
   register,
+  getUser,
   logout,
   login,
 } = proxyquire('../../../src/server/managers/authenticationManager', {
@@ -72,9 +73,9 @@ describe('AuthenticationManager', function () {
     jwtSignStub.reset();
     UserRepo.save.reset();
     UserRepo.findById.reset();
-    UserRepo.findOne.reset();
     UserRepo.update.reset();
-    UserRepo.find.reset();
+    UserRepo.listAll.reset();
+    UserRepo.findByEmail.reset();
     UserRepo.findByIdAndDelete.reset();
   });
 
@@ -318,11 +319,20 @@ describe('AuthenticationManager', function () {
     });
   });
 
-  it('should list users (we are not testing mongoose)', async function() {
-    await listUsers({});
+  it('should list users', async function() {
     await listUsers();
 
-    UserRepo.find.should.have.been.calledTwice;
+    UserRepo.listAll.should.have.been.calledOnce;
+  });
+
+  it('should retrieve an user by id', async function() {
+    const userId = '1';
+
+    UserRepo.findById.resolves({ id: userId });
+
+    const user = await getUser(userId);
+
+    should().exist(user);
   });
 
   describe('deleting user', function() {
@@ -364,7 +374,7 @@ describe('AuthenticationManager', function () {
       jwtSignStub.returns('mockToken');
 
       bcryptMock.compareSync.returns(true);
-      UserRepo.findOne.resolves(mockUser);
+      UserRepo.findByEmail.resolves(mockUser);
 
       const tokens = await login(mockUser.email, mockUser.password);
 
@@ -401,7 +411,7 @@ describe('AuthenticationManager', function () {
         password: 'nada',
       };
 
-      UserRepo.findOne.resolves(null);
+      UserRepo.findByEmail.resolves(null);
 
       try {
         await login(mockUser.email, mockUser.password);
@@ -421,7 +431,7 @@ describe('AuthenticationManager', function () {
         password: 'nada',
       };
       
-      UserRepo.findOne.returns(mockUser);
+      UserRepo.findByEmail.returns(mockUser);
 
       try {
         await login(mockUser.email, 'errada');
@@ -468,7 +478,7 @@ describe('AuthenticationManager', function () {
 
       jwtVerifyStub.returns({ payload: { email: 'test@gmail.com' } });
       jwtSignStub.returns(accessToken);
-      UserRepo.findOne.resolves(user);
+      UserRepo.findByEmail.resolves(user);
       addToken(cryptToken);
 
       const tokens = await refreshTokens(cryptToken) as Tokens;
@@ -499,7 +509,7 @@ describe('AuthenticationManager', function () {
     it('should throw an error if user is not found when refreshing tokens', async function() {
       const token = { email: 'test@gmail.com' };
       jwtVerifyStub.returns(token);
-      UserRepo.findOne.resolves(null);
+      UserRepo.findByEmail.resolves(null);
 
       try {
         await refreshTokens('mockToken');
@@ -538,7 +548,7 @@ describe('AuthenticationManager', function () {
         lastName: 'User',
         role: 'admin',
       };
-      UserRepo.findOne.resolves(mockUser);
+      UserRepo.findByEmail.resolves(mockUser);
       UserRepo.update.resolves(mockUser);
 
       try {
@@ -546,7 +556,7 @@ describe('AuthenticationManager', function () {
 
         should().exist(result);
         result.should.be.true;
-        UserRepo.findOne.should.have.been.calledOnce;
+        UserRepo.findByEmail.should.have.been.calledOnce;
         UserRepo.update.should.have.been.calledOnce;
         sendNotificationStub.should.have.been.calledOnce;
         sendNotificationStub.should.have.been.calledWith(mockUser.email, sinon.match.string);
@@ -557,7 +567,7 @@ describe('AuthenticationManager', function () {
     });
 
     it('should throw an error if the user is not found when resetting password', async function() {
-      UserRepo.findOne.resolves(null);
+      UserRepo.findByEmail.resolves(null);
 
       try {
         await resetPassword('test@gmail.com');
@@ -578,7 +588,7 @@ describe('AuthenticationManager', function () {
       };
 
       bcryptMock.compareSync.returns(true);
-      UserRepo.findOne.resolves(mockUser);
+      UserRepo.findByEmail.resolves(mockUser);
       UserRepo.update.resolves(mockUser);
 
       try {
@@ -586,7 +596,7 @@ describe('AuthenticationManager', function () {
 
         should().exist(result);
         result.should.be.true;
-        UserRepo.findOne.should.have.been.calledOnce;
+        UserRepo.findByEmail.should.have.been.calledOnce;
         UserRepo.update.should.have.been.calledOnce;
         bcryptMock.compareSync.should.have.been.calledOnce;
         bcryptMock.compareSync.should.have.been.calledWith('oldPassword', 'oldPassword');
@@ -605,14 +615,14 @@ describe('AuthenticationManager', function () {
       };
 
       bcryptMock.compareSync.returns(false);
-      UserRepo.findOne.resolves(mockUser);
+      UserRepo.findByEmail.resolves(mockUser);
 
       try {
         await changePassword('1', 'oldPassword', 'newPassword');
 
         chai.assert.fail('Should have thrown an error');
       } catch (error) {
-        UserRepo.findOne.should.have.been.calledOnce;
+        UserRepo.findByEmail.should.have.been.calledOnce;
         bcryptMock.compareSync.should.have.been.calledOnce;
         bcryptMock.compareSync.should.have.been.calledWith('oldPassword', 'anotherPassword');
         bcryptMock.genSaltSync.should.have.not.been.called;
@@ -623,7 +633,7 @@ describe('AuthenticationManager', function () {
     });
 
     it('should throw error if the user is not found', async function() {
-      UserRepo.findOne.resolves(null);
+      UserRepo.findByEmail.resolves(null);
 
       try {
         await changePassword('1', 'oldPassword', 'newPassword');
@@ -631,7 +641,7 @@ describe('AuthenticationManager', function () {
         chai.assert.fail('Should have thrown an error');
 
       } catch (error) {
-        UserRepo.findOne.should.have.been.calledOnce;
+        UserRepo.findByEmail.should.have.been.calledOnce;
         bcryptMock.compareSync.should.have.not.been.called;
         bcryptMock.genSaltSync.should.have.not.been.called;
         bcryptMock.hashSync.should.have.not.been.called;

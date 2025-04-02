@@ -32,6 +32,13 @@
       ],
       "no-plusplus": "off",
       "no-underscore-dangle": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+      "no-explicit-any": "off",
+      "no-use-before-define": "off",
+      "no-unused-vars": "off",
+      "react/require-default-props": "off",
+      "@typescript-eslint/no-empty-object-type": "off",
+      "class-methods-use-this": "off",
       "react/jsx-filename-extension": "off",
       "default-param-last": "off",
       "no-shadow": ["error", { "allow": ["INVESTMENT_TYPES", "BUDGET_TYPES", "TRANSACTION_TYPES"] }]

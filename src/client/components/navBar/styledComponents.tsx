@@ -2,7 +2,6 @@ import { styled } from '@mui/material/styles';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-import type { StyleCompProp } from '../../types';
 
 export const AccountMenuContainer = styled('div')(() => ({
   display: 'flex',

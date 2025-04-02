@@ -1,5 +1,5 @@
 import contentRouteFactory from './contentRouteFactory';
-import { createAccessTokenValidation } from '../utils/authorization';
+import createAccessTokenValidation from '../utils/authorization';
 import TransactionController from '../controllers/transactionController';
 
 const {

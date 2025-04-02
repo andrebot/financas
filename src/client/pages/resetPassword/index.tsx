@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { enqueueSnackbar } from 'notistack';
@@ -19,14 +18,13 @@ export default function ResetPassword(): React.JSX.Element {
   /**
    * Makes a request to reset the password and deals with the response
    */
-  async function handleResetPassword() {
+  const handleResetPassword = async () => {
     if (email === '') {
       enqueueSnackbar(t('emailRequired'), { variant: 'error' });
       setEmailError(t('emailRequired'));
       return;
-    } else {
-      setEmailError('');
     }
+    setEmailError('');
 
     try {
       const response = await resetPassword({ email });
@@ -36,17 +34,17 @@ export default function ResetPassword(): React.JSX.Element {
       } else {
         enqueueSnackbar(t('internalError'), { variant: 'error' });
       }
-    } catch (error) {
+    } catch {
       enqueueSnackbar(t('internalError'), { variant: 'error' });
     }
-  }
+  };
 
   /**
    * Handles the email change event to avoid empty email
    *
    * @param e - The change event
    */
-  function onChangeEmail(e: React.ChangeEvent<HTMLInputElement>) {
+  const onChangeEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
 
     if (e.target.value === '') {
@@ -54,7 +52,7 @@ export default function ResetPassword(): React.JSX.Element {
     } else {
       setEmailError('');
     }
-  }
+  };
 
   return (
     <ResetPasswordMain>
@@ -96,4 +94,4 @@ export default function ResetPassword(): React.JSX.Element {
       </ResetPasswordContainer>
     </ResetPasswordMain>
   );
-};
+}

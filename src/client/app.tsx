@@ -1,5 +1,4 @@
 import React from 'react';
-import { RouterProvider } from 'react-router';
 import { SnackbarProvider } from 'notistack';
 import { ThemeProvider } from '@mui/material/styles';
 import { LocalizationProvider } from '@mui/x-date-pickers';

@@ -3,16 +3,17 @@ import { useTranslation } from 'react-i18next';
 import { enqueueSnackbar } from 'notistack';
 import { useNavigate } from 'react-router';
 import { useDispatch } from 'react-redux';
+import { TextField, Button, CircularProgress } from '@mui/material';
+import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
+import type { SerializedError } from '@reduxjs/toolkit';
 import { setAccessToken } from '../../features/authSlice';
-import { TextField, Button } from '@mui/material';
-import { CircularProgress } from '@mui/material';
 import PasswordField from '../../components/form/passwordField';
 import { useAuth } from '../../hooks/authContext';
 import { useRegisterMutation } from '../../features/login';
-import { RegisterMainDiv, RegisterContainer, RowInput, TextFieldStyled } from './styledComponents';
+import {
+  RegisterMainDiv, RegisterContainer, RowInput, TextFieldStyled,
+} from './styledComponents';
 import { regExpEmail, regExpPassword, regExpName } from '../../utils/validators';
-import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
-import type { SerializedError } from '@reduxjs/toolkit';
 
 export default function Register(): React.JSX.Element {
   const { t } = useTranslation();
@@ -44,38 +45,38 @@ export default function Register(): React.JSX.Element {
    *
    * @param error - The error from the register mutation.
    */
-  function handleError(error: FetchBaseQueryError | SerializedError) {
+  const handleError = (error: FetchBaseQueryError | SerializedError) => {
     if ('data' in error) {
       enqueueSnackbar(t((error.data as any).error), { variant: 'error' });
     } else {
       enqueueSnackbar(t('internalError'), { variant: 'error' });
     }
-  }
+  };
 
   /**
    * Checks if the form is valid.
    *
    * @returns True if the form is valid, false otherwise.
    */
-  function isFormValid(): boolean {
-    return registerData.email.length > 0 &&
-      registerData.password.length > 0 &&
-      registerData.confirmPassword.length > 0 &&
-      registerData.firstName.length > 0 &&
-      registerData.lastName.length > 0 &&
-      isEmailValid &&
-      isPasswordValid &&
-      isConfirmPasswordValid &&
-      isFirstNameValid &&
-      isLastNameValid;
-  }
+  const isFormValid = (): boolean => (
+    registerData.email.length > 0
+      && registerData.password.length > 0
+      && registerData.confirmPassword.length > 0
+      && registerData.firstName.length > 0
+      && registerData.lastName.length > 0
+      && isEmailValid
+      && isPasswordValid
+      && isConfirmPasswordValid
+      && isFirstNameValid
+    && isLastNameValid
+  );
 
   /**
    * Registers the user and sets the user and access token in the state.
    *
    * @param response - The response from the register mutation.
    */
-  function updateAppWithUser(response: any) {
+  const updateAppWithUser = (response: any) => {
     if ('data' in response) {
       const {
         user: {
@@ -88,7 +89,9 @@ export default function Register(): React.JSX.Element {
         accessToken,
       } = response.data;
 
-      setUser({ email, firstName, lastName, role, id });
+      setUser({
+        email, firstName, lastName, role, id,
+      });
       dispatch(setAccessToken(accessToken));
       enqueueSnackbar(t('registerSuccess'), { variant: 'success' });
       navigate('/');
@@ -97,13 +100,13 @@ export default function Register(): React.JSX.Element {
     } else {
       enqueueSnackbar(t('internalError'), { variant: 'error' });
     }
-  }
+  };
 
   /**
    * Handles the register action, mainly for validating the data and sending
    * the data to the server.
    */
-  async function handleRegister() {
+  const handleRegister = async () => {
     if (!isFormValid()) {
       checkPasswordConfirmation(registerData.confirmPassword);
       checkPasswordValidity(registerData.password);
@@ -116,21 +119,22 @@ export default function Register(): React.JSX.Element {
     }
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { confirmPassword, ...formData } = registerData;
       const response = await register(formData);
 
       updateAppWithUser(response);
-    } catch (error) {
+    } catch {
       enqueueSnackbar(t('internalError'), { variant: 'error' });
     }
-  }
+  };
 
   /**
    * Checks if the password is valid.
-   * 
+   *
    * @param password - The password to check.
    */
-  function checkPasswordValidity(password: string) {
+  const checkPasswordValidity = (password: string) => {
     if (!regExpPassword.test(password)) {
       setIsPasswordValid(false);
       setPasswordError(t('passwordInvalid'));
@@ -138,14 +142,14 @@ export default function Register(): React.JSX.Element {
       setIsPasswordValid(true);
       setPasswordError('');
     }
-  }
+  };
 
   /**
    * Checks if the password confirmation is valid.
-   * 
+   *
    * @param confirmPassword - The password confirmation to check.
    */
-  function checkPasswordConfirmation(confirmPassword: string) {
+  const checkPasswordConfirmation = (confirmPassword: string) => {
     if (registerData.password !== confirmPassword) {
       setIsConfirmPasswordValid(false);
       setConfirmPasswordError(t('passwordsDoNotMatch'));
@@ -153,14 +157,14 @@ export default function Register(): React.JSX.Element {
       setIsConfirmPasswordValid(true);
       setConfirmPasswordError('');
     }
-  }
+  };
 
   /**
    * Checks if the email is valid.
-   * 
+   *
    * @param email - The email to check.
    */
-  function checkEmailValidity(email: string) {
+  const checkEmailValidity = (email: string) => {
     if (!regExpEmail.test(email)) {
       setIsEmailValid(false);
       setEmailError(t('emailInvalid'));
@@ -168,14 +172,14 @@ export default function Register(): React.JSX.Element {
       setIsEmailValid(true);
       setEmailError('');
     }
-  }
+  };
 
   /**
    * Checks if the first name is valid.
-   * 
+   *
    * @param firstName - The first name to check.
    */
-  function checkFirstNameValidity(firstName: string) {
+  const checkFirstNameValidity = (firstName: string) => {
     if (firstName.length === 0) {
       setIsFirstNameValid(false);
       setFirstNameError(t('firstNameRequired'));
@@ -186,14 +190,14 @@ export default function Register(): React.JSX.Element {
       setIsFirstNameValid(true);
       setFirstNameError('');
     }
-  }
+  };
 
   /**
    * Checks if the last name is valid.
-   * 
+   *
    * @param lastName - The last name to check.
    */
-  function checkLastNameValidity(lastName: string) {
+  const checkLastNameValidity = (lastName: string) => {
     if (lastName.length === 0) {
       setIsLastNameValid(false);
       setLastNameError(t('lastNameRequired'));
@@ -204,25 +208,26 @@ export default function Register(): React.JSX.Element {
       setIsLastNameValid(true);
       setLastNameError('');
     }
-  }
+  };
 
   /**
    * Handles the event for the input change.
    *
    * @param attribute - The attribute to check.
    * @param checkValidity - The validity check function.
-   * 
+   *
    * @returns The event handler for the input change.
    */
-  function handleEventForInputChange(attribute: keyof typeof registerData, checkValidity?: (value: string) => void) {
-    return (event: React.ChangeEvent<HTMLInputElement>) => {
-      setRegisterData({ ...registerData, [attribute]: event.target.value });
+  const handleEventForInputChange = (
+    attribute: keyof typeof registerData,
+    checkValidity?: (value: string) => void,
+  ) => (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRegisterData({ ...registerData, [attribute]: event.target.value });
 
-      if (checkValidity) {
-        checkValidity(event.target.value);
-      }
-    };
-  }
+    if (checkValidity) {
+      checkValidity(event.target.value);
+    }
+  };
 
   return (
     <RegisterMainDiv>

@@ -53,5 +53,6 @@ export default {
     confirmDeleteAccountTitle: 'Exclusão de Conta',
     confirmDeleteAccountDescription: 'Tem certeza que deseja excluir sua conta? Esta ação é irreversível.',
     delete: 'Deletar',
+    decodeTokenError: 'Erro ao decodificar o token de atualização',
   },
 };

@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router';
 import { enqueueSnackbar } from 'notistack';
 import { useDispatch } from 'react-redux';
 import { CircularProgress } from '@mui/material';
+import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
+import type { SerializedError } from '@reduxjs/toolkit';
 import { useLoginMutation } from '../../features/login';
 import { useAuth } from '../../hooks/authContext';
 import {
@@ -22,8 +24,6 @@ import Money1 from '../../assets/monay1.png';
 import Money2 from '../../assets/monay2.png';
 import Money3 from '../../assets/monay3.png';
 import { setAccessToken } from '../../features/authSlice';
-import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
-import type { SerializedError } from '@reduxjs/toolkit';
 
 export default function Login(): React.JSX.Element {
   const { t } = useTranslation();
@@ -48,18 +48,18 @@ export default function Login(): React.JSX.Element {
    *
    * @param error - Error from login mutation
    */
-  function handleError(error: FetchBaseQueryError | SerializedError) {
+  const handleError = (error: FetchBaseQueryError | SerializedError) => {
     if ('data' in error) {
       enqueueSnackbar(t((error.data as any).error), { variant: 'error' });
     } else {
       enqueueSnackbar(t('internalError'), { variant: 'error' });
     }
-  }
+  };
 
   /**
    * Handle the login process.
    */
-  async function handleLogin() {
+  const handleLogin = async () => {
     try {
       const response = await login({
         email,
@@ -73,37 +73,37 @@ export default function Login(): React.JSX.Element {
         dispatch(setAccessToken(response.data.accessToken));
         enqueueSnackbar(t('loginSuccess'), { variant: 'success' });
       }
-    } catch (error) {
+    } catch {
       enqueueSnackbar(t('internalError'), { variant: 'error' });
     }
-  }
+  };
 
   /**
    * Moves the user to the register page.
    */
-  function handleRegister() {
+  const handleRegister = () => {
     navigate('/register');
-  }
+  };
 
   /**
    * Moves the user to the forgot password page.
    */
-  function handleForgotPassword() {
+  const handleForgotPassword = () => {
     if (!isLoading) {
       navigate('/reset-password');
     }
-  }
+  };
 
   /**
    * Handles the enter key to login
    *
    * @param e - Keyboard event
    */
-  function handleEnterKey(e: React.KeyboardEvent<HTMLDivElement>) {
+  const handleEnterKey = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter') {
       handleLogin();
     }
-  }
+  };
 
   return (
     <LoginMainDiv>
@@ -142,7 +142,10 @@ export default function Login(): React.JSX.Element {
             {isLoading ? <CircularProgress size={20} color="inherit" /> : t('register')}
           </LoginButton>
           <p>
-            <span>{t('forgotPassword')} </span>
+            <span>
+              {t('forgotPassword')}
+              {' '}
+            </span>
             <ForgotLink onClick={handleForgotPassword}>
               {t('clickHere')}
             </ForgotLink>

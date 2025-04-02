@@ -3,12 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { useSnackbar } from 'notistack';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
+import CircularProgress from '@mui/material/CircularProgress';
 import { ChangePasswordModalContainer, ChangePasswordModalTitle } from './styledComponents';
 import { initialState, reducer, ActionType } from './changePasswordReducer';
 import { regExpPassword } from '../../utils/validators';
 import { useChangePasswordMutation } from '../../features/login';
 import { useModal } from '../../components/modal/modal';
-import CircularProgress from '@mui/material/CircularProgress';
 
 const {
   SET_PROPERTY,
@@ -22,17 +22,13 @@ export default function ChangePasswordModal() {
   const [changePassword, { isLoading }] = useChangePasswordMutation();
   const { enqueueSnackbar } = useSnackbar();
   const { closeModal } = useModal();
-  const validatorMap = {
-    newPassword: validateNewPassword,
-    confirmPassword: validateConfirmPassword,
-  };
 
   /**
    * Validates the new password field and updates the state.
-   * 
+   *
    * @param newPassword - The new password value.
    */
-  function validateNewPassword(newPassword: string) {
+  const validateNewPassword = (newPassword: string) => {
     if (!regExpPassword.test(newPassword)) {
       dispatch({ type: SET_NEW_PASSWORD_ERROR, payload: t('passwordInvalid') });
     } else if (newPassword === state.currentPassword) {
@@ -40,34 +36,39 @@ export default function ChangePasswordModal() {
     } else {
       dispatch({ type: SET_NEW_PASSWORD_ERROR, payload: '' });
     }
-  }
+  };
 
   /**
    * Validates the confirm password field and updates the state.
-   * 
+   *
    * @param confirmPassword - The confirm password value.
    */
-  function validateConfirmPassword(confirmPassword: string) {
+  const validateConfirmPassword = (confirmPassword: string) => {
     if (confirmPassword !== state.newPassword) {
       dispatch({ type: SET_CONFIRM_PASSWORD_ERROR, payload: t('passwordsDoNotMatch') });
     } else {
       dispatch({ type: SET_CONFIRM_PASSWORD_ERROR, payload: '' });
     }
-  }
+  };
+
+  const validatorMap = {
+    newPassword: validateNewPassword,
+    confirmPassword: validateConfirmPassword,
+  };
 
   /**
    * Handles the change event for the input fields.
-   * 
+   *
    * @remarks
    * This method expects the input fields to have a name attribute matching
    * the keys of the state object and the validationMap object.
    * ValidationMap is a map of the input field names to the validation functions.
-   * 
+   *
    * @param e - The change event.
    */
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const key = e.target.name;
-    const value = e.target.value;
+    const { value } = e.target;
     const validator = validatorMap[key as keyof typeof validatorMap];
 
     if (validator) {
@@ -75,29 +76,27 @@ export default function ChangePasswordModal() {
     }
 
     dispatch({ type: SET_PROPERTY, payload: { key, value } });
-  }
+  };
 
   /**
    * Validates the form.
-   * 
+   *
    * @returns true if the form is valid, false otherwise.
    */
-  function validateForm() {
-    return state.currentPassword &&
-      state.newPassword &&
-      state.confirmPassword &&
-      state.newPassword === state.confirmPassword &&
-      state.newPassword !== state.currentPassword;
-  }
+  const validateForm = () => state.currentPassword
+      && state.newPassword
+      && state.confirmPassword
+      && state.newPassword === state.confirmPassword
+      && state.newPassword !== state.currentPassword;
 
   /**
    * Handles the change password action. Validates the form and then changes the password
    * by calling the changePassword endpoint.
-   * 
+   *
    * @remarks
    * If any error occurs, the error message is displayed using the enqueueSnackbar function.
    */
-  async function handleChangePassword() {
+  const handleChangePassword = async () => {
     if (!state.isDirty || !validateForm()) {
       validateConfirmPassword(state.confirmPassword);
       validateNewPassword(state.newPassword);
@@ -120,10 +119,10 @@ export default function ChangePasswordModal() {
       } else {
         enqueueSnackbar(t('internalError'), { variant: 'error' });
       }
-    } catch (error) {
+    } catch {
       enqueueSnackbar(t('internalError'), { variant: 'error' });
     }
-  }
+  };
 
   return (
     <ChangePasswordModalContainer elevation={3}>
@@ -153,11 +152,14 @@ export default function ChangePasswordModal() {
         error={!!state.confirmPasswordError}
         helperText={state.confirmPasswordError}
       />
-      <Button variant="contained"
+      <Button
+        variant="contained"
         disabled={!state.isDirty || isLoading}
         onClick={handleChangePassword}
         aria-label="change-password-button"
-      >{isLoading ? <CircularProgress size={20} color="inherit" /> : t('changePassword')}</Button>
+      >
+        {isLoading ? <CircularProgress size={20} color="inherit" /> : t('changePassword')}
+      </Button>
       <Button variant="outlined" onClick={closeModal}>{t('cancel')}</Button>
     </ChangePasswordModalContainer>
   );

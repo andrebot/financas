@@ -630,7 +630,7 @@ describe('Authentication', () => {
         .send({ oldPassword: '', newPassword: 'Maka-jan32' });
 
       response.status.should.be.eq(400);
-      response.body.should.have.property('error').eql('Invalid password');
+      response.body.should.have.property('error').eql('Invalid old password or new password');
     });
 
     it('should return 400 if the newPassword is empty', async () => {
@@ -640,7 +640,7 @@ describe('Authentication', () => {
         .send({ oldPassword: 'adminPassword', newPassword: '' });
 
       response.status.should.be.eq(400);
-      response.body.should.have.property('error').eql('Invalid password');
+      response.body.should.have.property('error').eql('Invalid old password or new password');
     });
 
     it('should return 500 if the user is not found', async () => {

@@ -101,7 +101,7 @@ export default class ContentController<T extends Content> implements IContentCon
   }
 
   /**
-   * Lists the content. If query is provided, it will filter the content.
+   * Lists all the content by user.
    *
    * @param req - The request object
    * @param res - The response object
@@ -111,7 +111,7 @@ export default class ContentController<T extends Content> implements IContentCon
     try {
       checkVoidUser(req.user, this.manager.modelName, 'list');
 
-      const content = await this.manager.listContent(req.body, req.user?.id);
+      const content = await this.manager.listContent(req.user?.id);
 
       return res.send(content);
     } catch (error) {
@@ -133,7 +133,7 @@ export default class ContentController<T extends Content> implements IContentCon
 
       checkVoidUser(user, this.manager.modelName, 'get');
 
-      const content = await this.manager.getContent(contentId, user!.id!);
+      const content = await this.manager.getContent(contentId);
 
       return res.send(content);
     } catch (error) {

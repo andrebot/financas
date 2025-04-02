@@ -50,12 +50,10 @@ export class TransactionManager extends ContentManager<ITransaction> {
   private async getLastMonthBalance(content: ITransaction): Promise<IMonthlyBalance> {
     const contentDate = parseDate(content.date);
     const lastMonth = calculateLastMonth(contentDate.getFullYear(), contentDate.getMonth() + 1);
-    let lastMonthBalance = await this.monthlyBalanceRepo.findOne({
-      user: content.user,
-      account: content.account,
-      month: lastMonth.month,
-      year: lastMonth.year,
-    });
+    let lastMonthBalance = await this.monthlyBalanceRepo.findMonthlyBalance(
+      content,
+      new Date(lastMonth.year, lastMonth.month - 1),
+    );
 
     if (!lastMonthBalance) {
       lastMonthBalance = {
@@ -80,12 +78,10 @@ export class TransactionManager extends ContentManager<ITransaction> {
    */
   private async addTransactionToMonthlyBalance(content: ITransaction): Promise<void> {
     const contentDate = parseDate(content.date);
-    let monthlyBalance = await this.monthlyBalanceRepo.findOne({
-      user: content.user,
-      account: content.account,
-      month: contentDate.getMonth() + 1,
-      year: contentDate.getFullYear(),
-    });
+    let monthlyBalance = await this.monthlyBalanceRepo.findMonthlyBalance(
+      content,
+      contentDate,
+    );
 
     if (!monthlyBalance) {
       const lastMonthBalance = await this.getLastMonthBalance(content);
@@ -141,12 +137,10 @@ export class TransactionManager extends ContentManager<ITransaction> {
    */
   private async subtractTransactionFromMonthlyBalance(transaction: ITransaction): Promise<void> {
     const contentDate = parseDate(transaction.date);
-    const monthlyBalance = await this.monthlyBalanceRepo.findOne({
-      user: transaction.user,
-      account: transaction.account,
-      month: contentDate.getMonth() + 1,
-      year: contentDate.getFullYear(),
-    });
+    const monthlyBalance = await this.monthlyBalanceRepo.findMonthlyBalance(
+      transaction,
+      contentDate,
+    );
 
     if (monthlyBalance) {
       monthlyBalance.closingBalance -= transaction.value;

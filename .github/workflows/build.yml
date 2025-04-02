@@ -1,4 +1,4 @@
-name: Update Badges
+name: Build and Test App
 
 on:
   pull_request:
@@ -7,7 +7,7 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  update-badges:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -27,11 +27,17 @@ jobs:
       - name: Install lcov-summary
         run: npm install -g lcov-summary
 
+      - name: Run lint
+        run: npm run lint:all
+
       - name: Run server tests with coverage
         run: npm run test:server
 
       - name: Run client tests with coverage
         run: npm run test:client
+
+      - name: Run server integration tests
+        run: npm run test:server:integration
 
       - name: Update Coverage Badges
         run: |

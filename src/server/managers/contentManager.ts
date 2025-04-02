@@ -1,5 +1,4 @@
 import { IRepository } from '../resources/repositories/IRepository';
-import { QueryFilter } from '../types';
 import { checkVoidPayload, checkVoidInstance } from '../utils/misc';
 
 export type Content = { user: string };
@@ -121,13 +120,9 @@ export default class ContentManager<T extends Content> {
    * @returns The list of content
    */
   async listContent(
-    query: QueryFilter<T> = {},
     userId?: string,
   ): Promise<T[]> {
-    return this.repository.find({
-      ...query,
-      user: userId,
-    });
+    return this.repository.listAll(userId);
   }
 
   /**
@@ -140,11 +135,7 @@ export default class ContentManager<T extends Content> {
    */
   async getContent(
     id: string,
-    userId?: string,
   ): Promise<T | null> {
-    return this.repository.findOne({
-      id,
-      user: userId,
-    } as QueryFilter<T>);
+    return this.repository.findById(id);
   }
 }

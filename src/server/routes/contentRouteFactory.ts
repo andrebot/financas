@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createAccessTokenValidation } from '../utils/authorization';
+import createAccessTokenValidation from '../utils/authorization';
 import type { IContentController } from '../types';
 
 export default function contentRouterFactory(controller: IContentController, urlPrefix: string) {

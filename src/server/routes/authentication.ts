@@ -12,7 +12,7 @@ import {
   changePasswordController,
   registerController,
 } from '../controllers/authorization';
-import { createAccessTokenValidation } from '../utils/authorization';
+import createAccessTokenValidation from '../utils/authorization';
 
 const router = express.Router();
 

@@ -12,8 +12,8 @@ export default function routes() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<ProtectedRoute />} >
-          <Route path="/" element={<MainPage />} >
+        <Route path="/" element={<ProtectedRoute />}>
+          <Route path="/" element={<MainPage />}>
             <Route path="settings" element={<Settings />} />
           </Route>
         </Route>
