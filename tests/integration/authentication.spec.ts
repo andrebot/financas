@@ -595,6 +595,10 @@ describe('Authentication', () => {
 
       response.status.should.be.eq(200);
       response.body.should.have.property('message').eql('Logged out');
+      response.headers.should.have.property('set-cookie');
+      response.headers['set-cookie'].should.be.an('array');
+      response.headers['set-cookie'].should.have.lengthOf(1);
+      response.headers['set-cookie'][0].should.match(new RegExp(`^${REFRESH_TOKEN_COOKIE_NAME}=; Path=\/; Expires=Thu, 01 Jan 1970 00:00:00 GMT$`));
     });
   });
 

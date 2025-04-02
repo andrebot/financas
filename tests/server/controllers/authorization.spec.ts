@@ -7,6 +7,7 @@ type MockResponse = {
   send: sinon.SinonStub;
   status: sinon.SinonStub;
   cookie: sinon.SinonStub;
+  clearCookie: sinon.SinonStub;
 };
 
 type MockRequest = {
@@ -72,6 +73,7 @@ describe('AuthorizationController', () => {
       send: sinon.stub(),
       status: sinon.stub().returnsThis(),
       cookie: sinon.stub(),
+      clearCookie: sinon.stub(),
     };
     request = {
       body: {
@@ -426,6 +428,8 @@ describe('AuthorizationController', () => {
       response.send.should.have.been.calledWith({ message: 'Logged out' });
       authManagerStub.logout.should.have.been.calledOnce;
       authManagerStub.logout.should.have.been.calledWith(request.cookies[REFRESH_TOKEN_COOKIE_NAME]);
+      response.clearCookie.should.have.been.calledOnce;
+      response.clearCookie.should.have.been.calledWith(REFRESH_TOKEN_COOKIE_NAME);
     } catch (error) {
       console.error(error);
       chai.assert.fail('Should not have thrown an error');

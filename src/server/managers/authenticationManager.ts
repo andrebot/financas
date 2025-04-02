@@ -268,9 +268,12 @@ export async function register(
  * @returns - the Tokens as an object
  */
 export async function login(searchEmail: string, password: string): Promise<LoginResponse> {
+  logger.info(`Logging in user: ${searchEmail}`);
   const user = await UserRepo.findByEmail(searchEmail);
 
   if (user) {
+    logger.info('User found, validating password');
+
     const isMatch = bcrypt.compareSync(password, user.password);
     const {
       email,
@@ -281,8 +284,12 @@ export async function login(searchEmail: string, password: string): Promise<Logi
     } = user;
 
     if (isMatch) {
+      logger.info('Password matches, creating tokens');
+
       const accessToken = createAccessToken(email, role, firstName, lastName, id!);
       const refreshToken = createRefreshToken(email, role, firstName, lastName, id!);
+
+      logger.info('Tokens created, returning response');
 
       return {
         accessToken,
@@ -311,10 +318,14 @@ export async function login(searchEmail: string, password: string): Promise<Logi
  * @returns - a boolean
  */
 export async function logout(refreshToken: string): Promise<boolean> {
+  logger.info(`Logging out user: ${refreshToken}`);
+
   let verification = false;
 
   try {
     jwt.verify(refreshToken, REFRESH_TOKEN_SECRET, { complete: true }) as Token;
+
+    logger.info('Token verified, deleting token');
 
     verification = true;
   } catch (error) {

@@ -322,6 +322,8 @@ export async function logoutController(req: Request, res: Response): Promise<Res
 
     await logout(refreshToken);
 
+    res.clearCookie(REFRESH_TOKEN_COOKIE_NAME);
+
     return res.send({ message: 'Logged out' });
   } catch (error) {
     return handleError(error as Error, res);
