@@ -7,7 +7,6 @@ import server from '../../src/server/server';
 import { adminUser, userToDelete } from './connectDB';
 import { createAccessToken, createRefreshToken } from '../../src/server/managers/authenticationManager';
 import UserModel from '../../src/server/resources/models/userModel';
-import { addToken, deleteToken } from '../../src/server/resources/repositories/tokenRepo';
 import { REFRESH_TOKEN_COOKIE_NAME } from '../../src/server/config/auth';
 describe('Authentication', () => {
   let newUser = {
@@ -503,12 +502,6 @@ describe('Authentication', () => {
         adminUser.lastName,
         adminUser.id!,
       );
-
-      addToken(refreshToken);
-    });
-
-    afterEach(() => {
-      deleteToken(refreshToken);
     });
 
     it('should return a 400 error if the refreshToken is empty', async () => {
@@ -549,14 +542,13 @@ describe('Authentication', () => {
     it('should return 500 if cannot find the user', async () => {
       const badEmail = 'naotem@gmail.com';
       refreshToken = createRefreshToken(badEmail, 'admin', 'admin', 'admin', new Types.ObjectId().toHexString());
-      addToken(refreshToken);
 
       const response = await request(server)
         .get('/api/v1/user/refresh-tokens')
         .set('Cookie', `${REFRESH_TOKEN_COOKIE_NAME}=${refreshToken}`);
 
       response.status.should.be.eq(500);
-      response.body.should.have.property('error').eql(`No user was found with email: ${badEmail}`);
+      response.body.should.have.property('error').eql(`Token invalid since its from non-existent user: ${badEmail}`);
     });
 
     it('should return 500 if finding the user throws an error', async () => {

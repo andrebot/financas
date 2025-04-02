@@ -2,7 +2,6 @@ import chai, { should } from 'chai';
 import sinon from 'sinon';
 import proxyquire from 'proxyquire';
 import { Tokens, UserPayload } from '../../../src/server/types';
-import { addToken, deleteToken } from '../../../src/server/resources/repositories/tokenRepo';
 import {
   ACCESS_TOKEN_EXPIRATION,
   REFRESH_TOKEN_EXPIRATION,
@@ -479,7 +478,6 @@ describe('AuthenticationManager', function () {
       jwtVerifyStub.returns({ payload: { email: 'test@gmail.com' } });
       jwtSignStub.returns(accessToken);
       UserRepo.findByEmail.resolves(user);
-      addToken(cryptToken);
 
       const tokens = await refreshTokens(cryptToken) as Tokens;
 
@@ -488,8 +486,6 @@ describe('AuthenticationManager', function () {
       tokens.refreshToken.should.exist;
       tokens.accessToken.should.be.a('string');
       tokens.refreshToken.should.be.a('string');
-
-      deleteToken(cryptToken);
     });
 
     it('should throw an error if token is invalid when refreshing tokens', async function() {
@@ -516,26 +512,8 @@ describe('AuthenticationManager', function () {
         chai.assert.fail('Should have thrown an error');
       } catch (error) {
         (error as Error).message.should.be.a('string');
-        (error as Error).message.should.contain(`No user was found with email: ${token.email}`);
+        (error as Error).message.should.contain(`Token invalid since its from non-existent user: ${token.email}`);
       }
-    });
-
-    it('should throw an error if token is not in whitelist', async function() {
-      const token = { payload: { email: 'test@gmail.com' } };
-      const cryptToken = 'notValid';
-
-      jwtVerifyStub.returns(token);
-      addToken(cryptToken);
-
-      try {
-        await refreshTokens(cryptToken);
-        chai.assert.fail('Should have thrown an error');
-      } catch (error) {
-        (error as Error).message.should.be.a('string');
-        (error as Error).message.should.contain('Token is not valid');
-      }
-
-      deleteToken(cryptToken);
     });
   });
   
