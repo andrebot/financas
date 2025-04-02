@@ -1,11 +1,13 @@
 import app from './server';
-import logger from './utils/logger';
+import { createLogger } from './utils/logger';
 import db from './utils/databaseConnection';
 import { PORT } from './config/server';
 
+const BootstrapLogger = createLogger('ServerBootstrap');
+
 // Start the server
 const server = app.listen(PORT, async () => {
-  logger.info(`Server listening on port ${PORT}...`);
+  BootstrapLogger.info(`Server listening on port ${PORT}...`);
 
   await db.connectToDatabase();
 });
@@ -14,6 +16,7 @@ const server = app.listen(PORT, async () => {
 const dispose = async () => {
   await db.disconnectFromDatabase();
   await server.close();
+  BootstrapLogger.info('Server closed');
   process.exit(0);
 };
 

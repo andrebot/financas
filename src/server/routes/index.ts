@@ -2,7 +2,9 @@ import { Express } from 'express';
 import { readdirSync } from 'fs';
 import path from 'path';
 import { API_PREFIX } from '../config/server';
-import logger from '../utils/logger';
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('RoutesInitializer');
 
 /**
  * This method will read all files at the route folder

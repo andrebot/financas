@@ -1,16 +1,20 @@
 import { IRepository } from '../resources/repositories/IRepository';
 import { checkVoidPayload, checkVoidInstance } from '../utils/misc';
-
+import { createLogger } from '../utils/logger';
+import type { Logger } from 'winston';
 export type Content = { user: string };
 
 export default class ContentManager<T extends Content> {
   protected repository: IRepository<T, T>;
 
+  protected logger: Logger;
+
   modelName: string;
 
-  constructor(repository: IRepository<T, T>) {
+  constructor(repository: IRepository<T, T>, managerName: string) {
     this.repository = repository;
     this.modelName = repository.modelName;
+    this.logger = createLogger(`${managerName}`);
   }
 
   /**

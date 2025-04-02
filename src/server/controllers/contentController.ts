@@ -4,20 +4,31 @@ import { handleError } from '../utils/responseHandlers';
 import type { RequestWithUser, IContentController } from '../types';
 import type { Content } from '../managers/contentManager';
 import { checkVoidPayload, checkVoidUser } from '../utils/misc';
+import { createLogger } from '../utils/logger';
+import type { Logger } from 'winston';
 
 export default class ContentController<T extends Content> implements IContentController {
   protected manager: ContentManager<T>;
-
   protected errorHandler: (error: Error, res: Response) => Response;
+  protected logger: Logger;
 
   constructor(
     manager: ContentManager<T>,
+    controllerName: string,
     errorHandler: (error: Error, res: Response) => Response = handleError,
   ) {
     this.manager = manager;
     this.errorHandler = errorHandler;
+    this.logger = createLogger(`${controllerName}Controller`);
   }
 
+  /**
+   * Creates the content.
+   *
+   * @param req - The request object
+   * @param res - The response object
+   * @returns The content
+   */
   async createContent(req: RequestWithUser, res: Response) {
     try {
       checkVoidUser(req.user, this.manager.modelName, 'create');
@@ -32,13 +43,13 @@ export default class ContentController<T extends Content> implements IContentCon
   }
 
   /**
- * Updates the content.
- *
- * @param req - The request object
- * @param res - The response object
- * @param model - The model to update the content from
- * @param contentId - The id of the content to update
- * @throws {Error} - If the user is not authenticated
+   * Updates the content.
+   *
+   * @param req - The request object
+   * @param res - The response object
+   * @param model - The model to update the content from
+   * @param contentId - The id of the content to update
+   * @throws {Error} - If the user is not authenticated
    */
   async updateContent(
     req: RequestWithUser,

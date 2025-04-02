@@ -3,4 +3,4 @@ import CategoryManager from '../managers/categoryManager';
 
 import type { ICategory } from '../types';
 
-export default new ContentController<ICategory>(CategoryManager);
+export default new ContentController<ICategory>(CategoryManager, 'CategoryController');

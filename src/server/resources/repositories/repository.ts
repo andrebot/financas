@@ -1,6 +1,7 @@
 import { Model, Document } from 'mongoose';
-import logger from '../../utils/logger';
+import { createLogger } from '../../utils/logger';
 import { IRepository } from './IRepository';
+import type { Logger } from 'winston';
 import type { ErrorHandler } from '../../types';
 
 /**
@@ -15,8 +16,8 @@ function defaultErrorHandler(error: Error): Error {
 
 export default class Repository<T extends Document, K> implements IRepository<T, K> {
   protected Model: Model<T>;
-
   protected errorHandler: ErrorHandler;
+  protected logger: Logger;
 
   modelName: string;
 
@@ -24,6 +25,7 @@ export default class Repository<T extends Document, K> implements IRepository<T,
     this.Model = model;
     this.modelName = model.modelName;
     this.errorHandler = errorHandler;
+    this.logger = createLogger(`Repository:${this.modelName}`);
   }
 
   /**
@@ -78,7 +80,7 @@ export default class Repository<T extends Document, K> implements IRepository<T,
 
       return result.toObject() as K;
     } catch (error) {
-      logger.error(error);
+      this.logger.error(error);
       throw this.errorHandler(error as Error);
     }
   }

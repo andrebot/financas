@@ -7,7 +7,9 @@ import {
   TokenValidationMiddleware,
 } from '../types';
 import { regExpBearer } from './validators';
-import logger from './logger';
+import { createLogger } from './logger';
+
+const logger = createLogger('AuthorizationUtils');
 
 /**
  * Check if the payload is valid

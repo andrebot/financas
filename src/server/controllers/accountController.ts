@@ -3,4 +3,4 @@ import AccountManager from '../managers/accountManager';
 
 import type { IAccount } from '../types';
 
-export default new ContentController<IAccount>(AccountManager);
+export default new ContentController<IAccount>(AccountManager, 'AccountController');

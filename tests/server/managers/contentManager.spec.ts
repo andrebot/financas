@@ -15,7 +15,7 @@ describe('contentManager', () => {
   beforeEach(() => {
     repositoryStub = sinon.createStubInstance<Repository<any, any>>(Repository as any);
     repositoryStub.modelName = 'test';
-    manager = new ContentManager(repositoryStub as any);
+    manager = new ContentManager(repositoryStub as any, 'TestManager');
   });
 
   describe('saveContent', () => {

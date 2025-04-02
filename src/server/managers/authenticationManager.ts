@@ -6,7 +6,7 @@ import {
 import UserRepo from '../resources/repositories/userRepo';
 import { addToken, deleteToken, isValidToken } from '../resources/repositories/tokenRepo';
 import { regExpPassword } from '../utils/validators';
-import Logger from '../utils/logger';
+import { createLogger } from '../utils/logger';
 import {
   WORK_FACTOR,
   ACCESS_TOKEN_SECRET,
@@ -17,6 +17,8 @@ import {
 } from '../config/auth';
 import sendNotification from '../utils/notification';
 import type { IUser, LoginResponse } from '../types';
+
+const logger = createLogger('AuthenticationManager');
 
 /**
  * Function to create a token
@@ -296,7 +298,7 @@ export async function login(searchEmail: string, password: string): Promise<Logi
       };
     }
 
-    Logger.error(new Error(`Password was not a match for user: ${email}`));
+    logger.error(new Error(`Password was not a match for user: ${email}`));
     throw new Error('invalidUser');
   }
 
@@ -317,8 +319,8 @@ export async function logout(refreshToken: string): Promise<boolean> {
 
     verification = true;
   } catch (error) {
-    Logger.error('Failed to verify token. Invalidating it anyway.');
-    Logger.error(error);
+    logger.error('Failed to verify token. Invalidating it anyway.');
+    logger.error(error);
   } finally {
     deleteToken(refreshToken);
   }
@@ -388,7 +390,7 @@ export async function resetPassword(email: string): Promise<boolean> {
     return true;
   }
 
-  Logger.error(`No user was found with email: ${email}`);
+  logger.error(`No user was found with email: ${email}`);
 
   throw new Error('Could not reset password. Try again later.');
 }

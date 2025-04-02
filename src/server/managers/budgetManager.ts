@@ -7,7 +7,7 @@ export class BudgetManager extends ContentManager<IBudget> {
   private transactionRepo: typeof TransactionRepo;
 
   constructor(budgetRepo: typeof BudgetRepo = BudgetRepo) {
-    super(budgetRepo);
+    super(budgetRepo, 'BudgetManager');
 
     this.transactionRepo = TransactionRepo;
   }

@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
-import logger from './logger';
+import { createLogger } from './logger';
 import { DB_URL, MONGO_OPT } from '../config/mongo';
+
+const logger = createLogger('DatabaseConnection');
 
 /**
  * Connects to a MongoDB database

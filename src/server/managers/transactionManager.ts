@@ -33,7 +33,7 @@ export class TransactionManager extends ContentManager<ITransaction> {
     goalRepo: typeof GoalRepo = GoalRepo,
     monthlyBalanceRepo: typeof MonthlyBalanceRepo = MonthlyBalanceRepo,
   ) {
-    super(transactionRepo);
+    super(transactionRepo, 'TransactionManager');
 
     this.budgetRepo = budgetRepo;
     this.goalRepo = goalRepo;

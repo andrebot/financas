@@ -17,7 +17,9 @@ import { handleError, isValidObjectId } from '../utils/responseHandlers';
 import { REFRESH_TOKEN_EXPIRATION_COOKIE, TOKEN_HTTPS_ONLY, REFRESH_TOKEN_COOKIE_NAME } from '../config/auth';
 // import { API_PREFIX } from '../config/server';
 import type { RequestWithUser, UserPayload } from '../types';
-import Logger from '../utils/logger';
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('AuthorizationController');
 
 /**
  * Function to validate the delete action. An user can only delete their own account or
@@ -54,7 +56,7 @@ function isDeleteActionValid(req: RequestWithUser, res: Response, userId: string
  */
 function isLoginActionValid(email: string, password: string) {
   if (!email || !password || !regExpEmail.test(email)) {
-    Logger.error(new Error('Invalid email or password'));
+    logger.error(new Error('Invalid email or password'));
 
     return false;
   }
