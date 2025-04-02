@@ -109,6 +109,14 @@ describe('AuthorizationController', () => {
 
   it('should be able to create an user successfully', async () => {
     try {
+      authManagerStub.createUser.resolves({
+        email: request.body.email,
+        firstName: request.body.firstName,
+        lastName: request.body.lastName,
+        role: 'user',
+        id: '123',
+      });
+
       const newUser = await createUserController(request, response);
 
       response.send.should.have.been.calledOnce;
@@ -139,6 +147,14 @@ describe('AuthorizationController', () => {
 
   it('should be able to update an user successfully', async () => {
     try {
+      authManagerStub.updateUser.resolves({
+        email: request.body.email,
+        firstName: request.body.firstName,
+        lastName: request.body.lastName,
+        role: 'user',
+        id: '123',
+      });
+
       await updateUserController(request, response);
 
       response.send.should.have.been.calledOnce;
@@ -187,6 +203,14 @@ describe('AuthorizationController', () => {
 
   it('should be able to list users successfully', async () => {
     try {
+      authManagerStub.listUsers.resolves([{
+        email: request.body.email,
+        firstName: request.body.firstName,
+        lastName: request.body.lastName,
+        role: 'user',
+        id: '123',
+      }]);
+
       await listUsersController(request, response);
 
       response.send.should.have.been.calledOnce;

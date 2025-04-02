@@ -2,14 +2,13 @@ import type { Response } from 'express';
 import ContentController from './contentController';
 import TransactionManager from '../managers/transactionManager';
 import { checkVoidUser } from '../utils/misc';
-import { handleError } from '../utils/responseHandlers';
 import type { RequestWithUser, ITransaction } from '../types';
 
 export class TransactionController extends ContentController<ITransaction> {
   private transactionManager: typeof TransactionManager;
 
   constructor(transactionManager: typeof TransactionManager = TransactionManager) {
-    super(transactionManager);
+    super(transactionManager, 'TransactionController');
 
     this.transactionManager = transactionManager;
   }
@@ -19,9 +18,16 @@ export class TransactionController extends ContentController<ITransaction> {
       const { user } = req;
 
       checkVoidUser(user, this.transactionManager.modelName, 'get');
-      return res.send(this.transactionManager.getTransactionTypes());
+
+      const transactionTypes = this.transactionManager.getTransactionTypes();
+
+      this.logger.info(`Listed ${transactionTypes.investmentTypes.length} investment types and ${transactionTypes.transactionTypes.length} transaction types for user: ${user?.id}`);
+
+      return res.send(transactionTypes);
     } catch (error) {
-      return handleError(error as Error, res);
+      this.logger.error(error);
+
+      return this.errorHandler(error as Error, res);
     }
   }
 }

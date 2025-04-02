@@ -33,6 +33,8 @@ export class UserRepo extends Repository<IUserDocument, IUser> {
    * @returns The user.
    */
   findByEmail(email: string): Promise<IUser | null> {
+    this.logger.info(`Finding user by email: ${email}`);
+
     return this.Model.findOne({ email }).then((doc) => doc?.toObject() as IUser);
   }
 }

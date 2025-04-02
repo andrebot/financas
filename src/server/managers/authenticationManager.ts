@@ -6,7 +6,7 @@ import {
 import UserRepo from '../resources/repositories/userRepo';
 import { addToken, deleteToken, isValidToken } from '../resources/repositories/tokenRepo';
 import { regExpPassword } from '../utils/validators';
-import Logger from '../utils/logger';
+import { createLogger } from '../utils/logger';
 import {
   WORK_FACTOR,
   ACCESS_TOKEN_SECRET,
@@ -17,6 +17,8 @@ import {
 } from '../config/auth';
 import sendNotification from '../utils/notification';
 import type { IUser, LoginResponse } from '../types';
+
+const logger = createLogger('AuthenticationManager');
 
 /**
  * Function to create a token
@@ -110,6 +112,10 @@ export async function createUser(
 /**
  * Function to validate the update user. It will check if the user is an admin and if the user
  * is trying to update another user
+ *
+ * @throws - Error if the user is not an admin and is trying to update another user
+ * @throws - Error if the user is not found
+ * @throws - Error if no information is provided to be updated
  *
  * @param requestingUser - The user that is requesting the update
  * @param user - The user to be updated
@@ -296,7 +302,7 @@ export async function login(searchEmail: string, password: string): Promise<Logi
       };
     }
 
-    Logger.error(new Error(`Password was not a match for user: ${email}`));
+    logger.error(new Error(`Password was not a match for user: ${email}`));
     throw new Error('invalidUser');
   }
 
@@ -317,8 +323,8 @@ export async function logout(refreshToken: string): Promise<boolean> {
 
     verification = true;
   } catch (error) {
-    Logger.error('Failed to verify token. Invalidating it anyway.');
-    Logger.error(error);
+    logger.error('Failed to verify token. Invalidating it anyway.');
+    logger.error(error);
   } finally {
     deleteToken(refreshToken);
   }
@@ -353,6 +359,8 @@ export async function refreshTokens(refreshToken: string): Promise<Tokens> {
         id,
       } = user;
 
+      logger.info(`Refreshing tokens for user: ${email}`);
+
       return {
         accessToken: createAccessToken(email, role, firstName, lastName, id!),
         refreshToken: createRefreshToken(email, role, firstName, lastName, id!),
@@ -380,6 +388,8 @@ export async function resetPassword(email: string): Promise<boolean> {
   if (user) {
     const newPassword = Math.random().toString(36).slice(-8);
 
+    logger.info(`Resetting password for user: ${email}`);
+
     user.password = bcrypt.hashSync(newPassword, bcrypt.genSaltSync(WORK_FACTOR));
     await UserRepo.update(user.id!, user);
 
@@ -388,7 +398,7 @@ export async function resetPassword(email: string): Promise<boolean> {
     return true;
   }
 
-  Logger.error(`No user was found with email: ${email}`);
+  logger.error(`No user was found with email: ${email}`);
 
   throw new Error('Could not reset password. Try again later.');
 }
@@ -412,6 +422,8 @@ export async function changePassword(
   const user = await UserRepo.findByEmail(email);
 
   if (user) {
+    logger.info(`Changing password for user: ${email}`);
+
     const isMatch = bcrypt.compareSync(oldPassword, user.password);
 
     if (isMatch) {

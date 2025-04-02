@@ -17,6 +17,8 @@ export class GoalRepo extends Repository<IGoalDocument, IGoal> {
    * @param oldTransactionValue - The old value of the transaction
    */
   async incrementGoalsInBulk(bulkGoalsUpdate: BulkGoalsUpdate[]): Promise<void> {
+    this.logger.info(`Updating ${bulkGoalsUpdate.length} goals in bulk`);
+
     const goalsToUpdate = bulkGoalsUpdate.map(({ goalId, amount }) => ({
       updateOne: {
         filter: { _id: new mongoose.Types.ObjectId(goalId) },

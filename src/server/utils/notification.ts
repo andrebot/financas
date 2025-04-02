@@ -1,4 +1,6 @@
-import logger from './logger';
+import { createLogger } from './logger';
+
+const logger = createLogger('NotificationUtils');
 
 /**
  * Send a notification to a user

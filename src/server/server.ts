@@ -4,7 +4,7 @@ import path from 'path';
 import cors from 'cors';
 import * as dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
-import logger from './utils/logger';
+import { createLogger } from './utils/logger';
 import { PORT } from './config/server';
 import setRoutes from './routes';
 
@@ -40,7 +40,9 @@ app.get('*', (req: Request, res: Response) => {
 });
 
 app.use((err: Error, req: Request, res: Response) => {
-  logger.error(err);
+  const CatchAllLogger = createLogger('ExpressExceptionCatchAll');
+
+  CatchAllLogger.error(err);
   res.status(500).send(err.message);
 });
 

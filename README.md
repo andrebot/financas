@@ -26,7 +26,7 @@ This APP is made to help you manage your finances and invest, by providing power
 2. ~~Remove Query translation from Repository~~
 3. Remove Empty files to improve readability
 4. Revise all try-catch for better error handling
-5. Improve server logging for better log context
+5. ~~Improve server logging for better log context~~
 6. Remove useless token memory store
 
 # Author

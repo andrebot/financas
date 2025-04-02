@@ -17,7 +17,9 @@ import { handleError, isValidObjectId } from '../utils/responseHandlers';
 import { REFRESH_TOKEN_EXPIRATION_COOKIE, TOKEN_HTTPS_ONLY, REFRESH_TOKEN_COOKIE_NAME } from '../config/auth';
 // import { API_PREFIX } from '../config/server';
 import type { RequestWithUser, UserPayload } from '../types';
-import Logger from '../utils/logger';
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('AuthorizationController');
 
 /**
  * Function to validate the delete action. An user can only delete their own account or
@@ -54,7 +56,7 @@ function isDeleteActionValid(req: RequestWithUser, res: Response, userId: string
  */
 function isLoginActionValid(email: string, password: string) {
   if (!email || !password || !regExpEmail.test(email)) {
-    Logger.error(new Error('Invalid email or password'));
+    logger.error(new Error(`Invalid email or password: ${email} ${password}`));
 
     return false;
   }
@@ -106,8 +108,12 @@ export async function createUserController(req: Request, res: Response) {
       lastName,
     );
 
+    logger.info(`User created: ${user.email}`);
+
     return res.send(user);
   } catch (error) {
+    logger.error(error);
+
     return handleError(error as Error, res);
   }
 }
@@ -138,8 +144,12 @@ export async function registerController(req: Request, res: Response) {
       maxAge: REFRESH_TOKEN_EXPIRATION_COOKIE,
     });
 
+    logger.info(`User registered: ${user.email}`);
+
     return res.send({ user, accessToken: tokens.accessToken });
   } catch (error) {
+    logger.error(error);
+
     return handleError(error as Error, res);
   }
 }
@@ -169,6 +179,8 @@ export async function updateUserController(req: RequestWithUser, res: Response) 
       },
     );
 
+    logger.info(`User updated: ${user.email}`);
+
     return res.send(user);
   } catch (error) {
     let errorCode = 500;
@@ -176,6 +188,8 @@ export async function updateUserController(req: RequestWithUser, res: Response) 
     if ((error as Error).message === 'You do not have permission to update this user') {
       errorCode = 403;
     }
+
+    logger.error(error);
 
     return handleError(error as Error, res, errorCode);
   }
@@ -192,8 +206,12 @@ export async function listUsersController(req: Request, res: Response) {
   try {
     const users = await listUsers();
 
+    logger.info(`Users listed: ${users.length}`);
+
     return res.send(users);
   } catch (error) {
+    logger.error(error);
+
     return handleError(error as Error, res);
   }
 }
@@ -209,8 +227,12 @@ export async function getUserController(req:Request, res: Response) {
   try {
     const user = await getUser(req.params.userId);
 
+    logger.info(`User retrieved: ${req.params.userId}`);
+
     return res.send(user);
   } catch (error) {
+    logger.error(error);
+
     return handleError(error as Error, res);
   }
 }
@@ -230,13 +252,19 @@ export async function deleteUserController(
     const { userId } = req.params;
 
     if (!isDeleteActionValid(req, res, userId)) {
+      logger.error(new Error(`Unauthorized: ${req.user?.email} cannot delete ${userId}`));
+
       return res.status(403).json({ message: 'Unauthorized' });
     }
 
     await deleteUser(userId);
 
+    logger.info(`User deleted: id ${userId}`);
+
     return res.send({ message: `User deleted: id ${userId}` });
   } catch (error) {
+    logger.error(error);
+
     return handleError(error as Error, res);
   }
 }
@@ -255,6 +283,8 @@ export async function loginController(req: Request, res: Response): Promise<Resp
   } = req.body;
 
   if (!isLoginActionValid(email, password)) {
+    logger.error(new Error(`Invalid email or password: ${email} ${password}`));
+
     return res.status(400).send({ error: 'invalidUser' });
   }
 
@@ -364,8 +394,12 @@ export async function changePasswordController(
   try {
     await changePassword(req.user!.email!, oldPassword, newPassword);
 
+    logger.info(`Password changed for user: ${req.user?.email}`);
+
     return res.send({ message: 'Password changed' });
   } catch (error) {
+    logger.error(error);
+
     return handleError(error as Error, res);
   }
 }

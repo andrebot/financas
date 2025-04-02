@@ -6,7 +6,6 @@ const {
   printf,
   colorize,
 } = winston.format;
-
 /**
  * Custom logging function. mimics the console.log behavior
  */
@@ -15,8 +14,10 @@ const logFormat = printf(({
   message,
   timestamp: tmstp,
   stack,
+  label,
 }) => {
-  const formattedMessage = `${tmstp} [${level}]: ${typeof message === 'object' ? JSON.stringify(message, null, 2) : message}`;
+  const prefix = label ? `[${label}]` : ' ';
+  const formattedMessage = `${tmstp} ${prefix}[${level}]: ${typeof message === 'object' ? JSON.stringify(message, null, 2) : message}`;
   return stack && level.includes('error')
     ? `${formattedMessage}\n${stack}`
     : `${formattedMessage}`;
@@ -37,3 +38,7 @@ const logger = winston.createLogger({
 
 // Export the logger
 export default logger;
+
+export function createLogger(label: string) {
+  return logger.child({ label });
+}

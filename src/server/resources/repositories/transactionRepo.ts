@@ -23,6 +23,11 @@ export class TransactionRepo extends Repository<ITransactionDocument, ITransacti
     startDate: Date,
     endDate: Date,
   ): Promise<ITransaction[]> {
+    this.logger.info(`Finding transactions by category and date range for user: ${userId}`);
+    this.logger.info(`Categories: ${categories}`);
+    this.logger.info(`Start date: ${startDate}`);
+    this.logger.info(`End date: ${endDate}`);
+
     return this.Model.find({
       user: userId,
       category: { $in: categories },

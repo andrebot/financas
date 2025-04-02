@@ -39,7 +39,7 @@ describe('Content Controller', () => {
 
   beforeEach(() => {
     managerStub = sinon.createStubInstance(ContentManager);
-    contentController = new ContentController(managerStub as unknown as ContentManager<any>);
+    contentController = new ContentController(managerStub as unknown as ContentManager<any>, 'TestController');
     // Stub the `modelName` property directly on the instance
     (managerStub as any).modelName = model.modelName;
     response = {
