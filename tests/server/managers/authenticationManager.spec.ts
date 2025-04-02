@@ -512,7 +512,7 @@ describe('AuthenticationManager', function () {
         chai.assert.fail('Should have thrown an error');
       } catch (error) {
         (error as Error).message.should.be.a('string');
-        (error as Error).message.should.contain(`No user was found with email: ${token.email}`);
+        (error as Error).message.should.contain(`Token invalid since its from non-existent user: ${token.email}`);
       }
     });
   });

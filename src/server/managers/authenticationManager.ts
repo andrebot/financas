@@ -359,7 +359,7 @@ export async function refreshTokens(refreshToken: string): Promise<Tokens> {
     };
   }
 
-  throw new Error(`No user was found with email: ${tokenDecrypted.email}`);
+  throw new Error(`Token invalid since its from non-existent user: ${tokenDecrypted.email}`);
 }
 
 /**

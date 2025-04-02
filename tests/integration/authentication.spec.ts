@@ -548,7 +548,7 @@ describe('Authentication', () => {
         .set('Cookie', `${REFRESH_TOKEN_COOKIE_NAME}=${refreshToken}`);
 
       response.status.should.be.eq(500);
-      response.body.should.have.property('error').eql(`No user was found with email: ${badEmail}`);
+      response.body.should.have.property('error').eql(`Token invalid since its from non-existent user: ${badEmail}`);
     });
 
     it('should return 500 if finding the user throws an error', async () => {
