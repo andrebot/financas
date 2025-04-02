@@ -22,10 +22,6 @@ export default function ChangePasswordModal() {
   const [changePassword, { isLoading }] = useChangePasswordMutation();
   const { enqueueSnackbar } = useSnackbar();
   const { closeModal } = useModal();
-  const validatorMap = {
-    newPassword: validateNewPassword,
-    confirmPassword: validateConfirmPassword,
-  };
 
   /**
    * Validates the new password field and updates the state.
@@ -53,6 +49,11 @@ export default function ChangePasswordModal() {
     } else {
       dispatch({ type: SET_CONFIRM_PASSWORD_ERROR, payload: '' });
     }
+  };
+
+  const validatorMap = {
+    newPassword: validateNewPassword,
+    confirmPassword: validateConfirmPassword,
   };
 
   /**

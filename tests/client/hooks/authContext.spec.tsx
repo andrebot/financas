@@ -3,9 +3,18 @@ import '@testing-library/jest-dom';
 import { render, screen, act } from '@testing-library/react';
 import jwt from 'jsonwebtoken';
 import Cookies from 'js-cookie';
+import { I18nextProvider } from 'react-i18next';
+import { useSnackbar } from 'notistack';
+import i18n from '../../../src/client/i18n';
+import i18nKeys from '../../../src/client/i18n/en';
 import { AuthProvider, useAuth } from '../../../src/client/hooks/authContext';
 
+jest.mock('notistack', () => ({
+  useSnackbar: jest.fn(),
+}));
+
 describe('AuthProvider and useAuth', () => {
+  let mockEnqueueSnackbar = jest.fn();
   const TestComponent = () => {
     const { user, setUser } = useAuth();
 
@@ -21,15 +30,23 @@ describe('AuthProvider and useAuth', () => {
     );
   };
 
+  beforeEach(() => {
+    (useSnackbar as unknown as jest.Mock).mockReturnValue({
+      enqueueSnackbar: mockEnqueueSnackbar,
+    });
+  });
+
   afterAll(() => {
     Cookies.remove('refreshToken');
   });
 
   it('should initialize the user context with empty values', () => {
     render(
-      <AuthProvider>
-        <TestComponent />
-      </AuthProvider>
+      <I18nextProvider i18n={i18n}>
+        <AuthProvider>
+          <TestComponent />
+        </AuthProvider>
+      </I18nextProvider>
     );
 
     expect(screen.getByTestId('user-name')).toHaveTextContent('');
@@ -46,9 +63,11 @@ describe('AuthProvider and useAuth', () => {
     Cookies.set('refreshToken', refreshToken);
 
     render(
-      <AuthProvider>
-        <TestComponent />
-      </AuthProvider>
+      <I18nextProvider i18n={i18n}>
+        <AuthProvider>
+          <TestComponent />
+        </AuthProvider>
+      </I18nextProvider>
     );
 
     // Assert that the user's name is rendered
@@ -57,9 +76,11 @@ describe('AuthProvider and useAuth', () => {
 
   it('allows user context to be updated', () => {
     render(
-      <AuthProvider>
-        <TestComponent />
-      </AuthProvider>
+      <I18nextProvider i18n={i18n}>
+        <AuthProvider>
+          <TestComponent />
+        </AuthProvider>
+      </I18nextProvider>
     );
 
     act(() => {
@@ -88,13 +109,14 @@ describe('AuthProvider and useAuth', () => {
     Cookies.set('refreshToken', 'invalid');
 
     render(
-      <AuthProvider>
-        <TestComponent />
-      </AuthProvider>
+      <I18nextProvider i18n={i18n}>
+        <AuthProvider>
+          <TestComponent />
+        </AuthProvider>
+      </I18nextProvider>
     );
 
-    expect(console.error).toHaveBeenCalledWith('Failed to decode refresh token:', expect.any(Error));
-
+    expect(mockEnqueueSnackbar).toHaveBeenCalledWith(i18nKeys.translation.decodeTokenError, { variant: 'error' });
     console.error = originalError;
   });
 });

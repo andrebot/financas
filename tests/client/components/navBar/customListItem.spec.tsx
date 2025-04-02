@@ -19,4 +19,10 @@ describe('CustomListItem', () => {
 
     expect(onClick).toHaveBeenCalled();
   });
+
+  it('should call the default onClick function when the component is clicked', () => {
+    render(<CustomListItem text="Test" children={<div>Test child</div>} />);
+
+    fireEvent.click(screen.getByText('Test'));
+  });
 });
