@@ -18,8 +18,15 @@ export class TransactionController extends ContentController<ITransaction> {
       const { user } = req;
 
       checkVoidUser(user, this.transactionManager.modelName, 'get');
-      return res.send(this.transactionManager.getTransactionTypes());
+
+      const transactionTypes = this.transactionManager.getTransactionTypes();
+
+      this.logger.info(`Listed ${transactionTypes.investmentTypes.length} investment types and ${transactionTypes.transactionTypes.length} transaction types for user: ${user?.id}`);
+
+      return res.send(transactionTypes);
     } catch (error) {
+      this.logger.error(error);
+
       return this.errorHandler(error as Error, res);
     }
   }

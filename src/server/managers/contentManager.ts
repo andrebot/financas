@@ -1,7 +1,8 @@
+import type { Logger } from 'winston';
 import { IRepository } from '../resources/repositories/IRepository';
 import { checkVoidPayload, checkVoidInstance } from '../utils/misc';
 import { createLogger } from '../utils/logger';
-import type { Logger } from 'winston';
+
 export type Content = { user: string };
 
 export default class ContentManager<T extends Content> {

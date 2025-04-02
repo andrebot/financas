@@ -38,6 +38,8 @@ export class BudgetManager extends ContentManager<IBudget> {
       endDate,
     );
 
+    this.logger.info(`Calculating spent for budget: ${budget.id} from user: ${user}`);
+
     return transactions.reduce((acc, curr) => acc + curr.value, 0);
   }
 
@@ -53,6 +55,8 @@ export class BudgetManager extends ContentManager<IBudget> {
     if (!budget) {
       return {} as IBudget;
     }
+
+    this.logger.info(`Calculating spent for budget: ${id} from user: ${budget.user}`);
 
     const budgetWithSpent = await this.calculateSpent(budget);
 

@@ -70,6 +70,8 @@ TokenValidationMiddleware {
     const token = authHeader && authHeader.split(' ')[1];
 
     if (!token || !regExpBearer.test(token)) {
+      logger.info('Token is missing or invalid');
+
       res.sendStatus(401);
       return;
     }
@@ -80,7 +82,12 @@ TokenValidationMiddleware {
       checkValidPayload(payload);
       checkAdminAccess(payload as UserPayload, isAdmin);
 
+      logger.info('Token is valid');
+
       req.user = payload as UserPayload;
+
+      logger.info('User payload added to request object');
+
       next();
     } catch (err) {
       logger.error(err);

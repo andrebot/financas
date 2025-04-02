@@ -1,8 +1,5 @@
 import { Response } from 'express';
 import { Types } from 'mongoose';
-import { createLogger } from './logger';
-
-const logger = createLogger('ResponseHandlersUtils');
 
 /**
  * Function to handle errors. It will log the error and return a response with
@@ -15,7 +12,6 @@ const logger = createLogger('ResponseHandlersUtils');
  */
 export function handleError(error: Error, res: Response, status = 500): Response {
   let newStatus = status;
-  logger.error(error);
 
   if (error.message.includes('not found')) {
     newStatus = 404;

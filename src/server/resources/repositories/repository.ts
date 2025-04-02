@@ -1,7 +1,7 @@
 import { Model, Document } from 'mongoose';
+import type { Logger } from 'winston';
 import { createLogger } from '../../utils/logger';
 import { IRepository } from './IRepository';
-import type { Logger } from 'winston';
 import type { ErrorHandler } from '../../types';
 
 /**
@@ -16,7 +16,9 @@ function defaultErrorHandler(error: Error): Error {
 
 export default class Repository<T extends Document, K> implements IRepository<T, K> {
   protected Model: Model<T>;
+
   protected errorHandler: ErrorHandler;
+
   protected logger: Logger;
 
   modelName: string;
@@ -35,6 +37,8 @@ export default class Repository<T extends Document, K> implements IRepository<T,
    * @returns The document.
    */
   async findById(id: string): Promise<K | null> {
+    this.logger.info(`Finding document by id: ${id}`);
+
     const doc = await this.Model.findById(id);
 
     return doc ? (doc.toObject() as K) : null;
@@ -47,6 +51,8 @@ export default class Repository<T extends Document, K> implements IRepository<T,
    * @returns The deleted document.
    */
   async findByIdAndDelete(id: string): Promise<K | null> {
+    this.logger.info(`Deleting document: ${id}`);
+
     const doc = await this.Model.findByIdAndDelete(id);
 
     return doc ? (doc.toObject() as K) : null;
@@ -59,6 +65,8 @@ export default class Repository<T extends Document, K> implements IRepository<T,
    * @returns The documents.
    */
   async listAll(userId?: string): Promise<K[]> {
+    this.logger.info(`Listing all documents for user: ${userId}`);
+
     const docs = await this.Model.find({
       user: userId,
     });
@@ -73,6 +81,8 @@ export default class Repository<T extends Document, K> implements IRepository<T,
    * @returns The saved document.
    */
   async save(entity?: K): Promise<K> {
+    this.logger.info(`Saving document: ${entity}`);
+
     try {
       const instance = new this.Model(entity);
 
@@ -81,6 +91,7 @@ export default class Repository<T extends Document, K> implements IRepository<T,
       return result.toObject() as K;
     } catch (error) {
       this.logger.error(error);
+
       throw this.errorHandler(error as Error);
     }
   }
@@ -93,6 +104,8 @@ export default class Repository<T extends Document, K> implements IRepository<T,
    * @returns The updated document.
    */
   async update(id: string, entity: Partial<K>): Promise<K | null> {
+    this.logger.info(`Updating document: ${id}`);
+
     const result = await this.Model.findByIdAndUpdate(
       id,
       entity as any,

@@ -50,12 +50,17 @@ export class TransactionManager extends ContentManager<ITransaction> {
   private async getLastMonthBalance(content: ITransaction): Promise<IMonthlyBalance> {
     const contentDate = parseDate(content.date);
     const lastMonth = calculateLastMonth(contentDate.getFullYear(), contentDate.getMonth() + 1);
+
+    this.logger.info(`Getting last month balance for ${lastMonth.year}-${lastMonth.month} from user: ${content.user}`);
+
     let lastMonthBalance = await this.monthlyBalanceRepo.findMonthlyBalance(
       content,
       new Date(lastMonth.year, lastMonth.month - 1),
     );
 
     if (!lastMonthBalance) {
+      this.logger.info('Last month balance not found, creating new one');
+
       lastMonthBalance = {
         user: content.user,
         account: content.account,
@@ -78,12 +83,17 @@ export class TransactionManager extends ContentManager<ITransaction> {
    */
   private async addTransactionToMonthlyBalance(content: ITransaction): Promise<void> {
     const contentDate = parseDate(content.date);
+
+    this.logger.info(`Getting monthly balance for ${contentDate.getFullYear()}-${contentDate.getMonth() + 1} from user: ${content.user}`);
+
     let monthlyBalance = await this.monthlyBalanceRepo.findMonthlyBalance(
       content,
       contentDate,
     );
 
     if (!monthlyBalance) {
+      this.logger.info('Monthly balance not found, creating new one');
+
       const lastMonthBalance = await this.getLastMonthBalance(content);
 
       monthlyBalance = {
@@ -98,6 +108,8 @@ export class TransactionManager extends ContentManager<ITransaction> {
 
       await this.monthlyBalanceRepo.save(monthlyBalance);
     } else {
+      this.logger.info('Monthly balance found, adding transaction to it');
+
       monthlyBalance.transactions.push(content);
       monthlyBalance.closingBalance += content.value;
 
@@ -113,8 +125,12 @@ export class TransactionManager extends ContentManager<ITransaction> {
    */
   private async updateGoalsByTransaction(transaction: ITransaction): Promise<void> {
     if (!transaction.goalsList || transaction.goalsList.length === 0) {
+      this.logger.info(`No goals to update for transaction: ${transaction.id}`);
+
       return;
     }
+
+    this.logger.info(`Updating ${transaction.goalsList.length} goals for transaction: ${transaction.id}`);
 
     const goalsToUpdate = transaction.goalsList.map((goal) => {
       const addValue = transaction.value * goal.percentage;
@@ -137,12 +153,17 @@ export class TransactionManager extends ContentManager<ITransaction> {
    */
   private async subtractTransactionFromMonthlyBalance(transaction: ITransaction): Promise<void> {
     const contentDate = parseDate(transaction.date);
+
+    this.logger.info(`Getting monthly balance for ${contentDate.getFullYear()}-${contentDate.getMonth() + 1} from user: ${transaction.user}`);
+
     const monthlyBalance = await this.monthlyBalanceRepo.findMonthlyBalance(
       transaction,
       contentDate,
     );
 
     if (monthlyBalance) {
+      this.logger.info('Monthly balance found, subtracting transaction from it');
+
       monthlyBalance.closingBalance -= transaction.value;
       monthlyBalance.transactions = monthlyBalance.transactions.filter(
         (t) => t.id !== transaction.id,
@@ -175,6 +196,8 @@ export class TransactionManager extends ContentManager<ITransaction> {
   private async deleteTransactionFromOtherModels(transaction: ITransaction): Promise<void> {
     const invertedTransaction = { ...transaction, value: -transaction.value };
 
+    this.logger.info(`Deleting transaction: ${transaction.id}`);
+
     await this.subtractTransactionFromMonthlyBalance(transaction);
     await this.updateGoalsByTransaction(invertedTransaction);
     await this.budgetRepo.updateBudgetsByNewTransaction(invertedTransaction);
@@ -186,6 +209,8 @@ export class TransactionManager extends ContentManager<ITransaction> {
    * @param transaction - The transaction to add.
    */
   private async addTransactionToOtherModels(transaction: ITransaction): Promise<void> {
+    this.logger.info(`Adding transaction: ${transaction.id}`);
+
     await this.addTransactionToMonthlyBalance(transaction);
     await this.updateGoalsByTransaction(transaction);
     await this.budgetRepo.updateBudgetsByNewTransaction(transaction);
@@ -198,8 +223,12 @@ export class TransactionManager extends ContentManager<ITransaction> {
    * @returns The created transaction.
    */
   async createContent(content: ITransaction): Promise<ITransaction> {
+    this.logger.info(`Creating new transaction for user: ${content.user}`);
+
     const savedTransaction = await super.createContent(content);
     await this.addTransactionToOtherModels(savedTransaction);
+
+    this.logger.info(`Transaction created: ${savedTransaction.id}`);
 
     // Create investments here later
     // if (content.type === TRANSACTION_TYPES.INVESTMENT) {
@@ -218,6 +247,8 @@ export class TransactionManager extends ContentManager<ITransaction> {
    * @returns The deleted transaction.
    */
   async deleteContent(id: string, userId: string, isAdmin?: boolean): Promise<ITransaction | null> {
+    this.logger.info(`Deleting transaction: ${id}`);
+
     const transaction = await this.repository.findById(id);
 
     if (!transaction) {
@@ -244,6 +275,8 @@ export class TransactionManager extends ContentManager<ITransaction> {
     userId: string,
     isAdmin?: boolean,
   ): Promise<ITransaction | null> {
+    this.logger.info(`Updating transaction: ${id}`);
+
     const transaction = await this.repository.findById(id);
 
     if (!transaction) {
@@ -251,6 +284,8 @@ export class TransactionManager extends ContentManager<ITransaction> {
     }
 
     if (this.shouldTriggerRecalculation(payload)) {
+      this.logger.info('Triggering recalculation');
+
       const updatedContent = { ...transaction, ...payload };
 
       // we remove and add the transaction to other models to ensure consistency

@@ -14,6 +14,8 @@ export class BudgetRepo extends Repository<IBudgetDocument, IBudget> {
    * @param transaction - The transaction to update the budgets by
    */
   async updateBudgetsByNewTransaction(transaction: ITransaction): Promise<void> {
+    this.logger.info(`Updating budgets in bulk by new transaction: ${transaction.id}`);
+
     await this.Model.updateMany({
       categories: {
         $in: [transaction.category, transaction.parentCategory],
