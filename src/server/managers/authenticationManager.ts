@@ -4,7 +4,6 @@ import {
   Tokens, Token, UserPayload,
 } from '../types';
 import UserRepo from '../resources/repositories/userRepo';
-import { addToken, deleteToken, isValidToken } from '../resources/repositories/tokenRepo';
 import { regExpPassword } from '../utils/validators';
 import { createLogger } from '../utils/logger';
 import {
@@ -249,8 +248,6 @@ export async function register(
   const accessToken = createAccessToken(email, role, firstName, lastName, newUser.id!);
   const refreshToken = createRefreshToken(email, role, firstName, lastName, newUser.id!);
 
-  addToken(refreshToken);
-
   return {
     user: newUser,
     tokens: {
@@ -286,8 +283,6 @@ export async function login(searchEmail: string, password: string): Promise<Logi
     if (isMatch) {
       const accessToken = createAccessToken(email, role, firstName, lastName, id!);
       const refreshToken = createRefreshToken(email, role, firstName, lastName, id!);
-
-      addToken(refreshToken);
 
       return {
         accessToken,
@@ -325,8 +320,6 @@ export async function logout(refreshToken: string): Promise<boolean> {
   } catch (error) {
     logger.error('Failed to verify token. Invalidating it anyway.');
     logger.error(error);
-  } finally {
-    deleteToken(refreshToken);
   }
 
   return verification;
@@ -343,34 +336,30 @@ export async function logout(refreshToken: string): Promise<boolean> {
  * @returns - the Tokens as an object
  */
 export async function refreshTokens(refreshToken: string): Promise<Tokens> {
-  if (isValidToken(refreshToken)) {
-    const tokenDecrypted = jwt.verify(
-      refreshToken,
-      REFRESH_TOKEN_SECRET,
-    ) as UserPayload;
-    const user = await UserRepo.findByEmail(tokenDecrypted.email!);
+  const tokenDecrypted = jwt.verify(
+    refreshToken,
+    REFRESH_TOKEN_SECRET,
+  ) as UserPayload;
+  const user = await UserRepo.findByEmail(tokenDecrypted.email!);
 
-    if (user) {
-      const {
-        email,
-        firstName,
-        lastName,
-        role,
-        id,
-      } = user;
+  if (user) {
+    const {
+      email,
+      firstName,
+      lastName,
+      role,
+      id,
+    } = user;
 
-      logger.info(`Refreshing tokens for user: ${email}`);
+    logger.info(`Refreshing tokens for user: ${email}`);
 
-      return {
-        accessToken: createAccessToken(email, role, firstName, lastName, id!),
-        refreshToken: createRefreshToken(email, role, firstName, lastName, id!),
-      };
-    }
-
-    throw new Error(`No user was found with email: ${tokenDecrypted.email}`);
-  } else {
-    throw new Error('Token is not valid');
+    return {
+      accessToken: createAccessToken(email, role, firstName, lastName, id!),
+      refreshToken: createRefreshToken(email, role, firstName, lastName, id!),
+    };
   }
+
+  throw new Error(`No user was found with email: ${tokenDecrypted.email}`);
 }
 
 /**

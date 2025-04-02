@@ -27,7 +27,7 @@ This APP is made to help you manage your finances and invest, by providing power
 3. Remove Empty files to improve readability
 4. Revise all try-catch for better error handling
 5. ~~Improve server logging for better log context~~
-6. Remove useless token memory store
+6. ~~Remove useless token memory store~~
 
 # Author
 André Almeida
