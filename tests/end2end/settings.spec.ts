@@ -92,3 +92,28 @@ test('should allow user to change password', async ({ page }) => {
     await expect(page.getByText(i18nKeys.translation.passwordChangedSuccess)).toBeVisible();
   });
 });
+
+test('should allow user to delete account', async ({ page }) => {
+  const changePasswordUser = {
+    firstName: 'Andre',
+    lastName: 'Silva',
+    email: `delete.${Date.now()}@gmail.com`,
+    password: 'Maro-cjan94',
+  };
+
+  await test.step('Register successfully', async () => {
+    await goToRegisterPageFromLoginPage(page);
+    await fillRegisterForm(page, changePasswordUser);
+    await page.getByRole('button', { name: i18nKeys.translation.register }).click();
+    await page.waitForLoadState('domcontentloaded');
+    await expect(page.getByText(i18nKeys.translation.registerSuccess)).toBeVisible();
+  });
+
+  await test.step('Delete account', async () => {
+    await goToSettingsPage(page);
+    await page.getByRole('button', { name: i18nKeys.translation.deleteAccount }).click();
+    await page.getByRole('button', { name: i18nKeys.translation.delete }).click();
+    await expect(page.getByText(i18nKeys.translation.accountDeleted)).toBeVisible();
+    await expect(page.getByRole('heading', { name: i18nKeys.translation.login })).toBeVisible();
+  });
+});
