@@ -1,5 +1,5 @@
 # Finanças
-![Version](https://img.shields.io/badge/version-1.0.1-brightgreen.svg)
+![Version](https://img.shields.io/badge/version-1.0.0-brightgreen.svg)
 ![Server Coverage](https://img.shields.io/badge/server--coverage-100.00%25-brightgreen)
 ![Client Coverage](https://img.shields.io/badge/client--coverage-100%25-brightgreen)
 
