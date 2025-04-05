@@ -1,5 +1,10 @@
 import jwt from 'jsonwebtoken';
-import { Request, Response, NextFunction } from 'express';
+import { Document } from 'mongoose';
+import { Request, Response, NextFunction, Router } from 'express';
+import ContentController from './controllers/contentController';
+import { Content } from './managers/contentManager';
+import ContentManager from './managers/contentManager';
+import Repository from './resources/repositories/repository';
 /* eslint-disable no-unused-vars */
 
 /**
@@ -398,5 +403,10 @@ export type BulkGoalsUpdate = {
 };
 
 export type ErrorHandler = (error: Error) => void;
+
+export type StandardRouteFactoryOptions<T extends Document, K extends Content> = {
+  contentManager?: ContentManager<K>,
+  repository?: Repository<T, K>,
+};
 
 /* eslint-enable no-unused-vars */

@@ -7,6 +7,13 @@ import type { Content } from '../managers/contentManager';
 import { checkVoidPayload, checkVoidUser } from '../utils/misc';
 import { createLogger } from '../utils/logger';
 
+/**
+ * Base class for standard CRUD operations.
+ * 
+ * @remarks
+ * Use this class when you want to for a model and all you need
+ * are the standard CRUD operations.
+ */
 export default class ContentController<T extends Content> implements IContentController {
   protected manager: ContentManager<T>;
 

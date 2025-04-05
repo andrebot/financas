@@ -1,42 +1,53 @@
-import { Express } from 'express';
-import { readdirSync } from 'fs';
-import path from 'path';
+import { Express, Router } from 'express';
 import { API_PREFIX } from '../config/server';
 import { createLogger } from '../utils/logger';
+import BudgetManager from '../managers/budgetManager';
+import transactionRouter from './transaction';
+import contentRouterFactory, { standardRouteFactory } from './contentRouteFactory';
+import userRouter from './authentication';
+import AccountModel, { IAccountDocument } from '../resources/models/accountModel';
+import BudgetModel, { IBudgetDocument } from '../resources/models/budgetModel';
+import CategoryModel, { ICategoryDocument } from '../resources/models/categoryModel';
+import GoalModel, { IGoalDocument } from '../resources/models/goalModel';
+import BudgetRepo from '../resources/repositories/budgetRepo';
+import GoalRepo from '../resources/repositories/goalRepo';
+import type { IAccount, IBudget, ICategory, IGoal, IContentController } from '../types';
 
 const logger = createLogger('RoutesInitializer');
 
-/**
- * This method will read all files at the route folder
- * and add them to the application route.
- *
- * @param app the Express application
- * @param basePath the base path to find all routes
- */
-export default function setRoutes(app: Express, basePath = __dirname): void {
-  try {
-    const files = readdirSync(basePath);
+const standardRoutes: { prefix: string; controller: IContentController }[] = [
+  standardRouteFactory<IAccountDocument, IAccount>(AccountModel, 'account'),
+  standardRouteFactory<ICategoryDocument, ICategory>(CategoryModel, 'category'),
+  standardRouteFactory<IGoalDocument, IGoal>(GoalModel, 'goal', {
+    repository: GoalRepo,
+  }),
+  standardRouteFactory<IBudgetDocument, IBudget>(BudgetModel, 'budget', {
+    repository: BudgetRepo,
+    contentManager: BudgetManager,
+  }),
+];
+const customRoutes: { prefix: string; router: Router }[] = [
+  {
+    prefix: 'user',
+    router: userRouter,
+  },
+  {
+    prefix: 'transaction',
+    router: transactionRouter,
+  },
+];
 
-    files.forEach((file) => {
-      if (file === 'index.ts' || !file.endsWith('.ts')) {
-        logger.info(`skipping file ${file} to be added as a route`);
-        return;
-      }
+function addRoute(app: Express, router: Router, prefix: string) {
+  app.use(`${API_PREFIX}/${prefix}`, router);
+  logger.info(`Route added: ${API_PREFIX}/${prefix}`);
+}
 
-      const filePath = path.resolve(basePath, file);
-      logger.info(`Importing file: ${filePath}`);
+export default function setRoutes(app: Express) {
+  standardRoutes.forEach((route) => {
+    addRoute(app, contentRouterFactory(route.controller), route.prefix);
+  });
 
-      // eslint-disable-next-line
-      const { urlPrefix, router } = require(filePath).default;
-
-      if (urlPrefix && router) {
-        app.use(`${API_PREFIX}/${urlPrefix}`, router);
-        logger.info(`Route added: ${API_PREFIX}/${urlPrefix}`);
-      } else {
-        logger.error(`file ${file} does not have a valid route configuration. Skipping...`);
-      }
-    });
-  } catch (error) {
-    logger.error('Error reading directory:', error);
-  }
+  customRoutes.forEach((route) => {
+    addRoute(app, route.router, route.prefix);
+  });
 }
