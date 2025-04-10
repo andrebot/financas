@@ -28,7 +28,4 @@ router.delete('/:userId', createAccessTokenValidation(), deleteUserController);
 router.post('/reset-password', resetPasswordController);
 router.post('/change-password', createAccessTokenValidation(), changePasswordController);
 
-export default {
-  urlPrefix: 'user',
-  router,
-};
+export default router;

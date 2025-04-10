@@ -13,6 +13,13 @@ export class TransactionController extends ContentController<ITransaction> {
     this.transactionManager = transactionManager;
   }
 
+  /**
+   * Get the transaction types
+   *
+   * @param req - The request object
+   * @param res - The response object
+   * @returns The transaction types
+   */
   getTransactionTypes(req: RequestWithUser, res: Response) {
     try {
       const { user } = req;
