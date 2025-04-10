@@ -9,7 +9,7 @@ import { createLogger } from '../utils/logger';
 
 /**
  * Base class for standard CRUD operations.
- * 
+ *
  * @remarks
  * Use this class when you want to for a model and all you need
  * are the standard CRUD operations.

@@ -1,9 +1,9 @@
 import jwt from 'jsonwebtoken';
 import { Document } from 'mongoose';
-import { Request, Response, NextFunction, Router } from 'express';
-import ContentController from './controllers/contentController';
-import { Content } from './managers/contentManager';
-import ContentManager from './managers/contentManager';
+import {
+  Request, Response, NextFunction,
+} from 'express';
+import ContentManager, { Content } from './managers/contentManager';
 import Repository from './resources/repositories/repository';
 /* eslint-disable no-unused-vars */
 

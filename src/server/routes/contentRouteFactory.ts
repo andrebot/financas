@@ -28,7 +28,7 @@ export default function contentRouterFactory(controller: IContentController): Ro
  * Factory function to create standard CRUD routes but with a custom repository
  * and content manager. If no repository or content manager is provided, the
  * default ones will be used with the content controller.
- * 
+ *
  * @see {@link ContentController}
  * @see {@link ContentManager}
  * @see {@link Repository}
