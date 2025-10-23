@@ -3,15 +3,18 @@ import '@testing-library/jest-dom';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
 import { useSnackbar } from 'notistack';
+import { Provider, useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router';
 import useLogout from '../../../../src/client/hooks/useLogout';
 import i18n from '../../../../src/client/i18n';
 import i18nKeys from '../../../../src/client/i18n/en';
+import i18nKeysPt from '../../../../src/client/i18n/pt-br';
 import SettingsPage from '../../../../src/client/pages/settings/index';
 import { useAuth } from '../../../../src/client/hooks/authContext';
 import { useModal } from '../../../../src/client/components/modal/modal';
 import { useUpdateUserMutation, useChangePasswordMutation, useDeleteAccountMutation } from '../../../../src/client/features/login';
 import { fillUpSettingsForm } from './utils';
+import { toggleTheme } from '../../../../src/client/features/themeSlice';
 
 jest.mock('react-router', () => ({
   useNavigate: jest.fn(),
@@ -19,6 +22,12 @@ jest.mock('react-router', () => ({
 
 jest.mock('notistack', () => ({
   useSnackbar: jest.fn(),
+}));
+
+jest.mock('react-redux', () => ({
+  ...jest.requireActual('react-redux'),
+  useDispatch: jest.fn(),
+  useSelector: jest.fn(),
 }));
 
 jest.mock('../../../../src/client/hooks/useLogout');
@@ -46,6 +55,8 @@ describe('SettingsPage', () => {
   let mockSetUser = jest.fn();
   let mockShowModal = jest.fn();
   let mockHandleLogout = jest.fn();
+  let mockDispatch = jest.fn();
+  let mockSelector = jest.fn();
   let mockUser = {
     id: '1',
     email: 'test@test.com',
@@ -60,6 +71,16 @@ describe('SettingsPage', () => {
     (useUpdateUserMutation as jest.Mock).mockReturnValue([mockUpdateUserMutation, {}]);
     (useChangePasswordMutation as jest.Mock).mockReturnValue([mockChangePasswordMutation, {}]);
     (useDeleteAccountMutation as jest.Mock).mockReturnValue([mockDeleteAccountMutation, {}]);
+    (useDispatch as unknown as jest.Mock).mockReturnValue(mockDispatch);
+    (useSelector as unknown as jest.Mock).mockImplementation((selector) => {
+      const mockState = {
+        theme: 'dark',
+        auth: {},
+        loginApi: {},
+      };
+
+      return selector(mockState);
+    });
     (useLogout as jest.Mock).mockReturnValue({
       handleLogout: mockHandleLogout,
       isLoggingOut: false,
@@ -302,6 +323,48 @@ describe('SettingsPage', () => {
 
     await waitFor(() => {
       expect(mockShowModal).toHaveBeenCalled();
+    });
+  });
+
+  it('should be able to change the language', async () => {
+    render(
+      <I18nextProvider i18n={i18n}>
+        <SettingsPage />
+      </I18nextProvider>
+    );
+
+    expect(i18n.language).toBe('en-US');
+
+    fireEvent.click(screen.getByRole('radio', { name: i18nKeys.translation.portuguese }));
+
+    await waitFor(() => {
+      expect(i18n.language).toBe('pt');
+      expect(screen.getByText(i18nKeysPt.translation.settingInfoTitle)).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('radio', { name: i18nKeysPt.translation.english }));
+
+    await waitFor(() => {
+      expect(i18n.language).toBe('en-US');
+      expect(screen.getByText(i18nKeys.translation.settingInfoTitle)).toBeInTheDocument();
+    });
+  });
+
+  it('should be able to toggle the theme', async () => {
+    (useSelector as unknown as jest.Mock).mockReturnValue('dark');
+
+    render(
+      <I18nextProvider i18n={i18n}>
+        <SettingsPage />
+      </I18nextProvider>
+    );
+
+    expect(screen.getByRole('checkbox', { name: i18nKeys.translation.theme })).toBeChecked();
+
+    fireEvent.click(screen.getByRole('checkbox', { name: i18nKeys.translation.theme }));
+
+    await waitFor(() => {
+      expect(mockDispatch).toHaveBeenCalledWith(toggleTheme());
     });
   });
 });

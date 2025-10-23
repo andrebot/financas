@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { login, goToRegisterPageFromLoginPage, fillRegisterForm } from './authUtils';
 import i18nKeys from '../../src/client/i18n/en';
+import i18nKeysPt from '../../src/client/i18n/pt-br';
 import { goToSettingsPage } from './settingsPageUtils';
 
 test('should allow user to change name', async ({ page }) => {
@@ -116,4 +117,32 @@ test('should allow user to delete account', async ({ page }) => {
     await expect(page.getByText(i18nKeys.translation.accountDeleted)).toBeVisible();
     await expect(page.getByRole('heading', { name: i18nKeys.translation.login })).toBeVisible();
   });
+});
+
+test('should be able to change the language', async ({ page }) => {
+  await login(page);
+  await goToSettingsPage(page);
+
+  await page.getByRole('radio', { name: i18nKeys.translation.portuguese }).click();
+
+  await expect(page.getByText(i18nKeysPt.translation.settingInfoTitle)).toBeVisible();
+
+  await page.getByRole('radio', { name: i18nKeysPt.translation.english }).click();
+
+  await expect(page.getByText(i18nKeys.translation.settingInfoTitle)).toBeVisible();
+});
+
+test('should be able to toggle the theme', async ({ page }) => {
+  await login(page);
+  await goToSettingsPage(page);
+
+  await expect(page.getByRole('checkbox', { name: i18nKeys.translation.theme })).toBeChecked();
+
+  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(18, 18, 18)');
+
+  await page.getByRole('checkbox', { name: i18nKeys.translation.theme }).click();
+  await expect(page.getByRole('checkbox', { name: i18nKeys.translation.theme })).not.toBeChecked();
+
+  // check if the color of the bodyy is rgb(255, 255, 255)
+  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
 });

@@ -44,7 +44,8 @@
       "src/server/server.ts",
       "src/server/utils/logger.ts",
       "src/server/config/*",
-      "src/server/public/*"
+      "src/server/public/*",
+      "node_modules/**"
     ],
     "reporter": [
       "text-summary",
@@ -53,7 +54,8 @@
     "require": [
       "ts-node/register",
       "source-map-support/register"
-    ]
+    ],
+    "exclude-node-modules": true
   },
   "author": "Andre Almeida",
   "license": "MIT",
