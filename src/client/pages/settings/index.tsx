@@ -1,9 +1,16 @@
 import React, { useReducer } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useDispatch, useSelector } from 'react-redux';
+import { toggleTheme } from '../../features/themeSlice';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import CircularProgress from '@mui/material/CircularProgress';
 import Button from '@mui/material/Button';
+import RadioGroup from '@mui/material/RadioGroup';
+import Radio from '@mui/material/Radio';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import FormLabel from '@mui/material/FormLabel';
+import FormControl from '@mui/material/FormControl';
 import { useSnackbar } from 'notistack';
 import { useAuth } from '../../hooks/authContext';
 import {
@@ -12,6 +19,10 @@ import {
   SettingsSection,
   TextFieldStyled,
   InfoButton,
+  MaterialUISwitch,
+  ConfigSection,
+  ThemeFormControl,
+  ThemeFormControlLabel,
 } from './styledComponents';
 import { useUpdateUserMutation, useDeleteAccountMutation } from '../../features/login';
 import { regExpEmail } from '../../utils/validators';
@@ -20,6 +31,7 @@ import { useModal } from '../../components/modal/modal';
 import ChangePasswordModal from './changePasswordModal';
 import useLogout from '../../hooks/useLogout';
 import ConfirmDeleteAccount from './confirmDeleteAccountModal';
+import { RootState } from '../../features/store';
 
 const {
   SET_FIRST_NAME_ERROR,
@@ -30,10 +42,12 @@ const {
 } = ActionType;
 
 export default function Settings(): React.JSX.Element {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user, setUser } = useAuth();
   const { enqueueSnackbar } = useSnackbar();
   const { handleLogout } = useLogout();
+  const storeDispatch = useDispatch();
+  const theme = useSelector((state: RootState) => state.theme);
   const [state, dispatch] = useReducer(reducer, {
     ...initialState,
     firstName: user?.firstName,
@@ -171,6 +185,23 @@ export default function Settings(): React.JSX.Element {
     showModal(<ConfirmDeleteAccount handleLogout={handleLogout} />);
   };
 
+  /**
+   * Handles the change language action.
+   *
+   * @param e - The change event. This comes from the RadioGroup component.
+   */
+  const handleChangeLanguage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    i18n.changeLanguage(value);
+  };
+
+  /**
+   * Handles the change theme action.
+   */
+  const handleChangeTheme = () => {
+    storeDispatch(toggleTheme());
+  };
+
   return (
     <SettingsMain>
       <SettingsSection elevation={3}>
@@ -237,6 +268,29 @@ export default function Settings(): React.JSX.Element {
           {t('deleteAccount')}
         </Button>
       </SettingsSection>
+      <ConfigSection elevation={3}>
+        <Typography variant="h3">{t('configuration')}</Typography>
+        <FormControl>
+          <FormLabel>{t('language')}</FormLabel>
+          <RadioGroup
+            name="language"
+            row
+            onChange={handleChangeLanguage}
+            value={i18n.language}
+          >
+            <FormControlLabel value="en-US" control={<Radio />} label={t('english')} />
+            <FormControlLabel value="pt" control={<Radio />} label={t('portuguese')} />
+          </RadioGroup>
+        </FormControl>
+        <ThemeFormControl>
+          <ThemeFormControlLabel
+            control={<MaterialUISwitch checked={theme === 'dark'} />} 
+            label={t('theme')}
+            labelPlacement="start"
+            onChange={handleChangeTheme}
+           />
+        </ThemeFormControl>
+      </ConfigSection>
     </SettingsMain>
   );
 }

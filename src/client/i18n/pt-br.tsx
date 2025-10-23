@@ -54,5 +54,10 @@ export default {
     confirmDeleteAccountDescription: 'Tem certeza que deseja excluir sua conta? Esta ação é irreversível.',
     delete: 'Deletar',
     decodeTokenError: 'Erro ao decodificar o token de atualização',
+    theme: 'Tema',
+    english: 'Inglês',
+    portuguese: 'Português',
+    language: 'Idioma',
+    configuration: 'Configuração',
   },
 };

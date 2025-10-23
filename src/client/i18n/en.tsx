@@ -54,5 +54,10 @@ export default {
     confirmDeleteAccountDescription: 'Are you sure you want to delete your account? This action is irreversible.',
     delete: 'Delete',
     decodeTokenError: 'Failed to decode refresh token',
+    theme: 'Theme',
+    english: 'English',
+    portuguese: 'Portuguese',
+    language: 'Language',
+    configuration: 'Configuration',
   },
 };

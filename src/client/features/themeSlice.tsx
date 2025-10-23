@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-const initialState = 'dark';
+const initialState = localStorage.getItem('theme') || 'dark';
 
 const themeSlice = createSlice({
   name: 'theme',
@@ -13,7 +13,10 @@ const themeSlice = createSlice({
      * @returns Which state the theme: dark or light
      */
     toggleTheme(state): string {
-      return state === 'light' ? 'dark' : 'light';
+      const newState = state === 'light' ? 'dark' : 'light';
+
+      localStorage.setItem('theme', newState);
+      return newState;
     },
   },
 });

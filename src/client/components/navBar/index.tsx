@@ -35,7 +35,7 @@ export default function NavBar() {
   };
 
   return (
-    <AppBar position="static">
+    <AppBar position="relative">
       <Toolbar>
         <NavMenuIcon edge="start" color="inherit" aria-label="menu" onClick={() => setIsDrawerOpen(true)}>
           <MenuIcon />
