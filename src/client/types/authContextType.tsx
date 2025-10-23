@@ -4,6 +4,7 @@ import { UserType } from './user';
 export type AuthContextType = {
   user: UserType | undefined;
   setUser: React.Dispatch<React.SetStateAction<UserType | undefined>>;
+  loading: boolean;
 }
 
 export type LoginBody = {

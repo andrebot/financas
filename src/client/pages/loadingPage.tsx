@@ -5,7 +5,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { useTranslation } from 'react-i18next';
 
 const loadingPage = {
-  backgroundColor: 'lightgray',
+  backgroundColor: 'transparent',
   height: '100vh',
   display: 'flex',
   flexDirection: 'column',

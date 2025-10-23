@@ -26,7 +26,8 @@ const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
  */
 function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<UserType | undefined>();
-  const valueMemo = useMemo(() => ({ user, setUser }), [user, setUser]);
+  const [loading, setLoading] = useState(true);
+  const valueMemo = useMemo(() => ({ user, setUser, loading }), [user, setUser, loading]);
   const { enqueueSnackbar } = useSnackbar();
   const { t } = useTranslation();
 
@@ -53,6 +54,8 @@ function AuthProvider({ children }: AuthProviderProps) {
       }
     } catch {
       enqueueSnackbar(t('decodeTokenError'), { variant: 'error' });
+    } finally {
+      setLoading(false);
     }
   }, []);
 
