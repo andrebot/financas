@@ -12,11 +12,10 @@ function capitalize(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-const componentContent = `
-import React from 'react';
+const componentContent = `import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { enqueueSnackbar } from 'notistack';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { } from './styledComponents';
 
 export default function ${capitalize(pageName)}(): React.JSX.Element {
@@ -27,10 +26,11 @@ export default function ${capitalize(pageName)}(): React.JSX.Element {
       <h1>${pageName}</h1>
     </div>
   );
-};`;
+};
 
-const styledComponentsContent = `
-import { styled } from '@mui/material/styles';
+`;
+
+const styledComponentsContent = `import { styled } from '@mui/material/styles';
 import type { StyleCompProp } from '../../types';
 
 `;
