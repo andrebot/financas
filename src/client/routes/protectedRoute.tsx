@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router';
 import { useAuth } from '../hooks/authContext';
 import LoginPage from '../pages/login';
+import LoadingPage from '../pages/loadingPage';
 import config from '../config/apiConfig';
 
 /**
@@ -10,14 +11,18 @@ import config from '../config/apiConfig';
  * If the user is not authenticated, it redirects to the login page.
  */
 export default function ProtectedRoute(): React.JSX.Element | undefined {
-  const { user, setUser } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!user) {
+    if (!loading && !user) {
       navigate(config.user.loginPage);
     }
-  }, [user, setUser, navigate]);
+  }, [user, loading, navigate]);
+
+  if (loading) {
+    return <LoadingPage />;
+  }
 
   if (!user) {
     return <LoginPage />;
