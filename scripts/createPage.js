@@ -26,7 +26,7 @@ export default function ${capitalize(pageName)}(): React.JSX.Element {
       <h1>${pageName}</h1>
     </div>
   );
-};
+}
 
 `;
 

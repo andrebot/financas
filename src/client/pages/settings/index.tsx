@@ -1,7 +1,6 @@
 import React, { useReducer } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
-import { toggleTheme } from '../../features/themeSlice';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -12,6 +11,7 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import FormLabel from '@mui/material/FormLabel';
 import FormControl from '@mui/material/FormControl';
 import { useSnackbar } from 'notistack';
+import { toggleTheme } from '../../features/themeSlice';
 import { useAuth } from '../../hooks/authContext';
 import {
   HorizontalContainer,
@@ -191,7 +191,7 @@ export default function Settings(): React.JSX.Element {
    * @param e - The change event. This comes from the RadioGroup component.
    */
   const handleChangeLanguage = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+    const { value } = e.target;
     i18n.changeLanguage(value);
   };
 
@@ -284,11 +284,11 @@ export default function Settings(): React.JSX.Element {
         </FormControl>
         <ThemeFormControl>
           <ThemeFormControlLabel
-            control={<MaterialUISwitch checked={theme === 'dark'} />} 
+            control={<MaterialUISwitch checked={theme === 'dark'} />}
             label={t('theme')}
             labelPlacement="start"
             onChange={handleChangeTheme}
-           />
+          />
         </ThemeFormControl>
       </ConfigSection>
     </SettingsMain>

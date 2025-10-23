@@ -4,9 +4,9 @@ import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Switch from '@mui/material/Switch';
-import type { StyleCompProp } from '../../types';
 import FormControl from '@mui/material/FormControl';
 import FormControlLabel from '@mui/material/FormControlLabel';
+import type { StyleCompProp } from '../../types';
 
 export const SettingsMain = styled('div')(({ theme }: StyleCompProp) => ({
   display: 'flex',
