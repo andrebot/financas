@@ -59,5 +59,6 @@ export default {
     portuguese: 'Portuguese',
     language: 'Language',
     configuration: 'Configuration',
+    createAccount: 'Create Bank Account',
   },
 };

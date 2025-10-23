@@ -11,6 +11,7 @@ import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
 import AccountIcon from '@mui/icons-material/AccountCircle';
 import LogoutIcon from '@mui/icons-material/Logout';
 import SettingsIcon from '@mui/icons-material/Settings';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import CustomListItem from './customListItem';
 import {
   NavMenuIcon,
@@ -59,6 +60,9 @@ export default function NavBar() {
           <List>
             <CustomListItem text={t('transactions')}>
               <CompareArrowsIcon />
+            </CustomListItem>
+            <CustomListItem text={t('createAccount')} onClick={() => navigate('/create-account')}>
+              <AccountBalanceIcon />
             </CustomListItem>
           </List>
           <Divider />
