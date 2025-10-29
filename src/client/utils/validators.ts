@@ -14,3 +14,5 @@ export const regExpPassword = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#-])[a-zA-
  * spaces, hyphens and accents.
  */
 export const regExpName = /^[a-zA-ZÀ-ÿ\s-]+$/;
+
+export const regExpOnlyNumbers = /^[0-9]+$/;
