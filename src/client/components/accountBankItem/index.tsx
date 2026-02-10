@@ -23,19 +23,33 @@ export default function AccountBankItem({ bankAccount }: AccountBankItemProps): 
   const { showModal, closeModal } = useModal();
   const [deleteBankAccount, { isError, isSuccess }] = useDeleteBankAccountMutation();
 
+  /**
+   * Handles the click event for the anchor element. This makes the menu open.
+   *
+   * @param event - The click event
+   */
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
   };
 
+  /**
+   * Handles the close event for the menu. This makes the menu close.
+   */
   const handleClose = () => {
     setAnchorEl(null);
   };
 
+  /**
+   * Deletes the bank account by calling the deleteBankAccount mutation and closing the modal.
+   */
   const handleDeleteBankAccount = () => {
     deleteBankAccount(bankAccount.id!);
     closeModal();
   };
 
+  /**
+   * Opens the confirm modal to delete the bank account.
+   */
   const handleDelete = () => {
     setAnchorEl(null);
     showModal(

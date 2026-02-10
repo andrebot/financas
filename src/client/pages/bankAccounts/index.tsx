@@ -21,10 +21,18 @@ export default function CreateAccount(): React.JSX.Element {
   const { data: bankAccounts = [] } = useListBankAccountsQuery();
   const [createBankAccount, { isError, isSuccess }] = useCreateBankAccountMutation();
 
+  /**
+   * Adds a bank account by calling the createBankAccount mutation.
+   *
+   * @param bankAccount - The bank account to add
+   */
   const addBankAccount = async (bankAccount: BankAccount) => {
     createBankAccount({ ...bankAccount });
   };
 
+  /**
+   * Opens the add bank account modal.
+   */
   const openAddBankAccountModal = () => {
     showModal(<AddBankAccountModal addBankAccount={addBankAccount} />);
   };

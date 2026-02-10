@@ -47,13 +47,26 @@ export default function ModalProvider({ children }: ModalProviderProps) {
   const [open, setOpen] = useState(false);
   const [content, setContent] = useState<ReactNode | null>(null);
 
+  /**
+   * Shows the modal by setting the content and opening the modal.
+   *
+   * @param modalContent - The content to show in the modal
+   */
   const showModal = (modalContent: ReactNode) => {
     setContent(modalContent);
     setOpen(true);
   };
 
+  /**
+   * Closes the modal by setting the open state to false.
+   */
   const closeModal = () => setOpen(false);
 
+  /**
+   * Creates the context value to be used in the modal provider.
+   *
+   * @returns The context value
+   */
   const contextValue = useMemo(() => ({ showModal, closeModal }), []);
 
   return (

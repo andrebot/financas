@@ -18,6 +18,12 @@ import CreditCardForm from './creditCardForm';
 import { useAuth } from '../../hooks/authContext';
 import { BankAccount, CreditCardProps } from '../../types';
 
+/**
+ * Modal that handles the creation of a bank account.
+ *
+ * @param addBankAccount - The function to add a bank account
+ * @returns The add bank account modal
+ */
 export default function AddBankAccountModal({ addBankAccount }: { addBankAccount: (bankAccount: BankAccount) => void }) {
   const { t } = useTranslation();
   const { closeModal } = useModal();
@@ -35,18 +41,36 @@ export default function AddBankAccountModal({ addBankAccount }: { addBankAccount
     agencyError: '',
   });
 
+  /**
+   * Handles the change event for the bank account name.
+   *
+   * @param e - The change event
+   */
   const handleBankAccountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch({ type: e.target.name as ActionType, payload: e.target.value });
   };
 
+  /**
+   * Handles the change event for the currency.
+   *
+   * @param e - The change event
+   */
   const handleCurrencyChange = (e: SelectChangeEvent) => {
     dispatch({ type: ActionType.SET_CURRENCY, payload: e.target.value });
   };
 
+  /**
+   * Handles the change event for the agency.
+   *
+   * @param e - The change event
+   */
   const handleAgencyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch({ type: ActionType.SET_AGENCY, payload: e.target.value });
   };
 
+  /**
+   * Saves the bank account by calling the addBankAccount function and closing the modal.
+   */
   const handleAddBankAccount = () => {
     addBankAccount({
       name: state.name,

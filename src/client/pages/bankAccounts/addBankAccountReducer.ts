@@ -22,6 +22,13 @@ export type Action = {
   payload: string;
 }
 
+/**
+ * Reducer for the bank account state.
+ *
+ * @param state - The current state
+ * @param action - The action to perform
+ * @returns The new state
+ */
 export const reducer = (state: BankAccountState, action: Action): BankAccountState => {
   const { payload, type } = action;
 
