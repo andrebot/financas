@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Typography } from '@mui/material';
 import BankIcon from '@mui/icons-material/AccountBalance';
@@ -11,11 +11,17 @@ import { AccountBankItemMain, AccountBankInfo } from './styledComponent';
 import CreditCard from '../creditCard';
 import { AccountBankItemProps } from '../../types';
 import { CreditCardsList } from '../creditCard/styledComponents';
+import { useDeleteBankAccountMutation } from '../../features/bankAccount';
+import { enqueueSnackbar } from 'notistack';
+import ConfirmModal from '../confirmModal';
+import { useModal } from '../modal/modal';
 
 export default function AccountBankItem({ bankAccount }: AccountBankItemProps): React.JSX.Element {
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+  const { showModal, closeModal } = useModal();
+  const [deleteBankAccount, { isError, isSuccess }] = useDeleteBankAccountMutation();
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -24,6 +30,35 @@ export default function AccountBankItem({ bankAccount }: AccountBankItemProps): 
   const handleClose = () => {
     setAnchorEl(null);
   };
+
+  const handleDeleteBankAccount = () => {
+    deleteBankAccount(bankAccount.id!);
+    closeModal();
+  };
+
+  const handleDelete = () => {
+    setAnchorEl(null);
+    showModal(
+      <ConfirmModal
+        title={t('bankAccountDeletionTitle')}
+        confirmationText={t('bankAccountDeletionDescription')}
+        onConfirm={handleDeleteBankAccount}
+        onCancel={closeModal}
+      />
+    );
+  };
+
+  useEffect(() => {
+    if (isSuccess) {
+      enqueueSnackbar(t('bankAccountDeleted'), { variant: 'success' });
+    }
+  }, [isSuccess]);
+
+  useEffect(() => {
+    if (isError) {
+      enqueueSnackbar(t('bankAccountDeletionFailed'), { variant: 'error' });
+    }
+  }, [isError]);
 
   return (
     <AccountBankItemMain elevation={3}>
@@ -54,17 +89,18 @@ export default function AccountBankItem({ bankAccount }: AccountBankItemProps): 
             onClose={handleClose}
           >
             <MenuItem onClick={handleClose}>{t('edit')}</MenuItem>
-            <MenuItem onClick={handleClose}>{t('delete')}</MenuItem>
+            <MenuItem onClick={handleDelete}>{t('delete')}</MenuItem>
           </Menu>
         </div>
       </AccountBankInfo>
       <CreditCardsList>
-        {bankAccount.cards.map(({ flag, last4Digits, expirationDate }) => (
+        {bankAccount.cards.map(({ flag, last4Digits, expirationDate, number }) => (
           <CreditCard
             key={last4Digits}
             flag={flag}
-            last4Digits={last4Digits}
+            last4Digits={number.slice(-4)}
             expirationDate={expirationDate}
+            number={number}
           />
         ))}
       </CreditCardsList>

@@ -75,5 +75,9 @@ export default {
     expirationDate: 'Exp Date',
     addCard: 'Add Card',
     flag: 'Flag',
+    bankAccountCreated: 'Bank account created successfully!',
+    bankAccountDeleted: 'Bank account deleted successfully!',
+    bankAccountDeletionTitle: 'Bank Account Deletion',
+    bankAccountDeletionDescription: 'Are you sure you want to delete this bank account? This action is irreversible.',
   },
 };

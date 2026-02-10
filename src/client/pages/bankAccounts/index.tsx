@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import Typography from '@mui/material/Typography';
 import PlusIcon from '@mui/icons-material/Add';
@@ -7,7 +7,7 @@ import AccountBankItem from '../../components/accountBankItem';
 import { useModal } from '../../components/modal/modal';
 import AddBankAccountModal from './addBankAccountModal';
 import { useListBankAccountsQuery, useCreateBankAccountMutation } from '../../features/bankAccount';
-// import { enqueueSnackbar } from 'notistack';
+import { enqueueSnackbar } from 'notistack';
 import { 
   CreateAccountMain,
   AccountBankList,
@@ -19,15 +19,27 @@ export default function CreateAccount(): React.JSX.Element {
   const { t } = useTranslation();
   const { showModal } = useModal();
   const { data: bankAccounts = [] } = useListBankAccountsQuery();
-  const [createBankAccount] = useCreateBankAccountMutation();
+  const [createBankAccount, { isError, isSuccess }] = useCreateBankAccountMutation();
 
-  const addBankAccount = (bankAccount: BankAccount) => {
+  const addBankAccount = async (bankAccount: BankAccount) => {
     createBankAccount({ ...bankAccount });
   };
 
   const openAddBankAccountModal = () => {
     showModal(<AddBankAccountModal addBankAccount={addBankAccount} />);
   };
+
+  useEffect(() => {
+    if (isSuccess) {
+      enqueueSnackbar(t('bankAccountCreated'), { variant: 'success' });
+    }
+  }, [isSuccess]);
+
+  useEffect(() => {
+    if (isError) {
+      enqueueSnackbar(t('bankAccountCreationFailed'), { variant: 'error' });
+    }
+  }, [isError]);
 
   return (
     <CreateAccountMain>
@@ -39,7 +51,7 @@ export default function CreateAccount(): React.JSX.Element {
           </IconButton>
         </AddAccountButton>
         {bankAccounts.map((bankAccount) => (
-          <AccountBankItem key={bankAccount.accountNumber} bankAccount={bankAccount} />
+          <AccountBankItem bankAccount={bankAccount} />
         ))}
       </AccountBankList>
     </CreateAccountMain>

@@ -75,5 +75,7 @@ export default {
     expirationDate: 'Exp',
     addCard: 'Adicionar Cartão',
     flag: 'Bandeira',
+    bankAccountCreated: 'Conta bancária criada com sucesso!',
+    bankAccountDeleted: 'Conta bancária deletada com sucesso!',
   },
 };
