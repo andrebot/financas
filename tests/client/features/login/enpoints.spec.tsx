@@ -1,4 +1,4 @@
-import testBuilder, {
+import {
   loginMutation,
   registerMutation,
   refreshTokenQuery,
@@ -7,13 +7,14 @@ import testBuilder, {
   updateUserMutation,
   changePasswordMutation,
   deleteAccountMutation,
-} from '../../../../src/client/features/login/endpoints';
+  endpoints,
+} from '../../../../src/client/features/login';
 
 const mockBuilder = {
   query: jest.fn(() => ({})),
   mutation: jest.fn(() => ({})),
 };
-const tBuilder = testBuilder(mockBuilder as any);
+const tBuilder = endpoints(mockBuilder as any);
 
 describe('login endpoints', () => {
   it('should have all endpoints', () => {
@@ -41,7 +42,7 @@ describe('login endpoints', () => {
     const loginMutationExecuted = loginMutation(body);
 
     expect(loginMutationExecuted).toBeDefined();
-    expect(loginMutationExecuted.url).toBe('/login');
+    expect(loginMutationExecuted.url).toBe('/user/login');
     expect(loginMutationExecuted.method).toBe('POST');
     expect(loginMutationExecuted.body).toEqual(body);
   });
@@ -56,7 +57,7 @@ describe('login endpoints', () => {
     const registerMutationExecuted = registerMutation(body);
 
     expect(registerMutationExecuted).toBeDefined();
-    expect(registerMutationExecuted.url).toBe('/register');
+    expect(registerMutationExecuted.url).toBe('/user/register');
     expect(registerMutationExecuted.method).toBe('POST');
     expect(registerMutationExecuted.body).toEqual(body);
   });
@@ -65,7 +66,7 @@ describe('login endpoints', () => {
     const refreshTokenQueryExecuted = refreshTokenQuery();
 
     expect(refreshTokenQueryExecuted).toBeDefined();
-    expect(refreshTokenQueryExecuted.url).toBe('/refresh-tokens');
+    expect(refreshTokenQueryExecuted.url).toBe('/user/refresh-tokens');
     expect(refreshTokenQueryExecuted.method).toBe('POST');
   });
 
@@ -76,7 +77,7 @@ describe('login endpoints', () => {
     const resetPasswordMutationExecuted = resetPasswordMutation(body);
 
     expect(resetPasswordMutationExecuted).toBeDefined();
-    expect(resetPasswordMutationExecuted.url).toBe('/reset-password');
+    expect(resetPasswordMutationExecuted.url).toBe('/user/reset-password');
     expect(resetPasswordMutationExecuted.method).toBe('POST');
     expect(resetPasswordMutationExecuted.body).toEqual(body);
   });
@@ -85,7 +86,7 @@ describe('login endpoints', () => {
     const logoutMutationExecuted = logoutMutation();
 
     expect(logoutMutationExecuted).toBeDefined();
-    expect(logoutMutationExecuted.url).toBe('/logout');
+    expect(logoutMutationExecuted.url).toBe('/user/logout');
     expect(logoutMutationExecuted.method).toBe('POST');
   });
 
@@ -100,7 +101,7 @@ describe('login endpoints', () => {
     const updateUserMutationExecuted = updateUserMutation(body);
 
     expect(updateUserMutationExecuted).toBeDefined();
-    expect(updateUserMutationExecuted.url).toBe(`/${body.id}`);
+    expect(updateUserMutationExecuted.url).toBe(`/user/${body.id}`);
     expect(updateUserMutationExecuted.method).toBe('PUT');
     expect(updateUserMutationExecuted.body).toEqual({
       email: body.email,
@@ -120,7 +121,7 @@ describe('login endpoints', () => {
     const changePasswordMutationExecuted = changePasswordMutation(body);
 
     expect(changePasswordMutationExecuted).toBeDefined();
-    expect(changePasswordMutationExecuted.url).toBe('/change-password');
+    expect(changePasswordMutationExecuted.url).toBe('/user/change-password');
     expect(changePasswordMutationExecuted.method).toBe('POST');
     expect(changePasswordMutationExecuted.body).toEqual(body);
   });
@@ -129,7 +130,7 @@ describe('login endpoints', () => {
     const deleteAccountMutationExecuted = deleteAccountMutation('1');
 
     expect(deleteAccountMutationExecuted).toBeDefined();
-    expect(deleteAccountMutationExecuted.url).toBe('/1');
+    expect(deleteAccountMutationExecuted.url).toBe('/user/1');
     expect(deleteAccountMutationExecuted.method).toBe('DELETE');
   });
 });

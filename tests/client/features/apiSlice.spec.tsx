@@ -1,5 +1,6 @@
-import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { loginApi } from '../../../src/client/features/login';
+import apiSlice, { prepareHeaders } from "../../../src/client/features/apiSlice";
+import type { RTKApi } from "../../../src/client/types/requests";
 
 let mockBaseQuery = jest.fn();
 
@@ -7,7 +8,7 @@ jest.mock('@reduxjs/toolkit/query/react', () => ({
   fetchBaseQuery: jest.fn(() => mockBaseQuery),
 }));
 
-import baseQueryWithAuth from '../../../src/client/features/baseQueryWithAuth';
+import { baseQueryWithReauth } from '../../../src/client/features/apiSlice';
 import { clearAccessToken } from "../../../src/client/features/authSlice";
 
 
@@ -21,7 +22,43 @@ jest.mock('../../../src/client/features/login', () => ({
   },
 }));
 
-describe('baseQueryWithAuth', () => {
+describe('prepareHeaders', () => {
+  it('should prepare the headers for the API requests for simple non authenticated requests', () => {
+    const headers = new Headers();
+    const preparedHeaders = prepareHeaders(headers, { 
+      getState: () => ({ 
+        theme: 'light',
+        auth: { accessToken: '123', user: null },
+        [apiSlice.reducerPath]: {} as ReturnType<typeof apiSlice.reducer>
+      }),
+      extra: undefined,
+      endpoint: '',
+      type: 'query'
+    } as RTKApi);
+
+    expect(preparedHeaders?.get('Content-Type')).toBe('application/json');
+    expect(preparedHeaders?.get('Authorization')).toBe('Bearer 123');
+  });
+
+  it('should not add the authorization header if the access token is not present', () => {
+    const headers = new Headers();
+    const preparedHeaders = prepareHeaders(headers, { 
+      getState: () => ({ 
+        theme: 'light',
+        auth: { accessToken: null, user: null },
+        [apiSlice.reducerPath]: {} as ReturnType<typeof apiSlice.reducer>
+      }),
+      extra: undefined,
+      endpoint: '',
+      type: 'query'
+    } as RTKApi);
+
+    expect(preparedHeaders?.get('Content-Type')).toBe('application/json');
+    expect(preparedHeaders?.get('Authorization')).toBeUndefined();
+  });
+});
+
+describe('baseQueryWithReauth', () => {
   const mockUnauthorizedResult = {
     error: {
       message: 'Unauthorized',
@@ -54,7 +91,7 @@ describe('baseQueryWithAuth', () => {
 
     mockBaseQuery.mockResolvedValue(mockResult);
 
-    const result = await baseQueryWithAuth(mockArgs, mockApi as any, mockExtraOptions);
+    const result = await baseQueryWithReauth(mockArgs, mockApi as any, mockExtraOptions);
 
     expect(result).toEqual(mockResult);
   });
@@ -77,7 +114,7 @@ describe('baseQueryWithAuth', () => {
     });
     mockBaseQuery.mockResolvedValueOnce(mockResultSuccess);
 
-    const result = await baseQueryWithAuth(mockArgs, mockApi as any, mockExtraOptions);
+    const result = await baseQueryWithReauth(mockArgs, mockApi as any, mockExtraOptions);
 
     expect(result).toEqual(mockResultSuccess);
   });
@@ -92,7 +129,7 @@ describe('baseQueryWithAuth', () => {
     mockBaseQuery.mockResolvedValueOnce(mockUnauthorizedResult);
     mockBaseQuery.mockResolvedValueOnce(mockResult);
 
-    const result = await baseQueryWithAuth(mockArgs, mockApi as any, mockExtraOptions);
+    const result = await baseQueryWithReauth(mockArgs, mockApi as any, mockExtraOptions);
 
     expect(mockApi.dispatch).toHaveBeenCalledWith(loginApi.endpoints.logout.initiate());
     expect(mockApi.dispatch).toHaveBeenCalledWith(clearAccessToken());
