@@ -9,7 +9,7 @@ export default function ConfirmModal({ title, confirmationText, onConfirm, onCan
       <h1>{title}</h1>
       <p>{confirmationText}</p>
       <ButtonHolded>
-        <Button onClick={onCancel} color="error">Cancel</Button>
+        <Button onClick={onCancel} variant="contained" color="error">Cancel</Button>
         <Button onClick={onConfirm} variant="contained">Confirm</Button>
       </ButtonHolded>
     </ConfirmModalContainer>

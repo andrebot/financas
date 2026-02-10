@@ -42,4 +42,5 @@ export type BankAccountState = {
   currencyError: string;
   accountNumberError: string;
   agencyError: string;
+  id?: string;
 };

@@ -9,12 +9,13 @@ import MenuItem from '@mui/material/MenuItem';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDownCircle';
 import { AccountBankItemMain, AccountBankInfo } from './styledComponent';
 import CreditCard from '../creditCard';
-import { AccountBankItemProps } from '../../types';
+import { AccountBankItemProps, BankAccount } from '../../types';
 import { CreditCardsList } from '../creditCard/styledComponents';
-import { useDeleteBankAccountMutation } from '../../features/bankAccount';
+import { useDeleteBankAccountMutation, useUpdateBankAccountMutation } from '../../features/bankAccount';
 import { enqueueSnackbar } from 'notistack';
 import ConfirmModal from '../confirmModal';
 import { useModal } from '../modal/modal';
+import AddBankAccountModal from '../../pages/bankAccounts/addBankAccountModal';
 
 export default function AccountBankItem({ bankAccount }: AccountBankItemProps): React.JSX.Element {
   const { t } = useTranslation();
@@ -22,6 +23,7 @@ export default function AccountBankItem({ bankAccount }: AccountBankItemProps): 
   const open = Boolean(anchorEl);
   const { showModal, closeModal } = useModal();
   const [deleteBankAccount, { isError, isSuccess }] = useDeleteBankAccountMutation();
+  const [updateBankAccount, { isError: isUpdateError, isSuccess: isUpdateSuccess }] = useUpdateBankAccountMutation();
 
   /**
    * Handles the click event for the anchor element. This makes the menu open.
@@ -47,11 +49,24 @@ export default function AccountBankItem({ bankAccount }: AccountBankItemProps): 
     closeModal();
   };
 
+  const handleUpdateBankAccount = async (bankAccount: BankAccount) => {
+    await updateBankAccount(bankAccount);
+    closeModal();
+  };
+
+  /**
+   * Updates the bank account by calling the updateBankAccount mutation and closing the modal.
+   */
+  const openUpdateBankAccountModal = () => {
+    showModal(<AddBankAccountModal saveBankAccount={handleUpdateBankAccount} bankAccount={bankAccount} />);
+    handleClose();
+  };
+
   /**
    * Opens the confirm modal to delete the bank account.
    */
   const handleDelete = () => {
-    setAnchorEl(null);
+    handleClose();
     showModal(
       <ConfirmModal
         title={t('bankAccountDeletionTitle')}
@@ -102,7 +117,7 @@ export default function AccountBankItem({ bankAccount }: AccountBankItemProps): 
             open={open}
             onClose={handleClose}
           >
-            <MenuItem onClick={handleClose}>{t('edit')}</MenuItem>
+            <MenuItem onClick={openUpdateBankAccountModal}>{t('edit')}</MenuItem>
             <MenuItem onClick={handleDelete}>{t('delete')}</MenuItem>
           </Menu>
         </div>

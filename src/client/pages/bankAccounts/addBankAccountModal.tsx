@@ -18,27 +18,37 @@ import CreditCardForm from './creditCardForm';
 import { useAuth } from '../../hooks/authContext';
 import { BankAccount, CreditCardProps } from '../../types';
 
+type AddBankAccountModalProps = {
+  saveBankAccount: (bankAccount: BankAccount) => void;
+  bankAccount?: BankAccount;
+};
+
+const blankState = {
+  name: '',
+  currency: '',
+  accountNumber: '',
+  agency: '',
+  nameError: '',
+  currencyError: '',
+  accountNumberError: '',
+  agencyError: '',
+};
+
 /**
  * Modal that handles the creation of a bank account.
  *
  * @param addBankAccount - The function to add a bank account
  * @returns The add bank account modal
  */
-export default function AddBankAccountModal({ addBankAccount }: { addBankAccount: (bankAccount: BankAccount) => void }) {
+export default function AddBankAccountModal({ saveBankAccount, bankAccount }: AddBankAccountModalProps) {
   const { t } = useTranslation();
   const { closeModal } = useModal();
-  const [creditCards, setCreditCards] = useState<CreditCardProps[]>([]);
+  const [creditCards, setCreditCards] = useState<CreditCardProps[]>(bankAccount?.cards || []);
   const { user } = useAuth();
 
   const [state, dispatch] = useReducer(reducer, {
-    name: '',
-    currency: '',
-    accountNumber: '',
-    agency: '',
-    nameError: '',
-    currencyError: '',
-    accountNumberError: '',
-    agencyError: '',
+    ...blankState,
+    ...bankAccount,
   });
 
   /**
@@ -71,13 +81,14 @@ export default function AddBankAccountModal({ addBankAccount }: { addBankAccount
   /**
    * Saves the bank account by calling the addBankAccount function and closing the modal.
    */
-  const handleAddBankAccount = () => {
-    addBankAccount({
+  const handleSaveBankAccount = () => {
+    saveBankAccount({
       name: state.name,
       currency: state.currency,
       accountNumber: state.accountNumber,
       agency: state.agency,
       cards: creditCards,
+      id: state?.id,
       user: user!.id,
     });
     closeModal();
@@ -139,7 +150,7 @@ export default function AddBankAccountModal({ addBankAccount }: { addBankAccount
         <CreditCardForm creditCards={creditCards} setCreditCards={setCreditCards} />
         <RowInput>
           <Button variant='outlined' fullWidth onClick={closeModal}>{t('cancel')}</Button>
-          <Button variant='contained' fullWidth onClick={handleAddBankAccount}>{t('add')}</Button>
+          <Button variant='contained' fullWidth onClick={handleSaveBankAccount}>{t('save')}</Button>
         </RowInput>
       </FormWrapper>
     </CreateBankAccountModal>

@@ -34,7 +34,7 @@ export default function CreateAccount(): React.JSX.Element {
    * Opens the add bank account modal.
    */
   const openAddBankAccountModal = () => {
-    showModal(<AddBankAccountModal addBankAccount={addBankAccount} />);
+    showModal(<AddBankAccountModal saveBankAccount={addBankAccount} />);
   };
 
   useEffect(() => {
