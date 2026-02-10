@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+
 export type CardBrand =
   | 'visa'
   | 'master'
@@ -15,6 +17,16 @@ const inRange = (pan: string, start: number, end: number, digits = 6) => {
   const n = parseInt(pan.slice(0, digits), 10);
   return !Number.isNaN(n) && n >= start && n <= end;
 };
+
+/**
+ * Formats the expiration date to the format "MM/YY".
+ *
+ * @param date - The date to format.
+ * @returns The formatted date.
+ */
+export function formatExpirationDate(date: Date | undefined): string {
+  return date ? dayjs(date).format('MM/YY') : '';
+}
 
 export function detectCardBrand(panOrPrefix: string): CardBrand {
   const pan = panOrPrefix.replace(/\D/g, '');

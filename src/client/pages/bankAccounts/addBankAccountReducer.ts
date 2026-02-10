@@ -45,7 +45,7 @@ export const reducer = (state: BankAccountState, action: Action): BankAccountSta
 
       return accNumbState;
     case ActionType.SET_AGENCY:
-      const agencyState = { ...state, accountNumber: payload, agencyError: '' };
+      const agencyState = { ...state, agency: payload, agencyError: '' };
       
       if (!payload || payload.length === 0) {
         agencyState.agencyError = 'required';

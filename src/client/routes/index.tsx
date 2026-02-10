@@ -7,7 +7,7 @@ import Login from '../pages/login';
 import Register from '../pages/register';
 import ResetPassword from '../pages/resetPassword';
 import Settings from '../pages/settings';
-import CreateAccount from '../pages/createAccount';
+import BankAccounts from '../pages/bankAccounts';
 
 export default function routes() {
   return (
@@ -16,7 +16,7 @@ export default function routes() {
         <Route path="/" element={<ProtectedRoute />}>
           <Route path="/" element={<MainPage />}>
             <Route path="settings" element={<Settings />} />
-            <Route path="create-account" element={<CreateAccount />} />
+            <Route path="bank-accounts" element={<BankAccounts />} />
           </Route>
         </Route>
         <Route path={apiConfig.user.loginPage} element={<Login />} />

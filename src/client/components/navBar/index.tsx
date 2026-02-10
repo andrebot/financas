@@ -61,7 +61,7 @@ export default function NavBar() {
             <CustomListItem text={t('transactions')}>
               <CompareArrowsIcon />
             </CustomListItem>
-            <CustomListItem text={t('createAccount')} onClick={() => navigate('/create-account')}>
+            <CustomListItem text={t('bankAccounts')} onClick={() => navigate('/bank-accounts')}>
               <AccountBalanceIcon />
             </CustomListItem>
           </List>

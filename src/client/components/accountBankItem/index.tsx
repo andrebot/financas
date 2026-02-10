@@ -7,9 +7,10 @@ import IconButton from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDownCircle';
-import { AccountBankItemMain, AccountBankInfo, CreditCardsList } from './styledComponent';
+import { AccountBankItemMain, AccountBankInfo } from './styledComponent';
 import CreditCard from '../creditCard';
 import { AccountBankItemProps } from '../../types';
+import { CreditCardsList } from '../creditCard/styledComponents';
 
 export default function AccountBankItem({ bankAccount }: AccountBankItemProps): React.JSX.Element {
   const { t } = useTranslation();

@@ -16,3 +16,8 @@ export const regExpPassword = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#-])[a-zA-
 export const regExpName = /^[a-zA-ZÀ-ÿ\s-]+$/;
 
 export const regExpOnlyNumbers = /^[0-9]+$/;
+
+/**
+ * creditCardNumberRegex - Regular expression for credit card number validation. It allows up to 16 digits.
+ */
+export const creditCardNumberRegex = /^[0-9]{0,16}$/;

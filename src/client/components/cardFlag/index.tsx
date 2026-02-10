@@ -18,6 +18,7 @@ const ICONS: Record<Flag, React.ComponentType<React.SVGProps<SVGSVGElement>>> = 
   diners: DinersCC,
   discover: DiscoverCC,
   maestro: MaestroCC,
+  unknown: () => null,
 };
 
 export default function FlagIcon({ flag, ...props }: FlagIconProps) {

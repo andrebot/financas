@@ -28,13 +28,17 @@ export default function CreateAccount(): React.JSX.Element {
     ], currency: 'BRL', user: '1234567890' },
   ]);
 
+  const addBankAccount = (bankAccount: BankAccount) => {
+    setBankAccounts([...bankAccounts, bankAccount]);
+  };
+
   const openAddBankAccountModal = () => {
-    showModal(<AddBankAccountModal />);
+    showModal(<AddBankAccountModal addBankAccount={addBankAccount} />);
   };
 
   return (
     <CreateAccountMain>
-      <Typography variant="h2">{t('createAccount')}</Typography>
+      <Typography variant="h2">{t('bankAccounts')}</Typography>
       <AccountBankList>
         <AddAccountButton title={t('createAccount')}>
           <IconButton aria-label={t('createAccount')} size="large" onClick={openAddBankAccountModal}>

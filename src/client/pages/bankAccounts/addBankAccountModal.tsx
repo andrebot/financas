@@ -1,4 +1,4 @@
-import React, { useReducer } from 'react';
+import React, { useReducer, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
@@ -8,13 +8,19 @@ import Select, { SelectChangeEvent } from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import CloseIcon from '@mui/icons-material/Close';
 import { RowInput, TextFieldStyled, FormWrapper } from '../../components/formStyledComponents';
-import { CurrencyFormControl, CreateBankAccountModal } from './styledComponents';
+import {
+  CurrencyFormControl,
+  CreateBankAccountModal,
+} from './styledComponents';
 import { useModal } from '../../components/modal/modal';
 import { reducer, ActionType } from './addBankAccountReducer';
+import CreditCardForm from './creditCardForm';
+import { BankAccount, CreditCardProps } from '../../types';
 
-export default function AddBankAccountModal() {
+export default function AddBankAccountModal({ addBankAccount }: { addBankAccount: (bankAccount: BankAccount) => void }) {
   const { t } = useTranslation();
   const { closeModal } = useModal();
+  const [creditCards, setCreditCards] = useState<CreditCardProps[]>([]);
 
   const [state, dispatch] = useReducer(reducer, {
     name: '',
@@ -33,6 +39,22 @@ export default function AddBankAccountModal() {
 
   const handleCurrencyChange = (e: SelectChangeEvent) => {
     dispatch({ type: ActionType.SET_CURRENCY, payload: e.target.value });
+  };
+
+  const handleAgencyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    dispatch({ type: ActionType.SET_AGENCY, payload: e.target.value });
+  };
+
+  const handleAddBankAccount = () => {
+    addBankAccount({
+      name: state.name,
+      currency: state.currency,
+      accountNumber: state.accountNumber,
+      agency: state.agency,
+      cards: creditCards,
+      user: '',
+    });
+    closeModal();
   };
 
   return (
@@ -84,13 +106,14 @@ export default function AddBankAccountModal() {
             label={t('bankAgencyNumber')}
             variant='outlined'
             name={ActionType.SET_AGENCY}
-            onChange={handleBankAccountChange}
+            onChange={handleAgencyChange}
             value={state.agency}
           />
         </RowInput>
+        <CreditCardForm creditCards={creditCards} setCreditCards={setCreditCards} />
         <RowInput>
           <Button variant='outlined' fullWidth onClick={closeModal}>{t('cancel')}</Button>
-          <Button variant='contained' fullWidth onClick={closeModal}>{t('add')}</Button>
+          <Button variant='contained' fullWidth onClick={handleAddBankAccount}>{t('add')}</Button>
         </RowInput>
       </FormWrapper>
     </CreateBankAccountModal>

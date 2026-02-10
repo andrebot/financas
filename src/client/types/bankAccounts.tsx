@@ -23,6 +23,7 @@ export type AccountBankItemProps = {
 };
 
 export type BankAccount = {
+  id?: string;
   name: string;
   agency: string;
   accountNumber: string;
