@@ -15,12 +15,14 @@ import {
 import { useModal } from '../../components/modal/modal';
 import { reducer, ActionType } from './addBankAccountReducer';
 import CreditCardForm from './creditCardForm';
+import { useAuth } from '../../hooks/authContext';
 import { BankAccount, CreditCardProps } from '../../types';
 
 export default function AddBankAccountModal({ addBankAccount }: { addBankAccount: (bankAccount: BankAccount) => void }) {
   const { t } = useTranslation();
   const { closeModal } = useModal();
   const [creditCards, setCreditCards] = useState<CreditCardProps[]>([]);
+  const { user } = useAuth();
 
   const [state, dispatch] = useReducer(reducer, {
     name: '',
@@ -52,7 +54,7 @@ export default function AddBankAccountModal({ addBankAccount }: { addBankAccount
       accountNumber: state.accountNumber,
       agency: state.agency,
       cards: creditCards,
-      user: '',
+      user: user!.id,
     });
     closeModal();
   };

@@ -34,9 +34,11 @@ export const getBankAccountQuery = (id: string) => ({
 export const endpoints = (builder: ApiBuilder) => ({
   listBankAccounts: builder.query<BankAccount[], void>({
     query: listBankAccountQuery,
+    providesTags: [{ type: 'BankAccount', id: 'LIST' }],
   }),
   createBankAccount: builder.mutation<BankAccount, BankAccount>({
     query: createBankAccountMutation,
+    invalidatesTags: [{ type: 'BankAccount', id: 'LIST' }],
   }),
   updateBankAccount: builder.mutation<BankAccount, BankAccount>({
     query: updateBankAccountMutation,

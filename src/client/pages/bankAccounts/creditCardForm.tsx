@@ -64,6 +64,7 @@ export default function CreditCardForm({ creditCards, setCreditCards }: { credit
       { 
         flag: cardBrand,
         last4Digits: creditCardState.number.slice(-4),
+        number: creditCardState.number,
         expirationDate: formatExpirationDate(creditCardState.expirationDate)
       }
     ]);

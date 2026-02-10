@@ -9,6 +9,7 @@ export type FlagIconProps = Omit<SvgIconProps, 'component' | 'viewBox'> & {
 export type CreditCardProps = {
   flag: Flag;
   last4Digits: string;
+  number: string;
   expirationDate: string;
 };
 
