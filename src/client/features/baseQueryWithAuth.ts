@@ -1,9 +1,6 @@
-import { FetchBaseQueryMeta } from "@reduxjs/toolkit/query";
 import {
   fetchBaseQuery,
-  BaseQueryFn,
   FetchArgs,
-  FetchBaseQueryError,
 } from "@reduxjs/toolkit/query/react";
 import { loginApi } from "./login";
 import { setAccessToken, clearAccessToken } from "./authSlice";
@@ -12,7 +9,7 @@ import config from "../config/apiConfig";
 import type { RefreshTokenResponse } from "../types/authContextType";
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: config.api.user,
+  baseUrl: config.root,
   prepareHeaders,
 });
 
