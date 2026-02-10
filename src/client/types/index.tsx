@@ -1,7 +1,7 @@
 import { UserType } from './user';
 import { AuthContextType } from './authContextType';
 import { StyleCompProp } from './StyleCompProp';
-import { Flag, FlagIconProps, CreditCardProps, AccountBankItemProps, BankAccount, BankAccountState } from './bankAccounts';
+import { Flag, FlagIconProps, CreditCardProps, AccountBankItemProps, BankAccount, BankAccountState, CreditCardState } from './bankAccounts';
 
 export {
   UserType,
@@ -11,6 +11,7 @@ export {
   FlagIconProps,
   CreditCardProps,
   AccountBankItemProps,
+  CreditCardState,
   BankAccount,
   BankAccountState,
 };

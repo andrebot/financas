@@ -2,18 +2,13 @@ import {
   createApi,
   fetchBaseQuery,
   FetchArgs,
-  BaseQueryApi,
 } from '@reduxjs/toolkit/query/react';
 import { RootState } from './store';
 import { loginApi } from "./login";
 import { setAccessToken, clearAccessToken } from "./authSlice";
 import config from "../config/apiConfig";
 import type { RefreshTokenResponse } from "../types/authContextType";
-
-/**
- * Type alias for the API object passed to RTK Query's prepareHeaders function.
- */
-export type RTKApi = Pick<BaseQueryApi, 'getState' | 'extra' | 'endpoint' | 'type' | 'forced'>;
+import type { RTKApi } from "../types/requests";
 
 /**
  * Prepare the headers for the API requests for simple
@@ -68,7 +63,6 @@ export async function baseQueryWithReauth (
   return result
 }
 
-// Figuring out how to refresh access token. GPT has a suggestion
 export default createApi({
   reducerPath: '/api/v1',
   baseQuery: baseQueryWithReauth,
