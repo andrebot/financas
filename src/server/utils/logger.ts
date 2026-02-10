@@ -16,7 +16,7 @@ const {
  * @param message - The message to format
  * @returns The formatted message
  */
-function formatMessageSafely(message: unknown): string {
+export function formatMessageSafely(message: unknown): string {
   if (message instanceof Error) {
     return message.stack || message.message;
   }
