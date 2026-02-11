@@ -7,7 +7,7 @@ This APP is made to help you manage your finances and invest, by providing power
 
 # To-dos
 ## Features
-2. Build Account CRUD page
+2. ~~Build Account CRUD page~~
 3. Build transactions page
 4. Build Investments page
 5. Build dashboard page
