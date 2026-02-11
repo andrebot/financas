@@ -63,11 +63,10 @@ export default function CreditCardForm({ creditCards, setCreditCards }: CreditCa
    */
   const handleAddCard = () => {
     const validatedState = validateCreditCardForm(state);
-    const isValid =
-      !validatedState.numberError &&
-      !validatedState.expirationDateError &&
-      !!validatedState.number &&
-      !!validatedState.expirationDate;
+    const isValid = !validatedState.numberError
+      && !validatedState.expirationDateError
+      && !!validatedState.number
+      && !!validatedState.expirationDate;
 
     if (!isValid) {
       dispatch({ type: CreditCardActionType.VALIDATE });
@@ -124,12 +123,10 @@ export default function CreditCardForm({ creditCards, setCreditCards }: CreditCa
             views={['year', 'month']}
             format="MM/YY"
             value={state.expirationDate ? dayjs(state.expirationDate) : null}
-            onChange={(e) =>
-              dispatch({
-                type: CreditCardActionType.SET_EXPIRATION_DATE,
-                payload: e?.toDate(),
-              })
-            }
+            onChange={(e) => dispatch({
+              type: CreditCardActionType.SET_EXPIRATION_DATE,
+              payload: e?.toDate(),
+            })}
             slotProps={{
               field: { readOnly: false },
               textField: {

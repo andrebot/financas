@@ -27,7 +27,7 @@ export default function CreditCard({
         <FlagIcon flag={flag} />
       </CardItemSection>
       <Typography variant="subtitle1">
-        **** **** **** {last4Digits}
+        {`**** **** **** ${last4Digits}`}
       </Typography>
       <CardItemSection>
         <CardItemTopTypography variant="subtitle1">{t('expires')}</CardItemTopTypography>

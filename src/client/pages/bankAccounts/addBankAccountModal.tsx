@@ -88,11 +88,10 @@ export default function AddBankAccountModal({
    */
   const handleSaveBankAccount = () => {
     const validatedState = validateBankAccountForm(state);
-    const isValid =
-      !validatedState.nameError &&
-      !validatedState.currencyError &&
-      !validatedState.accountNumberError &&
-      !validatedState.agencyError;
+    const isValid = !validatedState.nameError
+      && !validatedState.currencyError
+      && !validatedState.accountNumberError
+      && !validatedState.agencyError;
 
     if (!isValid) {
       dispatch({ type: BankAccountActionType.VALIDATE });
