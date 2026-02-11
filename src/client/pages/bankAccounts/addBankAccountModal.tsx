@@ -41,7 +41,10 @@ const blankState = {
  * @param addBankAccount - The function to add a bank account
  * @returns The add bank account modal
  */
-export default function AddBankAccountModal({ saveBankAccount, bankAccount }: AddBankAccountModalProps) {
+export default function AddBankAccountModal({
+  saveBankAccount,
+  bankAccount,
+}: AddBankAccountModalProps) {
   const { t } = useTranslation();
   const { closeModal } = useModal();
   const [creditCards, setCreditCards] = useState<CreditCardProps[]>(bankAccount?.cards || []);
@@ -99,50 +102,50 @@ export default function AddBankAccountModal({ saveBankAccount, bankAccount }: Ad
     <CreateBankAccountModal elevation={3}>
       <FormWrapper>
         <RowInput>
-          <Typography flexGrow='1' variant='h6'>{t('addBankAccount')}</Typography>
+          <Typography flexGrow="1" variant="h6">{t('addBankAccount')}</Typography>
           <IconButton onClick={closeModal}>
             <CloseIcon />
           </IconButton>
         </RowInput>
         <RowInput>
-          <TextFieldStyled 
-            label={t('name')} 
-            variant='outlined' 
-            name={BankAccountActionType.SET_NAME} 
-            onChange={handleBankAccountChange} 
-            value={state.name} 
+          <TextFieldStyled
+            label={t('name')}
+            variant="outlined"
+            name={BankAccountActionType.SET_NAME}
+            onChange={handleBankAccountChange}
+            value={state.name}
           />
           <CurrencyFormControl sx={{ flexGrow: '1' }}>
-            <InputLabel id='currency-label'>{t('currency')}</InputLabel>
+            <InputLabel id="currency-label">{t('currency')}</InputLabel>
             <Select
-              labelId='currency-label'
-              id='currency-select'
+              labelId="currency-label"
+              id="currency-select"
               value={state.currency}
               label={t('currency')}
               onChange={handleCurrencyChange}
             >
-              <MenuItem value='BRL'>R$ - BRL</MenuItem>
-              <MenuItem value='USD'>$ - USD</MenuItem>
-              <MenuItem value='EUR'>€ - EUR</MenuItem>
-              <MenuItem value='GBP'>£ - GBP</MenuItem>
-              <MenuItem value='JPY'>¥ - JPY</MenuItem>
-              <MenuItem value='KRW'>₩ - KRW</MenuItem>
+              <MenuItem value="BRL">R$ - BRL</MenuItem>
+              <MenuItem value="USD">$ - USD</MenuItem>
+              <MenuItem value="EUR">€ - EUR</MenuItem>
+              <MenuItem value="GBP">£ - GBP</MenuItem>
+              <MenuItem value="JPY">¥ - JPY</MenuItem>
+              <MenuItem value="KRW">₩ - KRW</MenuItem>
             </Select>
           </CurrencyFormControl>
         </RowInput>
         <RowInput>
-          <TextFieldStyled 
+          <TextFieldStyled
             label={t('bankAccountNumber')}
             error={!!state.accountNumberError}
             helperText={state.accountNumberError}
-            variant='outlined'
+            variant="outlined"
             name={BankAccountActionType.SET_ACCOUNT_NUMBER}
             onChange={handleBankAccountChange}
             value={state.accountNumber}
           />
-          <TextFieldStyled 
+          <TextFieldStyled
             label={t('bankAgencyNumber')}
-            variant='outlined'
+            variant="outlined"
             name={BankAccountActionType.SET_AGENCY}
             onChange={handleAgencyChange}
             value={state.agency}
@@ -150,8 +153,8 @@ export default function AddBankAccountModal({ saveBankAccount, bankAccount }: Ad
         </RowInput>
         <CreditCardForm creditCards={creditCards} setCreditCards={setCreditCards} />
         <RowInput>
-          <Button variant='outlined' fullWidth onClick={closeModal}>{t('cancel')}</Button>
-          <Button variant='contained' fullWidth onClick={handleSaveBankAccount}>{t('save')}</Button>
+          <Button variant="outlined" fullWidth onClick={closeModal}>{t('cancel')}</Button>
+          <Button variant="contained" fullWidth onClick={handleSaveBankAccount}>{t('save')}</Button>
         </RowInput>
       </FormWrapper>
     </CreateBankAccountModal>

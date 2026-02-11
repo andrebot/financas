@@ -12,7 +12,7 @@ const {
  * - Errors: prefer stack, then message
  * - Objects: try JSON, fall back to util.inspect for circular structures
  * - Primitives: cast to string
- * 
+ *
  * @param message - The message to format
  * @returns The formatted message
  */

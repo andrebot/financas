@@ -13,7 +13,11 @@ import type { CreditCardProps } from '../../types';
  * @param expirationDate - The expiration date of the credit card
  * @returns The credit card component
  */
-export default function CreditCard({ flag, last4Digits, expirationDate }: CreditCardProps): React.JSX.Element {
+export default function CreditCard({
+  flag,
+  last4Digits,
+  expirationDate,
+}: CreditCardProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (
@@ -22,7 +26,9 @@ export default function CreditCard({ flag, last4Digits, expirationDate }: Credit
         <CardItemTopTypography>{t('credit')}</CardItemTopTypography>
         <FlagIcon flag={flag} />
       </CardItemSection>
-      <Typography variant="subtitle1">**** **** **** {last4Digits}</Typography>
+      <Typography variant="subtitle1">
+        **** **** **** {last4Digits}
+      </Typography>
       <CardItemSection>
         <CardItemTopTypography variant="subtitle1">{t('expires')}</CardItemTopTypography>
         <Typography variant="subtitle1">{expirationDate}</Typography>

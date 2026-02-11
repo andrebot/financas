@@ -61,7 +61,7 @@ export const getBankAccountQuery = (id: string) => ({
 
 /**
  * This is the endpoints for the bank account feature.
- * 
+ *
  * @remarks
  * This is the endpoints for the bank account feature.
  *

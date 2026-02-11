@@ -1,9 +1,9 @@
 import type { BaseQueryApi } from '@reduxjs/toolkit/query/react';
-import type { 
-  EndpointBuilder, 
-  BaseQueryFn, 
-  FetchArgs, 
-  FetchBaseQueryError, 
+import type {
+  EndpointBuilder,
+  BaseQueryFn,
+  FetchArgs,
+  FetchBaseQueryError,
   FetchBaseQueryMeta,
 } from '@reduxjs/toolkit/query';
 

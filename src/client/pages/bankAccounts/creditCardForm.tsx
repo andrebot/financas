@@ -17,7 +17,12 @@ import {
 } from './styledComponents';
 import { creditCardNumberRegex } from '../../utils/validators';
 import { detectCardBrand, formatExpirationDate } from '../../utils/creditCard';
-import { CreditCardProps, Flag, CreditCardState } from '../../types';
+import type {
+  CreditCardProps,
+  Flag,
+  CreditCardState,
+  CreditCardFormProps,
+} from '../../types';
 
 /**
  * Form that handles the creation of a credit card.
@@ -26,10 +31,7 @@ import { CreditCardProps, Flag, CreditCardState } from '../../types';
  * @param setCreditCards - The function to set the credit cards
  * @returns The credit card form
  */
-export default function CreditCardForm({ creditCards, setCreditCards }: {
-  creditCards: CreditCardProps[];
-  setCreditCards: (creditCards: CreditCardProps[]) => void;
-}) {
+export default function CreditCardForm({ creditCards, setCreditCards }: CreditCardFormProps) {
   const { t } = useTranslation();
   const [cardBrand, setCardBrand] = useState<Flag>('unknown');
   const [creditCardState, setCreditCardState] = useState<CreditCardState>({
@@ -44,9 +46,7 @@ export default function CreditCardForm({ creditCards, setCreditCards }: {
    * @param digits - The digits to format.
    * @returns The formatted digits.
    */
-  const formatCardNumberDisplay = (digits: string): string => {
-    return digits.replace(/(\d{4})(?=\d)/g, '$1 ');
-  }
+  const formatCardNumberDisplay = (digits: string): string => digits.replace(/(\d{4})(?=\d)/g, '$1 ');
 
   /**
    * Handles the change of the credit card number. Strips non-digits,
@@ -65,18 +65,18 @@ export default function CreditCardForm({ creditCards, setCreditCards }: {
   };
 
   /**
-   * Handles the addition of a credit card. Adds the credit card to the 
+   * Handles the addition of a credit card. Adds the credit card to the
    * list and resets the form state.
    */
   const handleAddCard = () => {
     setCreditCards([
-      ...creditCards, 
-      { 
+      ...creditCards,
+      {
         flag: cardBrand,
         last4Digits: creditCardState.number.slice(-4),
         number: creditCardState.number,
-        expirationDate: formatExpirationDate(creditCardState.expirationDate)
-      }
+        expirationDate: formatExpirationDate(creditCardState.expirationDate),
+      },
     ]);
     setCreditCardState({
       number: '',
@@ -84,7 +84,7 @@ export default function CreditCardForm({ creditCards, setCreditCards }: {
       flag: '',
     });
     setCardBrand('unknown');
-  }
+  };
 
   /**
    * Handles the deletion of a credit card. Removes the credit card from the list.
@@ -93,7 +93,7 @@ export default function CreditCardForm({ creditCards, setCreditCards }: {
    */
   const handleDeleteCard = (index: number) => {
     setCreditCards(creditCards.filter((_, i) => i !== index));
-  }
+  };
 
   return (
     <CreditCardHolder>
@@ -102,34 +102,42 @@ export default function CreditCardForm({ creditCards, setCreditCards }: {
         <RowInput>
           <TextFieldStyled
             label={t('creditCardNumber')}
-            variant='outlined'
+            variant="outlined"
             value={formatCardNumberDisplay(creditCardState.number)}
             onChange={handleNumberChange}
             slotProps={{
               input: {
-                startAdornment: 
-                <InputAdornment position='start'>
-                  <FlagIcon flag={cardBrand} />
-                </InputAdornment>,
+                startAdornment:
+  <InputAdornment position="start">
+    <FlagIcon flag={cardBrand} />
+  </InputAdornment>,
               },
             }}
           />
           <ExpirationDatePicker
             label={t('expirationDate')}
             views={['year', 'month']}
-            format='MM/YY'
+            format="MM/YY"
             value={creditCardState.expirationDate ? dayjs(creditCardState.expirationDate) : null}
-            onChange={(e) => setCreditCardState({ ...creditCardState, expirationDate: e?.toDate() })}
+            onChange={(e) => setCreditCardState({
+              ...creditCardState,
+              expirationDate: e?.toDate(),
+            })}
           />
         </RowInput>
-        <Button variant='contained' fullWidth onClick={handleAddCard}>{t('addCard')}</Button>
+        <Button variant="contained" fullWidth onClick={handleAddCard}>{t('addCard')}</Button>
       </CreditCardFormHolder>
       <CreditCardsList>
         {creditCards.map((card: CreditCardProps, index: number) => (
           <CreditCardItemHolder key={card.last4Digits}>
-            <CreditCard {...card} />
-            <CreditCardDeleteItem 
-              className='credit-card-delete-item'
+            <CreditCard
+              flag={card.flag}
+              last4Digits={card.last4Digits}
+              expirationDate={card.expirationDate}
+              number={card.number}
+            />
+            <CreditCardDeleteItem
+              className="credit-card-delete-item"
               onClick={() => handleDeleteCard(index)}
             >
               Delete

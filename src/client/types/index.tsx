@@ -1,7 +1,8 @@
 import { UserType } from './user';
 import { AuthContextType, AuthProviderProps } from './authContextType';
 import { StyleCompProp, ConfirmModalProps } from './StyleCompProp';
-import { Flag,
+import {
+  Flag,
   FlagIconProps,
   CreditCardProps,
   AccountBankItemProps,
@@ -10,6 +11,7 @@ import { Flag,
   CreditCardState,
   BankAccountAction,
   CardBrand,
+  CreditCardFormProps,
 } from './bankAccounts';
 import { ChangePasswordAction, SettingsAction } from './settings';
 import { ModalContextType, ModalProviderProps } from './modal';
@@ -33,4 +35,5 @@ export {
   ChangePasswordAction,
   SettingsAction,
   CardBrand,
+  CreditCardFormProps,
 };

@@ -7,12 +7,12 @@ import IconButton from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDownCircle';
+import { enqueueSnackbar } from 'notistack';
 import { AccountBankItemMain, AccountBankInfo } from './styledComponent';
 import CreditCard from '../creditCard';
 import { AccountBankItemProps, BankAccount } from '../../types';
 import { CreditCardsList } from '../creditCard/styledComponents';
 import { useDeleteBankAccountMutation, useUpdateBankAccountMutation } from '../../features/bankAccount';
-import { enqueueSnackbar } from 'notistack';
 import ConfirmModal from '../confirmModal';
 import { useModal } from '../modal/modal';
 import AddBankAccountModal from '../../pages/bankAccounts/addBankAccountModal';
@@ -30,7 +30,10 @@ export default function AccountBankItem({ bankAccount }: AccountBankItemProps): 
   const open = Boolean(anchorEl);
   const { showModal, closeModal } = useModal();
   const [deleteBankAccount, { isError, isSuccess }] = useDeleteBankAccountMutation();
-  const [updateBankAccount, { isError: isUpdateError, isSuccess: isUpdateSuccess }] = useUpdateBankAccountMutation();
+  const [updateBankAccount, {
+    isError: isUpdateError,
+    isSuccess: isUpdateSuccess,
+  }] = useUpdateBankAccountMutation();
 
   /**
    * Handles the click event for the anchor element. This makes the menu open.
@@ -56,8 +59,8 @@ export default function AccountBankItem({ bankAccount }: AccountBankItemProps): 
     closeModal();
   };
 
-  const handleUpdateBankAccount = async (bankAccount: BankAccount) => {
-    await updateBankAccount(bankAccount);
+  const handleUpdateBankAccount = async (newBankAccount: BankAccount) => {
+    await updateBankAccount(newBankAccount);
     closeModal();
   };
 
@@ -65,7 +68,12 @@ export default function AccountBankItem({ bankAccount }: AccountBankItemProps): 
    * Updates the bank account by calling the updateBankAccount mutation and closing the modal.
    */
   const openUpdateBankAccountModal = () => {
-    showModal(<AddBankAccountModal saveBankAccount={handleUpdateBankAccount} bankAccount={bankAccount} />);
+    showModal(
+      <AddBankAccountModal
+        saveBankAccount={handleUpdateBankAccount}
+        bankAccount={bankAccount}
+      />,
+    );
     handleClose();
   };
 
@@ -80,7 +88,7 @@ export default function AccountBankItem({ bankAccount }: AccountBankItemProps): 
         confirmationText={t('bankAccountDeletionDescription')}
         onConfirm={handleDeleteBankAccount}
         onCancel={closeModal}
-      />
+      />,
     );
   };
 
@@ -96,6 +104,18 @@ export default function AccountBankItem({ bankAccount }: AccountBankItemProps): 
     }
   }, [isError]);
 
+  useEffect(() => {
+    if (isUpdateSuccess) {
+      enqueueSnackbar(t('bankAccountUpdated'), { variant: 'success' });
+    }
+  }, [isUpdateSuccess]);
+
+  useEffect(() => {
+    if (isUpdateError) {
+      enqueueSnackbar(t('bankAccountUpdateFailed'), { variant: 'error' });
+    }
+  }, [isUpdateError]);
+
   return (
     <AccountBankItemMain elevation={3}>
       <AccountBankInfo>
@@ -103,8 +123,18 @@ export default function AccountBankItem({ bankAccount }: AccountBankItemProps): 
         <div style={{ flexGrow: 1 }}>
           <Typography variant="subtitle1">{bankAccount.name}</Typography>
           <AccountBankInfo>
-            <Typography variant="subtitle1">{t('bankAccountNumber')}: {bankAccount.accountNumber}</Typography>
-            <Typography variant="subtitle1">{t('bankAgencyNumber')}: {bankAccount.agency}</Typography>
+            <Typography variant="subtitle1">
+              {t('bankAccountNumber')}
+              :
+              {' '}
+              {bankAccount.accountNumber}
+            </Typography>
+            <Typography variant="subtitle1">
+              {t('bankAgencyNumber')}
+              :
+              {' '}
+              {bankAccount.agency}
+            </Typography>
           </AccountBankInfo>
         </div>
         <div>
@@ -130,7 +160,9 @@ export default function AccountBankItem({ bankAccount }: AccountBankItemProps): 
         </div>
       </AccountBankInfo>
       <CreditCardsList>
-        {bankAccount.cards.map(({ flag, last4Digits, expirationDate, number }) => (
+        {bankAccount.cards.map(({
+          flag, last4Digits, expirationDate, number,
+        }) => (
           <CreditCard
             key={last4Digits}
             flag={flag}

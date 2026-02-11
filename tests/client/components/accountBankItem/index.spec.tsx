@@ -218,6 +218,32 @@ describe('AccountBankItem', () => {
     });
   });
 
+  it('should show success snackbar when update succeeds', async () => {
+    (useUpdateBankAccountMutation as jest.Mock).mockReturnValue([
+      mockUpdateBankAccount,
+      { isError: false, isSuccess: true },
+    ]);
+
+    renderAccountBankItem();
+
+    await waitFor(() => {
+      expect(enqueueSnackbar).toHaveBeenCalledWith(i18nEn.translation.bankAccountUpdated, { variant: 'success' });
+    });
+  });
+
+  it('should show error snackbar when update fails', async () => {
+    (useUpdateBankAccountMutation as jest.Mock).mockReturnValue([
+      mockUpdateBankAccount,
+      { isError: true, isSuccess: false },
+    ]);
+
+    renderAccountBankItem();
+
+    await waitFor(() => {
+      expect(enqueueSnackbar).toHaveBeenCalledWith(i18nEn.translation.bankAccountUpdateFailed, { variant: 'error' });
+    });
+  });
+
   it('should render empty cards list when no cards', () => {
     renderAccountBankItem({ ...bankAccount, cards: [] });
 

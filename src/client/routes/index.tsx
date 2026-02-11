@@ -11,10 +11,10 @@ import BankAccounts from '../pages/bankAccounts';
 
 /**
  * Routes for the application.
- * 
+ *
  * Routes defined:
  * - Protected routes:
- *   - /: Main page 
+ *   - /: Main page
  *     - /settings: Settings page
  *     - /bank-accounts: Bank accounts page
  * - Public routes:

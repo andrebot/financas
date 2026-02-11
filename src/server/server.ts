@@ -39,7 +39,7 @@ app.get('*', (req: Request, res: Response) => {
   res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
 });
 
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   const CatchAllLogger = createLogger('ExpressExceptionCatchAll');
 
   CatchAllLogger.error(err);

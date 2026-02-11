@@ -79,5 +79,7 @@ export default {
     bankAccountDeleted: 'Bank account deleted successfully!',
     bankAccountDeletionTitle: 'Bank Account Deletion',
     bankAccountDeletionDescription: 'Are you sure you want to delete this bank account? This action is irreversible.',
+    bankAccountUpdated: 'Bank account updated successfully!',
+    bankAccountUpdateFailed: 'Failed to update bank account! Please try again later.',
   },
 };

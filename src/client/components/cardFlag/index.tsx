@@ -28,7 +28,7 @@ const ICONS: Record<Flag, React.ComponentType<React.SVGProps<SVGSVGElement>>> = 
  * @param props - The props to pass to the SvgIcon component
  * @returns The flag icon component
  */
-export default function FlagIcon({ flag, ...props }: FlagIconProps) {
+export default function FlagIcon({ flag }: FlagIconProps) {
   const flagIcon = ICONS[flag];
-  return <SvgIcon component={flagIcon} viewBox="0 0 32 32" {...props} />;
+  return <SvgIcon component={flagIcon} viewBox="0 0 32 32" />;
 }

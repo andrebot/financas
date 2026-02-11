@@ -60,6 +60,11 @@ export type BankAccountAction = {
   payload: string;
 }
 
+export type CreditCardFormProps = {
+  creditCards: CreditCardProps[];
+  setCreditCards: (creditCards: CreditCardProps[]) => void;
+};
+
 export type CardBrand =
   | 'visa'
   | 'master'

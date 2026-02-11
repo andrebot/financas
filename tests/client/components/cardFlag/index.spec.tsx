@@ -41,12 +41,6 @@ describe('FlagIcon', () => {
     expect(container.querySelector('svg')).not.toBeInTheDocument();
   });
 
-  it('should pass through additional props to SvgIcon', () => {
-    render(<FlagIcon flag="visa" data-testid="custom-flag-icon" />);
-
-    expect(screen.getByTestId('custom-flag-icon')).toBeInTheDocument();
-  });
-
   it('should render with viewBox for known flags', () => {
     const { container } = render(<FlagIcon flag="visa" />);
 

@@ -4,10 +4,10 @@ import {
   FetchArgs,
 } from '@reduxjs/toolkit/query/react';
 import { RootState } from './store';
-import { setAccessToken, clearAccessToken } from "./authSlice";
-import config from "../config/apiConfig";
-import type { RefreshTokenResponse } from "../types/authContextType";
-import type { RTKApi } from "../types/requests";
+import { setAccessToken, clearAccessToken } from './authSlice';
+import config from '../config/apiConfig';
+import type { RefreshTokenResponse } from '../types/authContextType';
+import type { RTKApi } from '../types/requests';
 
 /**
  * Prepare the headers for the API requests for simple

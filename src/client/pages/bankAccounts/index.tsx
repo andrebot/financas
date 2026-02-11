@@ -3,12 +3,12 @@ import { useTranslation } from 'react-i18next';
 import Typography from '@mui/material/Typography';
 import PlusIcon from '@mui/icons-material/Add';
 import IconButton from '@mui/material/IconButton';
+import { enqueueSnackbar } from 'notistack';
 import AccountBankItem from '../../components/accountBankItem';
 import { useModal } from '../../components/modal/modal';
 import AddBankAccountModal from './addBankAccountModal';
 import { useListBankAccountsQuery, useCreateBankAccountMutation } from '../../features/bankAccount';
-import { enqueueSnackbar } from 'notistack';
-import { 
+import {
   CreateAccountMain,
   AccountBankList,
   AddAccountButton,

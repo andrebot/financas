@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode } from 'react';
 
 export type ModalContextType = {
   // eslint-disable-next-line no-unused-vars
