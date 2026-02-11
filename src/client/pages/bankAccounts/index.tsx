@@ -15,7 +15,13 @@ import {
 } from './styledComponents';
 import { BankAccount } from '../../types';
 
-export default function CreateAccount(): React.JSX.Element {
+/**
+ * Page that displays the list of bank accounts. It also handles the
+ * CRUD operations for the bank accounts.
+ *
+ * @returns The bank accounts page
+ */
+export default function BankAccounts(): React.JSX.Element {
   const { t } = useTranslation();
   const { showModal } = useModal();
   const { data: bankAccounts = [] } = useListBankAccountsQuery();

@@ -21,6 +21,11 @@ import {
 import { useAuth } from '../../hooks/authContext';
 import useLogout from '../../hooks/useLogout';
 
+/**
+ * This component is the nav bar for the application.
+ *
+ * @returns The nav bar component
+ */
 export default function NavBar() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const { t } = useTranslation();

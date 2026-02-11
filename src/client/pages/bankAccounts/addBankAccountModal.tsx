@@ -13,9 +13,10 @@ import {
   CreateBankAccountModal,
 } from './styledComponents';
 import { useModal } from '../../components/modal/modal';
-import { reducer, ActionType } from './addBankAccountReducer';
+import { reducer } from './addBankAccountReducer';
 import CreditCardForm from './creditCardForm';
 import { useAuth } from '../../hooks/authContext';
+import { BankAccountActionType } from '../../enums';
 import { BankAccount, CreditCardProps } from '../../types';
 
 type AddBankAccountModalProps = {
@@ -57,7 +58,7 @@ export default function AddBankAccountModal({ saveBankAccount, bankAccount }: Ad
    * @param e - The change event
    */
   const handleBankAccountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch({ type: e.target.name as ActionType, payload: e.target.value });
+    dispatch({ type: e.target.name as BankAccountActionType, payload: e.target.value });
   };
 
   /**
@@ -66,7 +67,7 @@ export default function AddBankAccountModal({ saveBankAccount, bankAccount }: Ad
    * @param e - The change event
    */
   const handleCurrencyChange = (e: SelectChangeEvent) => {
-    dispatch({ type: ActionType.SET_CURRENCY, payload: e.target.value });
+    dispatch({ type: BankAccountActionType.SET_CURRENCY, payload: e.target.value });
   };
 
   /**
@@ -75,7 +76,7 @@ export default function AddBankAccountModal({ saveBankAccount, bankAccount }: Ad
    * @param e - The change event
    */
   const handleAgencyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch({ type: ActionType.SET_AGENCY, payload: e.target.value });
+    dispatch({ type: BankAccountActionType.SET_AGENCY, payload: e.target.value });
   };
 
   /**
@@ -107,7 +108,7 @@ export default function AddBankAccountModal({ saveBankAccount, bankAccount }: Ad
           <TextFieldStyled 
             label={t('name')} 
             variant='outlined' 
-            name={ActionType.SET_NAME} 
+            name={BankAccountActionType.SET_NAME} 
             onChange={handleBankAccountChange} 
             value={state.name} 
           />
@@ -135,14 +136,14 @@ export default function AddBankAccountModal({ saveBankAccount, bankAccount }: Ad
             error={!!state.accountNumberError}
             helperText={state.accountNumberError}
             variant='outlined'
-            name={ActionType.SET_ACCOUNT_NUMBER}
+            name={BankAccountActionType.SET_ACCOUNT_NUMBER}
             onChange={handleBankAccountChange}
             value={state.accountNumber}
           />
           <TextFieldStyled 
             label={t('bankAgencyNumber')}
             variant='outlined'
-            name={ActionType.SET_AGENCY}
+            name={BankAccountActionType.SET_AGENCY}
             onChange={handleAgencyChange}
             value={state.agency}
           />

@@ -19,7 +19,17 @@ import { creditCardNumberRegex } from '../../utils/validators';
 import { detectCardBrand, formatExpirationDate } from '../../utils/creditCard';
 import { CreditCardProps, Flag, CreditCardState } from '../../types';
 
-export default function CreditCardForm({ creditCards, setCreditCards }: { creditCards: CreditCardProps[], setCreditCards: (creditCards: CreditCardProps[]) => void }) {
+/**
+ * Form that handles the creation of a credit card.
+ *
+ * @param creditCards - The credit cards to display
+ * @param setCreditCards - The function to set the credit cards
+ * @returns The credit card form
+ */
+export default function CreditCardForm({ creditCards, setCreditCards }: {
+  creditCards: CreditCardProps[];
+  setCreditCards: (creditCards: CreditCardProps[]) => void;
+}) {
   const { t } = useTranslation();
   const [cardBrand, setCardBrand] = useState<Flag>('unknown');
   const [creditCardState, setCreditCardState] = useState<CreditCardState>({

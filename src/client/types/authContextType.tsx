@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { UserType } from './user';
 
 export type AuthContextType = {
@@ -62,4 +62,8 @@ export type UpdateUserResponse = {
 export type ChangePasswordBody = {
   oldPassword: string;
   newPassword: string;
+}
+
+export type AuthProviderProps = {
+  children: ReactNode;
 }

@@ -17,6 +17,13 @@ import ConfirmModal from '../confirmModal';
 import { useModal } from '../modal/modal';
 import AddBankAccountModal from '../../pages/bankAccounts/addBankAccountModal';
 
+/**
+ * Account bank item component. This component displays a bank account and its credit cards.
+ * Has actions for editing and deleting the bank account.
+ *
+ * @param bankAccount - The bank account to display
+ * @returns The account bank item component
+ */
 export default function AccountBankItem({ bankAccount }: AccountBankItemProps): React.JSX.Element {
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);

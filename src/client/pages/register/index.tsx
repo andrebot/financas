@@ -16,6 +16,11 @@ import {
 } from './styledComponents';
 import { regExpEmail, regExpPassword, regExpName } from '../../utils/validators';
 
+/**
+ * Page that displays the register form.
+ *
+ * @returns The register page
+ */
 export default function Register(): React.JSX.Element {
   const { t } = useTranslation();
   const navigate = useNavigate();

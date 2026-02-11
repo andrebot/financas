@@ -1,5 +1,4 @@
 import React, {
-  ReactNode,
   useContext,
   useState,
   useEffect,
@@ -9,11 +8,7 @@ import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
 import { useSnackbar } from 'notistack';
 import { useTranslation } from 'react-i18next';
-import type { UserType, AuthContextType } from '../types';
-
-type AuthProviderProps = {
-  children: ReactNode;
-}
+import type { UserType, AuthContextType, AuthProviderProps } from '../types';
 
 const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
 

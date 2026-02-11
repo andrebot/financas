@@ -8,6 +8,11 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { useResetPasswordMutation } from '../../features/login';
 import { ResetPasswordMain, ResetPasswordContainer } from './styledComponents';
 
+/**
+ * Page that displays the reset password form.
+ *
+ * @returns The reset password page
+ */
 export default function ResetPassword(): React.JSX.Element {
   const { t } = useTranslation();
   const navigate = useNavigate();

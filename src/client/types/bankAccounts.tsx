@@ -1,4 +1,5 @@
 import { SvgIconProps } from '@mui/material/SvgIcon';
+import { BankAccountActionType } from '../enums';
 
 export type Flag = 'amazon' | 'master' | 'visa' | 'amex' | 'diners' | 'discover' | 'maestro' | 'unknown';
 
@@ -44,3 +45,27 @@ export type BankAccountState = {
   agencyError: string;
   id?: string;
 };
+
+export type BankAccountAction = {
+  type: BankAccountActionType.SET_NAME;
+  payload: string;
+} | {
+  type: BankAccountActionType.SET_CURRENCY;
+  payload: string;
+} | {
+  type: BankAccountActionType.SET_ACCOUNT_NUMBER;
+  payload: string;
+} | {
+  type: BankAccountActionType.SET_AGENCY;
+  payload: string;
+}
+
+export type CardBrand =
+  | 'visa'
+  | 'master'
+  | 'amex'
+  | 'discover'
+  | 'diners'
+  | 'amazon'
+  | 'maestro'
+  | 'unknown';

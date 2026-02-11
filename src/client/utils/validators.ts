@@ -15,6 +15,9 @@ export const regExpPassword = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#-])[a-zA-
  */
 export const regExpName = /^[a-zA-ZÀ-ÿ\s-]+$/;
 
+/**
+ * regExpOnlyNumbers - Regular expression for only numbers validation.
+ */
 export const regExpOnlyNumbers = /^[0-9]+$/;
 
 /**

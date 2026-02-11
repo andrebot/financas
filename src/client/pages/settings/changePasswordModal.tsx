@@ -5,7 +5,8 @@ import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import CircularProgress from '@mui/material/CircularProgress';
 import { ChangePasswordModalContainer, ChangePasswordModalTitle } from './styledComponents';
-import { initialState, reducer, ActionType } from './changePasswordReducer';
+import { initialState, reducer } from './changePasswordReducer';
+import { ChangePasswordActionType } from '../../enums';
 import { regExpPassword } from '../../utils/validators';
 import { useChangePasswordMutation } from '../../features/login';
 import { useModal } from '../../components/modal/modal';
@@ -14,8 +15,13 @@ const {
   SET_PROPERTY,
   SET_NEW_PASSWORD_ERROR,
   SET_CONFIRM_PASSWORD_ERROR,
-} = ActionType;
+} = ChangePasswordActionType;
 
+/**
+ * Modal that displays the change password form.
+ *
+ * @returns The change password modal
+ */
 export default function ChangePasswordModal() {
   const { t } = useTranslation();
   const [state, dispatch] = useReducer(reducer, initialState);

@@ -8,16 +8,7 @@ import React, {
 import Modal from '@mui/material/Modal';
 
 import ModalWrapper from './styledComponent';
-
-type ModalContextType = {
-  // eslint-disable-next-line no-unused-vars
-  showModal: (modalContent: ReactNode) => void;
-  closeModal: () => void;
-};
-
-type ModalProviderProps = {
-  children: ReactNode;
-};
+import type { ModalContextType, ModalProviderProps } from '../../types';
 
 const ModalContext = createContext<ModalContextType>({
   showModal: () => {},

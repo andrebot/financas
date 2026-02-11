@@ -12,6 +12,12 @@ import {
 import { useAuth } from '../../hooks/authContext';
 import { useDeleteAccountMutation } from '../../features/login';
 
+/**
+ * Modal that displays the confirm delete account form.
+ *
+ * @param handleLogout - The function to handle the logout
+ * @returns The confirm delete account modal
+ */
 export default function ConfirmDeleteAccount({
   handleLogout,
 }: {
