@@ -8,16 +8,7 @@ import React, {
 import Modal from '@mui/material/Modal';
 
 import ModalWrapper from './styledComponent';
-
-type ModalContextType = {
-  // eslint-disable-next-line no-unused-vars
-  showModal: (modalContent: ReactNode) => void;
-  closeModal: () => void;
-};
-
-type ModalProviderProps = {
-  children: ReactNode;
-};
+import type { ModalContextType, ModalProviderProps } from '../../types';
 
 const ModalContext = createContext<ModalContextType>({
   showModal: () => {},
@@ -47,13 +38,26 @@ export default function ModalProvider({ children }: ModalProviderProps) {
   const [open, setOpen] = useState(false);
   const [content, setContent] = useState<ReactNode | null>(null);
 
+  /**
+   * Shows the modal by setting the content and opening the modal.
+   *
+   * @param modalContent - The content to show in the modal
+   */
   const showModal = (modalContent: ReactNode) => {
     setContent(modalContent);
     setOpen(true);
   };
 
+  /**
+   * Closes the modal by setting the open state to false.
+   */
   const closeModal = () => setOpen(false);
 
+  /**
+   * Creates the context value to be used in the modal provider.
+   *
+   * @returns The context value
+   */
   const contextValue = useMemo(() => ({ showModal, closeModal }), []);
 
   return (

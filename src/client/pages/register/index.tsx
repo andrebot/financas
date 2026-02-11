@@ -10,11 +10,17 @@ import { setAccessToken } from '../../features/authSlice';
 import PasswordField from '../../components/form/passwordField';
 import { useAuth } from '../../hooks/authContext';
 import { useRegisterMutation } from '../../features/login';
+import { RowInput, TextFieldStyled } from '../../components/formStyledComponents';
 import {
-  RegisterMainDiv, RegisterContainer, RowInput, TextFieldStyled,
+  RegisterMainDiv, RegisterContainer,
 } from './styledComponents';
 import { regExpEmail, regExpPassword, regExpName } from '../../utils/validators';
 
+/**
+ * Page that displays the register form.
+ *
+ * @returns The register page
+ */
 export default function Register(): React.JSX.Element {
   const { t } = useTranslation();
   const navigate = useNavigate();

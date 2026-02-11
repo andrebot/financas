@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { UserType } from './user';
 
 export type AuthContextType = {
   user: UserType | undefined;
   setUser: React.Dispatch<React.SetStateAction<UserType | undefined>>;
+  loading: boolean;
 }
 
 export type LoginBody = {
@@ -61,4 +62,8 @@ export type UpdateUserResponse = {
 export type ChangePasswordBody = {
   oldPassword: string;
   newPassword: string;
+}
+
+export type AuthProviderProps = {
+  children: ReactNode;
 }

@@ -96,7 +96,10 @@ test('should not be able to login with invalid password', async ({ page }) => {
 test('should be able to reset password', async ({ page }) => {
   await page.goto('http://localhost:3000/');
   await page.locator(`text=${i18nKeys.translation.clickHere}`).click();
-  await page.getByLabel(i18nKeys.translation.email).fill(resetPasswordUser.email);
+  const emailInput = page.getByLabel(i18nKeys.translation.email);
+  await emailInput.waitFor({ state: 'visible' });
+  await emailInput.click();
+  await emailInput.fill(resetPasswordUser.email);
   await page.getByRole('button', { name: i18nKeys.translation.resetPassword }).click();
   await expect(page.getByText(i18nKeys.translation.resetPasswordSuccess)).toBeVisible();
   await expect(page.getByText(i18nKeys.translation.waitForEmail)).toBeVisible();

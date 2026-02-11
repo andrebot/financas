@@ -21,6 +21,11 @@ import {
 import { useAuth } from '../../hooks/authContext';
 import useLogout from '../../hooks/useLogout';
 
+/**
+ * This component is the nav bar for the application.
+ *
+ * @returns The nav bar component
+ */
 export default function NavBar() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const { t } = useTranslation();
@@ -61,7 +66,7 @@ export default function NavBar() {
             <CustomListItem text={t('transactions')}>
               <CompareArrowsIcon />
             </CustomListItem>
-            <CustomListItem text={t('createAccount')} onClick={() => navigate('/create-account')}>
+            <CustomListItem text={t('bankAccounts')} onClick={() => navigate('/bank-accounts')}>
               <AccountBalanceIcon />
             </CustomListItem>
           </List>

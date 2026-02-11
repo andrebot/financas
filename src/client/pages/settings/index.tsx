@@ -26,12 +26,13 @@ import {
 } from './styledComponents';
 import { useUpdateUserMutation, useDeleteAccountMutation } from '../../features/login';
 import { regExpEmail } from '../../utils/validators';
-import { reducer, initialState, ActionType } from './reducer';
+import { reducer, initialState } from './reducer';
 import { useModal } from '../../components/modal/modal';
 import ChangePasswordModal from './changePasswordModal';
 import useLogout from '../../hooks/useLogout';
 import ConfirmDeleteAccount from './confirmDeleteAccountModal';
 import { RootState } from '../../features/store';
+import { SettingsActionType } from '../../enums';
 
 const {
   SET_FIRST_NAME_ERROR,
@@ -39,8 +40,13 @@ const {
   SET_PROPERTY,
   SET_IS_DIRTY,
   RESET_STATE,
-} = ActionType;
+} = SettingsActionType;
 
+/**
+ * Page that displays the settings page.
+ *
+ * @returns The settings page
+ */
 export default function Settings(): React.JSX.Element {
   const { t, i18n } = useTranslation();
   const { user, setUser } = useAuth();
@@ -72,7 +78,7 @@ export default function Settings(): React.JSX.Element {
   const validateName = (
     name: string,
     key: string,
-    errorAction: ActionType.SET_FIRST_NAME_ERROR | ActionType.SET_LAST_NAME_ERROR,
+    errorAction: SettingsActionType.SET_FIRST_NAME_ERROR | SettingsActionType.SET_LAST_NAME_ERROR,
   ) => {
     if (name.length === 0) {
       dispatch({ type: errorAction, payload: t(key) });

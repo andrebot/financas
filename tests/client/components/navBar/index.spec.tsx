@@ -64,6 +64,7 @@ describe('NavBar', () => {
 
     expect(screen.getByText(`${i18nKeys.translation.hello}, John`)).toBeInTheDocument();
     expect(screen.getByText(i18nKeys.translation.transactions)).toBeInTheDocument();
+    expect(screen.getByText(i18nKeys.translation.bankAccounts)).toBeInTheDocument();
     expect(screen.getByText(i18nKeys.translation.settings)).toBeInTheDocument();
     expect(screen.getByText(i18nKeys.translation.logout)).toBeInTheDocument();
   });
@@ -124,5 +125,18 @@ describe('NavBar', () => {
     fireEvent.click(screen.getByText(i18nKeys.translation.settings));
 
     expect(navigateMock).toHaveBeenCalledWith('/settings');
+  });
+
+  it('should go to the bank accounts page when the bank accounts button is clicked', () => {
+    render(
+      <I18nextProvider i18n={i18n}>
+        <NavBar />
+      </I18nextProvider>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'menu' }));
+    fireEvent.click(screen.getByText(i18nKeys.translation.bankAccounts));
+
+    expect(navigateMock).toHaveBeenCalledWith('/bank-accounts');
   });
 });

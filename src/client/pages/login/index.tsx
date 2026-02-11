@@ -25,6 +25,11 @@ import Money2 from '../../assets/monay2.png';
 import Money3 from '../../assets/monay3.png';
 import { setAccessToken } from '../../features/authSlice';
 
+/**
+ * Page that displays the login form.
+ *
+ * @returns The login page
+ */
 export default function Login(): React.JSX.Element {
   const { t } = useTranslation();
   const navigate = useNavigate();

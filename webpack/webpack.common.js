@@ -8,12 +8,30 @@ module.exports = {
     rules: [
       {
         test: /\.tsx?$/,
-        use: 'ts-loader',
         include: path.resolve(__dirname, '..', 'src/client'),
+        use: [
+          {
+            loader: 'babel-loader',
+            options: {
+              presets: [
+                '@babel/preset-env',
+                '@babel/preset-react',
+                '@babel/preset-typescript',
+              ],
+              plugins: [
+                process.env.NODE_ENV === 'development' && 'react-refresh/babel',
+              ].filter(Boolean),
+            },
+          },
+        ],
       },
       {
-        test: /\.(png|jpg|jpeg|gif|svg)$/i,
+        test: /\.(png|jpg|jpeg|gif)$/i,
         type: 'asset/resource',
+      },
+      {
+        test: /\.svg$/i,
+        use: ['@svgr/webpack', 'url-loader'],
       },
       // Add additional rules for other file types if needed
     ],

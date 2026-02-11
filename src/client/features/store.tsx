@@ -1,6 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import themeReducer from './themeSlice';
-import { loginApi } from './login';
+import baseApi from './apiSlice';
 import authReducer from './authSlice';
 
 /**
@@ -10,10 +10,10 @@ export const store = configureStore({
   reducer: {
     theme: themeReducer,
     auth: authReducer,
-    [loginApi.reducerPath]: loginApi.reducer,
+    [baseApi.reducerPath]: baseApi.reducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware()
-    .concat(loginApi.middleware),
+    .concat(baseApi.middleware),
 });
 
 /**

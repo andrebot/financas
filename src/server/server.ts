@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
 import path from 'path';
 import cors from 'cors';
@@ -39,7 +39,7 @@ app.get('*', (req: Request, res: Response) => {
   res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
 });
 
-app.use((err: Error, req: Request, res: Response) => {
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   const CatchAllLogger = createLogger('ExpressExceptionCatchAll');
 
   CatchAllLogger.error(err);
