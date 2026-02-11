@@ -131,6 +131,7 @@ export default function CreditCardForm({ creditCards, setCreditCards }: CreditCa
               })
             }
             slotProps={{
+              field: { readOnly: false },
               textField: {
                 error: !!state.expirationDateError,
                 helperText: state.expirationDateError ? t(state.expirationDateError) : '',
@@ -143,7 +144,7 @@ export default function CreditCardForm({ creditCards, setCreditCards }: CreditCa
       </CreditCardFormHolder>
       <CreditCardsList>
         {creditCards.map((card: CreditCardProps, index: number) => (
-          <CreditCardItemHolder key={card.last4Digits}>
+          <CreditCardItemHolder key={card.last4Digits} data-testid="credit-card-item-holder">
             <CreditCard
               flag={card.flag}
               last4Digits={card.last4Digits}

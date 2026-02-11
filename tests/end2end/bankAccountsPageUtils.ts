@@ -56,19 +56,23 @@ export async function saveBankAccount(page: Page) {
 export async function addCreditCard(page: Page, cardNumber: string, expirationDate = '12/30') {
   const modal = page.getByTestId('add-bank-account-modal');
   await modal.getByTestId('credit-card-number-input').fill(cardNumber);
-  await modal.getByTestId('credit-card-expiration-input').fill(expirationDate);
+  const [month, year] = expirationDate.split('/');
+  const monthSection = modal.getByRole('spinbutton', { name: 'Month' });
+  await monthSection.click();
+  await monthSection.pressSequentially(month);
+  await monthSection.press('Tab');
+  const yearSection = modal.getByRole('spinbutton', { name: 'Year' });
+  await yearSection.pressSequentially(year.length === 2 ? `20${year}` : year);
+  await yearSection.press('Tab');
   await modal.getByTestId('credit-card-add-button').click();
 }
 
 export async function deleteCreditCardFromForm(page: Page, cardIndex: number) {
-  const cardHolder = page.getByTestId('credit-card-delete-item').nth(cardIndex);
-  await cardHolder.evaluate((el) => {
-    const parent = el.parentElement;
-    if (parent) {
-      parent.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
-    }
-  });
-  await cardHolder.click({ force: true });
+  const modal = page.getByTestId('add-bank-account-modal');
+  const deleteItem = modal.getByTestId('credit-card-delete-item').nth(cardIndex);
+  const cardHolder = deleteItem.locator('xpath=..');
+  await cardHolder.hover();
+  await cardHolder.click();
 }
 
 export async function openBankAccountMenu(page: Page, accountName: string) {

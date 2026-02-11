@@ -54,7 +54,16 @@ export default function AccountBankItem({ bankAccount }: AccountBankItemProps): 
   /**
    * Deletes the bank account by calling the deleteBankAccount mutation and closing the modal.
    */
-  const handleDeleteBankAccount = () => {
+  const handleDeleteBankAccount = async () => {
+    try {
+      await deleteBankAccount(bankAccount.id!).unwrap();
+      enqueueSnackbar(t('bankAccountDeleted'), { variant: 'success' });
+    } catch {
+      enqueueSnackbar(t('bankAccountDeletionFailed'), { variant: 'error' });
+    } finally {
+      closeModal();
+    }
+
     deleteBankAccount(bankAccount.id!);
     closeModal();
   };

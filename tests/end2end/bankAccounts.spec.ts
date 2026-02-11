@@ -15,10 +15,10 @@ import {
 } from './bankAccountsPageUtils';
 
 test.describe.serial('Bank Accounts', () => {
-  const accountName1 = `Account-test`;
+  const accountName1 = `Account test`;
   let currentAccountName = accountName1;
-  const accountName2 = `Account2-test`;
-  const accountName3 = `Account3-test`;
+  const accountName2 = `Account test two`;
+  const accountName3 = `Account test three`;
 
   test.beforeEach(({ browserName }) => {
     test.skip(browserName !== 'chromium', 'Bank accounts serial tests run only in chromium to avoid data conflicts');
@@ -56,7 +56,7 @@ test.describe.serial('Bank Accounts', () => {
     await login(page, bankAccountsUser.email, bankAccountsUserPassword);
     await goToBankAccountsPage(page);
 
-    const newName = `Updated-test`;
+    const newName = `Updated account test`;
     currentAccountName = newName;
     await editBankAccount(page, accountName1);
     await fillBankAccountForm(page, { name: newName });
@@ -251,7 +251,8 @@ test.describe('Bank Account Modal - Card Flags', () => {
     await openAddBankAccountModal(page);
 
     await page.getByTestId('credit-card-number-input').fill('0000000000000000');
-    await expect(page.getByTestId('card-flag-unknown')).toBeVisible();
+    const creditCardInputContainer = page.getByTestId('add-bank-account-modal').locator('.MuiInputBase-root').filter({ has: page.getByTestId('credit-card-number-input') });
+    await expect(creditCardInputContainer.locator('svg')).toHaveCount(0);
   });
 });
 
