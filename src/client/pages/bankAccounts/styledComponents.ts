@@ -58,7 +58,7 @@ export const CreditCardFormHolder = styled('div')(() => ({
   gap: '10px',
 }));
 
-export const ExpirationDatePicker = styled(DatePicker)(({ theme }) => ({
+export const ExpirationDatePicker = styled(DatePicker)(() => ({
   maxWidth: '130px',
 }));
 

@@ -65,7 +65,7 @@ export default function BankAccounts(): React.JSX.Element {
           </IconButton>
         </AddAccountButton>
         {bankAccounts.map((bankAccount) => (
-          <AccountBankItem bankAccount={bankAccount} />
+          <AccountBankItem key={bankAccount.id ?? bankAccount.name} bankAccount={bankAccount} />
         ))}
       </AccountBankList>
     </CreateAccountMain>

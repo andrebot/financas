@@ -59,7 +59,7 @@ export default function CreditCardForm({ creditCards, setCreditCards }: {
 
     setCardBrand(detectCardBrand(digits));
 
-    if (creditCardNumberRegex.test(digits) || digits === '') {
+    if (creditCardNumberRegex.test(digits)) {
       setCreditCardState((prev) => ({ ...prev, number: digits }));
     }
   };
@@ -118,7 +118,7 @@ export default function CreditCardForm({ creditCards, setCreditCards }: {
             label={t('expirationDate')}
             views={['year', 'month']}
             format='MM/YY'
-            value={creditCardState.expirationDate ? dayjs(creditCardState.expirationDate) : undefined}
+            value={creditCardState.expirationDate ? dayjs(creditCardState.expirationDate) : null}
             onChange={(e) => setCreditCardState({ ...creditCardState, expirationDate: e?.toDate() })}
           />
         </RowInput>
@@ -126,8 +126,8 @@ export default function CreditCardForm({ creditCards, setCreditCards }: {
       </CreditCardFormHolder>
       <CreditCardsList>
         {creditCards.map((card: CreditCardProps, index: number) => (
-          <CreditCardItemHolder>
-            <CreditCard key={card.last4Digits} {...card} />
+          <CreditCardItemHolder key={card.last4Digits}>
+            <CreditCard {...card} />
             <CreditCardDeleteItem 
               className='credit-card-delete-item'
               onClick={() => handleDeleteCard(index)}
