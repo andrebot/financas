@@ -62,7 +62,9 @@ function setAccountNumber(state: BankAccountState, payload: string): BankAccount
   }
 
   if (!regExpOnlyNumbers.test(payload)) {
-    return state;
+    nextState.accountNumberError = 'accountNumberInvalid';
+    nextState.accountNumber = payload;
+    return nextState;
   }
 
   nextState.accountNumber = payload;
@@ -87,7 +89,9 @@ function setAgency(state: BankAccountState, payload: string): BankAccountState {
   }
 
   if (!regExpOnlyNumbers.test(payload)) {
-    return state;
+    nextState.agencyError = 'agencyInvalid';
+    nextState.agency = payload;
+    return nextState;
   }
 
   nextState.agency = payload;

@@ -256,6 +256,105 @@ test.describe('Bank Account Modal - Card Flags', () => {
   });
 });
 
+test.describe('Bank Account Modal - Validation', () => {
+  test('should show required errors when submitting empty form', async ({ page }) => {
+    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    await goToBankAccountsPage(page);
+    await openAddBankAccountModal(page);
+
+    await saveBankAccount(page);
+
+    await expect(page.getByText(i18nKeys.translation.nameRequired)).toBeVisible();
+    await expect(page.getByText(i18nKeys.translation.currencyRequired)).toBeVisible();
+    await expect(page.getByText(i18nKeys.translation.accountNumberRequired)).toBeVisible();
+    await expect(page.getByText(i18nKeys.translation.agencyRequired)).toBeVisible();
+  });
+
+  test('should show invalid format error for account number with non-digits', async ({ page }) => {
+    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    await goToBankAccountsPage(page);
+    await openAddBankAccountModal(page);
+
+    await fillBankAccountForm(page, {
+      name: 'Valid Account',
+      currency: 'BRL',
+      accountNumber: '12345abc',
+      agency: '0001',
+    });
+    await saveBankAccount(page);
+
+    await expect(page.getByText(i18nKeys.translation.accountNumberInvalid)).toBeVisible();
+  });
+
+  test('should show invalid format error for agency with non-digits', async ({ page }) => {
+    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    await goToBankAccountsPage(page);
+    await openAddBankAccountModal(page);
+
+    await fillBankAccountForm(page, {
+      name: 'Valid Account',
+      currency: 'BRL',
+      accountNumber: '12345',
+      agency: '0001xyz',
+    });
+    await saveBankAccount(page);
+
+    await expect(page.getByText(i18nKeys.translation.agencyInvalid)).toBeVisible();
+  });
+});
+
+test.describe('Bank Account Modal - Credit Card Validation', () => {
+  test('should show required error when adding card with empty card number', async ({ page }) => {
+    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    await goToBankAccountsPage(page);
+    await openAddBankAccountModal(page);
+
+    const modal = page.getByTestId('add-bank-account-modal');
+    const monthSection = modal.getByRole('spinbutton', { name: 'Month' });
+    await monthSection.click();
+    await monthSection.pressSequentially('12');
+    await monthSection.press('Tab');
+    const yearSection = modal.getByRole('spinbutton', { name: 'Year' });
+    await yearSection.pressSequentially('2030');
+    await yearSection.press('Tab');
+    await modal.getByTestId('credit-card-add-button').click();
+
+    await expect(page.getByText(i18nKeys.translation.creditCardNumberRequired)).toBeVisible();
+  });
+
+  test('should show invalid format error when adding card with non-digits in card number', async ({ page }) => {
+    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    await goToBankAccountsPage(page);
+    await openAddBankAccountModal(page);
+
+    await addCreditCard(page, '4111abc1111111111', '12/30');
+
+    await expect(page.getByText(i18nKeys.translation.creditCardNumberInvalid)).toBeVisible();
+  });
+
+  test('should show required error when adding card with empty expiration date', async ({ page }) => {
+    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    await goToBankAccountsPage(page);
+    await openAddBankAccountModal(page);
+
+    const modal = page.getByTestId('add-bank-account-modal');
+    await modal.getByTestId('credit-card-number-input').fill('4111111111111111');
+    await modal.getByTestId('credit-card-add-button').click();
+
+    await expect(page.getByText(i18nKeys.translation.expirationDateRequired)).toBeVisible();
+  });
+
+  test('should show invalid error when adding card with past expiration date', async ({ page }) => {
+    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    await goToBankAccountsPage(page);
+    await openAddBankAccountModal(page);
+
+    await addCreditCard(page, '4111111111111111', '01/24');
+
+    await expect(page.getByText(i18nKeys.translation.expirationDateInvalid)).toBeVisible();
+  });
+});
+
 test.describe('Bank Account Modal - Currency Select', () => {
   const expectedCurrencies = [
     'R$ - BRL',

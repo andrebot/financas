@@ -30,7 +30,7 @@ function setNumber(state: CreditCardFormState, payload: string): CreditCardFormS
   }
 
   if (!regExpOnlyNumbers.test(digitsWithoutSpaces)) {
-    return { ...state, numberError: 'creditCardNumberInvalid' };
+    return { ...nextState, number: digitsWithoutSpaces, numberError: 'creditCardNumberInvalid' };
   }
 
   return { ...nextState, number: digitsWithoutSpaces };

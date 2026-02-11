@@ -133,15 +133,39 @@ describe('CreditCardForm', () => {
     expect(newCards[0].expirationDate).toMatch(/^\d{2}\/\d{2}$/);
   });
 
-  it('should not add card when number is empty', () => {
+  it('should show required error when number is empty and Add card is clicked', () => {
     setup([]);
 
     fireEvent.click(screen.getByRole('button', { name: /add card/i }));
 
     expect(mockSetCreditCards).not.toHaveBeenCalled();
+    expect(screen.getByText(i18nEn.translation.creditCardNumberRequired)).toBeInTheDocument();
   });
 
-  it('should not add card when expiration date is empty', () => {
+  it('should show invalid format error when card number contains non-digits', () => {
+    setup([]);
+
+    const numberInput = screen.getByLabelText(i18nEn.translation.creditCardNumber) as HTMLInputElement;
+    fireEvent.change(numberInput, { target: { value: '4111abc1111111111' } });
+
+    const monthSpinbutton = screen.getByRole('spinbutton', { name: /month/i });
+    fireEvent.click(monthSpinbutton);
+    for (let i = 0; i < 6; i += 1) {
+      fireEvent.keyDown(monthSpinbutton, { key: 'ArrowDown' });
+    }
+    const yearSpinbutton = screen.getByRole('spinbutton', { name: /year/i });
+    fireEvent.click(yearSpinbutton);
+    for (let i = 0; i < 6; i += 1) {
+      fireEvent.keyDown(yearSpinbutton, { key: 'ArrowUp' });
+    }
+
+    fireEvent.click(screen.getByRole('button', { name: /add card/i }));
+
+    expect(mockSetCreditCards).not.toHaveBeenCalled();
+    expect(screen.getByText(i18nEn.translation.creditCardNumberInvalid)).toBeInTheDocument();
+  });
+
+  it('should show required error when expiration date is empty and Add card is clicked', () => {
     setup([]);
 
     const numberInput = screen.getByLabelText(i18nEn.translation.creditCardNumber) as HTMLInputElement;
@@ -150,6 +174,31 @@ describe('CreditCardForm', () => {
     fireEvent.click(screen.getByRole('button', { name: /add card/i }));
 
     expect(mockSetCreditCards).not.toHaveBeenCalled();
+    expect(screen.getByText(i18nEn.translation.expirationDateRequired)).toBeInTheDocument();
+  });
+
+  it('should show invalid error when expiration date is in the past and Add card is clicked', () => {
+    setup([]);
+
+    const numberInput = screen.getByLabelText(i18nEn.translation.creditCardNumber) as HTMLInputElement;
+    fireEvent.change(numberInput, { target: { value: '4111111111111111' } });
+
+    // Select January 2020 (past date)
+    const monthSpinbutton = screen.getByRole('spinbutton', { name: /month/i });
+    fireEvent.click(monthSpinbutton);
+    for (let i = 0; i < 12; i += 1) {
+      fireEvent.keyDown(monthSpinbutton, { key: 'ArrowDown' });
+    }
+    const yearSpinbutton = screen.getByRole('spinbutton', { name: /year/i });
+    fireEvent.click(yearSpinbutton);
+    for (let i = 0; i < 10; i += 1) {
+      fireEvent.keyDown(yearSpinbutton, { key: 'ArrowDown' });
+    }
+
+    fireEvent.click(screen.getByRole('button', { name: /add card/i }));
+
+    expect(mockSetCreditCards).not.toHaveBeenCalled();
+    expect(screen.getByText(i18nEn.translation.expirationDateInvalid)).toBeInTheDocument();
   });
 
   it('should list existing cards and allows deleting one', () => {

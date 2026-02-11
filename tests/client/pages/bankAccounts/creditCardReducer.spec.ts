@@ -47,14 +47,14 @@ describe('creditCardReducer', () => {
       expect(newState.numberError).toBe('');
     });
 
-    it('should reject and set error when payload contains non-digit characters', () => {
+    it('should set invalid error and store value when payload contains non-digit characters', () => {
       const initialState = createState({ number: '1234', numberError: '' });
       const newState = creditCardReducer(initialState, {
         type: CreditCardActionType.SET_NUMBER,
         payload: '1234a',
       });
 
-      expect(newState.number).toBe('1234');
+      expect(newState.number).toBe('1234a');
       expect(newState.numberError).toBe('creditCardNumberInvalid');
     });
 

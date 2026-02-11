@@ -94,12 +94,12 @@ describe('addBankAccountReducer', () => {
       expect(newState.accountNumber).toBe('');
     });
 
-    it('should keep previous state when invalid (non numeric)', () => {
+    it('should set invalid error when contains non-digits', () => {
       const initialState = createState({ accountNumber: '1234', accountNumberError: '' });
       const newState = reduce(initialState, BankAccountActionType.SET_ACCOUNT_NUMBER, '12ab');
 
-      expect(newState).toBe(initialState);
-      expect(newState.accountNumber).toBe('1234');
+      expect(newState.accountNumber).toBe('12ab');
+      expect(newState.accountNumberError).toBe('accountNumberInvalid');
     });
   });
 
@@ -120,12 +120,12 @@ describe('addBankAccountReducer', () => {
       expect(newState.agency).toBe('');
     });
 
-    it('should keep previous state when invalid (non numeric)', () => {
+    it('should set invalid error when contains non-digits', () => {
       const initialState = createState({ agency: '1234', agencyError: '' });
       const newState = reduce(initialState, BankAccountActionType.SET_AGENCY, '12ab');
 
-      expect(newState).toBe(initialState);
-      expect(newState.agency).toBe('1234');
+      expect(newState.agency).toBe('12ab');
+      expect(newState.agencyError).toBe('agencyInvalid');
     });
   });
 
@@ -209,6 +209,32 @@ describe('validateBankAccountForm', () => {
     expect(validatedState.currencyError).toBe('');
     expect(validatedState.accountNumberError).toBe('');
     expect(validatedState.agencyError).toBe('');
+  });
+
+  it('should set accountNumberInvalid when account number has non-digits', () => {
+    const state = createState({
+      name: 'Valid Account',
+      currency: 'EUR',
+      accountNumber: '12abc',
+      agency: '1234',
+    });
+    const validatedState = validateBankAccountForm(state);
+
+    expect(validatedState.accountNumberError).toBe('accountNumberInvalid');
+    expect(validatedState.agencyError).toBe('');
+  });
+
+  it('should set agencyInvalid when agency has non-digits', () => {
+    const state = createState({
+      name: 'Valid Account',
+      currency: 'EUR',
+      accountNumber: '99999',
+      agency: '12xyz',
+    });
+    const validatedState = validateBankAccountForm(state);
+
+    expect(validatedState.accountNumberError).toBe('');
+    expect(validatedState.agencyError).toBe('agencyInvalid');
   });
 
   it('should preserve id when present in state', () => {
