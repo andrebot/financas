@@ -192,6 +192,119 @@ describe('AccountBankItem', () => {
     expect(mockDeleteBankAccount).toHaveBeenCalledWith('account-1');
   });
 
+  describe('handleDeleteBankAccount', () => {
+    it('should call deleteBankAccount with bank account id when confirm is clicked', async () => {
+      mockDeleteBankAccount.mockReturnValue({
+        unwrap: jest.fn().mockResolvedValue(undefined),
+      });
+
+      renderAccountBankItem();
+
+      fireEvent.click(screen.getByRole('button', { name: i18nEn.translation.actionMenu }));
+      fireEvent.click(screen.getByRole('menuitem', { name: i18nEn.translation.delete }));
+      fireEvent.click(screen.getByRole('button', { name: /confirm/i }));
+
+      await waitFor(() => {
+        expect(mockDeleteBankAccount).toHaveBeenCalledWith('account-1');
+      });
+    });
+
+    it('should show success snackbar when delete succeeds', async () => {
+      mockDeleteBankAccount.mockReturnValue({
+        unwrap: jest.fn().mockResolvedValue(undefined),
+      });
+
+      renderAccountBankItem();
+
+      fireEvent.click(screen.getByRole('button', { name: i18nEn.translation.actionMenu }));
+      fireEvent.click(screen.getByRole('menuitem', { name: i18nEn.translation.delete }));
+      fireEvent.click(screen.getByRole('button', { name: /confirm/i }));
+
+      await waitFor(() => {
+        expect(enqueueSnackbar).toHaveBeenCalledWith(
+          i18nEn.translation.bankAccountDeleted,
+          { variant: 'success' },
+        );
+      });
+    });
+
+    it('should show error snackbar when delete fails', async () => {
+      mockDeleteBankAccount.mockReturnValue({
+        unwrap: jest.fn().mockRejectedValue(new Error('Delete failed')),
+      });
+
+      renderAccountBankItem();
+
+      fireEvent.click(screen.getByRole('button', { name: i18nEn.translation.actionMenu }));
+      fireEvent.click(screen.getByRole('menuitem', { name: i18nEn.translation.delete }));
+      fireEvent.click(screen.getByRole('button', { name: /confirm/i }));
+
+      await waitFor(() => {
+        expect(enqueueSnackbar).toHaveBeenCalledWith(
+          i18nEn.translation.bankAccountDeletionFailed,
+          { variant: 'error' },
+        );
+      });
+    });
+
+    it('should close modal when delete succeeds', async () => {
+      mockDeleteBankAccount.mockReturnValue({
+        unwrap: jest.fn().mockResolvedValue(undefined),
+      });
+
+      renderAccountBankItem();
+
+      fireEvent.click(screen.getByRole('button', { name: i18nEn.translation.actionMenu }));
+      fireEvent.click(screen.getByRole('menuitem', { name: i18nEn.translation.delete }));
+      expect(screen.getByRole('heading', { name: i18nEn.translation.bankAccountDeletionTitle })).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: /confirm/i }));
+
+      await waitFor(() => {
+        expect(screen.queryByRole('heading', { name: i18nEn.translation.bankAccountDeletionTitle })).not.toBeInTheDocument();
+      });
+    });
+
+    it('should close modal when delete fails', async () => {
+      mockDeleteBankAccount.mockReturnValue({
+        unwrap: jest.fn().mockRejectedValue(new Error('Delete failed')),
+      });
+
+      renderAccountBankItem();
+
+      fireEvent.click(screen.getByRole('button', { name: i18nEn.translation.actionMenu }));
+      fireEvent.click(screen.getByRole('menuitem', { name: i18nEn.translation.delete }));
+      expect(screen.getByRole('heading', { name: i18nEn.translation.bankAccountDeletionTitle })).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: /confirm/i }));
+
+      await waitFor(() => {
+        expect(screen.queryByRole('heading', { name: i18nEn.translation.bankAccountDeletionTitle })).not.toBeInTheDocument();
+      });
+    });
+
+    it('should use correct bank account id for different accounts', async () => {
+      mockDeleteBankAccount.mockReturnValue({
+        unwrap: jest.fn().mockResolvedValue(undefined),
+      });
+
+      const customAccount: BankAccount = {
+        ...bankAccount,
+        id: 'custom-account-123',
+      };
+
+      renderAccountBankItem(customAccount);
+
+      fireEvent.click(screen.getByRole('button', { name: i18nEn.translation.actionMenu }));
+      fireEvent.click(screen.getByRole('menuitem', { name: i18nEn.translation.delete }));
+      fireEvent.click(screen.getByRole('button', { name: /confirm/i }));
+
+      await waitFor(() => {
+        expect(mockDeleteBankAccount).toHaveBeenCalledWith('custom-account-123');
+      });
+    });
+  });
+
   it('should show success snackbar when delete succeeds', async () => {
     (useDeleteBankAccountMutation as jest.Mock).mockReturnValue([
       mockDeleteBankAccount,
@@ -214,7 +327,10 @@ describe('AccountBankItem', () => {
     renderAccountBankItem();
 
     await waitFor(() => {
-      expect(enqueueSnackbar).toHaveBeenCalledWith(expect.any(String), { variant: 'error' });
+      expect(enqueueSnackbar).toHaveBeenCalledWith(
+        i18nEn.translation.bankAccountDeletionFailed,
+        { variant: 'error' },
+      );
     });
   });
 

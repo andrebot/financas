@@ -89,5 +89,6 @@ export default {
     bankAccountDeletionDescription: 'Tem certeza que deseja excluir esta conta bancária? Esta ação é irreversível.',
     bankAccountUpdated: 'Conta bancária atualizada com sucesso!',
     bankAccountUpdateFailed: 'Falha ao atualizar conta bancária! Por favor, tente novamente mais tarde.',
+    bankAccountDeletionFailed: 'Falha ao deletar conta bancária! Por favor, tente novamente mais tarde.',
   },
 };
