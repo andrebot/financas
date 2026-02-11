@@ -1,26 +1,20 @@
-import { loginApi } from '../../../src/client/features/login';
-import apiSlice, { prepareHeaders } from "../../../src/client/features/apiSlice";
+import apiSlice, { prepareHeaders, baseQueryWithReauth } from "../../../src/client/features/apiSlice";
 import type { RTKApi } from "../../../src/client/types/requests";
-
-let mockBaseQuery = jest.fn();
-
-jest.mock('@reduxjs/toolkit/query/react', () => ({
-  fetchBaseQuery: jest.fn(() => mockBaseQuery),
-}));
-
-import { baseQueryWithReauth } from '../../../src/client/features/apiSlice';
 import { clearAccessToken } from "../../../src/client/features/authSlice";
 
+// eslint-disable-next-line no-var
+var mockBaseQuery: jest.Mock;
 
-jest.mock('../../../src/client/features/login', () => ({
-  loginApi: {
-    endpoints: {
-      logout: {
-        initiate: jest.fn(),
-      },
-    },
-  },
-}));
+jest.mock('@reduxjs/toolkit/query/react', () => {
+  const originalModule = jest.requireActual('@reduxjs/toolkit/query/react');
+
+  mockBaseQuery = jest.fn();
+
+  return {
+    ...originalModule,
+    fetchBaseQuery: jest.fn(() => mockBaseQuery),
+  };
+});
 
 describe('prepareHeaders', () => {
   it('should prepare the headers for the API requests for simple non authenticated requests', () => {
@@ -54,7 +48,7 @@ describe('prepareHeaders', () => {
     } as RTKApi);
 
     expect(preparedHeaders?.get('Content-Type')).toBe('application/json');
-    expect(preparedHeaders?.get('Authorization')).toBeUndefined();
+    expect(preparedHeaders?.get('Authorization')).toBeNull();
   });
 });
 
@@ -131,7 +125,6 @@ describe('baseQueryWithReauth', () => {
 
     const result = await baseQueryWithReauth(mockArgs, mockApi as any, mockExtraOptions);
 
-    expect(mockApi.dispatch).toHaveBeenCalledWith(loginApi.endpoints.logout.initiate());
     expect(mockApi.dispatch).toHaveBeenCalledWith(clearAccessToken());
     expect(result).toEqual(mockUnauthorizedResult);
   });

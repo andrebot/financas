@@ -64,7 +64,7 @@ describe('NavBar', () => {
 
     expect(screen.getByText(`${i18nKeys.translation.hello}, John`)).toBeInTheDocument();
     expect(screen.getByText(i18nKeys.translation.transactions)).toBeInTheDocument();
-    expect(screen.getByText(i18nKeys.translation.createAccount)).toBeInTheDocument();
+    expect(screen.getByText(i18nKeys.translation.bankAccounts)).toBeInTheDocument();
     expect(screen.getByText(i18nKeys.translation.settings)).toBeInTheDocument();
     expect(screen.getByText(i18nKeys.translation.logout)).toBeInTheDocument();
   });
@@ -127,7 +127,7 @@ describe('NavBar', () => {
     expect(navigateMock).toHaveBeenCalledWith('/settings');
   });
 
-  it('should go to the create account page when the create account button is clicked', () => {
+  it('should go to the bank accounts page when the bank accounts button is clicked', () => {
     render(
       <I18nextProvider i18n={i18n}>
         <NavBar />
@@ -135,8 +135,8 @@ describe('NavBar', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'menu' }));
-    fireEvent.click(screen.getByText(i18nKeys.translation.createAccount));
+    fireEvent.click(screen.getByText(i18nKeys.translation.bankAccounts));
 
-    expect(navigateMock).toHaveBeenCalledWith('/create-account');
+    expect(navigateMock).toHaveBeenCalledWith('/bank-accounts');
   });
 });

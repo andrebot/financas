@@ -77,5 +77,7 @@ export default {
     flag: 'Bandeira',
     bankAccountCreated: 'Conta bancária criada com sucesso!',
     bankAccountDeleted: 'Conta bancária deletada com sucesso!',
+    bankAccountDeletionTitle: 'Exclusão de Conta Bancária',
+    bankAccountDeletionDescription: 'Tem certeza que deseja excluir esta conta bancária? Esta ação é irreversível.',
   },
 };

@@ -4,7 +4,6 @@ import {
   FetchArgs,
 } from '@reduxjs/toolkit/query/react';
 import { RootState } from './store';
-import { loginApi } from "./login";
 import { setAccessToken, clearAccessToken } from "./authSlice";
 import config from "../config/apiConfig";
 import type { RefreshTokenResponse } from "../types/authContextType";
@@ -42,9 +41,10 @@ const baseQuery = fetchBaseQuery({
  * @param extraOptions - The extra options for the query
  * @returns The result of the query
  */
-export async function baseQueryWithReauth (
-  args: string | FetchArgs, 
-  api: any, extraOptions: any,
+export async function baseQueryWithReauth(
+  args: string | FetchArgs,
+  api: any,
+  extraOptions: any,
 ) {
   let result = await baseQuery(args, api, extraOptions);
 
@@ -52,15 +52,21 @@ export async function baseQueryWithReauth (
     const refreshResult = await baseQuery('/refresh-tokens', api, extraOptions);
 
     if (refreshResult.data) {
-      api.dispatch(setAccessToken((refreshResult.data as RefreshTokenResponse).accessToken))
-      result = await baseQuery(args, api, extraOptions)
+      api.dispatch(setAccessToken((refreshResult.data as RefreshTokenResponse).accessToken));
+      result = await baseQuery(args, api, extraOptions);
     } else {
-      await api.dispatch(loginApi.endpoints.logout.initiate());
-      api.dispatch(clearAccessToken())
+      /**
+       * If the refresh token request fails, we clear the access token to ensure
+       * the user is logged out on the client side. Previously this also triggered
+       * the logout mutation from `loginApi`, but that created a circular dependency
+       * between `apiSlice` and `login`. To avoid that runtime issue (and failing
+       * tests), we now only clear the token here.
+       */
+      api.dispatch(clearAccessToken());
     }
   }
 
-  return result
+  return result;
 }
 
 export default createApi({
