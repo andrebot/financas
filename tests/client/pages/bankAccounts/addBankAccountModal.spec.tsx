@@ -82,5 +82,14 @@ describe('AddBankAccountModal', () => {
 
     expect(mockCloseModal).toHaveBeenCalled();
   });
+
+  it('does not save or close when form is invalid', () => {
+    setup();
+
+    fireEvent.click(screen.getByRole('button', { name: /save/i }));
+
+    expect(mockSaveBankAccount).not.toHaveBeenCalled();
+    expect(mockCloseModal).not.toHaveBeenCalled();
+  });
 });
 

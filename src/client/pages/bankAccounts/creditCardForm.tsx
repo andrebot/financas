@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useReducer, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import { Button } from '@mui/material';
@@ -15,14 +15,14 @@ import {
   CreditCardDeleteItem,
   CreditCardItemHolder,
 } from './styledComponents';
-import { creditCardNumberRegex } from '../../utils/validators';
 import { detectCardBrand, formatExpirationDate } from '../../utils/creditCard';
-import type {
-  CreditCardProps,
-  Flag,
-  CreditCardState,
-  CreditCardFormProps,
-} from '../../types';
+import {
+  creditCardReducer,
+  initialCreditCardFormState,
+  validateCreditCardForm,
+} from './creditCardReducer';
+import { CreditCardActionType } from '../../enums';
+import type { CreditCardProps, Flag, CreditCardFormProps } from '../../types';
 
 /**
  * Form that handles the creation of a credit card.
@@ -34,11 +34,7 @@ import type {
 export default function CreditCardForm({ creditCards, setCreditCards }: CreditCardFormProps) {
   const { t } = useTranslation();
   const [cardBrand, setCardBrand] = useState<Flag>('unknown');
-  const [creditCardState, setCreditCardState] = useState<CreditCardState>({
-    number: '',
-    expirationDate: undefined,
-    flag: '',
-  });
+  const [state, dispatch] = useReducer(creditCardReducer, initialCreditCardFormState);
 
   /**
    * Formats digits as "#### #### #### ####" for display.
@@ -55,34 +51,39 @@ export default function CreditCardForm({ creditCards, setCreditCards }: CreditCa
    * @param e - The event object.
    */
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const digits = e.target.value.replace(/\D/g, '').slice(0, 16);
+    const rawValue = e.target.value;
 
-    setCardBrand(detectCardBrand(digits));
-
-    if (creditCardNumberRegex.test(digits)) {
-      setCreditCardState((prev) => ({ ...prev, number: digits }));
-    }
+    setCardBrand(detectCardBrand(rawValue.replace(/\D/g, '')));
+    dispatch({ type: CreditCardActionType.SET_NUMBER, payload: rawValue });
   };
 
   /**
-   * Handles the addition of a credit card. Adds the credit card to the
-   * list and resets the form state.
+   * Handles the addition of a credit card. Validates the form first.
+   * Adds the credit card to the list and resets the form state if valid.
    */
   const handleAddCard = () => {
+    const validatedState = validateCreditCardForm(state);
+    const isValid =
+      !validatedState.numberError &&
+      !validatedState.expirationDateError &&
+      !!validatedState.number &&
+      !!validatedState.expirationDate;
+
+    if (!isValid) {
+      dispatch({ type: CreditCardActionType.VALIDATE });
+      return;
+    }
+
     setCreditCards([
       ...creditCards,
       {
         flag: cardBrand,
-        last4Digits: creditCardState.number.slice(-4),
-        number: creditCardState.number,
-        expirationDate: formatExpirationDate(creditCardState.expirationDate),
+        last4Digits: validatedState.number.slice(-4),
+        number: validatedState.number,
+        expirationDate: formatExpirationDate(validatedState.expirationDate),
       },
     ]);
-    setCreditCardState({
-      number: '',
-      expirationDate: undefined,
-      flag: '',
-    });
+    dispatch({ type: CreditCardActionType.RESET });
     setCardBrand('unknown');
   };
 
@@ -103,14 +104,18 @@ export default function CreditCardForm({ creditCards, setCreditCards }: CreditCa
           <TextFieldStyled
             label={t('creditCardNumber')}
             variant="outlined"
-            value={formatCardNumberDisplay(creditCardState.number)}
+            value={formatCardNumberDisplay(state.number)}
             onChange={handleNumberChange}
+            error={!!state.numberError}
+            helperText={state.numberError ? t(state.numberError) : ''}
+            inputProps={{ 'data-testid': 'credit-card-number-input' }}
             slotProps={{
               input: {
-                startAdornment:
-  <InputAdornment position="start">
-    <FlagIcon flag={cardBrand} />
-  </InputAdornment>,
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <FlagIcon flag={cardBrand} />
+                  </InputAdornment>
+                ),
               },
             }}
           />
@@ -118,14 +123,23 @@ export default function CreditCardForm({ creditCards, setCreditCards }: CreditCa
             label={t('expirationDate')}
             views={['year', 'month']}
             format="MM/YY"
-            value={creditCardState.expirationDate ? dayjs(creditCardState.expirationDate) : null}
-            onChange={(e) => setCreditCardState({
-              ...creditCardState,
-              expirationDate: e?.toDate(),
-            })}
+            value={state.expirationDate ? dayjs(state.expirationDate) : null}
+            onChange={(e) =>
+              dispatch({
+                type: CreditCardActionType.SET_EXPIRATION_DATE,
+                payload: e?.toDate(),
+              })
+            }
+            slotProps={{
+              textField: {
+                error: !!state.expirationDateError,
+                helperText: state.expirationDateError ? t(state.expirationDateError) : '',
+                inputProps: { 'data-testid': 'credit-card-expiration-input' },
+              },
+            }}
           />
         </RowInput>
-        <Button variant="contained" fullWidth onClick={handleAddCard}>{t('addCard')}</Button>
+        <Button variant="contained" fullWidth onClick={handleAddCard} data-testid="credit-card-add-button">{t('addCard')}</Button>
       </CreditCardFormHolder>
       <CreditCardsList>
         {creditCards.map((card: CreditCardProps, index: number) => (
@@ -139,6 +153,7 @@ export default function CreditCardForm({ creditCards, setCreditCards }: CreditCa
             <CreditCardDeleteItem
               className="credit-card-delete-item"
               onClick={() => handleDeleteCard(index)}
+              data-testid="credit-card-delete-item"
             >
               Delete
             </CreditCardDeleteItem>

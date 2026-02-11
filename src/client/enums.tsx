@@ -3,12 +3,20 @@ export enum BankAccountActionType {
   SET_CURRENCY = 'SET_CURRENCY',
   SET_ACCOUNT_NUMBER = 'SET_ACCOUNT_NUMBER',
   SET_AGENCY = 'SET_AGENCY',
+  VALIDATE = 'VALIDATE',
 }
 
 export enum ChangePasswordActionType {
   SET_PROPERTY = 'SET_PROPERTY',
   SET_NEW_PASSWORD_ERROR = 'SET_NEW_PASSWORD_ERROR',
   SET_CONFIRM_PASSWORD_ERROR = 'SET_CONFIRM_PASSWORD_ERROR',
+}
+
+export enum CreditCardActionType {
+  SET_NUMBER = 'SET_NUMBER',
+  SET_EXPIRATION_DATE = 'SET_EXPIRATION_DATE',
+  VALIDATE = 'VALIDATE',
+  RESET = 'RESET',
 }
 
 export enum SettingsActionType {

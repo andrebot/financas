@@ -30,5 +30,5 @@ const ICONS: Record<Flag, React.ComponentType<React.SVGProps<SVGSVGElement>>> = 
  */
 export default function FlagIcon({ flag }: FlagIconProps) {
   const flagIcon = ICONS[flag];
-  return <SvgIcon component={flagIcon} viewBox="0 0 32 32" />;
+  return <SvgIcon component={flagIcon} viewBox="0 0 32 32" data-testid={`card-flag-${flag}`} />;
 }

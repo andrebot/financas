@@ -1,5 +1,5 @@
 import { SvgIconProps } from '@mui/material/SvgIcon';
-import { BankAccountActionType } from '../enums';
+import { BankAccountActionType, CreditCardActionType } from '../enums';
 
 export type Flag = 'amazon' | 'master' | 'visa' | 'amex' | 'diners' | 'discover' | 'maestro' | 'unknown';
 
@@ -58,7 +58,20 @@ export type BankAccountAction = {
 } | {
   type: BankAccountActionType.SET_AGENCY;
   payload: string;
+} | {
+  type: BankAccountActionType.VALIDATE;
 }
+
+export type CreditCardFormState = CreditCardState & {
+  numberError: string;
+  expirationDateError: string;
+};
+
+export type CreditCardFormAction =
+  | { type: CreditCardActionType.SET_NUMBER; payload: string }
+  | { type: CreditCardActionType.SET_EXPIRATION_DATE; payload: Date | undefined }
+  | { type: CreditCardActionType.VALIDATE }
+  | { type: CreditCardActionType.RESET };
 
 export type CreditCardFormProps = {
   creditCards: CreditCardProps[];

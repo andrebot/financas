@@ -1,32 +1,47 @@
-import { regExpOnlyNumbers } from "../../utils/validators";
-import { BankAccountState } from "../../types";
+import { regExpOnlyNumbers, regExpName } from '../../utils/validators';
+import { BankAccountState } from '../../types';
 import { BankAccountActionType } from '../../enums';
 import type { BankAccountAction } from '../../types';
 
 /**
- * Sets the name of the bank account. The name must be between 2 and 20 characters.
+ * Sets the name of the bank account. Must not be empty and must not contain special characters.
  *
  * @param state - The current state
  * @param payload - The payload to set the name
  * @returns The new state
  */
 function setName(state: BankAccountState, payload: string): BankAccountState {
-  if (payload && payload.length > 0 && payload.length <= 20) {
-    return { ...state, name: payload };
+  const nextState = { ...state, name: payload, nameError: '' };
+
+  if (!payload || payload.trim().length === 0) {
+    nextState.nameError = 'nameRequired';
+    return nextState;
   }
 
-  return { ...state, nameError: 'invalidName' };
+  if (!regExpName.test(payload)) {
+    nextState.nameError = 'nameInvalid';
+    return nextState;
+  }
+
+  return nextState;
 }
 
 /**
- * Sets the currency of the bank account.
+ * Sets the currency of the bank account. Must not be empty.
  *
  * @param state - The current state
  * @param payload - The payload to set the currency
  * @returns The new state
  */
 function setCurrency(state: BankAccountState, payload: string): BankAccountState {
-  return { ...state, currency: payload };
+  const nextState = { ...state, currency: payload, currencyError: '' };
+
+  if (!payload || payload.length === 0) {
+    nextState.currencyError = 'currencyRequired';
+    return nextState;
+  }
+
+  return nextState;
 }
 
 /**
@@ -38,15 +53,20 @@ function setCurrency(state: BankAccountState, payload: string): BankAccountState
  * @returns The new state
  */
 function setAccountNumber(state: BankAccountState, payload: string): BankAccountState {
-  const accNumbState = { ...state, accountNumber: payload, accountNumberError: '' };
-      
+  const nextState = { ...state, accountNumberError: '' };
+
   if (!payload || payload.length === 0) {
-    accNumbState.accountNumberError = 'required';
-  } else if (!regExpOnlyNumbers.test(payload)) {
+    nextState.accountNumberError = 'accountNumberRequired';
+    nextState.accountNumber = payload;
+    return nextState;
+  }
+
+  if (!regExpOnlyNumbers.test(payload)) {
     return state;
   }
 
-  return accNumbState;
+  nextState.accountNumber = payload;
+  return nextState;
 }
 
 /**
@@ -58,15 +78,34 @@ function setAccountNumber(state: BankAccountState, payload: string): BankAccount
  * @returns The new state
  */
 function setAgency(state: BankAccountState, payload: string): BankAccountState {
-  const agencyState = { ...state, agency: payload, agencyError: '' };
-      
+  const nextState = { ...state, agencyError: '' };
+
   if (!payload || payload.length === 0) {
-    agencyState.agencyError = 'required';
-  } else if (!regExpOnlyNumbers.test(payload)) {
+    nextState.agencyError = 'agencyRequired';
+    nextState.agency = payload;
+    return nextState;
+  }
+
+  if (!regExpOnlyNumbers.test(payload)) {
     return state;
   }
 
-  return agencyState;
+  nextState.agency = payload;
+  return nextState;
+}
+
+/**
+ * Runs full validation on the current state (e.g. on submit).
+ *
+ * @param state - The current state
+ * @returns The new state with validation errors
+ */
+export function validateBankAccountForm(state: BankAccountState): BankAccountState {
+  let nextState = setName(state, state.name);
+  nextState = setCurrency(nextState, state.currency);
+  nextState = setAccountNumber(nextState, state.accountNumber);
+  nextState = setAgency(nextState, state.agency);
+  return nextState;
 }
 
 /**
@@ -77,6 +116,10 @@ function setAgency(state: BankAccountState, payload: string): BankAccountState {
  * @returns The new state
  */
 export const reducer = (state: BankAccountState, action: BankAccountAction): BankAccountState => {
+  if (action.type === BankAccountActionType.VALIDATE) {
+    return validateBankAccountForm(state);
+  }
+
   const { payload, type } = action;
 
   switch (type) {

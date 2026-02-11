@@ -80,6 +80,18 @@ describe('CreditCardForm', () => {
     const numberInput = screen.getByLabelText(i18nEn.translation.creditCardNumber) as HTMLInputElement;
     fireEvent.change(numberInput, { target: { value: '4111111111111111' } });
 
+    // Fill expiration date (required by validation) - select future month/year via spinbuttons
+    const monthSpinbutton = screen.getByRole('spinbutton', { name: /month/i });
+    fireEvent.click(monthSpinbutton);
+    for (let i = 0; i < 6; i += 1) {
+      fireEvent.keyDown(monthSpinbutton, { key: 'ArrowDown' });
+    }
+    const yearSpinbutton = screen.getByRole('spinbutton', { name: /year/i });
+    fireEvent.click(yearSpinbutton);
+    for (let i = 0; i < 6; i += 1) {
+      fireEvent.keyDown(yearSpinbutton, { key: 'ArrowUp' });
+    }
+
     fireEvent.click(screen.getByRole('button', { name: /add card/i }));
 
     expect(mockSetCreditCards).toHaveBeenCalledTimes(1);
@@ -119,6 +131,25 @@ describe('CreditCardForm', () => {
     expect(mockSetCreditCards).toHaveBeenCalledTimes(1);
     const [newCards] = mockSetCreditCards.mock.calls[0];
     expect(newCards[0].expirationDate).toMatch(/^\d{2}\/\d{2}$/);
+  });
+
+  it('should not add card when number is empty', () => {
+    setup([]);
+
+    fireEvent.click(screen.getByRole('button', { name: /add card/i }));
+
+    expect(mockSetCreditCards).not.toHaveBeenCalled();
+  });
+
+  it('should not add card when expiration date is empty', () => {
+    setup([]);
+
+    const numberInput = screen.getByLabelText(i18nEn.translation.creditCardNumber) as HTMLInputElement;
+    fireEvent.change(numberInput, { target: { value: '4111111111111111' } });
+
+    fireEvent.click(screen.getByRole('button', { name: /add card/i }));
+
+    expect(mockSetCreditCards).not.toHaveBeenCalled();
   });
 
   it('should list existing cards and allows deleting one', () => {
