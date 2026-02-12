@@ -128,7 +128,11 @@ export default function AddBankAccountModal({
             value={state.name}
             error={!!state.nameError}
             helperText={state.nameError ? t(state.nameError) : ''}
-            inputProps={{ 'data-testid': 'bank-account-name-input' }}
+            slotProps={{
+              htmlInput: {
+                'data-testid': 'bank-account-name-input',
+              },
+            }}
           />
           <CurrencyFormControl sx={{ flexGrow: '1' }} error={!!state.currencyError}>
             <InputLabel id="currency-label">{t('currency')}</InputLabel>
@@ -163,7 +167,11 @@ export default function AddBankAccountModal({
             name={BankAccountActionType.SET_ACCOUNT_NUMBER}
             onChange={handleBankAccountChange}
             value={state.accountNumber}
-            inputProps={{ 'data-testid': 'bank-account-number-input' }}
+            slotProps={{
+              htmlInput: {
+                'data-testid': 'bank-account-number-input',
+              },
+            }}
           />
           <TextFieldStyled
             label={t('bankAgencyNumber')}
@@ -173,7 +181,11 @@ export default function AddBankAccountModal({
             value={state.agency}
             error={!!state.agencyError}
             helperText={state.agencyError ? t(state.agencyError) : ''}
-            inputProps={{ 'data-testid': 'bank-account-agency-input' }}
+            slotProps={{
+              htmlInput: {
+                'data-testid': 'bank-account-agency-input',
+              },
+            }}
           />
         </RowInput>
         <CreditCardForm creditCards={creditCards} setCreditCards={setCreditCards} />

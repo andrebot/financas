@@ -107,8 +107,10 @@ export default function CreditCardForm({ creditCards, setCreditCards }: CreditCa
             onChange={handleNumberChange}
             error={!!state.numberError}
             helperText={state.numberError ? t(state.numberError) : ''}
-            inputProps={{ 'data-testid': 'credit-card-number-input' }}
             slotProps={{
+              htmlInput: {
+                'data-testid': 'credit-card-number-input',
+              },
               input: {
                 startAdornment: (
                   <InputAdornment position="start">
