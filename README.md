@@ -8,12 +8,16 @@ This APP is made to help you manage your finances and invest, by providing power
 # To-dos
 ## Features
 2. ~~Build Account CRUD page~~
-3. Build transactions page
-4. Build Investments page
-5. Build dashboard page
-6. Build User managements page for admin
-7. Build smart import for transactions
-8. Integrate with brazilian B3 stock market
+3. Build Category page
+4. Build Goals page
+5. Build Budget page
+6. Build transactions page
+7. Build Investments page
+8. Build dashboard page
+9. Build FII portifolio builder page
+10. Build User managements page for admin
+11. Integrate with brazilian B3 stock market
+12. Build smart import for transactions
 
 ## Infrastructure
 1. ~~Build github actions for PR to run tests (unit tests, integration tests) and lint~~
@@ -28,6 +32,7 @@ This APP is made to help you manage your finances and invest, by providing power
 4. Revise all try-catch for better error handling
 5. ~~Improve server logging for better log context~~
 6. ~~Remove useless token memory store~~
+7. i18n on backend based on user settings
 
 # Technical Considerations
 ## Route Setup Refactor
