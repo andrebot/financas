@@ -92,5 +92,7 @@ export default {
     bankAccountUpdated: 'Bank account updated successfully!',
     bankAccountUpdateFailed: 'Failed to update bank account! Please try again later.',
     bankAccountDeletionFailed: 'Failed to delete bank account! Please try again later.',
+    confirm: 'Confirm',
+    bankAccountCreationFailed: 'Failed to create bank account! Please try again later.',
   },
 };

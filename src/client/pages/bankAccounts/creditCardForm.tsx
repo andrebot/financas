@@ -153,7 +153,7 @@ export default function CreditCardForm({ creditCards, setCreditCards }: CreditCa
               onClick={() => handleDeleteCard(index)}
               data-testid="credit-card-delete-item"
             >
-              Delete
+              {t('delete')}
             </CreditCardDeleteItem>
           </CreditCardItemHolder>
         ))}
