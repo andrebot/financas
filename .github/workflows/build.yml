@@ -10,6 +10,17 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
+    services:
+      mongodb:
+        image: mongo:latest
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand(\"ping\")'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -39,6 +50,11 @@ jobs:
 
       - name: Run server integration tests
         run: npm run test:server:integration
+
+      - name: Run e2e tests
+        run: npm run test:e2e:ci
+        env:
+          DB_URL: mongodb://localhost:27017/financas
 
       - name: Update Coverage Badges
         run: |
