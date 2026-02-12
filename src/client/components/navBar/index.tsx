@@ -47,7 +47,7 @@ export default function NavBar() {
           <MenuIcon />
         </NavMenuIcon>
         <NavTitle variant="h6">
-          Financas
+          {t('appName')}
         </NavTitle>
       </Toolbar>
       <Drawer anchor="left" open={isDrawerOpen} onClose={closeDrawer}>

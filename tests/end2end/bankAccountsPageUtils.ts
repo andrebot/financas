@@ -1,17 +1,27 @@
 import { Page } from '@playwright/test';
 import i18nKeys from '../../src/client/i18n/en';
 
-export const bankAccountsUser = {
-  email: 'delete.me.bank.accounts@gmail.com',
+const createBankAccountsUser = (browser: string) => ({
+  email: `delete.me.bank.accounts.${browser}@gmail.com`,
   firstName: 'John',
   lastName: 'Doe',
   password: '$2b$10$28bW5R9ZyYOe/I3erH71/e8nWKmgd1ddiKbpPSFBjhaFIJJFDYRcS',
   createdAt: new Date('2025-02-06T20:35:00.065Z'),
   updatedAt: new Date('2025-02-06T20:35:00.065Z'),
   __v: 0,
+});
+
+export const bankAccountsUsers: Record<string, ReturnType<typeof createBankAccountsUser>> = {
+  chromium: createBankAccountsUser('chromium'),
+  firefox: createBankAccountsUser('firefox'),
+  webkit: createBankAccountsUser('webkit'),
 };
 
 export const bankAccountsUserPassword = 'Maro-cja99';
+
+export function getBankAccountsUser(projectName: string) {
+  return bankAccountsUsers[projectName] ?? bankAccountsUsers.chromium;
+}
 
 export async function goToBankAccountsPage(page: Page) {
   await page.getByRole('button', { name: /menu/i }).click();

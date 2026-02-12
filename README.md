@@ -17,8 +17,9 @@ This APP is made to help you manage your finances and invest, by providing power
 
 ## Infrastructure
 1. ~~Build github actions for PR to run tests (unit tests, integration tests) and lint~~
-2. Update pre-push github automation to not run tests
+2. ~~Update pre-push github automation to not run tests~~
 3. ~~Build github actions for PR merge on mester to run tests (all) and deploy~~
+4. ~~Add e2e to CI/CD~~
 
 ## Technical Debts
 1. Switch mongo to a SQL database

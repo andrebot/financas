@@ -92,5 +92,7 @@ export default {
     bankAccountUpdated: 'Conta bancária atualizada com sucesso!',
     bankAccountUpdateFailed: 'Falha ao atualizar conta bancária! Por favor, tente novamente mais tarde.',
     bankAccountDeletionFailed: 'Falha ao deletar conta bancária! Por favor, tente novamente mais tarde.',
+    confirm: 'Confirmar',
+    bankAccountCreationFailed: 'Falha ao criar conta bancária! Por favor, tente novamente mais tarde.',
   },
 };

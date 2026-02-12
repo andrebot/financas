@@ -58,7 +58,7 @@ describe('NavBar', () => {
       </I18nextProvider>
     );
 
-    expect(screen.getByText('Financas')).toBeInTheDocument();
+    expect(screen.getByText(i18nKeys.translation.appName)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'menu' }));
 

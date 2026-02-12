@@ -2,8 +2,8 @@ import { test, expect } from '@playwright/test';
 import { login } from './authUtils';
 import i18nKeys from '../../src/client/i18n/en';
 import {
-  bankAccountsUser,
   bankAccountsUserPassword,
+  getBankAccountsUser,
   goToBankAccountsPage,
   openAddBankAccountModal,
   fillBankAccountForm,
@@ -15,17 +15,18 @@ import {
 } from './bankAccountsPageUtils';
 
 test.describe.serial('Bank Accounts', () => {
-  const accountName1 = `Account test`;
-  let currentAccountName = accountName1;
-  const accountName2 = `Account test two`;
-  const accountName3 = `Account test three`;
-
-  test.beforeEach(({ browserName }) => {
-    test.skip(browserName !== 'chromium', 'Bank accounts serial tests run only in chromium to avoid data conflicts');
-  });
+  const getAccountNames = () => {
+    const suffix = test.info().project.name;
+    return {
+      accountName1: `Account test ${suffix}`,
+      accountName2: `Account test two ${suffix}`,
+      accountName3: `Account test three ${suffix}`,
+    };
+  };
+  let currentAccountName: string;
 
   test('should see the page empty', async ({ page }) => {
-    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    await login(page, getBankAccountsUser(test.info().project.name).email, bankAccountsUserPassword);
     await goToBankAccountsPage(page);
 
     await expect(page.getByRole('heading', { name: i18nKeys.translation.bankAccounts })).toBeVisible();
@@ -34,7 +35,9 @@ test.describe.serial('Bank Accounts', () => {
   });
 
   test('should add a bank account with no cards', async ({ page }) => {
-    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    const { accountName1 } = getAccountNames();
+    currentAccountName = accountName1;
+    await login(page, getBankAccountsUser(test.info().project.name).email, bankAccountsUserPassword);
     await goToBankAccountsPage(page);
 
     await openAddBankAccountModal(page);
@@ -53,10 +56,11 @@ test.describe.serial('Bank Accounts', () => {
   });
 
   test('should edit bank account - name', async ({ page }) => {
-    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    const { accountName1 } = getAccountNames();
+    await login(page, getBankAccountsUser(test.info().project.name).email, bankAccountsUserPassword);
     await goToBankAccountsPage(page);
 
-    const newName = `Updated account test`;
+    const newName = `Updated account test ${test.info().project.name}`;
     currentAccountName = newName;
     await editBankAccount(page, accountName1);
     await fillBankAccountForm(page, { name: newName });
@@ -67,7 +71,7 @@ test.describe.serial('Bank Accounts', () => {
   });
 
   test('should edit bank account - currency', async ({ page }) => {
-    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    await login(page, getBankAccountsUser(test.info().project.name).email, bankAccountsUserPassword);
     await goToBankAccountsPage(page);
 
     await editBankAccount(page, currentAccountName);
@@ -78,7 +82,7 @@ test.describe.serial('Bank Accounts', () => {
   });
 
   test('should edit bank account - account number', async ({ page }) => {
-    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    await login(page, getBankAccountsUser(test.info().project.name).email, bankAccountsUserPassword);
     await goToBankAccountsPage(page);
 
     await editBankAccount(page, currentAccountName);
@@ -90,7 +94,7 @@ test.describe.serial('Bank Accounts', () => {
   });
 
   test('should edit bank account - agency', async ({ page }) => {
-    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    await login(page, getBankAccountsUser(test.info().project.name).email, bankAccountsUserPassword);
     await goToBankAccountsPage(page);
 
     await editBankAccount(page, currentAccountName);
@@ -102,7 +106,7 @@ test.describe.serial('Bank Accounts', () => {
   });
 
   test('should edit bank account by adding 2 cards', async ({ page }) => {
-    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    await login(page, getBankAccountsUser(test.info().project.name).email, bankAccountsUserPassword);
     await goToBankAccountsPage(page);
 
     await editBankAccount(page, currentAccountName);
@@ -116,7 +120,7 @@ test.describe.serial('Bank Accounts', () => {
   });
 
   test('should edit bank account by deleting one card at a time', async ({ page }) => {
-    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    await login(page, getBankAccountsUser(test.info().project.name).email, bankAccountsUserPassword);
     await goToBankAccountsPage(page);
 
     await editBankAccount(page, currentAccountName);
@@ -136,7 +140,8 @@ test.describe.serial('Bank Accounts', () => {
   });
 
   test('should add multiple bank accounts', async ({ page }) => {
-    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    const { accountName2, accountName3 } = getAccountNames();
+    await login(page, getBankAccountsUser(test.info().project.name).email, bankAccountsUserPassword);
     await goToBankAccountsPage(page);
 
     await openAddBankAccountModal(page);
@@ -163,7 +168,8 @@ test.describe.serial('Bank Accounts', () => {
   });
 
   test('should delete one bank account', async ({ page }) => {
-    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    const { accountName2, accountName3 } = getAccountNames();
+    await login(page, getBankAccountsUser(test.info().project.name).email, bankAccountsUserPassword);
     await goToBankAccountsPage(page);
 
     await deleteBankAccount(page, accountName2);
@@ -175,7 +181,8 @@ test.describe.serial('Bank Accounts', () => {
   });
 
   test('should delete all bank accounts', async ({ page }) => {
-    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    const { accountName3 } = getAccountNames();
+    await login(page, getBankAccountsUser(test.info().project.name).email, bankAccountsUserPassword);
     await goToBankAccountsPage(page);
 
     await deleteBankAccount(page, currentAccountName);
@@ -192,7 +199,7 @@ test.describe.serial('Bank Accounts', () => {
 
 test.describe('Bank Account Modal - Card Flags', () => {
   test('should show correct flag for Visa card number', async ({ page }) => {
-    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    await login(page, getBankAccountsUser(test.info().project.name).email, bankAccountsUserPassword);
     await goToBankAccountsPage(page);
     await openAddBankAccountModal(page);
 
@@ -201,7 +208,7 @@ test.describe('Bank Account Modal - Card Flags', () => {
   });
 
   test('should show correct flag for Mastercard card number', async ({ page }) => {
-    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    await login(page, getBankAccountsUser(test.info().project.name).email, bankAccountsUserPassword);
     await goToBankAccountsPage(page);
     await openAddBankAccountModal(page);
 
@@ -210,7 +217,7 @@ test.describe('Bank Account Modal - Card Flags', () => {
   });
 
   test('should show correct flag for Amex card number', async ({ page }) => {
-    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    await login(page, getBankAccountsUser(test.info().project.name).email, bankAccountsUserPassword);
     await goToBankAccountsPage(page);
     await openAddBankAccountModal(page);
 
@@ -219,7 +226,7 @@ test.describe('Bank Account Modal - Card Flags', () => {
   });
 
   test('should show correct flag for Discover card number', async ({ page }) => {
-    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    await login(page, getBankAccountsUser(test.info().project.name).email, bankAccountsUserPassword);
     await goToBankAccountsPage(page);
     await openAddBankAccountModal(page);
 
@@ -228,7 +235,7 @@ test.describe('Bank Account Modal - Card Flags', () => {
   });
 
   test('should show correct flag for Diners card number', async ({ page }) => {
-    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    await login(page, getBankAccountsUser(test.info().project.name).email, bankAccountsUserPassword);
     await goToBankAccountsPage(page);
     await openAddBankAccountModal(page);
 
@@ -237,7 +244,7 @@ test.describe('Bank Account Modal - Card Flags', () => {
   });
 
   test('should show correct flag for Maestro card number', async ({ page }) => {
-    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    await login(page, getBankAccountsUser(test.info().project.name).email, bankAccountsUserPassword);
     await goToBankAccountsPage(page);
     await openAddBankAccountModal(page);
 
@@ -246,7 +253,7 @@ test.describe('Bank Account Modal - Card Flags', () => {
   });
 
   test('should show no flag icon for unknown card number', async ({ page }) => {
-    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    await login(page, getBankAccountsUser(test.info().project.name).email, bankAccountsUserPassword);
     await goToBankAccountsPage(page);
     await openAddBankAccountModal(page);
 
@@ -258,7 +265,7 @@ test.describe('Bank Account Modal - Card Flags', () => {
 
 test.describe('Bank Account Modal - Validation', () => {
   test('should show required errors when submitting empty form', async ({ page }) => {
-    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    await login(page, getBankAccountsUser(test.info().project.name).email, bankAccountsUserPassword);
     await goToBankAccountsPage(page);
     await openAddBankAccountModal(page);
 
@@ -271,7 +278,7 @@ test.describe('Bank Account Modal - Validation', () => {
   });
 
   test('should show invalid format error for account number with non-digits', async ({ page }) => {
-    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    await login(page, getBankAccountsUser(test.info().project.name).email, bankAccountsUserPassword);
     await goToBankAccountsPage(page);
     await openAddBankAccountModal(page);
 
@@ -287,7 +294,7 @@ test.describe('Bank Account Modal - Validation', () => {
   });
 
   test('should show invalid format error for agency with non-digits', async ({ page }) => {
-    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    await login(page, getBankAccountsUser(test.info().project.name).email, bankAccountsUserPassword);
     await goToBankAccountsPage(page);
     await openAddBankAccountModal(page);
 
@@ -305,7 +312,7 @@ test.describe('Bank Account Modal - Validation', () => {
 
 test.describe('Bank Account Modal - Credit Card Validation', () => {
   test('should show required error when adding card with empty card number', async ({ page }) => {
-    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    await login(page, getBankAccountsUser(test.info().project.name).email, bankAccountsUserPassword);
     await goToBankAccountsPage(page);
     await openAddBankAccountModal(page);
 
@@ -323,7 +330,7 @@ test.describe('Bank Account Modal - Credit Card Validation', () => {
   });
 
   test('should show invalid format error when adding card with non-digits in card number', async ({ page }) => {
-    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    await login(page, getBankAccountsUser(test.info().project.name).email, bankAccountsUserPassword);
     await goToBankAccountsPage(page);
     await openAddBankAccountModal(page);
 
@@ -333,7 +340,7 @@ test.describe('Bank Account Modal - Credit Card Validation', () => {
   });
 
   test('should show required error when adding card with empty expiration date', async ({ page }) => {
-    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    await login(page, getBankAccountsUser(test.info().project.name).email, bankAccountsUserPassword);
     await goToBankAccountsPage(page);
     await openAddBankAccountModal(page);
 
@@ -345,7 +352,7 @@ test.describe('Bank Account Modal - Credit Card Validation', () => {
   });
 
   test('should show invalid error when adding card with past expiration date', async ({ page }) => {
-    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    await login(page, getBankAccountsUser(test.info().project.name).email, bankAccountsUserPassword);
     await goToBankAccountsPage(page);
     await openAddBankAccountModal(page);
 
@@ -366,7 +373,7 @@ test.describe('Bank Account Modal - Currency Select', () => {
   ];
 
   test('should show all available currencies in the select', async ({ page }) => {
-    await login(page, bankAccountsUser.email, bankAccountsUserPassword);
+    await login(page, getBankAccountsUser(test.info().project.name).email, bankAccountsUserPassword);
     await goToBankAccountsPage(page);
     await openAddBankAccountModal(page);
 
