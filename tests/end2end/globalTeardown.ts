@@ -3,6 +3,7 @@ import * as dotenv from 'dotenv';
 import { loginUser, resetPasswordUser, testUser } from './authUtils';
 import { changeEmailUser, changePasswordUser } from './settingsPageUtils';
 import { bankAccountsUsers } from './bankAccountsPageUtils';
+import { categoryUsers } from './categoriesPageUtils';
 
 dotenv.config();
 
@@ -13,6 +14,14 @@ export default async function globalTeardown() {
     const dbUser = await mongoose.connection.db?.collection('users').findOne({ email: user.email });
     if (dbUser?._id) {
       await mongoose.connection.db?.collection('accounts').deleteMany({ user: dbUser._id });
+    }
+    await mongoose.connection.db?.collection('users').deleteOne({ email: user.email });
+  }
+
+  for (const user of Object.values(categoryUsers)) {
+    const dbUser = await mongoose.connection.db?.collection('users').findOne({ email: user.email });
+    if (dbUser?._id) {
+      await mongoose.connection.db?.collection('categories').deleteMany({ user: dbUser._id });
     }
     await mongoose.connection.db?.collection('users').deleteOne({ email: user.email });
   }

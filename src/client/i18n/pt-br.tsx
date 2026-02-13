@@ -112,5 +112,7 @@ export default {
     categoryDeletionFailed: 'Falha ao deletar categoria! Por favor, tente novamente mais tarde.',
     categoryCreated: 'Categoria criada com sucesso!',
     categoryCreationFailed: 'Falha ao criar categoria! Por favor, tente novamente mais tarde.',
+    categoryUpdated: 'Categoria atualizada com sucesso!',
+    categoryUpdateFailed: 'Falha ao atualizar categoria! Por favor, tente novamente mais tarde.',
   },
 };

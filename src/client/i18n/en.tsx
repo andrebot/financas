@@ -114,5 +114,7 @@ export default {
     categoryDeletionFailed: 'Failed to delete category! Please try again later.',
     categoryCreated: 'Category created successfully!',
     categoryCreationFailed: 'Failed to create category! Please try again later.',
+    categoryUpdated: 'Category updated successfully!',
+    categoryUpdateFailed: 'Failed to update category! Please try again later.',
   },
 };
