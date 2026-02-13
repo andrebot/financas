@@ -13,32 +13,32 @@ function capitalize(string) {
 }
 
 const endpointContent = `import baseApi from '../apiSlice';
-import type { ApiBuilder } from '../../types/requests';
+import type { ApiBuilder } from '../../types';
 
 export const list${capitalize(endpointName)}Query = () => ({
-  url: '/account',
+  url: '/ENDPOINT',
   method: 'GET',
 });
 
 export const create${capitalize(endpointName)}Mutation = (body: TYPE) => ({
-  url: '/account',
+  url: '/ENDPOINT',
   method: 'POST',
   body,
 });
 
 export const update${capitalize(endpointName)}Mutation = (body: TYPE) => ({
-  url: \`/account/\${body.id}\`,
+  url: \`/ENDPOINT/\${body.id}\`,
   method: 'PUT',
   body,
 });
 
 export const delete${capitalize(endpointName)}Mutation = (id: string) => ({
-  url: \`/account/\${id}\`,
+  url: \`/ENDPOINT/\${id}\`,
   method: 'DELETE',
 });
 
 export const get${capitalize(endpointName)}Query = (id: string) => ({
-  url: \`/account/\${id}\`,
+  url: \`/ENDPOINT/\${id}\`,
   method: 'GET',
 });
 
