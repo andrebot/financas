@@ -409,4 +409,12 @@ export type StandardRouteFactoryOptions<T extends Document, K extends Content> =
   repository?: Repository<T, K>,
 };
 
+export type RouteOverrides = {
+  listContent?: (req: RequestWithUser, res: Response) => Promise<Response>;
+  createContent?: (req: RequestWithUser, res: Response) => Promise<Response>;
+  getContent?: (req: RequestWithUser, res: Response) => Promise<Response>;
+  updateContent?: (req: RequestWithUser, res: Response) => Promise<Response>;
+  deleteContent?: (req: RequestWithUser, res: Response) => Promise<Response>;
+};
+
 /* eslint-enable no-unused-vars */

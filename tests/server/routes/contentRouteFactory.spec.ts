@@ -50,6 +50,61 @@ describe(('contentRouteFactory'), () => {
         layer.route.stack[0].handle.name.should.equal('accessTokenValidator');
       });
     });
+
+    it('should be able to override one route', async () => {
+      const overrideListContent = sinon.spy();
+      const newRouter = contentRouteFactory(testController, {
+        listContent: overrideListContent,
+      });
+
+      const listRoute = newRouter.stack[0];
+      const routeHandler = listRoute.route!.stack[1].handle;
+
+      const mockReq = { user: { id: 'test' } } as any;
+      const mockRes = { sendStatus: sinon.stub(), json: sinon.stub() } as any;
+      const next = sinon.stub();
+
+      await routeHandler(mockReq, mockRes, next);
+
+      overrideListContent.should.have.been.calledOnce;
+      testController.listContent.should.not.have.been.called;
+    });
+
+    it('should be able to override multiple routes', async () => {
+      const overrideListContent = sinon.spy();
+      const overrideCreateContent = sinon.spy();
+      const overrideGetContent = sinon.spy();
+      const overrideUpdateContent = sinon.spy();
+      const overrideDeleteContent = sinon.spy();
+
+      const newRouter = contentRouteFactory(testController, {
+        listContent: overrideListContent,
+        createContent: overrideCreateContent,
+        getContent: overrideGetContent,
+        updateContent: overrideUpdateContent,
+        deleteContent: overrideDeleteContent,
+      });
+
+      for (const route of newRouter.stack) {
+        const routeHandler = route.route!.stack[1].handle;
+        const mockReq = { user: { id: 'test' } } as any;
+        const mockRes = { sendStatus: sinon.stub(), json: sinon.stub() } as any;
+        const next = sinon.stub();
+
+        await routeHandler(mockReq, mockRes, next);
+      }
+
+      overrideListContent.should.have.been.calledOnce;
+      testController.listContent.should.not.have.been.called;
+      overrideCreateContent.should.have.been.calledOnce;
+      testController.createContent.should.not.have.been.called;
+      overrideGetContent.should.have.been.calledOnce;
+      testController.getContent.should.not.have.been.called;
+      overrideUpdateContent.should.have.been.calledOnce;
+      testController.updateContent.should.not.have.been.called;
+      overrideDeleteContent.should.have.been.calledOnce;
+      testController.deleteContent.should.not.have.been.called;
+    });
   });
 
   describe('Standard route factory', () => {

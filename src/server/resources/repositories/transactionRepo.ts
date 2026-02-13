@@ -34,6 +34,23 @@ export class TransactionRepo extends Repository<ITransactionDocument, ITransacti
       date: { $gte: startDate, $lte: endDate },
     });
   }
+
+  /**
+   * Removes categories from transactions by a list of category ids.
+   *
+   * @param categoryIds - The ids of the categories to remove.
+   * @returns The number of transactions updated.
+   */
+  async removeCategoriesFromTransactions(categoryIds: string[]): Promise<number> {
+    this.logger.info(`Removing categories from transactions: ${categoryIds}`);
+
+    const result = await this.Model.updateMany(
+      { category: { $in: categoryIds } },
+      { $unset: { category: 1 } },
+    );
+
+    return result.modifiedCount;
+  }
 }
 
 export default new TransactionRepo();

@@ -28,7 +28,7 @@ export default class ContentManager<T extends Content> {
  * @param contentId - The id of the content
  * @param action - The action to check access for
  */
-  private checkUserAccess(
+  protected checkUserAccess(
     contentOwnerId: string,
     userId: string,
     isAdmin: boolean,
