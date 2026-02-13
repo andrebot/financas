@@ -3,9 +3,13 @@ import sinon from 'sinon';
 import request from 'supertest';
 import { Types } from 'mongoose';
 import server from '../../src/server/server';
-import { category1, category2, category3, adminUser } from './connectDB';
+import {
+  category1, category2, category3, adminUser, createCategory, createTransaction, account1,
+} from './connectDB';
 import { createAccessToken } from '../../src/server/managers/authenticationManager';
 import categoryModel from '../../src/server/resources/models/categoryModel';
+import type { ICategory, ITransaction } from '../../src/server/types';
+import { TRANSACTION_TYPES } from '../../src/server/types';
 
 const resourceUrl = '/api/v1/category';
 
@@ -113,7 +117,7 @@ describe('Category', () => {
   describe('Create Category - POST /api/v1/category/', () => {
     it('should create a category', async () => {
       const newCategory = {
-        name: 'Test Account',
+        name: 'Test Category',
         user: adminUser.id,
       };
 
@@ -152,7 +156,7 @@ describe('Category', () => {
   describe('Update Category - PUT /api/v1/category/:id', () => {
     it('should update a category', async () => {
       const updatedCategory = {
-        name: 'Updated Account',
+        name: 'Updated Category',
       };
 
       const response = await request(server)
@@ -295,6 +299,59 @@ describe('Category', () => {
 
       response.status.should.be.eq(500);
       stub.restore();
+    });
+
+    it('should delete a category and its subcategories', async () => {
+      const categoryForSubcategories = { name: 'Parent Category' } as ICategory;
+      await createCategory(categoryForSubcategories, adminUser.id!, undefined);
+
+      const subCategory = { name: 'Sub Category' } as ICategory;
+      await createCategory(subCategory, adminUser.id!, categoryForSubcategories.id);
+
+      const response = await request(server)
+        .delete(`${resourceUrl}/${categoryForSubcategories.id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      response.status.should.be.eq(200);
+      response.body.should.have.property('name', categoryForSubcategories.name);
+
+      const getSubCategoryResponse = await request(server)
+        .get(`${resourceUrl}/${subCategory.id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      getSubCategoryResponse.body.should.be.empty;
+    });
+
+    it('should remove category from transactions when deleting a category', async () => {
+      const categoryForTransaction = { name: 'Category For Transaction' } as ICategory;
+      await createCategory(categoryForTransaction, adminUser.id!, undefined);
+
+      const transactionWithCategory = {
+        name: 'Transaction With Category',
+        category: categoryForTransaction.id!,
+        parentCategory: categoryForTransaction.id!,
+        type: TRANSACTION_TYPES.WITHDRAW,
+        date: new Date(),
+        value: 50,
+      } as ITransaction;
+      await createTransaction(transactionWithCategory, adminUser.id!, account1.id!);
+
+      const deleteResponse = await request(server)
+        .delete(`${resourceUrl}/${categoryForTransaction.id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      deleteResponse.status.should.be.eq(200);
+
+      const getTransactionResponse = await request(server)
+        .get(`/api/v1/transaction/${transactionWithCategory.id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      getTransactionResponse.status.should.be.eq(200);
+      getTransactionResponse.body.should.not.have.property('category');
+
+      await request(server)
+        .delete(`/api/v1/transaction/${transactionWithCategory.id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
     });
   });
 });

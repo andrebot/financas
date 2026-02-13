@@ -8,6 +8,7 @@ import Register from '../pages/register';
 import ResetPassword from '../pages/resetPassword';
 import Settings from '../pages/settings';
 import BankAccounts from '../pages/bankAccounts';
+import Categories from '../pages/categories';
 
 /**
  * Routes for the application.
@@ -32,6 +33,7 @@ export default function routes(): React.JSX.Element {
           <Route path="/" element={<MainPage />}>
             <Route path="settings" element={<Settings />} />
             <Route path="bank-accounts" element={<BankAccounts />} />
+            <Route path="categories" element={<Categories />} />
           </Route>
         </Route>
         <Route path={apiConfig.user.loginPage} element={<Login />} />

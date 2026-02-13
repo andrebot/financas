@@ -1,7 +1,6 @@
 // eslint-disable-next-line import/no-unresolved
 import baseApi from '../apiSlice';
-import type { ApiBuilder } from '../../types/requests';
-import type { BankAccount } from '../../types/bankAccounts';
+import type { ApiBuilder, BankAccount } from '../../types';
 
 /**
  * This query is used to list all bank accounts.

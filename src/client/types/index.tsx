@@ -17,6 +17,8 @@ import {
 } from './bankAccounts';
 import { ChangePasswordAction, SettingsAction } from './settings';
 import { ModalContextType, ModalProviderProps } from './modal';
+import { Category, FormattedCategory } from './categories';
+import { ApiBuilder, RTKApi } from './requests';
 
 export {
   UserType,
@@ -40,4 +42,8 @@ export {
   SettingsAction,
   CardBrand,
   CreditCardFormProps,
+  Category,
+  ApiBuilder,
+  RTKApi,
+  FormattedCategory,
 };

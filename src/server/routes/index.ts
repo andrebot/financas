@@ -3,16 +3,16 @@ import { API_PREFIX } from '../config/server';
 import { createLogger } from '../utils/logger';
 import BudgetManager from '../managers/budgetManager';
 import transactionRouter from './transaction';
+import categoryRouter from './category';
 import contentRouterFactory, { standardRouteFactory } from './contentRouteFactory';
 import userRouter from './authentication';
 import AccountModel, { IAccountDocument } from '../resources/models/accountModel';
 import BudgetModel, { IBudgetDocument } from '../resources/models/budgetModel';
-import CategoryModel, { ICategoryDocument } from '../resources/models/categoryModel';
 import GoalModel, { IGoalDocument } from '../resources/models/goalModel';
 import BudgetRepo from '../resources/repositories/budgetRepo';
 import GoalRepo from '../resources/repositories/goalRepo';
 import type {
-  IAccount, IBudget, ICategory, IGoal, IContentController,
+  IAccount, IBudget, IGoal, IContentController,
 } from '../types';
 
 const logger = createLogger('RoutesInitializer');
@@ -25,7 +25,6 @@ const logger = createLogger('RoutesInitializer');
  */
 const standardRoutes: { prefix: string; controller: IContentController }[] = [
   standardRouteFactory<IAccountDocument, IAccount>(AccountModel, 'account'),
-  standardRouteFactory<ICategoryDocument, ICategory>(CategoryModel, 'category'),
   standardRouteFactory<IGoalDocument, IGoal>(GoalModel, 'goal', {
     repository: GoalRepo,
   }),
@@ -49,6 +48,10 @@ const customRoutes: { prefix: string; router: Router }[] = [
   {
     prefix: 'transaction',
     router: transactionRouter,
+  },
+  {
+    prefix: 'category',
+    router: categoryRouter,
   },
 ];
 

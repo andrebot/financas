@@ -12,6 +12,7 @@ import AccountIcon from '@mui/icons-material/AccountCircle';
 import LogoutIcon from '@mui/icons-material/Logout';
 import SettingsIcon from '@mui/icons-material/Settings';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import CollectionsBookmarkIcon from '@mui/icons-material/CollectionsBookmark';
 import CustomListItem from './customListItem';
 import {
   NavMenuIcon,
@@ -68,6 +69,9 @@ export default function NavBar() {
             </CustomListItem>
             <CustomListItem text={t('bankAccounts')} onClick={() => navigate('/bank-accounts')}>
               <AccountBalanceIcon />
+            </CustomListItem>
+            <CustomListItem text={t('categories')} onClick={() => navigate('/categories')}>
+              <CollectionsBookmarkIcon />
             </CustomListItem>
           </List>
           <Divider />

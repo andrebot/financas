@@ -5,10 +5,12 @@ describe('TransactionRepo', function() {
   let transactionRepo: TransactionRepo;
   let transactionModel = {
     find: sinon.stub(),
+    updateMany: sinon.stub(),
   };
 
   beforeEach(function() {
     transactionModel.find.reset();
+    transactionModel.updateMany.reset();
     transactionRepo = new TransactionRepo(transactionModel as any);
   });
   
@@ -31,5 +33,20 @@ describe('TransactionRepo', function() {
 
     transactions.should.be.an.instanceOf(Array);
     transactions.should.have.lengthOf(1);
+  });
+
+  it('should remove categories from transactions', async function() {
+    const categoryIds = ['1', '2'];
+
+    transactionModel.updateMany.resolves({ modifiedCount: 1 });
+
+    const result = await transactionRepo.removeCategoriesFromTransactions(categoryIds);
+
+    transactionModel.updateMany.should.have.been.calledOnce;
+    transactionModel.updateMany.should.have.been.calledWith(
+      { category: { $in: categoryIds } },
+      { $unset: { category: 1 } },
+    );
+    result.should.equal(1);
   });
 });

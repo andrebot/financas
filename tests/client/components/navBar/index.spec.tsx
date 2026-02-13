@@ -139,4 +139,15 @@ describe('NavBar', () => {
 
     expect(navigateMock).toHaveBeenCalledWith('/bank-accounts');
   });
+
+  it('should go to the categories page when the categories button is clicked', () => {
+    render(
+      <I18nextProvider i18n={i18n}>
+        <NavBar />
+      </I18nextProvider>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'menu' }));
+    fireEvent.click(screen.getByText(i18nKeys.translation.categories));
+  });
 });

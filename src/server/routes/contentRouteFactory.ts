@@ -4,7 +4,7 @@ import ContentController from '../controllers/contentController';
 import Repository from '../resources/repositories/repository';
 import ContentManager, { Content } from '../managers/contentManager';
 import createAccessTokenValidation from '../utils/authorization';
-import type { IContentController, StandardRouteFactoryOptions } from '../types';
+import type { IContentController, StandardRouteFactoryOptions, RouteOverrides } from '../types';
 
 /**
  * Factory function to create standard CRUD routes for a given controller
@@ -12,14 +12,23 @@ import type { IContentController, StandardRouteFactoryOptions } from '../types';
  * @param controller - The controller to create the router for
  * @returns The router and the url prefix
  */
-export default function contentRouterFactory(controller: IContentController): Router {
+export default function contentRouterFactory(
+  controller: IContentController,
+  overrides: RouteOverrides = {},
+): Router {
   const router = Router();
 
-  router.get('/', createAccessTokenValidation(), controller.listContent.bind(controller));
-  router.post('/', createAccessTokenValidation(), controller.createContent.bind(controller));
-  router.get('/:id([0-9a-fA-F]{24})', createAccessTokenValidation(), controller.getContent.bind(controller));
-  router.put('/:id([0-9a-fA-F]{24})', createAccessTokenValidation(), controller.updateContent.bind(controller));
-  router.delete('/:id([0-9a-fA-F]{24})', createAccessTokenValidation(), controller.deleteContent.bind(controller));
+  const listContentMethod = overrides.listContent || controller.listContent;
+  const createContentMethod = overrides.createContent || controller.createContent;
+  const getContentMethod = overrides.getContent || controller.getContent;
+  const updateContentMethod = overrides.updateContent || controller.updateContent;
+  const deleteContentMethod = overrides.deleteContent || controller.deleteContent;
+
+  router.get('/', createAccessTokenValidation(), listContentMethod.bind(controller));
+  router.post('/', createAccessTokenValidation(), createContentMethod.bind(controller));
+  router.get('/:id([0-9a-fA-F]{24})', createAccessTokenValidation(), getContentMethod.bind(controller));
+  router.put('/:id([0-9a-fA-F]{24})', createAccessTokenValidation(), updateContentMethod.bind(controller));
+  router.delete('/:id([0-9a-fA-F]{24})', createAccessTokenValidation(), deleteContentMethod.bind(controller));
 
   return router;
 }
