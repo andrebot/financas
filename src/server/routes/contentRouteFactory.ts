@@ -12,7 +12,10 @@ import type { IContentController, StandardRouteFactoryOptions, RouteOverrides } 
  * @param controller - The controller to create the router for
  * @returns The router and the url prefix
  */
-export default function contentRouterFactory(controller: IContentController, overrides: RouteOverrides = {}): Router {
+export default function contentRouterFactory(
+  controller: IContentController,
+  overrides: RouteOverrides = {},
+): Router {
   const router = Router();
 
   const listContentMethod = overrides.listContent || controller.listContent;

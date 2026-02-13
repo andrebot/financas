@@ -10,6 +10,7 @@ import type { ICategory } from '../types';
  */
 export class CategoryManager extends ContentManager<ICategory> {
   private transactionRepo: typeof TransactionRepo;
+
   private categoryRepo: typeof CategoryRepo;
 
   constructor(
@@ -23,7 +24,8 @@ export class CategoryManager extends ContentManager<ICategory> {
   }
 
   /**
-   * Deletes a category and all its subcategories. It also removes the category from all transactions.
+   * Deletes a category and all its subcategories. It also
+   * removes the category from all transactions.
    *
    * @throws {Error} - If the category id is not provided.
    * @throws {Error} - If the user is not allowed to delete the category.
@@ -40,7 +42,7 @@ export class CategoryManager extends ContentManager<ICategory> {
 
     checkVoidInstance(instance, this.repository.modelName, id);
     this.checkUserAccess(instance!.user.toString(), userId, isAdmin, this.repository.modelName, id, 'delete');
-    
+
     this.logger.info(`Deleting category and all its subcategories with id: ${id}`);
 
     const subcategories = await this.categoryRepo.findAllSubcategories(id);
@@ -48,7 +50,7 @@ export class CategoryManager extends ContentManager<ICategory> {
     this.logger.info(`Found ${subcategories.length} subcategories`);
 
     const updatedTransactions = await this.transactionRepo.removeCategoriesFromTransactions(
-      [id, ...subcategories.map((s) => s.id!)]
+      [id, ...subcategories.map((s) => s.id!)],
     );
 
     this.logger.info(`Removed categories from ${updatedTransactions} transactions`);

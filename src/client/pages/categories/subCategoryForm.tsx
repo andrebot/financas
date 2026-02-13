@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import Button from '@mui/material/Button';
 import { useTranslation } from 'react-i18next';
-import { 
+import {
   SubCategoryHolder,
   SubCategoryTextField,
 } from './styledComponents';
@@ -24,7 +24,7 @@ export default function SubCategoryForm({ onAddSubCategory }: SubCategoryFormPro
     setSubCategoryName('');
     anchorEl.current?.focus();
   };
-  
+
   return (
     <SubCategoryHolder>
       <SubCategoryTextField inputRef={anchorEl} label={t('subCategoryName')} variant="outlined" value={subCategoryName} onChange={(e) => setSubCategoryName(e.target.value)} />

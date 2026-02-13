@@ -16,13 +16,17 @@ import {
   CategoryTitleHolder,
   SubCategoryList,
 } from './styledComponents';
-import { Category } from '../../types';
+import { Category, FormattedCategory } from '../../types';
 import { useAuth } from '../../hooks/authContext';
 import { useModal } from '../../components/modal/modal';
 import AddCategoryModal from './addCategoryModal';
 import ConfirmDeleteCategoryModal from '../../components/confirmModal';
-import { useListCategoriesQuery, useCreateCategoryMutation, useDeleteCategoryMutation, useUpdateCategoryMutation } from '../../features/category';
-import { FormattedCategory } from '../../types';
+import {
+  useListCategoriesQuery,
+  useCreateCategoryMutation,
+  useDeleteCategoryMutation,
+  useUpdateCategoryMutation,
+} from '../../features/category';
 
 /**
  * Main component for the categories page. This has the logic for all the
@@ -63,26 +67,28 @@ export default function Categories(): React.JSX.Element {
    * ]
    *
    * @remarks
-   * The categories from the API are a flat list of categories. This function formats them into a tree structure.
-   * 
+   * The categories from the API are a flat list of categories.
+   * This function formats them into a tree structure.
+   *
    * @param categories List of categories to be formatted
    * @returns Formatted categories
    */
   const formatCategories = (categories: Category[]) => {
-    const formattedCategories: FormattedCategory[] = [];
+    const newFormattedCategories: FormattedCategory[] = [];
 
-    for (const category of categories) {
+    categories.forEach((category) => {
       if (category.parentCategory) {
-        formattedCategories.find(c => c.id === category.parentCategory)?.children.push(category);
+        newFormattedCategories.find((c) => c.id === category.parentCategory)?.children
+          .push(category);
       } else {
-        formattedCategories.push({
+        newFormattedCategories.push({
           ...category,
           children: [],
         });
       }
-    }
+    });
 
-    return formattedCategories;
+    return newFormattedCategories;
   };
 
   /**
@@ -95,14 +101,14 @@ export default function Categories(): React.JSX.Element {
       await deleteCategory(subCategoryId).unwrap();
 
       enqueueSnackbar(t('subCategoryDeleted'), { variant: 'success' });
-    } catch (error) {
+    } catch {
       enqueueSnackbar(t('subCategoryDeletionFailed'), { variant: 'error' });
     }
   };
 
   /**
    * Handles the addition of a sub-category.
-   * 
+   *
    * @remarks
    * After the save is done we focus the input field to allow the user to
    * quickly add another sub-category.
@@ -119,7 +125,7 @@ export default function Categories(): React.JSX.Element {
       }).unwrap();
 
       enqueueSnackbar(t('subCategoryCreated'), { variant: 'success' });
-    } catch (error) {
+    } catch {
       enqueueSnackbar(t('subCategoryCreationFailed'), { variant: 'error' });
     }
 
@@ -136,7 +142,7 @@ export default function Categories(): React.JSX.Element {
       await deleteCategory(categoryId).unwrap();
 
       enqueueSnackbar(t('categoryDeleted'), { variant: 'success' });
-    } catch (error) {
+    } catch {
       enqueueSnackbar(t('categoryDeletionFailed'), { variant: 'error' });
     } finally {
       closeModal();
@@ -173,7 +179,7 @@ export default function Categories(): React.JSX.Element {
       }).unwrap();
 
       enqueueSnackbar(t('categoryCreated'), { variant: 'success' });
-    } catch (error) {
+    } catch {
       enqueueSnackbar(t('categoryCreationFailed'), { variant: 'error' });
     }
   };
@@ -204,7 +210,7 @@ export default function Categories(): React.JSX.Element {
       }).unwrap();
 
       enqueueSnackbar(t('categoryUpdated'), { variant: 'success' });
-    } catch (error) {
+    } catch {
       enqueueSnackbar(t('categoryUpdateFailed'), { variant: 'error' });
     }
   };
@@ -216,7 +222,10 @@ export default function Categories(): React.JSX.Element {
    */
   const handleEditCategory = (category: FormattedCategory) => {
     showModal(
-      <AddCategoryModal category={category} onSaveCategory={(categoryName) => handleUpdateCategory(category, categoryName)} />,
+      <AddCategoryModal
+        category={category}
+        onSaveCategory={(categoryName) => handleUpdateCategory(category, categoryName)}
+      />,
     );
   };
 
@@ -242,14 +251,24 @@ export default function Categories(): React.JSX.Element {
             </CategoryTitleHolder>
             <SubCategoryList>
               {category.children.map((subCategory) => (
-                <Chip key={subCategory.id} label={subCategory.name} onDelete={() => handleDeleteSubCategory(subCategory.id!)} />
+                <Chip
+                  key={subCategory.id}
+                  label={subCategory.name}
+                  onDelete={() => handleDeleteSubCategory(subCategory.id!)}
+                  data-testid="subCategoryChip"
+                />
               ))}
             </SubCategoryList>
-            <SubCategoryForm onAddSubCategory={(subCategoryName) => handleAddSubCategory(category.id!, subCategoryName)} />
+            <SubCategoryForm
+              onAddSubCategory={(subCategoryName) => handleAddSubCategory(
+                category.id!,
+                subCategoryName,
+              )}
+              data-testid="subCategoryForm"
+            />
           </ParentCategory>
         ))}
       </CategoryList>
     </CategoriesMain>
   );
 }
-

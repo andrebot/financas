@@ -43,11 +43,11 @@ export const endpoints = (builder: ApiBuilder) => ({
     invalidatesTags: [{ type: 'Category', id: 'LIST' }],
   }),
   deleteCategory: builder.mutation<Category, string>({
-    query: deleteCategoryMutation ,
+    query: deleteCategoryMutation,
     invalidatesTags: [{ type: 'Category', id: 'LIST' }],
   }),
   getCategory: builder.query<Category, string>({
-    query: getCategoryQuery ,
+    query: getCategoryQuery,
   }),
 });
 

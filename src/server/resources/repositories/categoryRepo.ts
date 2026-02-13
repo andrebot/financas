@@ -1,6 +1,6 @@
-import { ICategory } from "../../types";
-import CategoryModel, { ICategoryDocument } from "../models/categoryModel";
-import Repository from "./repository";
+import { ICategory } from '../../types';
+import CategoryModel, { ICategoryDocument } from '../models/categoryModel';
+import Repository from './repository';
 
 export class CategoryRepo extends Repository<ICategoryDocument, ICategory> {
   constructor(categoryModel: typeof CategoryModel = CategoryModel) {
