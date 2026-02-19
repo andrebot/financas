@@ -1,11 +1,10 @@
 import jwt from 'jsonwebtoken';
-import { Document } from 'mongoose';
 import {
   Request, Response, NextFunction,
 } from 'express';
-import ContentManager, { Content } from './managers/contentManager';
-import Repository from './resources/repositories/repository';
 /* eslint-disable no-unused-vars */
+
+export type Content = { user: string };
 
 /**
  * Interface for the Token
@@ -269,7 +268,7 @@ export interface ITransaction {
   goalsList: IGoalItem[];
 }
 
-export interface IGoal {
+export interface IGoal extends Content {
   /**
    * Unique identifier
    */
@@ -323,7 +322,7 @@ export enum BUDGET_TYPES {
   DAILY = 'daily',
 }
 
-export interface IBudget {
+export interface IBudget extends Content {
   /**
    * Unique identifier of the budget
    */
@@ -404,17 +403,153 @@ export type BulkGoalsUpdate = {
 
 export type ErrorHandler = (error: Error) => void;
 
-export type StandardRouteFactoryOptions<T extends Document, K extends Content> = {
-  contentManager?: ContentManager<K>,
-  repository?: Repository<T, K>,
-};
-
 export type RouteOverrides = {
   listContent?: (req: RequestWithUser, res: Response) => Promise<Response>;
   createContent?: (req: RequestWithUser, res: Response) => Promise<Response>;
   getContent?: (req: RequestWithUser, res: Response) => Promise<Response>;
   updateContent?: (req: RequestWithUser, res: Response) => Promise<Response>;
   deleteContent?: (req: RequestWithUser, res: Response) => Promise<Response>;
+};
+
+export interface IAccountantManager {
+  createTransaction: (content: ITransaction) => Promise<ITransaction>;
+  deleteTransaction: (id: string, userId: string, isAdmin: boolean) => Promise<ITransaction | null>;
+  updateTransaction: (id: string, payload: Partial<ITransaction>, userId: string, isAdmin: boolean) => Promise<ITransaction | null>;
+  getTransaction: (id: string, userId: string, isAdmin: boolean) => Promise<ITransaction | null>;
+  listTransactions: (userId: string) => Promise<ITransaction[]>;
+  getTransactionTypes: () => { transactionTypes: string[]; investmentTypes: string[] };
+};
+
+export interface ICommonController<T extends Content> {
+  /**
+     * Creates a new content.
+     * 
+     * @throws {Error} - If no user is parsed in the request.
+     * @throws {Error} - If the payload is void.
+     *
+     * @param req - The request object.
+     * @param res - The response object.
+     * @returns The created content.
+     */
+  createContent: (req: RequestWithUser, res: Response) => Promise<Response<T>>;
+  /**
+   * Updates a content.
+   *
+   * @throws {Error} - If no user is parsed in the request.
+   * @throws {Error} - If the payload is void.
+   * @throws {Error} - If the content is not found.
+   * @throws {Error} - If the user is not authorized to update the content.
+   * 
+   * @param req - The request object.
+   * @param res - The response object.
+   * @returns The updated content.
+   */
+  updateContent: (req: RequestWithUser, res: Response) => Promise<Response<T>>;
+  /**
+   * Deletes a content by id.
+   * 
+   * @throws {Error} - If no user is parsed in the request.
+   * @throws {Error} - If the content is not found.
+   * @throws {Error} - If the user is not authorized to delete the content.
+   * @throws {Error} - If the content id is not found in the request parameters.
+   *
+   * @param req - The request object.
+   * @param res - The response object.
+   * @returns The deleted content.
+   */
+  deleteContent: (req: RequestWithUser, res: Response) => Promise<Response<T>>;
+  /**
+   * Lists all content for a user.
+   *
+   * @throws {Error} - If no user is parsed in the request.
+   *
+   * @param req - The request object.
+   * @param res - The response object.
+   * @returns The list of content.
+   */
+  listContent: (req: RequestWithUser, res: Response) => Promise<Response<T>>;
+  /**
+   * Gets a content by id.
+   *
+   * @throws {Error} - If no user is parsed in the request.
+   * @throws {Error} - If the content is not found.
+   * @throws {Error} - If the content id is not found in the request parameters.
+   *
+   * @param req - The request object.
+   * @param res - The response object.
+   * @returns The content.
+   */
+  getContent: (req: RequestWithUser, res: Response) => Promise<Response<T>>;
+}
+
+export interface ICommonActions<K extends Content> {
+  /**
+   * Creates a new content.
+   *
+   * @throws {Error} - If the payload is void.
+   *
+   * @param content - The content to create.
+   * @returns The created content.
+   */
+  createContent: (content: K) => Promise<K>;
+  /**
+   * Updates a content.
+   *
+   * @throws {Error} - If the payload is void.
+   * @throws {Error} - If the content is not found.
+   * @throws {Error} - If the user is not authorized to update the content.
+   *
+   * @param id - The id of the content to update.
+   * @param payload - The payload to update the content with.
+   * @param userId - The id of the user updating the content.
+   * @param isAdmin - Whether the user is an admin.
+   * @returns The updated content.
+   */
+  updateContent: (id: string, payload: Partial<K>, userId: string, isAdmin: boolean) => Promise<K | null>;
+  /**
+   * Deletes a content by id.
+   *
+   * @throws {Error} - If the content is not found.
+   * @throws {Error} - If the user is not authorized to delete the content.
+   *
+   * @param id - The id of the content to delete.
+   * @param userId - The id of the user deleting the content.
+   * @param isAdmin - Whether the user is an admin.
+   * @returns The deleted content.
+   */
+  deleteContent: (id: string, userId: string, isAdmin: boolean) => Promise<K | null>;
+  /**
+   * Lists all content for a user.
+   *
+   * @throws {Error} - If the user is not authorized to list the content.
+   *
+   * @param userId - The id of the user listing the content.
+   * @returns The list of content.
+   */
+  listContent: (userId: string) => Promise<K[]>;
+  /**
+   * Gets a content by id.
+   *
+   * @throws {Error} - If the content is not found.
+   * @throws {Error} - If the user is not authorized to get the content.
+   *
+   * @param id - The id of the content to get.
+   * @param userId - The id of the user getting the content.
+   * @param isAdmin - Whether the user is an admin.
+   * @returns The content.
+   */
+  getContent: (id: string, userId: string, isAdmin: boolean) => Promise<K | null>;
+}
+
+export interface IBudgetActions extends ICommonActions<IBudget> {
+  calculateBudgetSpent: (budget: IBudget) => Promise<number>;
+}
+
+export type ContentManagerActions = {
+  budgetActions: IBudgetActions;
+  categoryActions: ICommonActions<ICategory>;
+  goalActions: ICommonActions<IGoal>;
+  accountActions: ICommonActions<IAccount>;
 };
 
 /* eslint-enable no-unused-vars */

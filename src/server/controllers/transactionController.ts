@@ -1,42 +1,73 @@
-import type { Response } from 'express';
-import ContentController from './contentController';
-import TransactionManager from '../managers/transactionManager';
+import { Response } from 'express';
+import { AccountantManager } from '../managers/accountantManager';
+import CommonController from './commonController';
 import { checkVoidUser } from '../utils/misc';
-import type { RequestWithUser, ITransaction } from '../types';
+import { createLogger } from '../utils/logger';
+import { handleError } from '../utils/responseHandlers';
+import type { IAccountantManager, ITransaction, RequestWithUser } from '../types';
 
-export class TransactionController extends ContentController<ITransaction> {
-  private transactionManager: typeof TransactionManager;
+const logger = createLogger('TransactionController');
 
-  constructor(transactionManager: typeof TransactionManager = TransactionManager) {
-    super(transactionManager, 'TransactionController');
+/**
+ * Get the transaction types
+ * 
+ * @throws {Error} - If the user is not found.
+ *
+ * @param req - The request object
+ * @param res - The response object
+ * @param accountantManager - The accountant manager to use.
+ * @param errorHandler - The error handler to use.
+ * @returns The transaction types
+ */
+function getTransactionTypes(
+  req: RequestWithUser,
+  res: Response,
+  accountantManager: IAccountantManager,
+  errorHandler = handleError,
+) {
+  try {
+    const { user } = req;
 
-    this.transactionManager = transactionManager;
-  }
+    checkVoidUser(user, 'Transaction', 'get');
 
-  /**
-   * Get the transaction types
-   *
-   * @param req - The request object
-   * @param res - The response object
-   * @returns The transaction types
-   */
-  getTransactionTypes(req: RequestWithUser, res: Response) {
-    try {
-      const { user } = req;
+    const transactionTypes = accountantManager.getTransactionTypes();
 
-      checkVoidUser(user, this.transactionManager.modelName, 'get');
+    logger.info(`Listed ${transactionTypes.investmentTypes.length} investment types and ${transactionTypes.transactionTypes.length} transaction types for user: ${user?.id}`);
 
-      const transactionTypes = this.transactionManager.getTransactionTypes();
+    return res.send(transactionTypes);
+  } catch (error) {
+    logger.error(error);
 
-      this.logger.info(`Listed ${transactionTypes.investmentTypes.length} investment types and ${transactionTypes.transactionTypes.length} transaction types for user: ${user?.id}`);
-
-      return res.send(transactionTypes);
-    } catch (error) {
-      this.logger.error(error);
-
-      return this.errorHandler(error as Error, res);
-    }
+    return errorHandler(error as Error, res);
   }
 }
 
-export default new TransactionController();
+/**
+ * Creates a new transaction controller.
+ *
+ * @param transactionRepo - The transaction repository to use.
+ * @param monthlyBalanceRepo - The monthly balance repository to use.
+ * @param goalRepo - The goal repository to use.
+ * @param budgetRepo - The budget repository to use.
+ * @param errorHandler - The error handler to use.
+ * @returns The transaction controller.
+ */
+export function TransactionController(
+  errorHandler = handleError,
+) {
+  const accountantManager = AccountantManager();
+  const commonTransactionController = CommonController<ITransaction>({
+    createContent: accountantManager.createTransaction,
+    updateContent: accountantManager.updateTransaction,
+    deleteContent: accountantManager.deleteTransaction,
+    listContent: accountantManager.listTransactions,
+    getContent: accountantManager.getTransaction,
+  }, 'Transaction');
+
+  return {
+    ...commonTransactionController,
+    getTransactionTypes: (req: RequestWithUser, res: Response) => getTransactionTypes(req, res, accountantManager, errorHandler),
+  };
+}
+
+export default TransactionController(handleError);

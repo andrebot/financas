@@ -51,6 +51,23 @@ export class TransactionRepo extends Repository<ITransactionDocument, ITransacti
 
     return result.modifiedCount;
   }
+
+  /**
+   * Deletes a goal from transactions by a goal id.
+   *
+   * @param goalId - The id of the goal to delete.
+   * @returns The number of transactions updated.
+   */
+  async deleteGoalFromTransactions(goalId: string): Promise<number> {
+    this.logger.info(`Deleting goal from transactions: ${goalId}`);
+
+    const result = await this.Model.updateMany(
+      { goalsList: { $elemMatch: { goal: goalId } } },
+      { $pull: { goalsList: { goal: goalId } } },
+    );
+
+    return result.modifiedCount;
+  }
 }
 
 export default new TransactionRepo();
