@@ -1,8 +1,8 @@
 import { AnyBulkWriteOperation } from 'mongodb';
 import mongoose from 'mongoose';
 import Repository from './repository';
-import GoalModel, { IGoalDocument } from '../models/goalModel';
-import { IGoal, BulkGoalsUpdate } from '../../types';
+import GoalModel from '../models/goalModel';
+import type { IGoal, IGoalDocument, BulkGoalsUpdate } from '../../types';
 
 export class GoalRepo extends Repository<IGoalDocument, IGoal> {
   constructor(goalModel: typeof GoalModel = GoalModel) {

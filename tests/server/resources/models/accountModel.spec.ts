@@ -1,6 +1,7 @@
 import { should } from 'chai';
 import mongoose from 'mongoose';
-import AccountModel, { IAccountDocument } from '../../../../src/server/resources/models/accountModel';
+import AccountModel from '../../../../src/server/resources/models/accountModel';
+import { IAccountDocument } from '../../../../src/server/types';
 import checkRequiredField from '../../checkRequiredField';
 
 describe('AccountModel', () => {

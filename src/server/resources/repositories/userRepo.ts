@@ -1,7 +1,7 @@
 import { Model } from 'mongoose';
-import UserModel, { IUserDocument } from '../models/userModel';
+import UserModel from '../models/userModel';
 import Repository from './repository';
-import { IUser } from '../../types';
+import type { IUser, IUserDocument } from '../../types';
 
 /**
  * Error handler for the user repository.

@@ -1,16 +1,5 @@
-import {
-  Schema,
-  model,
-  Document,
-  ObjectId,
-  Types,
-} from 'mongoose';
-import { IGoal } from '../../types';
-
-export interface IGoalDocument extends Omit<IGoal, 'id' | 'user'>, Document {
-  _id: Types.ObjectId;
-  user: ObjectId;
-}
+import { Schema, model } from 'mongoose';
+import type { IGoalDocument } from '../../types';
 
 const GoalSchema = new Schema<IGoalDocument>({
   name: { type: String, required: true },

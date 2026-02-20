@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import {
   Request, Response, NextFunction,
 } from 'express';
+import { Document, ObjectId, Types } from 'mongoose';
 /* eslint-disable no-unused-vars */
 
 export type Content = { user: string };
@@ -160,6 +161,11 @@ export interface ICard {
 }
 
 /**
+ * Mongoose document type for the Card
+ */
+export interface ICardDocument extends Omit<ICard, 'id'>, Document {}
+
+/**
  * Interface for the Account
  */
 export interface IAccount {
@@ -194,6 +200,14 @@ export interface IAccount {
 }
 
 /**
+ * Mongoose document type for the Account
+ */
+export interface IAccountDocument extends Omit<IAccount, 'id' | 'user'>, Document {
+  _id: Types.ObjectId;
+  user: ObjectId;
+}
+
+/**
  * Interface for the User
  */
 export interface IUser {
@@ -221,6 +235,13 @@ export interface IUser {
    * Password of the user
    */
   password: string;
+}
+
+/**
+ * Mongoose document type for the User
+ */
+export interface IUserDocument extends Omit<IUser, 'id'>, Document {
+  _id: Types.ObjectId;
 }
 
 export enum TRANSACTION_TYPES {
@@ -268,6 +289,20 @@ export interface ITransaction {
   goalsList: IGoalItem[];
 }
 
+/**
+ * Mongoose document type for the Transaction
+ */
+export interface ITransactionDocument extends Omit<ITransaction, 'id' | 'user' | 'goalsList' | 'account'>, Document {
+  _id: Types.ObjectId;
+  user: ObjectId;
+  account: ObjectId;
+  goalsList: {
+    goal: Types.ObjectId;
+    goalName: string;
+    percentage: number;
+  }[];
+}
+
 export interface IGoal extends Content {
   /**
    * Unique identifier
@@ -295,6 +330,14 @@ export interface IGoal extends Content {
   savedValue: number;
 }
 
+/**
+ * Mongoose document type for the Goal
+ */
+export interface IGoalDocument extends Omit<IGoal, 'id' | 'user'>, Document {
+  _id: Types.ObjectId;
+  user: ObjectId;
+}
+
 export interface ICategory {
   /**
    * Unique identifier
@@ -312,6 +355,15 @@ export interface ICategory {
    * Parent category, if this is a sub-category
    */
   parentCategory?: string;
+}
+
+/**
+ * Mongoose document type for the Category
+ */
+export interface ICategoryDocument extends Omit<ICategory, 'id' | 'user' | 'parentCategory'>, Document {
+  _id: Types.ObjectId;
+  user: ObjectId;
+  parentCategory: ObjectId;
 }
 
 export enum BUDGET_TYPES {
@@ -361,6 +413,14 @@ export interface IBudget extends Content {
   user: string;
 }
 
+/**
+ * Mongoose document type for the Budget
+ */
+export interface IBudgetDocument extends Omit<IBudget, 'id' | 'user'>, Document {
+  _id: Types.ObjectId;
+  user: ObjectId;
+}
+
 export interface IMonthlyBalance {
   /**
    * Unique identifier
@@ -394,6 +454,15 @@ export interface IMonthlyBalance {
    * Transactions of the monthly balance
    */
   transactions: ITransaction[];
+}
+
+/**
+ * Mongoose document type for the Monthly Balance
+ */
+export interface IMonthlyBalanceDocument extends Omit<IMonthlyBalance, 'id' | 'user' | 'account' | 'transactions'>, Document {
+  user: ObjectId;
+  account: ObjectId;
+  transactions: ObjectId[];
 }
 
 export type BulkGoalsUpdate = {

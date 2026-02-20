@@ -1,5 +1,6 @@
 import { should } from 'chai';
-import CategoryModel, { ICategoryDocument } from '../../../../src/server/resources/models/categoryModel';
+import CategoryModel from '../../../../src/server/resources/models/categoryModel';
+import { ICategoryDocument } from '../../../../src/server/types';
 import checkRequiredField from '../../checkRequiredField';
 import { Types } from 'mongoose';
 

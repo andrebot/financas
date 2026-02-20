@@ -1,6 +1,7 @@
 import { should } from 'chai';
 import mongoose from 'mongoose';
-import TransactionModel, { ITransactionDocument } from '../../../../src/server/resources/models/transactionModel';
+import TransactionModel from '../../../../src/server/resources/models/transactionModel';
+import { ITransactionDocument } from '../../../../src/server/types';
 import checkRequiredField from '../../checkRequiredField';
 import { INVESTMENT_TYPES, IGoalItem, TRANSACTION_TYPES } from '../../../../src/server/types';
 

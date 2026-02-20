@@ -1,7 +1,7 @@
 import { Model } from 'mongoose';
 import Repository from './repository';
-import TransactionModel, { ITransactionDocument } from '../models/transactionModel';
-import { ITransaction } from '../../types';
+import TransactionModel from '../models/transactionModel';
+import type { ITransaction, ITransactionDocument } from '../../types';
 
 export class TransactionRepo extends Repository<ITransactionDocument, ITransaction> {
   constructor(model: Model<ITransactionDocument> = TransactionModel) {

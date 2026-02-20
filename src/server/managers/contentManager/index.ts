@@ -6,18 +6,19 @@ import GoalRepo from '../../resources/repositories/goalRepo';
 import TransactionRepo from '../../resources/repositories/transactionRepo';
 import { createLogger } from '../../utils/logger';
 import { checkVoidInstance, checkUserAccess } from '../../utils/misc';
-import { ICategoryDocument } from '../../resources/models/categoryModel';
-import { IBudgetDocument } from '../../resources/models/budgetModel';
-import { IGoalDocument } from '../../resources/models/goalModel';
 import Repository from '../../resources/repositories/repository';
-import AccountModel, { IAccountDocument } from '../../resources/models/accountModel';
-import {
+import AccountModel from '../../resources/models/accountModel';
+import type {
   IAccount,
+  IAccountDocument,
   ICommonActions,
   ContentManagerActions,
   IBudget,
+  IBudgetDocument,
   ICategory,
+  ICategoryDocument,
   IGoal,
+  IGoalDocument,
 } from '../../types';
 
 const AccountRepo = new Repository<IAccountDocument, IAccount>(AccountModel);
@@ -32,7 +33,7 @@ const AccountRepo = new Repository<IAccountDocument, IAccount>(AccountModel);
  * @returns The goal actions.
  */
 function createGoalActions(
-  goalRepo: typeof GoalRepo,
+  goalRepo: Repository<IGoalDocument, IGoal>,
   transactionRepo: typeof TransactionRepo,
   logger: Logger,
 ): ICommonActions<IGoal> {
@@ -221,7 +222,7 @@ function createBudgetActions(
 export function createContentManager(
   budgetRepo: typeof BudgetRepo,
   categoryRepo: typeof CategoryRepo,
-  goalRepo: typeof GoalRepo,
+  goalRepo: Repository<IGoalDocument, IGoal>,
   transactionRepo: typeof TransactionRepo,
   accountRepo: typeof AccountRepo,
 ): ContentManagerActions {
@@ -239,4 +240,10 @@ export function createContentManager(
   };
 }
 
-export default createContentManager(BudgetRepo, CategoryRepo, GoalRepo, TransactionRepo, AccountRepo);
+export default createContentManager(
+  BudgetRepo,
+  CategoryRepo,
+  GoalRepo,
+  TransactionRepo,
+  AccountRepo,
+);

@@ -1,16 +1,5 @@
-import {
-  Schema,
-  model,
-  Document,
-  ObjectId,
-  Types,
-} from 'mongoose';
-import { IBudget, BUDGET_TYPES } from '../../types';
-
-export interface IBudgetDocument extends Omit<IBudget, 'id' | 'user'>, Document {
-  _id: Types.ObjectId;
-  user: ObjectId;
-}
+import { Schema, model } from 'mongoose';
+import { BUDGET_TYPES, IBudgetDocument } from '../../types';
 
 const BudgetSchema = new Schema<IBudgetDocument>({
   name: { type: String, required: true },

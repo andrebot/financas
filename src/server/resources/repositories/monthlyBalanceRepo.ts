@@ -1,7 +1,7 @@
 import { Model } from 'mongoose';
-import MonthlyBalanceModel, { IMonthlyBalanceDocument } from '../models/monthlyBalanceModel';
+import MonthlyBalanceModel from '../models/monthlyBalanceModel';
 import Repository from './repository';
-import { IMonthlyBalance, ITransaction } from '../../types';
+import type { IMonthlyBalance, IMonthlyBalanceDocument, ITransaction } from '../../types';
 
 export class MonthlyBalanceRepo extends Repository<IMonthlyBalanceDocument, IMonthlyBalance> {
   constructor(model: Model<IMonthlyBalanceDocument> = MonthlyBalanceModel) {
