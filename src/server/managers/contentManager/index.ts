@@ -126,6 +126,51 @@ function createCategoryActions(
 }
 
 /**
+ * Calculates the spent value of a budget.
+ *
+ * @param budget - The budget to calculate the spent value of.
+ * @param transactionRepo - The transaction repository to use.
+ * @param logger - The logger to use.
+ * @returns The spent value of the budget.
+ */
+export async function calculateBudgetSpent(
+  budget: IBudget | null,
+  transactionRepo: {
+    findByCategoryWithDateRange: (
+      userId: string,
+      categories: string[],
+      startDate: Date,
+      endDate: Date,
+    ) => Promise<{ value: number }[]>;
+  },
+  logger: Logger,
+): Promise<number> {
+  if (!budget) {
+    throw new Error('We need a budget to calculate the spent');
+  }
+
+  logger.info(`Calculating spent for budget: ${budget.id} from user: ${budget.user}`);
+
+  const {
+    user,
+    categories,
+    startDate,
+    endDate,
+  } = budget;
+  const transactions = await transactionRepo.findByCategoryWithDateRange(
+    user,
+    categories,
+    startDate,
+    endDate,
+  );
+
+  logger.info(`Found ${transactions.length} transactions for budget: ${budget.id} from user: ${user}`);
+  logger.info(`Calculating spent for budget: ${budget.id} from user: ${user}`);
+
+  return transactions.reduce((acc, curr) => acc + curr.value, 0);
+}
+
+/**
  * Creates the budget actions. Gets the spent value of a budget is different from the
  * standard get.
  *
@@ -140,38 +185,6 @@ function createBudgetActions(
   logger: Logger,
 ): ICommonActions<IBudget> {
   const commonBudgetActions = commonActions<IBudgetDocument, IBudget>(budgetRepo, 'Budget');
-
-  /**
-   * Calculates the spent value of a budget.
-   *
-   * @param budget - The budget to calculate the spent value of.
-   * @returns The spent value of the budget.
-   */
-  async function calculateBudgetSpent(budget: IBudget): Promise<number> {
-    if (!budget) {
-      throw new Error('We need a budget to calculate the spent');
-    }
-
-    logger.info(`Calculating spent for budget: ${budget.id} from user: ${budget.user}`);
-
-    const {
-      user,
-      categories,
-      startDate,
-      endDate,
-    } = budget;
-    const transactions = await transactionRepo.findByCategoryWithDateRange(
-      user,
-      categories,
-      startDate,
-      endDate,
-    );
-
-    logger.info(`Found ${transactions.length} transactions for budget: ${budget.id} from user: ${user}`);
-    logger.info(`Calculating spent for budget: ${budget.id} from user: ${user}`);
-
-    return transactions.reduce((acc, curr) => acc + curr.value, 0);
-  }
 
   return {
     ...commonBudgetActions,
@@ -188,7 +201,7 @@ function createBudgetActions(
 
       logger.info(`Calculating spent for budget: ${id} from user: ${budget.user}`);
 
-      const spent = await calculateBudgetSpent(budget);
+      const spent = await calculateBudgetSpent(budget, transactionRepo, logger);
 
       return { ...budget, spent };
     },
