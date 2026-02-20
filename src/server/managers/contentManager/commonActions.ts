@@ -1,8 +1,8 @@
 import { Document } from 'mongoose';
-import Repository from '../../resources/repositories/repository';
 import { createLogger } from '../../utils/logger';
 import { checkVoidPayload, checkVoidInstance, checkUserAccess } from '../../utils/misc';
 import type { Content, ICommonActions } from '../../types';
+import type { IRepository } from '../../resources/repositories/IRepository';
 
 /**
  * Creates a common actions for a given repository and model name.
@@ -16,7 +16,7 @@ import type { Content, ICommonActions } from '../../types';
  * @returns The common actions.
  */
 export default function CommonActions<T extends Document, K extends Content>(
-  repository: Repository<T, K>,
+  repository: IRepository<T, K>,
   modelName: string,
 ): ICommonActions<K> {
   const logger = createLogger(`CommonActions:${modelName}`);

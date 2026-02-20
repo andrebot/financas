@@ -199,7 +199,7 @@ describe('ContentManager', () => {
       const loggerStub = { info: sinon.stub() };
 
       try {
-        await calculateBudgetSpent(null, transactionRepoStub, loggerStub as any);
+        await calculateBudgetSpent(null, transactionRepoStub as any, loggerStub as any);
         chai.expect.fail('Should have thrown');
       } catch (error) {
         (error as Error).message.should.equal('We need a budget to calculate the spent');

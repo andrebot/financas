@@ -2,13 +2,21 @@ import { createLogger } from '../utils/logger';
 import {
   parseDate, calculateLastMonth, checkUserAccess, checkVoidPayload,
 } from '../utils/misc';
-import {
-  ITransaction, IMonthlyBalance, BulkGoalsUpdate, TRANSACTION_TYPES, INVESTMENT_TYPES,
-} from '../types';
 import MonthlyBalanceRepo from '../resources/repositories/monthlyBalanceRepo';
 import GoalRepo from '../resources/repositories/goalRepo';
 import BudgetRepo from '../resources/repositories/budgetRepo';
 import TransactionRepo from '../resources/repositories/transactionRepo';
+import {
+  ITransaction,
+  IMonthlyBalance,
+  BulkGoalsUpdate,
+  TRANSACTION_TYPES,
+  INVESTMENT_TYPES,
+  ITransactionRepo,
+  IMonthlyBalanceRepo,
+  IGoalRepo,
+  IBudgetRepo,
+} from '../types';
 
 const logger = createLogger('AccountantManager');
 
@@ -43,7 +51,7 @@ const recalculationFields: Array<keyof ITransaction> = [
  */
 async function getLastMonthBalance(
   content: ITransaction,
-  monthlyBalanceRepo: typeof MonthlyBalanceRepo,
+  monthlyBalanceRepo: IMonthlyBalanceRepo,
 ): Promise<IMonthlyBalance> {
   const contentDate = parseDate(content.date);
   const lastMonth = calculateLastMonth(contentDate.getFullYear(), contentDate.getMonth() + 1);
@@ -81,7 +89,7 @@ async function getLastMonthBalance(
  */
 async function addTransactionToMonthlyBalance(
   content: ITransaction,
-  monthlyBalanceRepo: typeof MonthlyBalanceRepo,
+  monthlyBalanceRepo: IMonthlyBalanceRepo,
 ): Promise<void> {
   const contentDate = parseDate(content.date);
 
@@ -127,7 +135,7 @@ async function addTransactionToMonthlyBalance(
  */
 async function updateGoalsByTransaction(
   transaction: ITransaction,
-  goalRepo: typeof GoalRepo,
+  goalRepo: IGoalRepo,
 ): Promise<void> {
   if (!transaction.goalsList || transaction.goalsList.length === 0) {
     logger.info(`No goals to update for transaction: ${transaction.id}`);
@@ -159,7 +167,7 @@ async function updateGoalsByTransaction(
  */
 async function subtractTransactionFromMonthlyBalance(
   transaction: ITransaction,
-  monthlyBalanceRepo: typeof MonthlyBalanceRepo,
+  monthlyBalanceRepo: IMonthlyBalanceRepo,
 ): Promise<void> {
   const contentDate = parseDate(transaction.date);
 
@@ -207,9 +215,9 @@ function shouldTriggerRecalculation(payload: Partial<ITransaction>): boolean {
  */
 async function deleteTransactionFromOtherModels(
   transaction: ITransaction,
-  monthlyBalanceRepo: typeof MonthlyBalanceRepo,
-  goalRepo: typeof GoalRepo,
-  budgetRepo: typeof BudgetRepo,
+  monthlyBalanceRepo: IMonthlyBalanceRepo,
+  goalRepo: IGoalRepo,
+  budgetRepo: IBudgetRepo,
 ): Promise<void> {
   const invertedTransaction = { ...transaction, value: -transaction.value };
 
@@ -230,9 +238,9 @@ async function deleteTransactionFromOtherModels(
  */
 async function addTransactionToOtherModels(
   transaction: ITransaction,
-  monthlyBalanceRepo: typeof MonthlyBalanceRepo,
-  goalRepo: typeof GoalRepo,
-  budgetRepo: typeof BudgetRepo,
+  monthlyBalanceRepo: IMonthlyBalanceRepo,
+  goalRepo: IGoalRepo,
+  budgetRepo: IBudgetRepo,
 ): Promise<void> {
   logger.info(`Adding transaction: ${transaction.id}`);
 
@@ -255,10 +263,10 @@ async function addTransactionToOtherModels(
    */
 async function createTransaction(
   content: ITransaction,
-  transactionRepo: typeof TransactionRepo,
-  monthlyBalanceRepo: typeof MonthlyBalanceRepo,
-  goalRepo: typeof GoalRepo,
-  budgetRepo: typeof BudgetRepo,
+  transactionRepo: ITransactionRepo,
+  monthlyBalanceRepo: IMonthlyBalanceRepo,
+  goalRepo: IGoalRepo,
+  budgetRepo: IBudgetRepo,
 ): Promise<ITransaction> {
   logger.info(`Creating new transaction for user: ${content.user}`);
 
@@ -295,10 +303,10 @@ async function createTransaction(
 async function deleteTransaction(
   id: string,
   userId: string,
-  transactionRepo: typeof TransactionRepo,
-  monthlyBalanceRepo: typeof MonthlyBalanceRepo,
-  goalRepo: typeof GoalRepo,
-  budgetRepo: typeof BudgetRepo,
+  transactionRepo: ITransactionRepo,
+  monthlyBalanceRepo: IMonthlyBalanceRepo,
+  goalRepo: IGoalRepo,
+  budgetRepo: IBudgetRepo,
   isAdmin: boolean,
 ): Promise<ITransaction | null> {
   logger.info(`Deleting transaction: ${id}`);
@@ -339,10 +347,10 @@ async function updateTransaction(
   id: string,
   payload: Partial<ITransaction>,
   userId: string,
-  transactionRepo: typeof TransactionRepo,
-  monthlyBalanceRepo: typeof MonthlyBalanceRepo,
-  goalRepo: typeof GoalRepo,
-  budgetRepo: typeof BudgetRepo,
+  transactionRepo: ITransactionRepo,
+  monthlyBalanceRepo: IMonthlyBalanceRepo,
+  goalRepo: IGoalRepo,
+  budgetRepo: IBudgetRepo,
   isAdmin: boolean,
 ): Promise<ITransaction | null> {
   logger.info(`Updating transaction: ${id}`);
@@ -401,7 +409,7 @@ function getTransactionTypes(): {
 async function getTransaction(
   id: string,
   userId: string,
-  transactionRepo: typeof TransactionRepo,
+  transactionRepo: ITransactionRepo,
   isAdmin: boolean,
 ): Promise<ITransaction | null> {
   logger.info(`Getting transaction: ${id}`);
@@ -426,7 +434,7 @@ async function getTransaction(
  */
 async function listTransactions(
   userId: string,
-  transactionRepo: typeof TransactionRepo,
+  transactionRepo: ITransactionRepo,
 ): Promise<ITransaction[]> {
   logger.info(`Listing transactions for user: ${userId}`);
 
@@ -434,10 +442,10 @@ async function listTransactions(
 }
 
 export function AccountantManager(
-  transactionRepo: typeof TransactionRepo,
-  monthlyBalanceRepo: typeof MonthlyBalanceRepo,
-  goalRepo: typeof GoalRepo,
-  budgetRepo: typeof BudgetRepo,
+  transactionRepo: ITransactionRepo,
+  monthlyBalanceRepo: IMonthlyBalanceRepo,
+  goalRepo: IGoalRepo,
+  budgetRepo: IBudgetRepo,
 ) {
   return {
     createTransaction: (content: ITransaction) => createTransaction(

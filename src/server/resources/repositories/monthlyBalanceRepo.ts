@@ -1,9 +1,15 @@
 import { Model } from 'mongoose';
 import MonthlyBalanceModel from '../models/monthlyBalanceModel';
 import Repository from './repository';
-import type { IMonthlyBalance, IMonthlyBalanceDocument, ITransaction } from '../../types';
+import type {
+  IMonthlyBalance,
+  IMonthlyBalanceDocument,
+  ITransaction,
+  IMonthlyBalanceRepo,
+} from '../../types';
 
-export class MonthlyBalanceRepo extends Repository<IMonthlyBalanceDocument, IMonthlyBalance> {
+export class MonthlyBalanceRepo extends Repository<IMonthlyBalanceDocument, IMonthlyBalance>
+  implements IMonthlyBalanceRepo {
   constructor(model: Model<IMonthlyBalanceDocument> = MonthlyBalanceModel) {
     super(model);
   }

@@ -1,8 +1,13 @@
 import BudgetModel from '../models/budgetModel';
 import Repository from './repository';
-import type { IBudget, IBudgetDocument, ITransaction } from '../../types';
+import type {
+  IBudget,
+  IBudgetDocument,
+  ITransaction,
+  IBudgetRepo,
+} from '../../types';
 
-export class BudgetRepo extends Repository<IBudgetDocument, IBudget> {
+export class BudgetRepo extends Repository<IBudgetDocument, IBudget> implements IBudgetRepo {
   constructor(budgetModel: typeof BudgetModel = BudgetModel) {
     super(budgetModel);
   }

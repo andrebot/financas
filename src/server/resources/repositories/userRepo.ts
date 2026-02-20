@@ -1,7 +1,7 @@
 import { Model } from 'mongoose';
 import UserModel from '../models/userModel';
 import Repository from './repository';
-import type { IUser, IUserDocument } from '../../types';
+import type { IUser, IUserDocument, IUserRepo } from '../../types';
 
 /**
  * Error handler for the user repository.
@@ -21,7 +21,7 @@ export function errorHandler(error: Error): Error {
   return error;
 }
 
-export class UserRepo extends Repository<IUserDocument, IUser> {
+export class UserRepo extends Repository<IUserDocument, IUser> implements IUserRepo {
   constructor(model: Model<IUserDocument> = UserModel) {
     super(model, errorHandler);
   }

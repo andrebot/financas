@@ -3,6 +3,7 @@ import {
   Request, Response, NextFunction,
 } from 'express';
 import { Document, ObjectId, Types } from 'mongoose';
+import type { IRepository } from './resources/repositories/IRepository';
 /* eslint-disable no-unused-vars */
 
 export type Content = { user: string };
@@ -469,6 +470,44 @@ export type BulkGoalsUpdate = {
   goalId: string;
   amount: number;
 };
+
+/**
+ * Repository interfaces - extend IRepository with repo-specific methods.
+ * Use these instead of typeof for dependency injection and testability.
+ */
+export interface ITransactionRepo extends IRepository<ITransactionDocument, ITransaction> {
+  deleteGoalFromTransactions(goalId: string): Promise<number>;
+  removeCategoriesFromTransactions(categoryIds: string[]): Promise<number>;
+  findByCategoryWithDateRange(
+    userId: string,
+    categories: string[],
+    startDate: Date,
+    endDate: Date,
+  ): Promise<ITransaction[] | { value: number }[]>;
+}
+
+export interface ICategoryRepo extends IRepository<ICategoryDocument, ICategory> {
+  findAllSubcategories(parentCategoryId: string): Promise<ICategory[]>;
+  deleteAllSubcategories(parentCategoryId: string): Promise<number>;
+}
+
+export interface IBudgetRepo extends IRepository<IBudgetDocument, IBudget> {
+  updateBudgetsByNewTransaction(transaction: ITransaction): Promise<void>;
+}
+
+export interface IGoalRepo extends IRepository<IGoalDocument, IGoal> {
+  incrementGoalsInBulk(bulkGoalsUpdate: BulkGoalsUpdate[]): Promise<void>;
+}
+
+export interface IMonthlyBalanceRepo extends IRepository<IMonthlyBalanceDocument, IMonthlyBalance> {
+  findMonthlyBalance(transaction: ITransaction, date: Date): Promise<IMonthlyBalance | null>;
+}
+
+export interface IUserRepo extends IRepository<IUserDocument, IUser> {
+  findByEmail(email: string): Promise<IUser | null>;
+}
+
+export type IAccountRepo = IRepository<IAccountDocument, IAccount>;
 
 export type ErrorHandler = (error: Error) => void;
 
