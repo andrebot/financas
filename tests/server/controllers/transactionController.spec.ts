@@ -43,12 +43,23 @@ const accountantManagerInstance = {
 
 const accountantManagerStub = sinon.stub().returns(accountantManagerInstance);
 
+const handleErrorStub = sinon.stub().callsFake((error: Error, res: MockResponse) => {
+  (res as unknown as Response).status(500);
+  (res as unknown as Response).send({ error: error.message });
+  return res as unknown as Response;
+});
+
 const {
   default: controller,
   TransactionController: TransactionControllerFactory,
+  getTransactionTypes: getTransactionTypesFn,
 } = proxyquire('../../../src/server/controllers/transactionController', {
   '../managers/accountantManager': {
+    default: accountantManagerInstance,
     AccountantManager: accountantManagerStub,
+  },
+  '../utils/responseHandlers': {
+    handleError: handleErrorStub,
   },
 });
 
@@ -79,6 +90,7 @@ describe('Transaction controller', () => {
     accountantManagerInstance.getTransaction.resetHistory();
     accountantManagerInstance.getTransactionTypes.resetHistory();
     accountantManagerInstance.getTransactionTypes.returns(transactionTypesResponse);
+    handleErrorStub.resetHistory();
   });
 
   describe('getTransactionTypes', () => {
@@ -119,6 +131,23 @@ describe('Transaction controller', () => {
 
       response.status.should.have.been.calledWith(500);
       response.send.should.have.been.calledWith({ error: error.message });
+    });
+
+    it('should use handleError by default when errorHandler is omitted', () => {
+      request.user = undefined;
+
+      getTransactionTypesFn(
+        request as RequestWithUser,
+        response as unknown as Response,
+        accountantManagerInstance,
+      );
+
+      handleErrorStub.should.have.been.calledOnce;
+      handleErrorStub.should.have.been.calledWith(
+        sinon.match.instanceOf(Error),
+        response,
+      );
+      response.status.should.have.been.calledWith(500);
     });
   });
 
@@ -238,6 +267,26 @@ describe('Transaction controller', () => {
 
       customErrorHandler.should.have.been.calledOnce;
       response.status.should.have.been.calledWith(400);
+    });
+
+    it('should use handleError by default when omitted', () => {
+      const controllerWithDefault = TransactionControllerFactory();
+      request.user = undefined;
+
+      controllerWithDefault.getTransactionTypes(
+        request as RequestWithUser,
+        response as unknown as Response,
+      );
+
+      handleErrorStub.should.have.been.calledOnce;
+      handleErrorStub.should.have.been.calledWith(
+        sinon.match.instanceOf(Error),
+        response,
+      );
+      response.status.should.have.been.calledWith(500);
+      response.send.should.have.been.calledWith({
+        error: 'User not authenticated to get Transaction',
+      });
     });
   });
 });

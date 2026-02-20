@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { AccountantManager } from '../managers/accountantManager';
+import AccountantManager from '../managers/accountantManager';
 import CommonController from './commonController';
 import { checkVoidUser } from '../utils/misc';
 import { createLogger } from '../utils/logger';
@@ -19,7 +19,7 @@ const logger = createLogger('TransactionController');
  * @param errorHandler - The error handler to use.
  * @returns The transaction types
  */
-function getTransactionTypes(
+export function getTransactionTypes(
   req: RequestWithUser,
   res: Response,
   accountantManager: IAccountantManager,
@@ -55,13 +55,12 @@ function getTransactionTypes(
 export function TransactionController(
   errorHandler = handleError,
 ) {
-  const accountantManager = AccountantManager();
   const commonTransactionController = CommonController<ITransaction>({
-    createContent: accountantManager.createTransaction,
-    updateContent: accountantManager.updateTransaction,
-    deleteContent: accountantManager.deleteTransaction,
-    listContent: accountantManager.listTransactions,
-    getContent: accountantManager.getTransaction,
+    createContent: AccountantManager.createTransaction,
+    updateContent: AccountantManager.updateTransaction,
+    deleteContent: AccountantManager.deleteTransaction,
+    listContent: AccountantManager.listTransactions,
+    getContent: AccountantManager.getTransaction,
   }, 'Transaction');
 
   return {
@@ -69,7 +68,7 @@ export function TransactionController(
     getTransactionTypes: (req: RequestWithUser, res: Response) => getTransactionTypes(
       req,
       res,
-      accountantManager,
+      AccountantManager,
       errorHandler,
     ),
   };

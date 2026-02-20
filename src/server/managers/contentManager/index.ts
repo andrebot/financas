@@ -32,8 +32,8 @@ const AccountRepo = new Repository<IAccountDocument, IAccount>(AccountModel);
  * @returns The goal actions.
  */
 function createGoalActions(
-  goalRepo = GoalRepo,
-  transactionRepo = TransactionRepo,
+  goalRepo: typeof GoalRepo,
+  transactionRepo: typeof TransactionRepo,
   logger: Logger,
 ): ICommonActions<IGoal> {
   return {
@@ -71,8 +71,8 @@ function createGoalActions(
  * @returns The category actions.
  */
 function createCategoryActions(
-  categoryRepo = CategoryRepo,
-  transactionRepo = TransactionRepo,
+  categoryRepo: typeof CategoryRepo,
+  transactionRepo: typeof TransactionRepo,
   logger: Logger,
 ): ICommonActions<ICategory> {
   return {
@@ -180,8 +180,8 @@ export async function calculateBudgetSpent(
  * @returns The budget actions.
  */
 function createBudgetActions(
-  budgetRepo = BudgetRepo,
-  transactionRepo = TransactionRepo,
+  budgetRepo: typeof BudgetRepo,
+  transactionRepo: typeof TransactionRepo,
   logger: Logger,
 ): ICommonActions<IBudget> {
   const commonBudgetActions = commonActions<IBudgetDocument, IBudget>(budgetRepo, 'Budget');
@@ -219,11 +219,11 @@ function createBudgetActions(
  * @returns The content manager.
  */
 export function createContentManager(
-  budgetRepo = BudgetRepo,
-  categoryRepo = CategoryRepo,
-  goalRepo = GoalRepo,
-  transactionRepo = TransactionRepo,
-  accountRepo = AccountRepo,
+  budgetRepo: typeof BudgetRepo,
+  categoryRepo: typeof CategoryRepo,
+  goalRepo: typeof GoalRepo,
+  transactionRepo: typeof TransactionRepo,
+  accountRepo: typeof AccountRepo,
 ): ContentManagerActions {
   const logger = createLogger('ContentManager');
   const budgetActions = createBudgetActions(budgetRepo, transactionRepo, logger);
@@ -239,4 +239,4 @@ export function createContentManager(
   };
 }
 
-export default createContentManager();
+export default createContentManager(BudgetRepo, CategoryRepo, GoalRepo, TransactionRepo, AccountRepo);

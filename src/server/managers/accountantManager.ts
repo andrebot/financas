@@ -43,7 +43,7 @@ const recalculationFields: Array<keyof ITransaction> = [
  */
 async function getLastMonthBalance(
   content: ITransaction,
-  monthlyBalanceRepo = MonthlyBalanceRepo,
+  monthlyBalanceRepo: typeof MonthlyBalanceRepo,
 ): Promise<IMonthlyBalance> {
   const contentDate = parseDate(content.date);
   const lastMonth = calculateLastMonth(contentDate.getFullYear(), contentDate.getMonth() + 1);
@@ -81,7 +81,7 @@ async function getLastMonthBalance(
  */
 async function addTransactionToMonthlyBalance(
   content: ITransaction,
-  monthlyBalanceRepo = MonthlyBalanceRepo,
+  monthlyBalanceRepo: typeof MonthlyBalanceRepo,
 ): Promise<void> {
   const contentDate = parseDate(content.date);
 
@@ -95,7 +95,7 @@ async function addTransactionToMonthlyBalance(
   if (!monthlyBalance) {
     logger.info('Monthly balance not found, creating new one');
 
-    const lastMonthBalance = await getLastMonthBalance(content);
+    const lastMonthBalance = await getLastMonthBalance(content, monthlyBalanceRepo);
 
     monthlyBalance = {
       user: content.user,
@@ -127,7 +127,7 @@ async function addTransactionToMonthlyBalance(
  */
 async function updateGoalsByTransaction(
   transaction: ITransaction,
-  goalRepo = GoalRepo,
+  goalRepo: typeof GoalRepo,
 ): Promise<void> {
   if (!transaction.goalsList || transaction.goalsList.length === 0) {
     logger.info(`No goals to update for transaction: ${transaction.id}`);
@@ -159,7 +159,7 @@ async function updateGoalsByTransaction(
  */
 async function subtractTransactionFromMonthlyBalance(
   transaction: ITransaction,
-  monthlyBalanceRepo = MonthlyBalanceRepo,
+  monthlyBalanceRepo: typeof MonthlyBalanceRepo,
 ): Promise<void> {
   const contentDate = parseDate(transaction.date);
 
@@ -207,9 +207,9 @@ function shouldTriggerRecalculation(payload: Partial<ITransaction>): boolean {
  */
 async function deleteTransactionFromOtherModels(
   transaction: ITransaction,
-  monthlyBalanceRepo = MonthlyBalanceRepo,
-  goalRepo = GoalRepo,
-  budgetRepo = BudgetRepo,
+  monthlyBalanceRepo: typeof MonthlyBalanceRepo,
+  goalRepo: typeof GoalRepo,
+  budgetRepo: typeof BudgetRepo,
 ): Promise<void> {
   const invertedTransaction = { ...transaction, value: -transaction.value };
 
@@ -230,9 +230,9 @@ async function deleteTransactionFromOtherModels(
  */
 async function addTransactionToOtherModels(
   transaction: ITransaction,
-  monthlyBalanceRepo = MonthlyBalanceRepo,
-  goalRepo = GoalRepo,
-  budgetRepo = BudgetRepo,
+  monthlyBalanceRepo: typeof MonthlyBalanceRepo,
+  goalRepo: typeof GoalRepo,
+  budgetRepo: typeof BudgetRepo,
 ): Promise<void> {
   logger.info(`Adding transaction: ${transaction.id}`);
 
@@ -255,10 +255,10 @@ async function addTransactionToOtherModels(
    */
 async function createTransaction(
   content: ITransaction,
-  transactionRepo = TransactionRepo,
-  monthlyBalanceRepo = MonthlyBalanceRepo,
-  goalRepo = GoalRepo,
-  budgetRepo = BudgetRepo,
+  transactionRepo: typeof TransactionRepo,
+  monthlyBalanceRepo: typeof MonthlyBalanceRepo,
+  goalRepo: typeof GoalRepo,
+  budgetRepo: typeof BudgetRepo,
 ): Promise<ITransaction> {
   logger.info(`Creating new transaction for user: ${content.user}`);
 
@@ -295,11 +295,11 @@ async function createTransaction(
 async function deleteTransaction(
   id: string,
   userId: string,
-  isAdmin = false,
-  transactionRepo = TransactionRepo,
-  monthlyBalanceRepo = MonthlyBalanceRepo,
-  goalRepo = GoalRepo,
-  budgetRepo = BudgetRepo,
+  transactionRepo: typeof TransactionRepo,
+  monthlyBalanceRepo: typeof MonthlyBalanceRepo,
+  goalRepo: typeof GoalRepo,
+  budgetRepo: typeof BudgetRepo,
+  isAdmin: boolean,
 ): Promise<ITransaction | null> {
   logger.info(`Deleting transaction: ${id}`);
 
@@ -339,11 +339,11 @@ async function updateTransaction(
   id: string,
   payload: Partial<ITransaction>,
   userId: string,
-  transactionRepo = TransactionRepo,
-  monthlyBalanceRepo = MonthlyBalanceRepo,
-  goalRepo = GoalRepo,
-  budgetRepo = BudgetRepo,
-  isAdmin = false,
+  transactionRepo: typeof TransactionRepo,
+  monthlyBalanceRepo: typeof MonthlyBalanceRepo,
+  goalRepo: typeof GoalRepo,
+  budgetRepo: typeof BudgetRepo,
+  isAdmin: boolean,
 ): Promise<ITransaction | null> {
   logger.info(`Updating transaction: ${id}`);
 
@@ -401,8 +401,8 @@ function getTransactionTypes(): {
 async function getTransaction(
   id: string,
   userId: string,
-  isAdmin = false,
-  transactionRepo = TransactionRepo,
+  transactionRepo: typeof TransactionRepo,
+  isAdmin: boolean,
 ): Promise<ITransaction | null> {
   logger.info(`Getting transaction: ${id}`);
 
@@ -426,7 +426,7 @@ async function getTransaction(
  */
 async function listTransactions(
   userId: string,
-  transactionRepo = TransactionRepo,
+  transactionRepo: typeof TransactionRepo,
 ): Promise<ITransaction[]> {
   logger.info(`Listing transactions for user: ${userId}`);
 
@@ -434,10 +434,10 @@ async function listTransactions(
 }
 
 export function AccountantManager(
-  transactionRepo = TransactionRepo,
-  monthlyBalanceRepo = MonthlyBalanceRepo,
-  goalRepo = GoalRepo,
-  budgetRepo = BudgetRepo,
+  transactionRepo: typeof TransactionRepo,
+  monthlyBalanceRepo: typeof MonthlyBalanceRepo,
+  goalRepo: typeof GoalRepo,
+  budgetRepo: typeof BudgetRepo,
 ) {
   return {
     createTransaction: (content: ITransaction) => createTransaction(
@@ -450,11 +450,11 @@ export function AccountantManager(
     deleteTransaction: (id: string, userId: string, isAdmin = false) => deleteTransaction(
       id,
       userId,
-      isAdmin,
       transactionRepo,
       monthlyBalanceRepo,
       goalRepo,
       budgetRepo,
+      isAdmin,
     ),
     updateTransaction: (
       id: string,
@@ -474,12 +474,12 @@ export function AccountantManager(
     getTransaction: (id: string, userId: string, isAdmin = false) => getTransaction(
       id,
       userId,
-      isAdmin,
       transactionRepo,
+      isAdmin,
     ),
     listTransactions: (userId: string) => listTransactions(userId, transactionRepo),
     getTransactionTypes: () => getTransactionTypes(),
   };
 }
 
-export default AccountantManager();
+export default AccountantManager(TransactionRepo, MonthlyBalanceRepo, GoalRepo, BudgetRepo);

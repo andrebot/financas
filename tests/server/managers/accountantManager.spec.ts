@@ -233,6 +233,18 @@ describe('AccountantManager', () => {
       transactionRepoStub.findByIdAndDelete.should.have.been.calledWith('tx-123');
     });
 
+    it('should use isAdmin=false by default when omitted', async () => {
+      transactionRepoStub.findById.resolves({ ...mockTransaction, user: 'other-user' });
+
+      try {
+        await accountantManager.deleteTransaction('tx-123', 'user-123');
+        chai.expect.fail('Should have thrown');
+      } catch (error) {
+        (error as Error).message.should.include('is not allowed to delete');
+      }
+      transactionRepoStub.findByIdAndDelete.should.not.have.been.called;
+    });
+
     it('should throw when monthly balance is not found during delete', async () => {
       transactionRepoStub.findById.resolves(mockTransaction);
       monthlyBalanceRepoStub.findMonthlyBalance.resolves(null);
@@ -315,6 +327,18 @@ describe('AccountantManager', () => {
       transactionRepoStub.update.should.have.been.calledWith('tx-123', { value: 200 });
       chai.expect(result).to.have.property('value', 200);
     });
+
+    it('should use isAdmin=false by default when omitted', async () => {
+      transactionRepoStub.findById.resolves({ ...mockTransaction, user: 'other-user' });
+
+      try {
+        await accountantManager.updateTransaction('tx-123', { name: 'Updated' }, 'user-123');
+        chai.expect.fail('Should have thrown');
+      } catch (error) {
+        (error as Error).message.should.include('is not allowed to update');
+      }
+      transactionRepoStub.update.should.not.have.been.called;
+    });
   });
 
   describe('getTransaction', () => {
@@ -352,6 +376,17 @@ describe('AccountantManager', () => {
       const result = await accountantManager.getTransaction('tx-123', 'admin-user', true);
 
       result.should.deep.equal(mockTransaction);
+    });
+
+    it('should use isAdmin=false by default when omitted', async () => {
+      transactionRepoStub.findById.resolves({ ...mockTransaction, user: 'other-user' });
+
+      try {
+        await accountantManager.getTransaction('tx-123', 'user-123');
+        chai.expect.fail('Should have thrown');
+      } catch (error) {
+        (error as Error).message.should.include('is not allowed to get');
+      }
     });
   });
 
