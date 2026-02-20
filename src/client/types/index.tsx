@@ -19,6 +19,7 @@ import { ChangePasswordAction, SettingsAction } from './settings';
 import { ModalContextType, ModalProviderProps } from './modal';
 import { Category, FormattedCategory } from './categories';
 import { ApiBuilder, RTKApi } from './requests';
+import { GoalState, GoalAction, Goal, GoalsTableProps } from './goals';
 
 export {
   UserType,
@@ -46,4 +47,8 @@ export {
   ApiBuilder,
   RTKApi,
   FormattedCategory,
+  GoalState,
+  GoalAction,
+  Goal,
+  GoalsTableProps,
 };
