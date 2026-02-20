@@ -322,6 +322,10 @@ export interface IGoal extends Content {
    */
   dueDate: Date;
   /**
+   * Whether the goal is archived
+   */
+  archived: boolean;
+  /**
    * Goal owner
    */
   user: string;
