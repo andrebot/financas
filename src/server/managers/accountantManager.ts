@@ -1,17 +1,20 @@
-
-import { createLogger } from "../utils/logger";
-import { parseDate, calculateLastMonth, checkUserAccess, checkVoidPayload } from "../utils/misc";
-import { ITransaction, IMonthlyBalance, BulkGoalsUpdate, TRANSACTION_TYPES, INVESTMENT_TYPES } from "../types";
-import MonthlyBalanceRepo from "../resources/repositories/monthlyBalanceRepo";
-import GoalRepo from "../resources/repositories/goalRepo";
-import BudgetRepo from "../resources/repositories/budgetRepo";
-import TransactionRepo from "../resources/repositories/transactionRepo";
+import { createLogger } from '../utils/logger';
+import {
+  parseDate, calculateLastMonth, checkUserAccess, checkVoidPayload,
+} from '../utils/misc';
+import {
+  ITransaction, IMonthlyBalance, BulkGoalsUpdate, TRANSACTION_TYPES, INVESTMENT_TYPES,
+} from '../types';
+import MonthlyBalanceRepo from '../resources/repositories/monthlyBalanceRepo';
+import GoalRepo from '../resources/repositories/goalRepo';
+import BudgetRepo from '../resources/repositories/budgetRepo';
+import TransactionRepo from '../resources/repositories/transactionRepo';
 
 const logger = createLogger('AccountantManager');
 
 /**
  * Fields in Transaction model that trigger recalculation in the system.
- * 
+ *
  * - value: Impacts balances and budgets
  * - category: Affects budget categorization
  * - parentCategory: Affects budget categorization
@@ -122,7 +125,10 @@ async function addTransactionToMonthlyBalance(
  * @param transaction - The transaction to update the goals by.
  * @param goalRepo - The goal repository to use.
  */
-async function updateGoalsByTransaction(transaction: ITransaction, goalRepo = GoalRepo): Promise<void> {
+async function updateGoalsByTransaction(
+  transaction: ITransaction,
+  goalRepo = GoalRepo,
+): Promise<void> {
   if (!transaction.goalsList || transaction.goalsList.length === 0) {
     logger.info(`No goals to update for transaction: ${transaction.id}`);
 
@@ -237,7 +243,7 @@ async function addTransactionToOtherModels(
 
 /**
    * Creates a new transaction and updates the monthly balance, goals and budgets.
-   * 
+   *
    * @throws {Error} - If the payload is void.
    *
    * @param content - The transaction to create.
@@ -287,7 +293,9 @@ async function createTransaction(
  * @returns The deleted transaction.
  */
 async function deleteTransaction(
-  id: string, userId: string, isAdmin = false,
+  id: string,
+  userId: string,
+  isAdmin = false,
   transactionRepo = TransactionRepo,
   monthlyBalanceRepo = MonthlyBalanceRepo,
   goalRepo = GoalRepo,
@@ -305,14 +313,14 @@ async function deleteTransaction(
 
   await deleteTransactionFromOtherModels(transaction, monthlyBalanceRepo, goalRepo, budgetRepo);
 
-  logger.info(`Removed transaction from other models`);
+  logger.info('Removed transaction from other models');
 
   return transactionRepo.findByIdAndDelete(id);
 }
 
 /**
  * Updates a transaction and updates the monthly balance, goals and budgets.
- * 
+ *
  * @throws {Error} - If the transaction is not found.
  * @throws {Error} - If the payload is void.
  * @throws {Error} - If the user is not authorized to update the transaction.
@@ -416,7 +424,10 @@ async function getTransaction(
  * @param transactionRepo - The transaction repository to use.
  * @returns The transactions.
  */
-async function listTransactions(userId: string, transactionRepo = TransactionRepo): Promise<ITransaction[]> {
+async function listTransactions(
+  userId: string,
+  transactionRepo = TransactionRepo,
+): Promise<ITransaction[]> {
   logger.info(`Listing transactions for user: ${userId}`);
 
   return transactionRepo.listAll(userId);
@@ -430,16 +441,41 @@ export function AccountantManager(
 ) {
   return {
     createTransaction: (content: ITransaction) => createTransaction(
-      content, transactionRepo, monthlyBalanceRepo, goalRepo, budgetRepo,
+      content,
+      transactionRepo,
+      monthlyBalanceRepo,
+      goalRepo,
+      budgetRepo,
     ),
     deleteTransaction: (id: string, userId: string, isAdmin = false) => deleteTransaction(
-      id, userId, isAdmin, transactionRepo, monthlyBalanceRepo, goalRepo, budgetRepo,
+      id,
+      userId,
+      isAdmin,
+      transactionRepo,
+      monthlyBalanceRepo,
+      goalRepo,
+      budgetRepo,
     ),
-    updateTransaction: (id: string, payload: Partial<ITransaction>, userId: string, isAdmin = false) => updateTransaction(
-      id, payload, userId, transactionRepo, monthlyBalanceRepo, goalRepo, budgetRepo, isAdmin,
+    updateTransaction: (
+      id: string,
+      payload: Partial<ITransaction>,
+      userId: string,
+      isAdmin = false,
+    ) => updateTransaction(
+      id,
+      payload,
+      userId,
+      transactionRepo,
+      monthlyBalanceRepo,
+      goalRepo,
+      budgetRepo,
+      isAdmin,
     ),
     getTransaction: (id: string, userId: string, isAdmin = false) => getTransaction(
-      id, userId, isAdmin, transactionRepo,
+      id,
+      userId,
+      isAdmin,
+      transactionRepo,
     ),
     listTransactions: (userId: string) => listTransactions(userId, transactionRepo),
     getTransactionTypes: () => getTransactionTypes(),

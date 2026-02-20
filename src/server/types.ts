@@ -414,16 +414,21 @@ export type RouteOverrides = {
 export interface IAccountantManager {
   createTransaction: (content: ITransaction) => Promise<ITransaction>;
   deleteTransaction: (id: string, userId: string, isAdmin: boolean) => Promise<ITransaction | null>;
-  updateTransaction: (id: string, payload: Partial<ITransaction>, userId: string, isAdmin: boolean) => Promise<ITransaction | null>;
+  updateTransaction: (
+    id: string,
+    payload: Partial<ITransaction>,
+    userId: string,
+    isAdmin: boolean,
+  ) => Promise<ITransaction | null>;
   getTransaction: (id: string, userId: string, isAdmin: boolean) => Promise<ITransaction | null>;
   listTransactions: (userId: string) => Promise<ITransaction[]>;
   getTransactionTypes: () => { transactionTypes: string[]; investmentTypes: string[] };
-};
+}
 
 export interface ICommonController<T extends Content> {
   /**
      * Creates a new content.
-     * 
+     *
      * @throws {Error} - If no user is parsed in the request.
      * @throws {Error} - If the payload is void.
      *
@@ -439,7 +444,7 @@ export interface ICommonController<T extends Content> {
    * @throws {Error} - If the payload is void.
    * @throws {Error} - If the content is not found.
    * @throws {Error} - If the user is not authorized to update the content.
-   * 
+   *
    * @param req - The request object.
    * @param res - The response object.
    * @returns The updated content.
@@ -447,7 +452,7 @@ export interface ICommonController<T extends Content> {
   updateContent: (req: RequestWithUser, res: Response) => Promise<Response<T>>;
   /**
    * Deletes a content by id.
-   * 
+   *
    * @throws {Error} - If no user is parsed in the request.
    * @throws {Error} - If the content is not found.
    * @throws {Error} - If the user is not authorized to delete the content.
@@ -505,7 +510,12 @@ export interface ICommonActions<K extends Content> {
    * @param isAdmin - Whether the user is an admin.
    * @returns The updated content.
    */
-  updateContent: (id: string, payload: Partial<K>, userId: string, isAdmin: boolean) => Promise<K | null>;
+  updateContent: (
+    id: string,
+    payload: Partial<K>,
+    userId: string,
+    isAdmin: boolean,
+  ) => Promise<K | null>;
   /**
    * Deletes a content by id.
    *
@@ -541,12 +551,8 @@ export interface ICommonActions<K extends Content> {
   getContent: (id: string, userId: string, isAdmin: boolean) => Promise<K | null>;
 }
 
-export interface IBudgetActions extends ICommonActions<IBudget> {
-  calculateBudgetSpent: (budget: IBudget) => Promise<number>;
-}
-
 export type ContentManagerActions = {
-  budgetActions: IBudgetActions;
+  budgetActions: ICommonActions<IBudget>;
   categoryActions: ICommonActions<ICategory>;
   goalActions: ICommonActions<IGoal>;
   accountActions: ICommonActions<IAccount>;

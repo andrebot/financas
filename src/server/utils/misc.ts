@@ -2,8 +2,8 @@ import {
   Document,
   FlatRecord,
 } from 'mongoose';
-import { UserPayload } from '../types';
 import { Logger } from 'winston';
+import { UserPayload } from '../types';
 
 /**
  * Checks if an object is empty or null.
@@ -159,7 +159,7 @@ export function transformMongooseObject(
 
 /**
  * Checks if the user has access to the content.
- * 
+ *
  * @throws {Error} - If the user is not allowed to access the content.
  *
  * @param contentOwnerId - The id of the content owner.

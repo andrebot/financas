@@ -10,7 +10,7 @@ const logger = createLogger('TransactionController');
 
 /**
  * Get the transaction types
- * 
+ *
  * @throws {Error} - If the user is not found.
  *
  * @param req - The request object
@@ -66,7 +66,12 @@ export function TransactionController(
 
   return {
     ...commonTransactionController,
-    getTransactionTypes: (req: RequestWithUser, res: Response) => getTransactionTypes(req, res, accountantManager, errorHandler),
+    getTransactionTypes: (req: RequestWithUser, res: Response) => getTransactionTypes(
+      req,
+      res,
+      accountantManager,
+      errorHandler,
+    ),
   };
 }
 

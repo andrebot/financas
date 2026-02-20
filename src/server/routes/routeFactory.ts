@@ -1,7 +1,7 @@
-import { Router } from "express";
-import { Content } from "../types";
-import createAccessTokenValidation from "../utils/authorization";
-import type { ICommonController } from "../types";
+import { Router } from 'express';
+import { Content } from '../types';
+import createAccessTokenValidation from '../utils/authorization';
+import type { ICommonController } from '../types';
 
 /**
  * Factory for creating routes for a given common controller. This is used
