@@ -66,6 +66,7 @@ describe('ContentManager', () => {
     dueDate: new Date(2024, 11, 31),
     user: 'user-123',
     savedValue: 1000,
+    archived: false,
   };
 
   const mockAccount: IAccount = {
