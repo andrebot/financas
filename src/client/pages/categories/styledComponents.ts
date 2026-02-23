@@ -3,6 +3,7 @@ import Paper from '@mui/material/Paper';
 import type { StyleCompProp } from '../../types';
 import Tooltip from '@mui/material/Tooltip';
 import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
 
 export const CategoriesMain = styled('div')(() => ({
   display: 'flex',
@@ -75,4 +76,23 @@ export const CreateCategoryModal = styled(Paper)(({ theme }) => ({
   [theme.breakpoints.up('md')]: {
     width: '400px',
   },
+}));
+
+export const SubCategoryWrapper = styled('div')(({ theme }: StyleCompProp) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  position: 'relative',
+  gap: '20px',
+  padding: '15px 10px 10px 10px',
+  border: `1px solid ${theme.palette.grey.A400}`,
+  borderRadius: '5px',
+}));
+
+export const SubCategoryTitle = styled(Typography)(({ theme }: StyleCompProp) => ({
+  position: 'absolute',
+  top: '-13px',
+  left: '10px',
+  padding: '0 5px',
+  backgroundColor: theme.palette.background.default,
+  backgroundImage: 'var(--Paper-overlay)',
 }));

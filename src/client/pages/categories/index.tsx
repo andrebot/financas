@@ -8,6 +8,7 @@ import Chip from '@mui/material/Chip';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SubCategoryForm from './subCategoryForm';
+import Tooltip from '@mui/material/Tooltip';
 import {
   CategoriesMain,
   CategoryList,
@@ -15,6 +16,8 @@ import {
   ParentCategory,
   CategoryTitleHolder,
   SubCategoryList,
+  SubCategoryWrapper,
+  SubCategoryTitle,
 } from './styledComponents';
 import { Category, FormattedCategory } from '../../types';
 import { useAuth } from '../../hooks/authContext';
@@ -242,30 +245,39 @@ export default function Categories(): React.JSX.Element {
           <ParentCategory elevation={6} key={category.id}>
             <CategoryTitleHolder>
               <Typography variant="h3">{category.name}</Typography>
-              <IconButton size="large" onClick={() => handleEditCategory(category)}>
-                <EditIcon />
-              </IconButton>
-              <IconButton size="large" onClick={() => handleDeleteCategory(category.id!)}>
-                <DeleteIcon />
-              </IconButton>
+              <Tooltip title={t('editCategory')}>
+                <IconButton size="large" onClick={() => handleEditCategory(category)}>
+                  <EditIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title={t('deleteCategory')}>
+                <IconButton size="large" onClick={() => handleDeleteCategory(category.id!)}>
+                  <DeleteIcon color="error" />
+                </IconButton>
+              </Tooltip>
             </CategoryTitleHolder>
-            <SubCategoryList>
-              {category.children.map((subCategory) => (
-                <Chip
-                  key={subCategory.id}
-                  label={subCategory.name}
-                  onDelete={() => handleDeleteSubCategory(subCategory.id!)}
-                  data-testid="subCategoryChip"
-                />
-              ))}
-            </SubCategoryList>
-            <SubCategoryForm
-              onAddSubCategory={(subCategoryName) => handleAddSubCategory(
-                category.id!,
-                subCategoryName,
-              )}
-              data-testid="subCategoryForm"
-            />
+            <SubCategoryWrapper>
+              <SubCategoryTitle>
+                {t('subCategories')}
+              </SubCategoryTitle>
+              <SubCategoryList>
+                {category.children.map((subCategory) => (
+                  <Chip
+                    key={subCategory.id}
+                    label={subCategory.name}
+                    onDelete={() => handleDeleteSubCategory(subCategory.id!)}
+                    data-testid="subCategoryChip"
+                  />
+                ))}
+              </SubCategoryList>
+              <SubCategoryForm
+                onAddSubCategory={(subCategoryName) => handleAddSubCategory(
+                  category.id!,
+                  subCategoryName,
+                )}
+                data-testid="subCategoryForm"
+              />
+            </SubCategoryWrapper>
           </ParentCategory>
         ))}
       </CategoryList>
