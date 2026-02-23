@@ -7,8 +7,8 @@ import PlusIcon from '@mui/icons-material/Add';
 import Chip from '@mui/material/Chip';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import SubCategoryForm from './subCategoryForm';
 import Tooltip from '@mui/material/Tooltip';
+import SubCategoryForm from './subCategoryForm';
 import {
   CategoriesMain,
   CategoryList,
