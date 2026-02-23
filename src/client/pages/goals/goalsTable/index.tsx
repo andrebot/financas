@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import TableHead from '@mui/material/TableHead';
@@ -7,6 +7,7 @@ import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
 import TableBody from '@mui/material/TableBody';
 import TableContainer from '@mui/material/TableContainer';
+import TableSortLabel from '@mui/material/TableSortLabel';
 import LinearProgress from '@mui/material/LinearProgress';
 import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
@@ -21,8 +22,11 @@ import {
   GoalsTableEmpty,
 } from './styledComponents';
 import { GoalsTableActionType } from '../../../enums';
-import type { GoalsTableProps } from '../../../types';
+import type { Goal, GoalsTableProps } from '../../../types';
 import { Typography } from '@mui/material';
+
+type SortColumn = 'value' | 'dueDate';
+type SortOrder = 'asc' | 'desc';
 
 export default function GoalsTable({
   goals,
@@ -35,6 +39,31 @@ export default function GoalsTable({
   onDeselectGoal,
 }: GoalsTableProps): React.JSX.Element {
   const { t } = useTranslation();
+  const [sortBy, setSortBy] = useState<SortColumn>('dueDate');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+
+  const sortedGoals = useMemo(() => {
+    const sorted = [...goals];
+    sorted.sort((a: Goal, b: Goal) => {
+      let comparison = 0;
+      if (sortBy === 'value') {
+        comparison = a.value - b.value;
+      } else {
+        comparison = new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+      }
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+    return sorted;
+  }, [goals, sortBy, sortOrder]);
+
+  const handleSort = (column: SortColumn) => {
+    if (column === sortBy) {
+      setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortBy(column);
+      setSortOrder('asc');
+    }
+  };
 
   const getProgressColor = (progress: number) => {
     if (progress === 100) {
@@ -71,14 +100,30 @@ export default function GoalsTable({
           <TableHead>
             <TableRow>
               <TableCell>{t('goalName')}</TableCell>
-              <GoalsTableCell>{t('goalValue')}</GoalsTableCell>
-              <GoalsTableCell>{t('goalDueDate')}</GoalsTableCell>
+              <GoalsTableCell sortDirection={sortBy === 'value' ? sortOrder : false}>
+                <TableSortLabel
+                  active={sortBy === 'value'}
+                  direction={sortBy === 'value' ? sortOrder : 'asc'}
+                  onClick={() => handleSort('value')}
+                >
+                  {t('goalValue')}
+                </TableSortLabel>
+              </GoalsTableCell>
+              <GoalsTableCell sortDirection={sortBy === 'dueDate' ? sortOrder : false}>
+                <TableSortLabel
+                  active={sortBy === 'dueDate'}
+                  direction={sortBy === 'dueDate' ? sortOrder : 'asc'}
+                  onClick={() => handleSort('dueDate')}
+                >
+                  {t('goalDueDate')}
+                </TableSortLabel>
+              </GoalsTableCell>
               <TableCell>{t('progress')}</TableCell>
               <GoalsTableCellAction>{t('actions')}</GoalsTableCellAction>
             </TableRow>
           </TableHead>
           <TableBody>
-            {goals.map((goal) => (
+            {sortedGoals.map((goal) => (
               <TableRow key={goal.id} selected={activeGoalId === goal.id}>
                 <TableCell>{goal.name}</TableCell>
                 <TableCell>{goal.value}</TableCell>
