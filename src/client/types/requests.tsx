@@ -12,4 +12,4 @@ import type {
  */
 export type RTKApi = Pick<BaseQueryApi, 'getState' | 'extra' | 'endpoint' | 'type' | 'forced'>;
 
-export type ApiBuilder = EndpointBuilder<BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError, {}, FetchBaseQueryMeta>, 'BankAccount' | 'Category', '/api/v1'>
+export type ApiBuilder = EndpointBuilder<BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError, {}, FetchBaseQueryMeta>, 'BankAccount' | 'Category' | 'Goal', '/api/v1'>

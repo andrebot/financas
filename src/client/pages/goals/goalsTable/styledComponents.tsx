@@ -29,3 +29,12 @@ export const GoalsTableCell = styled(TableCell)(() => ({
 export const GoalsTableCellAction = styled(TableCell)(() => ({
   width: '180px',
 }));
+
+export const GoalsTableEmpty = styled('div')(() => ({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '20px',
+  padding: '20px',
+}));

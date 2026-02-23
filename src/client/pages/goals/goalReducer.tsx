@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import { regExpName } from '../../utils/validators';
-import { GoalState, GoalAction } from '../../types';
+import { GoalState, GoalAction, Goal } from '../../types';
 import { GoalActionType } from '../../enums';
 
 export const initialGoalState: GoalState = {
@@ -98,6 +98,13 @@ function setDueDate(
     return nextState;
 }
 
+function editGoal(
+    state: GoalState,
+    payload: Goal,
+): GoalState {
+    return { ...state, ...payload };
+}
+
 /**
  * Reducer for the goal state.
  *
@@ -113,6 +120,8 @@ export const goalReducer = (state: GoalState, action: GoalAction): GoalState => 
             return setValue(state, action.payload);
         case GoalActionType.SET_DUE_DATE:
             return setDueDate(state, action.payload);
+        case GoalActionType.EDIT:
+            return editGoal(state, action.payload);
         case GoalActionType.RESET:
             return { ...initialGoalState };
         default:

@@ -20,59 +20,29 @@ import {
   SaveGoalButton,
 } from './styledComponents';
 import type { Goal } from '../../types';
+import { useCreateGoalMutation, useDeleteGoalMutation, useListGoalsQuery, useUpdateGoalMutation } from '../../features/goal';
+import { useAuth } from '../../hooks/authContext';
+import { useModal } from '../../components/modal/modal';
+import ConfirmModal from '../../components/confirmModal';
 
-const archivedGoals = [
-  {
-    id: '3',
-    name: 'Goal 3',
-    value: 2000,
-    dueDate: new Date('2026-03-01'),
-    user: '1',
-    savedValue: 2000,
-    progress: 100,
-  },
-  {
-    id: '4',
-    name: 'Goal 4',
-    value: 2000,
-    dueDate: new Date('2026-04-01'),
-    user: '1',
-    savedValue: 2000,
-    progress: 100,
-  },
-];
-const activeGoals = [
-  {
-    id: '1',
-    name: 'Goal 1',
-    value: 2000000000,
-    dueDate: new Date('2026-01-01'),
-    user: '1',
-    savedValue: 900,
-    progress: 90,
-  },
-  {
-    id: '2',
-    name: 'Goal 2',
-    value: 2000,
-    dueDate: new Date('2026-02-01'),
-    user: '1',
-    savedValue: 1000,
-    progress: 50,
-  },
-];
-
-
-const availableActions =  [GoalsTableActionType.EDIT, GoalsTableActionType.ARCHIVE, GoalsTableActionType.DELETE];
+const availableActions =  [GoalsTableActionType.EDIT, GoalsTableActionType.DESELECT, GoalsTableActionType.ARCHIVE, GoalsTableActionType.DELETE];
 const archivedAvailableActions = [GoalsTableActionType.UNARCHIVE, GoalsTableActionType.DELETE];
 
 export default function Goals(): React.JSX.Element {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const goalNameAnchorRef = useRef<HTMLDivElement>(null);
+  const { showModal, closeModal } = useModal();
+  const { data: allGoals = [] } = useListGoalsQuery();
+  const [createGoal] = useCreateGoalMutation();
+  const [updateGoal] = useUpdateGoalMutation();
+  const [deleteGoal] = useDeleteGoalMutation();
 
   const [goalState, dispatchGoal] = useReducer(goalReducer, initialGoalState);
   const [activeTab, setActiveTab] = useState(0);
-  const [goals, setGoals] = useState<Goal[]>(activeGoals);
+  const [activeGoals, setActiveGoals] = useState<Goal[]>([]);
+  const [archivedGoals, setArchivedGoals] = useState<Goal[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
   const [goalsTableActions, setGoalsTableActions] = useState<GoalsTableActionType[]>(availableActions);
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -91,11 +61,80 @@ export default function Goals(): React.JSX.Element {
     setActiveTab(newValue);
   }
 
-  const handleSaveGoal = () => {
-    console.log('save goal');
-    goalNameAnchorRef.current?.focus();
+  const handleStartEditGoal = (goal: Goal) => {
+    dispatchGoal({ type: GoalActionType.EDIT, payload: goal });
+  }
+
+  const saveGoal = async (goal: Goal, successMessage: string, errorMessage: string) => {
+    try {
+      await updateGoal(goal).unwrap();
+      
+      enqueueSnackbar(t(successMessage), { variant: 'success' });
+    } catch {
+      enqueueSnackbar(t(errorMessage), { variant: 'error' });
+    }
+  }
+
+  const handleArchiveGoal = async (goal: Goal) => {
+    saveGoal({ ...goal, archived: true }, 'goalArchived', 'goalArchiveFailed');
+  }
+
+  const handleUnarchiveGoal = async (goal: Goal) => {
+    saveGoal({ ...goal, archived: false }, 'goalUnarchived', 'goalUnarchiveFailed');
+  }
+
+  const submitDeleteGoal = async (goal: Goal) => {
+    try {
+      await deleteGoal(goal.id!).unwrap();
+      enqueueSnackbar(t('goalDeleted'), { variant: 'success' });
+    } catch {
+      enqueueSnackbar(t('goalDeletionFailed'), { variant: 'error' });
+    } finally {
+      closeModal();
+    }
+  }
+
+  const handleDeleteGoal = async (goal: Goal) => {
+    showModal(
+      <ConfirmModal
+        title={t('deleteGoalModalTitle')}
+        confirmationText={t('deleteGoalConfirmation')}
+        onConfirm={() => submitDeleteGoal(goal)}
+        onCancel={() => closeModal()}
+      />,
+    );
+  }
+
+  const handleSaveGoal = async () => {
+    if (goalState.dueDateError || goalState.valueError || goalState.nameError) {
+      enqueueSnackbar(t('fixErrorsBeforeSaving'), { variant: 'error' });
+      return;
+    }
+
+    const action = goalState.id ? updateGoal : createGoal;
+
+    try {
+      await action({
+        id: goalState.id,
+        name: goalState.name!,
+        value: goalState.value,
+        dueDate: goalState.dueDate!,
+        archived: false,
+        user: user!.id,
+        savedValue: 0,
+        progress: 0,
+      }).unwrap();
+
+      dispatchGoal({ type: GoalActionType.RESET });
+      enqueueSnackbar(t('goalSaved'), { variant: 'success' });
+      goalNameAnchorRef.current?.focus();
+    } catch {
+      enqueueSnackbar(t('goalCreationFailed'), { variant: 'error' });
+    }
+  }
+
+  const handleDeselectGoal = () => {
     dispatchGoal({ type: GoalActionType.RESET });
-    enqueueSnackbar(t('goalSaved'), { variant: 'success' });
   }
 
   useEffect(() => {
@@ -106,7 +145,33 @@ export default function Goals(): React.JSX.Element {
       setGoals(archivedGoals);
       setGoalsTableActions(archivedAvailableActions);
     }
-  }, [activeTab]);
+  }, [activeTab, allGoals]);
+
+  useEffect(() => {
+    if (allGoals && allGoals.length > 0) {
+      const [active, archived] = allGoals.reduce<[Goal[], Goal[]]>(
+        ([active, archived], goal) => {
+          if (goal.archived) {
+            archived.push(goal);
+          } else {
+            active.push(goal);
+          }
+
+          return [active, archived];
+        },
+        [[], []] as [Goal[], Goal[]]
+      );
+
+      setActiveGoals(active);
+      setArchivedGoals(archived);
+
+      if (activeTab === 0) {
+        setGoals(active);
+      } else {
+        setGoals(archived);
+      }
+    }
+  }, [allGoals]);
 
   return (
     <GoalsMain>
@@ -161,7 +226,16 @@ export default function Goals(): React.JSX.Element {
             <Tab label={t('archived')} />
           </Tabs>
         </Box>
-        <GoalsTable goals={goals} availableActions={goalsTableActions} />
+        <GoalsTable
+          goals={goals}
+          activeGoalId={goalState.id}
+          availableActions={goalsTableActions}
+          onArchiveGoal={handleArchiveGoal}
+          onUnarchiveGoal={handleUnarchiveGoal}
+          onDeleteGoal={handleDeleteGoal}
+          onEditGoal={handleStartEditGoal}
+          onDeselectGoal={handleDeselectGoal}
+        />
       </GoalsTableWrapper>
     </GoalsMain>
   );

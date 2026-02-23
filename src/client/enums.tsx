@@ -33,6 +33,7 @@ export enum GoalActionType {
   SET_DUE_DATE = 'SET_DUE_DATE',
   VALIDATE = 'VALIDATE',
   RESET = 'RESET',
+  EDIT = 'EDIT',
 }
 
 export enum GoalsTableActionType {
@@ -40,4 +41,5 @@ export enum GoalsTableActionType {
   DELETE = 'delete',
   ARCHIVE = 'archive',
   UNARCHIVE = 'unarchive',
+  DESELECT = 'deselect',
 }

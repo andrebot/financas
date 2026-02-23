@@ -46,15 +46,19 @@ export const get${capitalize(endpointName)}Query = (id: string) => ({
 export const endpoints = (builder: ApiBuilder) => ({
   listCONTENT: builder.query<TYPE[], void>({
     query: list${capitalize(endpointName)}Query,
+    providesTags: [{ type: 'TAG_NAME', id: 'LIST' }],
   }),
   createCONTENT: builder.mutation<TYPE, TYPE>({
     query: create${capitalize(endpointName)}Mutation,
+    invalidatesTags: [{ type: 'TAG_NAME', id: 'LIST' }],
   }),
   updateCONTENT: builder.mutation<TYPE, TYPE>({
     query: update${capitalize(endpointName)}Mutation,
+    invalidatesTags: [{ type: 'TAG_NAME', id: 'LIST' }],
   }),
   deleteCONTENT: builder.mutation<TYPE, string>({
     query: delete${capitalize(endpointName)}Mutation ,
+    invalidatesTags: [{ type: 'TAG_NAME', id: 'LIST' }],
   }),
   getCONTENT: builder.query<TYPE, string>({
     query: get${capitalize(endpointName)}Query ,
