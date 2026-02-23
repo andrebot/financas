@@ -25,15 +25,29 @@ import {
   SaveGoalButton,
   GoalsRowInput,
 } from './styledComponents';
-import type { Goal } from '../../types';
-import { useCreateGoalMutation, useDeleteGoalMutation, useListGoalsQuery, useUpdateGoalMutation } from '../../features/goal';
+import {
+  useCreateGoalMutation,
+  useDeleteGoalMutation,
+  useListGoalsQuery,
+  useUpdateGoalMutation,
+} from '../../features/goal';
 import { useAuth } from '../../hooks/authContext';
 import { useModal } from '../../components/modal/modal';
 import ConfirmModal from '../../components/confirmModal';
+import type { Goal } from '../../types';
 
 const availableActions =  [GoalsTableActionType.EDIT, GoalsTableActionType.DESELECT, GoalsTableActionType.ARCHIVE, GoalsTableActionType.DELETE];
 const archivedAvailableActions = [GoalsTableActionType.UNARCHIVE, GoalsTableActionType.DELETE];
 
+/**
+ * Main component for the goals page. This has the logic for all the
+ * Goal CRUD operations.
+ * 
+ * Remember to add the transactions feature where we really calculate
+ * the progress and add more details to each goal.
+ *
+ * @returns The goals page
+ */
 export default function Goals(): React.JSX.Element {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -52,26 +66,93 @@ export default function Goals(): React.JSX.Element {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [goalsTableActions, setGoalsTableActions] = useState<GoalsTableActionType[]>(availableActions);
 
+  /**
+   * Handles the change of the name of the goal.
+   *
+   * @remarks
+   * Triggers the SET_NAME action to update the state.
+   *
+   * @param e - The event object
+   * @returns The new state
+   */
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatchGoal({ type: GoalActionType.SET_NAME, payload: e.target.value });
   }
 
+  /**
+   * Handles the change of the value of the goal.
+   * 
+   * @remarks
+   * Triggers the SET_VALUE action to update the state.
+   *
+   * @param e - The event object
+   * @returns The new state
+   */
   const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatchGoal({ type: GoalActionType.SET_VALUE, payload: Number(e.target.value) });
   }
 
+  /**
+   * Handles the change of the due date of the goal.
+   * 
+   * @remarks
+   * Triggers the SET_DUE_DATE action to update the state.
+   *
+   * @param e - The event object
+   * @returns The new state
+   */
   const handleDueDateChange = (e: PickerValue) => {
     dispatchGoal({ type: GoalActionType.SET_DUE_DATE, payload: e?.toDate() });
   }
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setActiveTab(newValue);
-  }
-
+  /**
+   * Handles the start of the edit of the goal.
+   * 
+   * @remarks
+   * Triggers the EDIT action to update the state.
+   *
+   * @param goal - The goal to edit
+   * @returns The new state
+   */
   const handleStartEditGoal = (goal: Goal) => {
     dispatchGoal({ type: GoalActionType.EDIT, payload: goal });
   }
 
+  /**
+   * Handles the deselection of the goal.
+   *
+   * @remarks
+   * Triggers the RESET action to update the state.
+   *
+   * @returns The new state
+   */
+  const handleDeselectGoal = () => {
+    dispatchGoal({ type: GoalActionType.RESET });
+  }
+
+  /**
+   * Handles the change of the tab of the goals.
+   * 
+   * @remarks
+   * This triggers the goals table to be updated
+   * with the active or archived goals.
+   *
+   * @param event - The event object
+   * @param newValue - The new value of the tab
+   * @returns The new state
+   */
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
+  }
+
+  /**
+   * Updates a goal through the API.
+   *
+   * @param goal - The goal to save
+   * @param successMessage - The success message to display
+   * @param errorMessage - The error message to display
+   * @returns The new state
+   */
   const saveGoal = async (goal: Goal, successMessage: string, errorMessage: string) => {
     try {
       await updateGoal(goal).unwrap();
@@ -82,14 +163,38 @@ export default function Goals(): React.JSX.Element {
     }
   }
 
+  /**
+   * Archives a goal through the API.
+   * 
+   * @remarks
+   * Just updates the archived flag to true.
+   *
+   * @param goal - The goal to archive
+   * @returns The new state
+   */
   const handleArchiveGoal = async (goal: Goal) => {
     saveGoal({ ...goal, archived: true }, 'goalArchived', 'goalArchiveFailed');
   }
 
+  /**
+   * Unarchives a goal through the API.
+   * 
+   * @remarks
+   * Just updates the archived flag to false.
+   *
+   * @param goal - The goal to unarchive
+   * @returns The new state
+   */
   const handleUnarchiveGoal = async (goal: Goal) => {
     saveGoal({ ...goal, archived: false }, 'goalUnarchived', 'goalUnarchiveFailed');
   }
 
+  /**
+   * Deletes a goal through the API.
+   *
+   * @param goal - The goal to delete
+   * @returns The new state
+   */
   const submitDeleteGoal = async (goal: Goal) => {
     try {
       await deleteGoal(goal.id!).unwrap();
@@ -101,6 +206,14 @@ export default function Goals(): React.JSX.Element {
     }
   }
 
+  /**
+   * Handles the deletion goal action by showing
+   * the confirmation modal and setting the
+   * callbacks to the modal.
+   *
+   * @param goal - The goal to delete
+   * @returns The new state
+   */
   const handleDeleteGoal = async (goal: Goal) => {
     showModal(
       <ConfirmModal
@@ -112,6 +225,17 @@ export default function Goals(): React.JSX.Element {
     );
   }
 
+  /**
+   * Handles the saving of the goal in the goal form.
+   * Since we create and update the goal in the same form,
+   * we need to check if the goal is being created or updated
+   * so we can use the correct mutation.
+   *
+   * @remarks
+   * This triggers the creation or update of the goal.
+   *
+   * @returns The new state
+   */
   const handleSaveGoal = async () => {
     if (goalState.dueDateError || goalState.valueError || goalState.nameError) {
       enqueueSnackbar(t('fixErrorsBeforeSaving'), { variant: 'error' });
@@ -140,14 +264,23 @@ export default function Goals(): React.JSX.Element {
     }
   }
 
-  const handleDeselectGoal = () => {
-    dispatchGoal({ type: GoalActionType.RESET });
-  }
-
+  /**
+   * Filters the goals by name.
+   *
+   * @param goals - The goals to filter
+   * @returns The filtered goals
+   */
   const filterGoals = useCallback((goals: Goal[]) => {
     return goals.filter((goal) => goal.name.toLowerCase().includes(search.toLowerCase()));
   }, [search]);
 
+  /**
+   * Calculates the progress of the goal.
+   *
+   * @param savedValue - The saved value of the goal
+   * @param value - The value of the goal
+   * @returns The progress of the goal
+   */
   const calculateGoalProgress = (savedValue: number, value: number) => {
     if (!savedValue || Number.isNaN(savedValue)) {
       return 0;
@@ -156,6 +289,17 @@ export default function Goals(): React.JSX.Element {
     return (savedValue / value) * 100;
   }
 
+  /**
+   * Handles the change of the active tab. Updated the goals
+   * that needs to be displayed in the goals table and the
+   * available actions in the goals table.
+   *
+   * @remarks
+   * This triggers the goals table to be updated
+   * with the active or archived goals.
+   *
+   * @returns The new state
+   */
   useEffect(() => {
     if (activeTab === 0) {
       setGoals(activeGoals);
@@ -166,6 +310,13 @@ export default function Goals(): React.JSX.Element {
     }
   }, [activeTab, allGoals]);
 
+  /**
+   * After we fetch the goals from the API, we need
+   * sort them into active and archived goals and
+   * format them to be displayed in the goals table.
+   *
+   * @returns The new state
+   */
   useEffect(() => {
     if (allGoals && allGoals.length > 0) {
       const [active, archived] = allGoals.reduce<[Goal[], Goal[]]>(

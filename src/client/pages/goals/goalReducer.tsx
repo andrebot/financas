@@ -98,6 +98,13 @@ function setDueDate(
     return nextState;
 }
 
+/**
+ * Edits the goal and updates the state.
+ *
+ * @param state - The current state
+ * @param payload - The payload to edit the goal
+ * @returns The new state
+ */
 function editGoal(
     state: GoalState,
     payload: Goal,

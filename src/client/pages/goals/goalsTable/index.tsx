@@ -9,6 +9,7 @@ import TableBody from '@mui/material/TableBody';
 import TableContainer from '@mui/material/TableContainer';
 import TableSortLabel from '@mui/material/TableSortLabel';
 import LinearProgress from '@mui/material/LinearProgress';
+import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -23,11 +24,24 @@ import {
 } from './styledComponents';
 import { GoalsTableActionType } from '../../../enums';
 import type { Goal, GoalsTableProps } from '../../../types';
-import { Typography } from '@mui/material';
 
 type SortColumn = 'value' | 'dueDate' | 'progress';
 type SortOrder = 'asc' | 'desc';
 
+/**
+ * Component for the goals table. This is used to display the goals in a table.
+ * This table is responsible for the sorting of the goals and the display of the goals.
+ *
+ * @param goals - The goals to display
+ * @param activeGoalId - The id of the active goal
+ * @param availableActions - The actions to display
+ * @param onArchiveGoal - The function to archive a goal
+ * @param onUnarchiveGoal - The function to unarchive a goal
+ * @param onDeleteGoal - The function to delete a goal
+ * @param onEditGoal - The function to edit a goal
+ * @param onDeselectGoal - The function to deselect a goal
+ * @returns The goals table
+ */
 export default function GoalsTable({
   goals,
   activeGoalId,
@@ -42,10 +56,20 @@ export default function GoalsTable({
   const [sortBy, setSortBy] = useState<SortColumn>('dueDate');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
 
+  /**
+   * Sorts the goals by the selected column and order.
+   * 
+   * @remarks
+   * This uses the useMemo hook to memoize the sorted goals.
+   *
+   * @returns The sorted goals
+   */
   const sortedGoals = useMemo(() => {
     const sorted = [...goals];
+
     sorted.sort((a: Goal, b: Goal) => {
       let comparison = 0;
+
       if (sortBy === 'value') {
         comparison = a.value - b.value;
       } else if (sortBy === 'dueDate') {
@@ -53,11 +77,19 @@ export default function GoalsTable({
       } else {
         comparison = a.progress - b.progress;
       }
+
       return sortOrder === 'asc' ? comparison : -comparison;
     });
+
     return sorted;
   }, [goals, sortBy, sortOrder]);
 
+  /**
+   * Defines the sorting direction and column to sort by.
+   *
+   * @param column - The column to sort by
+   * @returns The sorted goals
+   */
   const handleSort = (column: SortColumn) => {
     if (column === sortBy) {
       setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
@@ -67,6 +99,14 @@ export default function GoalsTable({
     }
   };
 
+  /**
+   * Gets the color of the progress bar based on the progress.
+   * 
+   * if the progress is 100%, the color is success, otherwise it is primary.
+   *
+   * @param progress - The progress to get the color for
+   * @returns The color of the progress bar
+   */
   const getProgressColor = (progress: number) => {
     if (progress === 100) {
       return 'success';
