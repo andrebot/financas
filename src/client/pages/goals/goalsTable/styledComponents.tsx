@@ -1,5 +1,4 @@
 import { styled } from '@mui/material/styles';
-import type { StyleCompProp } from '../../../types';
 import Paper from '@mui/material/Paper';
 import Button from '@mui/material/Button';
 import TableCell from '@mui/material/TableCell';

@@ -25,7 +25,7 @@ import { GoalsTableActionType } from '../../../enums';
 import type { Goal, GoalsTableProps } from '../../../types';
 import { Typography } from '@mui/material';
 
-type SortColumn = 'value' | 'dueDate';
+type SortColumn = 'value' | 'dueDate' | 'progress';
 type SortOrder = 'asc' | 'desc';
 
 export default function GoalsTable({
@@ -48,8 +48,10 @@ export default function GoalsTable({
       let comparison = 0;
       if (sortBy === 'value') {
         comparison = a.value - b.value;
-      } else {
+      } else if (sortBy === 'dueDate') {
         comparison = new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+      } else {
+        comparison = a.progress - b.progress;
       }
       return sortOrder === 'asc' ? comparison : -comparison;
     });
@@ -114,7 +116,15 @@ export default function GoalsTable({
                   {t('goalDueDate')}
                 </TableSortLabel>
               </GoalsTableCell>
-              <TableCell>{t('progress')}</TableCell>
+              <GoalsTableCell sortDirection={sortBy === 'progress' ? sortOrder : false}>
+                <TableSortLabel
+                  active={sortBy === 'progress'}
+                  direction={sortBy === 'progress' ? sortOrder : 'asc'}
+                  onClick={() => handleSort('progress')}
+                >
+                  {t('progress')}
+                </TableSortLabel>
+              </GoalsTableCell>
               <GoalsTableCellAction>{t('actions')}</GoalsTableCellAction>
             </TableRow>
           </TableHead>
