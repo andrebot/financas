@@ -73,10 +73,6 @@ export default function GoalsTable({
     return 'primary'
   }
 
-  const calculateGoalProgress = (savedValue: number, value: number) => {
-    return (savedValue / value) * 100;
-  }
-
   const ActionIcons = {
     [GoalsTableActionType.EDIT]: <EditIcon />,
     [GoalsTableActionType.DELETE]: <DeleteIcon color="error" />,
@@ -129,7 +125,7 @@ export default function GoalsTable({
                 <TableCell>{goal.value}</TableCell>
                 <TableCell>{dayjs(goal.dueDate).format('MM/YYYY')}</TableCell>
                 <TableCell>
-                  <Tooltip title={`${calculateGoalProgress(goal.savedValue, goal.value)}%`}>
+                  <Tooltip title={`${goal.progress}%`}>
                     <LinearProgress 
                       variant="determinate"
                       color={getProgressColor(goal.progress)}

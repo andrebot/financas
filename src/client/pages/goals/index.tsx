@@ -148,6 +148,14 @@ export default function Goals(): React.JSX.Element {
     return goals.filter((goal) => goal.name.toLowerCase().includes(search.toLowerCase()));
   }, [search]);
 
+  const calculateGoalProgress = (savedValue: number, value: number) => {
+    if (!savedValue || Number.isNaN(savedValue)) {
+      return 0;
+    }
+
+    return (savedValue / value) * 100;
+  }
+
   useEffect(() => {
     if (activeTab === 0) {
       setGoals(activeGoals);
@@ -162,10 +170,15 @@ export default function Goals(): React.JSX.Element {
     if (allGoals && allGoals.length > 0) {
       const [active, archived] = allGoals.reduce<[Goal[], Goal[]]>(
         ([active, archived], goal) => {
+          const formattedGoal: Goal = {
+            ...goal,
+            progress: calculateGoalProgress(goal.savedValue, goal.value),
+          };
+
           if (goal.archived) {
-            archived.push(goal);
+            archived.push(formattedGoal);
           } else {
-            active.push(goal);
+            active.push(formattedGoal);
           }
 
           return [active, archived];
