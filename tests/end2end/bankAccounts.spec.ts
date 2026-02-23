@@ -13,6 +13,7 @@ import {
   editBankAccount,
   deleteBankAccount,
 } from './bankAccountsPageUtils';
+import { fillMuiMonthYear } from './datePickerUtils';
 
 test.describe.serial('Bank Accounts', () => {
   const getAccountNames = () => {
@@ -66,7 +67,7 @@ test.describe.serial('Bank Accounts', () => {
     await fillBankAccountForm(page, { name: newName });
     await saveBankAccount(page);
 
-    await expect(page.getByText(i18nKeys.translation.bankAccountUpdated)).toBeVisible();
+    await expect(page.getByText(i18nKeys.translation.bankAccountUpdated).first()).toBeVisible();
     await expect(page.getByText(newName)).toBeVisible();
   });
 
@@ -78,7 +79,7 @@ test.describe.serial('Bank Accounts', () => {
     await fillBankAccountForm(page, { currency: 'USD' });
     await saveBankAccount(page);
 
-    await expect(page.getByText(i18nKeys.translation.bankAccountUpdated)).toBeVisible();
+    await expect(page.getByText(i18nKeys.translation.bankAccountUpdated).first()).toBeVisible();
   });
 
   test('should edit bank account - account number', async ({ page }) => {
@@ -89,7 +90,7 @@ test.describe.serial('Bank Accounts', () => {
     await fillBankAccountForm(page, { accountNumber: '99999' });
     await saveBankAccount(page);
 
-    await expect(page.getByText(i18nKeys.translation.bankAccountUpdated)).toBeVisible();
+    await expect(page.getByText(i18nKeys.translation.bankAccountUpdated).first()).toBeVisible();
     await expect(page.getByText(`${i18nKeys.translation.bankAccountNumber}: 99999`)).toBeVisible();
   });
 
@@ -101,7 +102,7 @@ test.describe.serial('Bank Accounts', () => {
     await fillBankAccountForm(page, { agency: '9999' });
     await saveBankAccount(page);
 
-    await expect(page.getByText(i18nKeys.translation.bankAccountUpdated)).toBeVisible();
+    await expect(page.getByText(i18nKeys.translation.bankAccountUpdated).first()).toBeVisible();
     await expect(page.getByText(`${i18nKeys.translation.bankAgencyNumber}: 9999`)).toBeVisible();
   });
 
@@ -114,7 +115,7 @@ test.describe.serial('Bank Accounts', () => {
     await addCreditCard(page, '5100000000000000');
     await saveBankAccount(page);
 
-    await expect(page.getByText(i18nKeys.translation.bankAccountUpdated)).toBeVisible();
+    await expect(page.getByText(i18nKeys.translation.bankAccountUpdated).first()).toBeVisible();
     await expect(page.getByText('1111')).toBeVisible();
     await expect(page.getByText('0000')).toBeVisible();
   });
@@ -127,7 +128,7 @@ test.describe.serial('Bank Accounts', () => {
     await deleteCreditCardFromForm(page, 0);
     await saveBankAccount(page);
 
-    await expect(page.getByText(i18nKeys.translation.bankAccountUpdated)).toBeVisible();
+    await expect(page.getByText(i18nKeys.translation.bankAccountUpdated).first()).toBeVisible();
     await expect(page.getByText('1111')).not.toBeVisible();
     await expect(page.getByText('0000')).toBeVisible();
 
@@ -135,7 +136,7 @@ test.describe.serial('Bank Accounts', () => {
     await deleteCreditCardFromForm(page, 0);
     await saveBankAccount(page);
 
-    await expect(page.getByText(i18nKeys.translation.bankAccountUpdated)).toBeVisible();
+    await expect(page.getByText(i18nKeys.translation.bankAccountUpdated).first()).toBeVisible();
     await expect(page.getByText('0000')).not.toBeVisible();
   });
 
@@ -317,13 +318,7 @@ test.describe('Bank Account Modal - Credit Card Validation', () => {
     await openAddBankAccountModal(page);
 
     const modal = page.getByTestId('add-bank-account-modal');
-    const monthSection = modal.getByRole('spinbutton', { name: 'Month' });
-    await monthSection.click();
-    await monthSection.pressSequentially('12');
-    await monthSection.press('Tab');
-    const yearSection = modal.getByRole('spinbutton', { name: 'Year' });
-    await yearSection.pressSequentially('2030');
-    await yearSection.press('Tab');
+    await fillMuiMonthYear(modal, '12/30');
     await modal.getByTestId('credit-card-add-button').click();
 
     await expect(page.getByText(i18nKeys.translation.creditCardNumberRequired)).toBeVisible();

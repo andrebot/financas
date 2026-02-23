@@ -1,6 +1,8 @@
 import { Page, expect } from "@playwright/test";
 import i18nKeys from "../../src/client/i18n/en";
 
+export const APP_URL = 'http://127.0.0.1:3000/';
+
 export const testUser = {
   firstName: 'John',
   lastName: 'Doe',
@@ -39,8 +41,10 @@ export async function fillRegisterForm(page: Page, info: typeof testUser = testU
 }
 
 export async function goToRegisterPageFromLoginPage(page: Page) {
-  await page.goto('http://localhost:3000/');
+  await page.goto(APP_URL);
+  await page.waitForTimeout(1000); // WebKit needs time to render before finding the register button
   await page.getByRole('button', { name: i18nKeys.translation.register }).click();
+  await page.getByLabel(i18nKeys.translation.firstName).waitFor({ state: 'visible' });
 }
 
 export async function checkFailedForm(page: Page, error: string) {
@@ -49,7 +53,7 @@ export async function checkFailedForm(page: Page, error: string) {
 }
 
 export async function login(page: Page, email = loginUser.email, password = loginUserPassword) {
-  await page.goto('http://localhost:3000/');
+  await page.goto(APP_URL);
   await page.waitForTimeout(1000); // Webkit was being too fast and not finding the email input
   await page.getByRole('textbox', { name: i18nKeys.translation.email, exact: true }).fill(email);
   await page.getByRole('textbox', { name: i18nKeys.translation.password, exact: true }).fill(password);

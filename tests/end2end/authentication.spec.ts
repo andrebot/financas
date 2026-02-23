@@ -9,6 +9,7 @@ import {
   loginUser,
   loginUserPassword,
   resetPasswordUser,
+  APP_URL,
 } from './authUtils';
 
 test('should register successfully and not allow to register again', async ({ page }) => {
@@ -68,7 +69,7 @@ test('should not allow user to register with names with invalid characters', asy
 });
 
 test('should be able to login', async ({ page }) => {
-  await page.goto('http://localhost:3000/');
+  await page.goto(APP_URL);
   await page.getByLabel(i18nKeys.translation.email).click();
   await page.getByLabel(i18nKeys.translation.email).fill(loginUser.email);
   await page.getByRole('textbox', { name: i18nKeys.translation.password, exact: true }).fill(loginUserPassword);
@@ -78,7 +79,7 @@ test('should be able to login', async ({ page }) => {
 });
 
 test('should not be able to login with invalid email', async ({ page }) => {
-  await page.goto('http://localhost:3000/');
+  await page.goto(APP_URL);
   await page.getByLabel(i18nKeys.translation.email).fill('invalid-email');
   await page.getByRole('textbox', { name: i18nKeys.translation.password, exact: true }).fill(loginUserPassword);
   await page.getByRole('button', { name: i18nKeys.translation.login }).click();
@@ -86,7 +87,7 @@ test('should not be able to login with invalid email', async ({ page }) => {
 });
 
 test('should not be able to login with invalid password', async ({ page }) => {
-  await page.goto('http://localhost:3000/');
+  await page.goto(APP_URL);
   await page.getByLabel(i18nKeys.translation.email).fill(loginUser.email);
   await page.getByRole('textbox', { name: i18nKeys.translation.password, exact: true }).fill('invalid-password');
   await page.getByRole('button', { name: i18nKeys.translation.login }).click();
@@ -94,7 +95,7 @@ test('should not be able to login with invalid password', async ({ page }) => {
 });
 
 test('should be able to reset password', async ({ page }) => {
-  await page.goto('http://localhost:3000/');
+  await page.goto(APP_URL);
   await page.locator(`text=${i18nKeys.translation.clickHere}`).click();
   const emailInput = page.getByLabel(i18nKeys.translation.email);
   await emailInput.waitFor({ state: 'visible' });

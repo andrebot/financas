@@ -70,13 +70,13 @@ test.describe.serial('Categories', () => {
     await fillCategoryName(page, category2);
     await saveCategory(page);
 
-    await expect(page.getByText(i18nKeys.translation.categoryCreated)).toBeVisible();
+    await expect(page.getByText(i18nKeys.translation.categoryCreated).first()).toBeVisible();
 
     await openAddCategoryModal(page);
     await fillCategoryName(page, category3);
     await saveCategory(page);
 
-    await expect(page.getByText(i18nKeys.translation.categoryCreated)).toBeVisible();
+    await expect(page.getByText(i18nKeys.translation.categoryCreated).first()).toBeVisible();
     await expect(page.getByText(currentCategoryName)).toBeVisible();
     await expect(page.getByText(category2)).toBeVisible();
     await expect(page.getByText(category3)).toBeVisible();

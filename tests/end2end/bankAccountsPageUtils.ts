@@ -1,5 +1,6 @@
 import { Page } from '@playwright/test';
 import i18nKeys from '../../src/client/i18n/en';
+import { fillMuiMonthYear } from './datePickerUtils';
 
 const createBankAccountsUser = (browser: string) => ({
   email: `delete.me.bank.accounts.${browser}@gmail.com`,
@@ -66,14 +67,7 @@ export async function saveBankAccount(page: Page) {
 export async function addCreditCard(page: Page, cardNumber: string, expirationDate = '12/30') {
   const modal = page.getByTestId('add-bank-account-modal');
   await modal.getByTestId('credit-card-number-input').fill(cardNumber);
-  const [month, year] = expirationDate.split('/');
-  const monthSection = modal.getByRole('spinbutton', { name: 'Month' });
-  await monthSection.click();
-  await monthSection.pressSequentially(month);
-  await monthSection.press('Tab');
-  const yearSection = modal.getByRole('spinbutton', { name: 'Year' });
-  await yearSection.pressSequentially(year.length === 2 ? `20${year}` : year);
-  await yearSection.press('Tab');
+  await fillMuiMonthYear(modal, expirationDate);
   await modal.getByTestId('credit-card-add-button').click();
 }
 
