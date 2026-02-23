@@ -2,7 +2,6 @@ import { styled } from '@mui/material/styles';
 import type { StyleCompProp } from '../../types';
 import Paper from '@mui/material/Paper';
 import Button from '@mui/material/Button';
-import TableCell from '@mui/material/TableCell';
 import { RowInput } from '../../components/formStyledComponents';
 
 export const GoalsMain = styled('div')(() => ({
@@ -12,6 +11,7 @@ export const GoalsMain = styled('div')(() => ({
   justifyContent: 'center',
   gap: '20px',
   padding: '0px 20px',
+  overflow: 'auto',
 }));
 
 export const GoalsTableWrapper = styled(Paper)(() => ({

@@ -3,11 +3,17 @@ import Paper from '@mui/material/Paper';
 import Tooltip from '@mui/material/Tooltip';
 import FormControl from '@mui/material/FormControl';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { StyleCompProp } from '../../types';
 
-export const CreateBankAccountModal = styled(Paper)(() => ({
+export const CreateBankAccountModal = styled(Paper)(({ theme }: StyleCompProp) => ({
   padding: '20px',
   gap: '10px',
-  maxWidth: '500px',
+  [theme.breakpoints.up('sm')]: {
+    maxWidth: '500px',
+  },
+  [theme.breakpoints.down('md')]: {
+    width: '100%',
+  },
 }));
 
 export const CreateAccountMain = styled('div')(() => ({

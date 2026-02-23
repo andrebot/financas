@@ -16,7 +16,6 @@ import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import Box from '@mui/material/Box';
 import { PickerValue } from '@mui/x-date-pickers/internals/models';
-import { RowInput } from '../../components/formStyledComponents';
 import { goalReducer, initialGoalState } from './goalReducer';
 import { GoalActionType, GoalsTableActionType } from '../../enums';
 import GoalsTable from './goalsTable';
