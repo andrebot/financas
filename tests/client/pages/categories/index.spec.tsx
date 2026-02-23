@@ -182,13 +182,8 @@ describe('Categories page', () => {
   it('should open edit category modal when clicking edit button', () => {
     setup();
 
-    const editButtons = screen.getAllByRole('button', { name: '' });
-    const editButton = editButtons.find((btn) => btn.closest('[class*="CategoryTitleHolder"]'));
-    if (editButton) {
-      fireEvent.click(editButton);
-    } else {
-      fireEvent.click(screen.getAllByTestId('EditIcon')[0].closest('button')!);
-    }
+    const editButton = screen.getByRole('button', { name: 'Edit Category' });
+    fireEvent.click(editButton);
 
     expect(mockShowModal).toHaveBeenCalledTimes(1);
   });

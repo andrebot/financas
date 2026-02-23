@@ -58,4 +58,33 @@ describe('SubCategoryForm', () => {
 
     expect(mockOnAddSubCategory).not.toHaveBeenCalled();
   });
+
+  it('should call onAddSubCategory when Enter is pressed in the input', () => {
+    setup();
+
+    const input = screen.getByLabelText(i18nEn.translation.subCategoryName);
+    fireEvent.change(input, { target: { value: 'New Sub Category' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    expect(mockOnAddSubCategory).toHaveBeenCalledWith('New Sub Category');
+  });
+
+  it('should clear the input after adding sub-category via Enter', () => {
+    setup();
+
+    const input = screen.getByLabelText(i18nEn.translation.subCategoryName);
+    fireEvent.change(input, { target: { value: 'New Sub Category' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    expect(input).toHaveValue('');
+  });
+
+  it('should not call onAddSubCategory when Enter is pressed with empty input', () => {
+    setup();
+
+    const input = screen.getByLabelText(i18nEn.translation.subCategoryName);
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    expect(mockOnAddSubCategory).not.toHaveBeenCalled();
+  });
 });
