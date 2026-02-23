@@ -1,4 +1,10 @@
-import React, { useReducer, useState, useEffect, useRef } from 'react';
+import React, {
+  useReducer,
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import { enqueueSnackbar } from 'notistack';
@@ -39,6 +45,7 @@ export default function Goals(): React.JSX.Element {
   const [deleteGoal] = useDeleteGoalMutation();
 
   const [goalState, dispatchGoal] = useReducer(goalReducer, initialGoalState);
+  const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState(0);
   const [activeGoals, setActiveGoals] = useState<Goal[]>([]);
   const [archivedGoals, setArchivedGoals] = useState<Goal[]>([]);
@@ -137,6 +144,10 @@ export default function Goals(): React.JSX.Element {
     dispatchGoal({ type: GoalActionType.RESET });
   }
 
+  const filterGoals = useCallback((goals: Goal[]) => {
+    return goals.filter((goal) => goal.name.toLowerCase().includes(search.toLowerCase()));
+  }, [search]);
+
   useEffect(() => {
     if (activeTab === 0) {
       setGoals(activeGoals);
@@ -220,6 +231,12 @@ export default function Goals(): React.JSX.Element {
         <SaveGoalButton variant="contained" color="primary" onClick={handleSaveGoal}>{t('saveGoal')}</SaveGoalButton>
       </RowInput>
       <GoalsTableWrapper elevation={3}>
+        <TextField
+          label={t('searchByName')}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          fullWidth
+        />
         <Box>
           <Tabs value={activeTab} variant="fullWidth" onChange={handleTabChange}>
             <Tab label={t('active')} />
@@ -227,7 +244,7 @@ export default function Goals(): React.JSX.Element {
           </Tabs>
         </Box>
         <GoalsTable
-          goals={goals}
+          goals={filterGoals(goals)}
           activeGoalId={goalState.id}
           availableActions={goalsTableActions}
           onArchiveGoal={handleArchiveGoal}

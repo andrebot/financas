@@ -142,5 +142,6 @@ export default {
     goalDeletionFailed: 'Falha ao deletar meta! Por favor, tente novamente mais tarde.',
     deleteGoalModalTitle: 'Excluir Meta',
     deleteGoalConfirmation: 'Tem certeza que deseja excluir esta meta? Esta ação é irreversível.',
+    searchByName: 'Pesquisar por nome',
   },
 };

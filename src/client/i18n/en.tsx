@@ -142,5 +142,6 @@ export default {
     goalDeletionFailed: 'Failed to delete goal! Please try again later.',
     deleteGoalModalTitle: 'Delete Goal',
     deleteGoalConfirmation: 'Are you sure you want to delete this goal? This action is irreversible.',
+    searchByName: 'Search by name',
   },
 };
