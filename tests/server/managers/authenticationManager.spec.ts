@@ -1,6 +1,10 @@
 import chai, { should } from 'chai';
 import sinon from 'sinon';
+import sinonChai from 'sinon-chai';
 import proxyquire from 'proxyquire';
+
+chai.use(sinonChai);
+chai.should();
 import { Tokens, UserPayload } from '../../../src/server/types';
 import {
   ACCESS_TOKEN_EXPIRATION,
@@ -19,9 +23,11 @@ type MockUserObj = {
 
 type MockUser = {
   _id: string;
+  id?: string;
   email: string;
   firstName: string;
   lastName: string;
+  role?: 'admin' | 'user';
 }
 
 const bcryptMock = {
@@ -80,7 +86,7 @@ describe('AuthenticationManager', function () {
 
   it('createToken should be called with correct arguments', function() {
     const payload = { email: 'test@example.com' };
-    const expiresIn = '1h';
+    const expiresIn = 3600;
     const secret = 'secretKey';
 
     jwtSignStub.returns('mocktoken');
@@ -113,13 +119,17 @@ describe('AuthenticationManager', function () {
 
   it('createRefreshToken should create a token with correct payload and options', function() {
     const email = 'user@example.com';
+    const role = 'user';
+    const firstName = 'John';
+    const lastName = 'Doe';
+    const id = '1';
 
     jwtSignStub.returns('mocktoken');
 
-    const token = createRefreshToken(email);
+    const token = createRefreshToken(email, role, firstName, lastName, id);
 
     jwtSignStub.should.have.been.calledOnce;
-    jwtSignStub.firstCall.args[0].should.have.property('email', email);
+    jwtSignStub.firstCall.args[0].should.deep.equal({ email, role, firstName, lastName, id });
     jwtSignStub.firstCall.args[2].should.have.property('expiresIn', REFRESH_TOKEN_EXPIRATION);
     should().exist(token);
     token.should.be.a('string');
@@ -204,9 +214,11 @@ describe('AuthenticationManager', function () {
     beforeEach(function() {
       user = {
         _id: new Types.ObjectId().toHexString(),
+        id: new Types.ObjectId().toHexString(),
         email: 'old@example.com',
         firstName: 'Old',
         lastName: 'User',
+        role: 'admin',
       };
       newValues = {
         email: 'new@example.com',
@@ -223,8 +235,8 @@ describe('AuthenticationManager', function () {
       UserRepo.findById.withArgs('1').resolves(user);
     });
 
-    it('should update user with all fields provided', async function() {    
-      UserRepo.update.resolves({ ...newValues, _id: user._id });
+    it('should update user with all fields provided', async function() {
+      UserRepo.update.resolves({ ...newValues, id: user.id ?? user._id, _id: user._id });
   
       const result = await updateUser(userPayload, '1', newValues);
   
@@ -235,7 +247,7 @@ describe('AuthenticationManager', function () {
       UserRepo.findById.should.have.been.calledOnce;
     });
 
-    it('should update user with only email field provided', async function() {    
+    it('should update user with only email field provided', async function() {
       UserRepo.update.resolves({ ...user, email: newValues.email });
   
       const result = await updateUser(userPayload, '1', { email: newValues.email });
@@ -247,7 +259,7 @@ describe('AuthenticationManager', function () {
       UserRepo.findById.should.have.been.calledOnce;
     });
 
-    it('should update user with only firstName field provided', async function() {    
+    it('should update user with only firstName field provided', async function() {
       UserRepo.update.resolves({ ...user, firstName: newValues.firstName });
   
       const result = await updateUser(userPayload, '1', { firstName: newValues.firstName });
@@ -259,7 +271,7 @@ describe('AuthenticationManager', function () {
       UserRepo.findById.should.have.been.calledOnce;
     });
 
-    it('should update user with only lastName field provided', async function() {    
+    it('should update user with only lastName field provided', async function() {
       UserRepo.update.resolves({ ...user, lastName: newValues.lastName });
   
       const result = await updateUser(userPayload, '1', { lastName: newValues.lastName });
@@ -525,23 +537,19 @@ describe('AuthenticationManager', function () {
         firstName: 'Old',
         lastName: 'User',
         role: 'admin',
+        password: 'oldPassword',
       };
       UserRepo.findByEmail.resolves(mockUser);
       UserRepo.update.resolves(mockUser);
 
-      try {
-        const result = await resetPassword(mockUser.email);
+      const result = await resetPassword(mockUser.email);
 
-        should().exist(result);
-        result.should.be.true;
-        UserRepo.findByEmail.should.have.been.calledOnce;
-        UserRepo.update.should.have.been.calledOnce;
-        sendNotificationStub.should.have.been.calledOnce;
-        sendNotificationStub.should.have.been.calledWith(mockUser.email, sinon.match.string);
-      } catch (error) {
-        console.error(error);
-        chai.assert.fail('Should not have thrown an error');
-      }
+      should().exist(result);
+      result.should.be.true;
+      UserRepo.findByEmail.should.have.been.calledOnce;
+      UserRepo.update.should.have.been.calledOnce;
+      sendNotificationStub.should.have.been.calledOnce;
+      sendNotificationStub.should.have.been.calledWith(mockUser.email, sinon.match.string);
     });
 
     it('should throw an error if the user is not found when resetting password', async function() {
@@ -561,69 +569,70 @@ describe('AuthenticationManager', function () {
   describe('changing password', function() {
     it('should change the password', async function() {
       const mockUser = {
+        id: '1',
+        email: 'user@example.com',
+        firstName: 'John',
+        lastName: 'Doe',
+        role: 'user' as const,
         password: 'oldPassword',
-        save: sinon.stub().resolves(),
       };
 
       bcryptMock.compareSync.returns(true);
       UserRepo.findByEmail.resolves(mockUser);
       UserRepo.update.resolves(mockUser);
 
-      try {
-        const result = await changePassword('1', 'oldPassword', 'newPassword');
+      const result = await changePassword(mockUser.email, 'oldPassword', 'newPassword');
 
-        should().exist(result);
-        result.should.be.true;
-        UserRepo.findByEmail.should.have.been.calledOnce;
-        UserRepo.update.should.have.been.calledOnce;
-        bcryptMock.compareSync.should.have.been.calledOnce;
-        bcryptMock.compareSync.should.have.been.calledWith('oldPassword', 'oldPassword');
-        bcryptMock.genSaltSync.should.have.been.calledOnce;
-        bcryptMock.hashSync.should.have.been.calledOnce;
-      } catch (error) {
-        console.error(error);
-        chai.assert.fail('Should not have thrown an error');
-      }
+      should().exist(result);
+      result.should.be.true;
+      UserRepo.findByEmail.should.have.been.calledOnceWith(mockUser.email);
+      UserRepo.update.should.have.been.calledOnce;
+      bcryptMock.compareSync.should.have.been.calledOnceWith('oldPassword', 'oldPassword');
+      bcryptMock.genSaltSync.should.have.been.calledOnce;
+      bcryptMock.hashSync.should.have.been.calledOnce;
     });
 
     it('should throw error if the old password does not match', async function() {
       const mockUser = {
+        id: '1',
+        email: 'user@example.com',
+        firstName: 'John',
+        lastName: 'Doe',
+        role: 'user' as const,
         password: 'anotherPassword',
-        save: sinon.stub().resolves(),
       };
 
       bcryptMock.compareSync.returns(false);
       UserRepo.findByEmail.resolves(mockUser);
 
       try {
-        await changePassword('1', 'oldPassword', 'newPassword');
+        await changePassword(mockUser.email, 'oldPassword', 'newPassword');
 
         chai.assert.fail('Should have thrown an error');
       } catch (error) {
-        UserRepo.findByEmail.should.have.been.calledOnce;
-        bcryptMock.compareSync.should.have.been.calledOnce;
-        bcryptMock.compareSync.should.have.been.calledWith('oldPassword', 'anotherPassword');
-        bcryptMock.genSaltSync.should.have.not.been.called;
-        bcryptMock.hashSync.should.have.not.been.called;
-        UserRepo.update.should.have.not.been.called;
+        UserRepo.findByEmail.should.have.been.calledOnceWith(mockUser.email);
+        bcryptMock.compareSync.should.have.been.calledOnceWith('oldPassword', 'anotherPassword');
+        bcryptMock.genSaltSync.should.not.have.been.called;
+        bcryptMock.hashSync.should.not.have.been.called;
+        UserRepo.update.should.not.have.been.called;
         (error as Error).message.should.contain('Invalid Password');
       }
     });
 
     it('should throw error if the user is not found', async function() {
+      const email = 'nonexistent@example.com';
       UserRepo.findByEmail.resolves(null);
 
       try {
-        await changePassword('1', 'oldPassword', 'newPassword');
+        await changePassword(email, 'oldPassword', 'newPassword');
 
         chai.assert.fail('Should have thrown an error');
-
       } catch (error) {
-        UserRepo.findByEmail.should.have.been.calledOnce;
-        bcryptMock.compareSync.should.have.not.been.called;
-        bcryptMock.genSaltSync.should.have.not.been.called;
-        bcryptMock.hashSync.should.have.not.been.called;
-        (error as Error).message.should.contain('No user was found with email: 1');
+        UserRepo.findByEmail.should.have.been.calledOnceWith(email);
+        bcryptMock.compareSync.should.not.have.been.called;
+        bcryptMock.genSaltSync.should.not.have.been.called;
+        bcryptMock.hashSync.should.not.have.been.called;
+        (error as Error).message.should.contain(`No user was found with email: ${email}`);
       }
     });
   });

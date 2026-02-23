@@ -66,6 +66,8 @@ describe('NavBar', () => {
     expect(screen.getByText(i18nKeys.translation.transactions)).toBeInTheDocument();
     expect(screen.getByText(i18nKeys.translation.bankAccounts)).toBeInTheDocument();
     expect(screen.getByText(i18nKeys.translation.settings)).toBeInTheDocument();
+    expect(screen.getByText(i18nKeys.translation.categories)).toBeInTheDocument();
+    expect(screen.getByText(i18nKeys.translation.goals)).toBeInTheDocument();
     expect(screen.getByText(i18nKeys.translation.logout)).toBeInTheDocument();
   });
 
@@ -149,5 +151,16 @@ describe('NavBar', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'menu' }));
     fireEvent.click(screen.getByText(i18nKeys.translation.categories));
+  });
+
+  it('should go to the goals page when the goals button is clicked', () => {
+    render(
+      <I18nextProvider i18n={i18n}>
+        <NavBar />
+      </I18nextProvider>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'menu' }));
+    fireEvent.click(screen.getByText(i18nKeys.translation.goals));
   });
 });

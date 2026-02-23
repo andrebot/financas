@@ -1,6 +1,7 @@
 import { should } from 'chai';
 import { Types } from 'mongoose';
-import GoalModel, { IGoalDocument } from '../../../../src/server/resources/models/goalModel';
+import GoalModel from '../../../../src/server/resources/models/goalModel';
+import { IGoalDocument } from '../../../../src/server/types';
 import checkRequiredField from '../../checkRequiredField';
 
 describe('GoalModel', () => {

@@ -1,7 +1,7 @@
 import { Model, Document } from 'mongoose';
 import type { Logger } from 'winston';
 import { createLogger } from '../../utils/logger';
-import { IRepository } from './IRepository';
+import type { IRepository } from './IRepository';
 import type { ErrorHandler } from '../../types';
 
 /**

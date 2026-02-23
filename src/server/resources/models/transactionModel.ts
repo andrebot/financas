@@ -1,22 +1,9 @@
+import { Schema, model } from 'mongoose';
 import {
-  Schema,
-  model,
-  Document,
-  ObjectId,
-  Types,
-} from 'mongoose';
-import { ITransaction, TRANSACTION_TYPES, INVESTMENT_TYPES } from '../../types';
-
-export interface ITransactionDocument extends Omit<ITransaction, 'id' | 'user' | 'goalsList' | 'account'>, Document {
-  _id: Types.ObjectId;
-  user: ObjectId;
-  account: ObjectId;
-  goalsList: {
-    goal: Types.ObjectId;
-    goalName: string;
-    percentage: number;
-  }[];
-}
+  TRANSACTION_TYPES,
+  INVESTMENT_TYPES,
+  ITransactionDocument,
+} from '../../types';
 
 const TransactionSchema = new Schema<ITransactionDocument>({
   name: { type: String, required: true },

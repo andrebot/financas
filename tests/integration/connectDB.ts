@@ -1,13 +1,13 @@
-import mongoose, { Types } from 'mongoose';
+import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 import { MongoMemoryServer } from 'mongodb-memory-server';
-import UserModel, { IUserDocument } from '../../src/server/resources/models/userModel';
-import AccountModel, { IAccountDocument } from '../../src/server/resources/models/accountModel';
-import categoryModel, { ICategoryDocument } from '../../src/server/resources/models/categoryModel';
-import GoalModel, { IGoalDocument } from '../../src/server/resources/models/goalModel';
-import BudgetModel, { IBudgetDocument } from '../../src/server/resources/models/budgetModel';
-import transactionModel, { ITransactionDocument } from '../../src/server/resources/models/transactionModel';
-import MonthlyBalanceModel, { IMonthlyBalanceDocument } from '../../src/server/resources/models/monthlyBalanceModel';
+import UserModel from '../../src/server/resources/models/userModel';
+import AccountModel from '../../src/server/resources/models/accountModel';
+import categoryModel from '../../src/server/resources/models/categoryModel';
+import GoalModel from '../../src/server/resources/models/goalModel';
+import BudgetModel from '../../src/server/resources/models/budgetModel';
+import transactionModel from '../../src/server/resources/models/transactionModel';
+import MonthlyBalanceModel from '../../src/server/resources/models/monthlyBalanceModel';
 import {
   IUser,
   IAccount,
@@ -15,6 +15,13 @@ import {
   IGoal,
   IBudget,
   ITransaction,
+  IUserDocument,
+  IAccountDocument,
+  ICategoryDocument,
+  IGoalDocument,
+  IBudgetDocument,
+  ITransactionDocument,
+  IMonthlyBalanceDocument,
   BUDGET_TYPES,
   TRANSACTION_TYPES,
   INVESTMENT_TYPES,

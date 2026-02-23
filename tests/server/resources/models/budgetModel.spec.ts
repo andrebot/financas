@@ -1,6 +1,7 @@
 import { should } from 'chai';
 import mongoose from 'mongoose';
-import BudgetModel, { IBudgetDocument } from '../../../../src/server/resources/models/budgetModel';
+import BudgetModel from '../../../../src/server/resources/models/budgetModel';
+import { IBudgetDocument } from '../../../../src/server/types';
 import checkRequiredField from '../../checkRequiredField';
 import { BUDGET_TYPES } from '../../../../src/server/types';
 

@@ -1,16 +1,5 @@
-import {
-  Schema,
-  model,
-  Document,
-  ObjectId,
-} from 'mongoose';
-import { IMonthlyBalance } from '../../types';
-
-export interface IMonthlyBalanceDocument extends Omit<IMonthlyBalance, 'id' | 'user' | 'account' | 'transactions'>, Document {
-  user: ObjectId;
-  account: ObjectId;
-  transactions: ObjectId[];
-}
+import { Schema, model } from 'mongoose';
+import type { IMonthlyBalanceDocument } from '../../types';
 
 const MonthlyBalanceSchema = new Schema<IMonthlyBalanceDocument>({
   user: { type: Schema.Types.ObjectId, ref: 'User', required: true },

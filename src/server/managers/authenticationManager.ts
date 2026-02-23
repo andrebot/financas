@@ -1,8 +1,5 @@
 import bcrypt from 'bcrypt';
 import jwt, { Secret } from 'jsonwebtoken';
-import {
-  Tokens, Token, UserPayload,
-} from '../types';
 import UserRepo from '../resources/repositories/userRepo';
 import { regExpPassword } from '../utils/validators';
 import { createLogger } from '../utils/logger';
@@ -15,7 +12,13 @@ import {
   REFRESH_TOKEN_EXPIRATION,
 } from '../config/auth';
 import sendNotification from '../utils/notification';
-import type { IUser, LoginResponse } from '../types';
+import type {
+  IUser,
+  LoginResponse,
+  UserPayload,
+  Tokens,
+  Token,
+} from '../types';
 
 const logger = createLogger('AuthenticationManager');
 

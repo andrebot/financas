@@ -1,9 +1,10 @@
 import { Model } from 'mongoose';
 import Repository from './repository';
-import TransactionModel, { ITransactionDocument } from '../models/transactionModel';
-import { ITransaction } from '../../types';
+import TransactionModel from '../models/transactionModel';
+import type { ITransaction, ITransactionDocument, ITransactionRepo } from '../../types';
 
-export class TransactionRepo extends Repository<ITransactionDocument, ITransaction> {
+export class TransactionRepo extends Repository<ITransactionDocument, ITransaction>
+  implements ITransactionRepo {
   constructor(model: Model<ITransactionDocument> = TransactionModel) {
     super(model);
   }
@@ -47,6 +48,23 @@ export class TransactionRepo extends Repository<ITransactionDocument, ITransacti
     const result = await this.Model.updateMany(
       { category: { $in: categoryIds } },
       { $unset: { category: 1 } },
+    );
+
+    return result.modifiedCount;
+  }
+
+  /**
+   * Deletes a goal from transactions by a goal id.
+   *
+   * @param goalId - The id of the goal to delete.
+   * @returns The number of transactions updated.
+   */
+  async deleteGoalFromTransactions(goalId: string): Promise<number> {
+    this.logger.info(`Deleting goal from transactions: ${goalId}`);
+
+    const result = await this.Model.updateMany(
+      { goalsList: { $elemMatch: { goal: goalId } } },
+      { $pull: { goalsList: { goal: goalId } } },
     );
 
     return result.modifiedCount;

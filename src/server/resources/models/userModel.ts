@@ -1,16 +1,7 @@
-import {
-  Schema,
-  model,
-  Document,
-  Types,
-} from 'mongoose';
+import { Schema, model } from 'mongoose';
 import { regExpEmail } from '../../utils/validators';
 import { transformMongooseObject } from '../../utils/misc';
-import { IUser } from '../../types';
-
-export interface IUserDocument extends Omit<IUser, 'id'>, Document {
-  _id: Types.ObjectId;
-}
+import type { IUserDocument } from '../../types';
 
 /**
  * Schema for the User

@@ -26,3 +26,20 @@ export enum SettingsActionType {
   SET_IS_DIRTY = 'SET_IS_DIRTY',
   RESET_STATE = 'RESET_STATE',
 }
+
+export enum GoalActionType {
+  SET_NAME = 'SET_NAME',
+  SET_VALUE = 'SET_VALUE',
+  SET_DUE_DATE = 'SET_DUE_DATE',
+  VALIDATE = 'VALIDATE',
+  RESET = 'RESET',
+  EDIT = 'EDIT',
+}
+
+export enum GoalsTableActionType {
+  EDIT = 'edit',
+  DELETE = 'delete',
+  ARCHIVE = 'archive',
+  UNARCHIVE = 'unarchive',
+  DESELECT = 'deselect',
+}

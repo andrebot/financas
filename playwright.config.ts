@@ -46,12 +46,20 @@ export default defineConfig({
 
     {
       name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      use: {
+        ...devices['Desktop Firefox'],
+        navigationTimeout: 60000,
+        timeout: 60000, // Allow slow page.goto (test timeout must be >= navigationTimeout)
+      },
     },
 
     {
       name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      use: {
+        ...devices['Desktop Safari'],
+        navigationTimeout: 60000,
+        timeout: 60000, // Allow slow page.goto (test timeout must be >= navigationTimeout)
+      },
     },
 
     /* Test against mobile viewports. */

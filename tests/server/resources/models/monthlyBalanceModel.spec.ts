@@ -1,6 +1,7 @@
 import { should } from 'chai';
 import { Types } from 'mongoose';
-import MonthlyBalanceModel, { IMonthlyBalanceDocument } from '../../../../src/server/resources/models/monthlyBalanceModel';
+import MonthlyBalanceModel from '../../../../src/server/resources/models/monthlyBalanceModel';
+import { IMonthlyBalanceDocument } from '../../../../src/server/types';
 import checkRequiredField from '../../checkRequiredField';
 
 describe('MonthlyBalanceModel', () => {
