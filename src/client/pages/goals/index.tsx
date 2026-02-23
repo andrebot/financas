@@ -24,6 +24,7 @@ import {
   GoalsMain,
   GoalsTableWrapper,
   SaveGoalButton,
+  GoalsRowInput,
 } from './styledComponents';
 import type { Goal } from '../../types';
 import { useCreateGoalMutation, useDeleteGoalMutation, useListGoalsQuery, useUpdateGoalMutation } from '../../features/goal';
@@ -200,7 +201,7 @@ export default function Goals(): React.JSX.Element {
   return (
     <GoalsMain>
       <Typography variant="h2">{t('goals')}</Typography>
-      <RowInput>
+      <GoalsRowInput>
         <TextField 
           label={t('goalName')}
           value={goalState.name}
@@ -242,7 +243,7 @@ export default function Goals(): React.JSX.Element {
           }}
         />
         <SaveGoalButton variant="contained" color="primary" onClick={handleSaveGoal}>{t('saveGoal')}</SaveGoalButton>
-      </RowInput>
+      </GoalsRowInput>
       <GoalsTableWrapper elevation={3}>
         <TextField
           label={t('searchByName')}

@@ -3,6 +3,7 @@ import type { StyleCompProp } from '../../types';
 import Paper from '@mui/material/Paper';
 import Button from '@mui/material/Button';
 import TableCell from '@mui/material/TableCell';
+import { RowInput } from '../../components/formStyledComponents';
 
 export const GoalsMain = styled('div')(() => ({
   display: 'flex',
@@ -20,4 +21,10 @@ export const GoalsTableWrapper = styled(Paper)(() => ({
 
 export const SaveGoalButton = styled(Button)(() => ({
   maxHeight: '56px',
+}));
+
+export const GoalsRowInput = styled(RowInput)(({ theme }: StyleCompProp) => ({
+  [theme.breakpoints.between('xs', 'md')]: {
+    width: '100%',
+  },
 }));
