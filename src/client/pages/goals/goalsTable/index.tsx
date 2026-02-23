@@ -58,7 +58,7 @@ export default function GoalsTable({
 
   /**
    * Sorts the goals by the selected column and order.
-   * 
+   *
    * @remarks
    * This uses the useMemo hook to memoize the sorted goals.
    *
@@ -101,7 +101,7 @@ export default function GoalsTable({
 
   /**
    * Gets the color of the progress bar based on the progress.
-   * 
+   *
    * if the progress is 100%, the color is success, otherwise it is primary.
    *
    * @param progress - The progress to get the color for
@@ -112,8 +112,8 @@ export default function GoalsTable({
       return 'success';
     }
 
-    return 'primary'
-  }
+    return 'primary';
+  };
 
   const ActionIcons = {
     [GoalsTableActionType.EDIT]: <EditIcon />,
@@ -121,7 +121,7 @@ export default function GoalsTable({
     [GoalsTableActionType.ARCHIVE]: <ArchiveIcon color="warning" />,
     [GoalsTableActionType.UNARCHIVE]: <UnarchiveIcon color="secondary" />,
     [GoalsTableActionType.DESELECT]: <DeselectIcon />,
-  }
+  };
 
   const actionHanlders = {
     [GoalsTableActionType.ARCHIVE]: onArchiveGoal,
@@ -129,7 +129,7 @@ export default function GoalsTable({
     [GoalsTableActionType.DELETE]: onDeleteGoal,
     [GoalsTableActionType.EDIT]: onEditGoal,
     [GoalsTableActionType.DESELECT]: onDeselectGoal,
-  }
+  };
 
   return (
     <TableContainer>
@@ -176,7 +176,7 @@ export default function GoalsTable({
                 <TableCell>{dayjs(goal.dueDate).format('MM/YYYY')}</TableCell>
                 <TableCell>
                   <Tooltip title={`${goal.progress}%`}>
-                    <LinearProgress 
+                    <LinearProgress
                       variant="determinate"
                       color={getProgressColor(goal.progress)}
                       value={goal.progress}

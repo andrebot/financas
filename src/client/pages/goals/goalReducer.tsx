@@ -4,17 +4,17 @@ import { GoalState, GoalAction, Goal } from '../../types';
 import { GoalActionType } from '../../enums';
 
 export const initialGoalState: GoalState = {
-    name: '',
-    value: 0,
-    dueDate: undefined as Date | undefined | null,
-    nameError: '',
-    valueError: '',
-    dueDateError: '',
-}
+  name: '',
+  value: 0,
+  dueDate: undefined as Date | undefined | null,
+  nameError: '',
+  valueError: '',
+  dueDateError: '',
+};
 
 /**
  * Validates the name of the goal and updates the state.
- * 
+ *
  * @remarks
  * The name must not be empty and must not contain special characters.
  *
@@ -23,25 +23,25 @@ export const initialGoalState: GoalState = {
  * @returns The new state
  */
 function setName(
-    state: GoalState,
-    payload: string | undefined | null,
+  state: GoalState,
+  payload: string | undefined | null,
 ): GoalState {
-    const nextState: GoalState = { ...state, name: payload, nameError: '' };
+  const nextState: GoalState = { ...state, name: payload, nameError: '' };
 
-    if (!payload || payload.trim().length === 0) {
-        nextState.nameError = 'nameRequired';
-    }
+  if (!payload || payload.trim().length === 0) {
+    nextState.nameError = 'nameRequired';
+  }
 
-    if (payload && !regExpName.test(payload)) {
-        nextState.nameError = 'nameInvalid';
-    }
+  if (payload && !regExpName.test(payload)) {
+    nextState.nameError = 'nameInvalid';
+  }
 
-    return nextState;
+  return nextState;
 }
 
 /**
  * Validates the value of the goal and updates the state.
- * 
+ *
  * @remarks
  * The value must not be empty and must be greater than 0.
  *
@@ -50,27 +50,27 @@ function setName(
  * @returns The new state
  */
 function setValue(
-    state: GoalState,
-    payload: number | undefined | null,
+  state: GoalState,
+  payload: number | undefined | null,
 ): GoalState {
-    let nextValue: number = payload ?? 0;
-    const nextState: GoalState = { ...state, value: nextValue, valueError: '' };
+  const nextValue: number = payload ?? 0;
+  const nextState: GoalState = { ...state, value: nextValue, valueError: '' };
 
-    if (isNaN(nextValue) || nextValue === 0) {
-        nextState.valueError = 'valueRequired';
-        nextState.value = 0;
-    }
+  if (Number.isNaN(nextValue) || nextValue === 0) {
+    nextState.valueError = 'valueRequired';
+    nextState.value = 0;
+  }
 
-    if (nextValue < 0) {
-        nextState.valueError = 'valueMustBeGreaterThanZero';
-    }
+  if (nextValue < 0) {
+    nextState.valueError = 'valueMustBeGreaterThanZero';
+  }
 
-    return nextState;
+  return nextState;
 }
 
 /**
  * Validates the due date of the goal and updates the state.
- * 
+ *
  * @remarks
  * The due date must not be empty and must be after today.
  *
@@ -79,23 +79,23 @@ function setValue(
  * @returns The new state
  */
 function setDueDate(
-    state: GoalState,
-    payload: Date | undefined | null,
+  state: GoalState,
+  payload: Date | undefined | null,
 ): GoalState {
-    const nextState: GoalState = { ...state, dueDate: payload, dueDateError: '' };
+  const nextState: GoalState = { ...state, dueDate: payload, dueDateError: '' };
 
-    if (payload === undefined || payload === null) {
-        nextState.dueDateError = 'dueDateRequired';
-    }
+  if (payload === undefined || payload === null) {
+    nextState.dueDateError = 'dueDateRequired';
+  }
 
-    const dueDateStartOfDay = dayjs(payload).startOf('day');
-    const todayStartOfDay = dayjs().startOf('day');
+  const dueDateStartOfDay = dayjs(payload).startOf('day');
+  const todayStartOfDay = dayjs().startOf('day');
 
-    if (dueDateStartOfDay.isBefore(todayStartOfDay)) {
-        nextState.dueDateError = 'dueDateMustBeAfterToday';
-    }
+  if (dueDateStartOfDay.isBefore(todayStartOfDay)) {
+    nextState.dueDateError = 'dueDateMustBeAfterToday';
+  }
 
-    return nextState;
+  return nextState;
 }
 
 /**
@@ -106,10 +106,10 @@ function setDueDate(
  * @returns The new state
  */
 function editGoal(
-    state: GoalState,
-    payload: Goal,
+  state: GoalState,
+  payload: Goal,
 ): GoalState {
-    return { ...state, ...payload };
+  return { ...state, ...payload };
 }
 
 /**
@@ -120,18 +120,18 @@ function editGoal(
  * @returns The new state
  */
 export const goalReducer = (state: GoalState, action: GoalAction): GoalState => {
-    switch (action.type) {
-        case GoalActionType.SET_NAME:
-            return setName(state, action.payload);
-        case GoalActionType.SET_VALUE:
-            return setValue(state, action.payload);
-        case GoalActionType.SET_DUE_DATE:
-            return setDueDate(state, action.payload);
-        case GoalActionType.EDIT:
-            return editGoal(state, action.payload);
-        case GoalActionType.RESET:
-            return { ...initialGoalState };
-        default:
-            return state;
-    }
-}
+  switch (action.type) {
+    case GoalActionType.SET_NAME:
+      return setName(state, action.payload);
+    case GoalActionType.SET_VALUE:
+      return setValue(state, action.payload);
+    case GoalActionType.SET_DUE_DATE:
+      return setDueDate(state, action.payload);
+    case GoalActionType.EDIT:
+      return editGoal(state, action.payload);
+    case GoalActionType.RESET:
+      return { ...initialGoalState };
+    default:
+      return state;
+  }
+};

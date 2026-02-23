@@ -43,11 +43,11 @@ export const endpoints = (builder: ApiBuilder) => ({
     invalidatesTags: [{ type: 'Goal', id: 'LIST' }],
   }),
   deleteGoal: builder.mutation<Goal, string>({
-    query: deleteGoalMutation ,
+    query: deleteGoalMutation,
     invalidatesTags: [{ type: 'Goal', id: 'LIST' }],
   }),
   getGoal: builder.query<Goal, string>({
-    query: getGoalQuery ,
+    query: getGoalQuery,
   }),
 });
 

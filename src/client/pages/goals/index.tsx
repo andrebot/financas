@@ -36,13 +36,21 @@ import { useModal } from '../../components/modal/modal';
 import ConfirmModal from '../../components/confirmModal';
 import type { Goal } from '../../types';
 
-const availableActions =  [GoalsTableActionType.EDIT, GoalsTableActionType.DESELECT, GoalsTableActionType.ARCHIVE, GoalsTableActionType.DELETE];
-const archivedAvailableActions = [GoalsTableActionType.UNARCHIVE, GoalsTableActionType.DELETE];
+const availableActions = [
+  GoalsTableActionType.EDIT,
+  GoalsTableActionType.DESELECT,
+  GoalsTableActionType.ARCHIVE,
+  GoalsTableActionType.DELETE,
+];
+const archivedAvailableActions = [
+  GoalsTableActionType.UNARCHIVE,
+  GoalsTableActionType.DELETE,
+];
 
 /**
  * Main component for the goals page. This has the logic for all the
  * Goal CRUD operations.
- * 
+ *
  * Remember to add the transactions feature where we really calculate
  * the progress and add more details to each goal.
  *
@@ -64,7 +72,9 @@ export default function Goals(): React.JSX.Element {
   const [activeGoals, setActiveGoals] = useState<Goal[]>([]);
   const [archivedGoals, setArchivedGoals] = useState<Goal[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
-  const [goalsTableActions, setGoalsTableActions] = useState<GoalsTableActionType[]>(availableActions);
+  const [goalsTableActions, setGoalsTableActions] = useState<GoalsTableActionType[]>(
+    availableActions,
+  );
 
   /**
    * Handles the change of the name of the goal.
@@ -77,11 +87,11 @@ export default function Goals(): React.JSX.Element {
    */
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatchGoal({ type: GoalActionType.SET_NAME, payload: e.target.value });
-  }
+  };
 
   /**
    * Handles the change of the value of the goal.
-   * 
+   *
    * @remarks
    * Triggers the SET_VALUE action to update the state.
    *
@@ -90,11 +100,11 @@ export default function Goals(): React.JSX.Element {
    */
   const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatchGoal({ type: GoalActionType.SET_VALUE, payload: Number(e.target.value) });
-  }
+  };
 
   /**
    * Handles the change of the due date of the goal.
-   * 
+   *
    * @remarks
    * Triggers the SET_DUE_DATE action to update the state.
    *
@@ -103,11 +113,11 @@ export default function Goals(): React.JSX.Element {
    */
   const handleDueDateChange = (e: PickerValue) => {
     dispatchGoal({ type: GoalActionType.SET_DUE_DATE, payload: e?.toDate() });
-  }
+  };
 
   /**
    * Handles the start of the edit of the goal.
-   * 
+   *
    * @remarks
    * Triggers the EDIT action to update the state.
    *
@@ -116,7 +126,7 @@ export default function Goals(): React.JSX.Element {
    */
   const handleStartEditGoal = (goal: Goal) => {
     dispatchGoal({ type: GoalActionType.EDIT, payload: goal });
-  }
+  };
 
   /**
    * Handles the deselection of the goal.
@@ -128,11 +138,11 @@ export default function Goals(): React.JSX.Element {
    */
   const handleDeselectGoal = () => {
     dispatchGoal({ type: GoalActionType.RESET });
-  }
+  };
 
   /**
    * Handles the change of the tab of the goals.
-   * 
+   *
    * @remarks
    * This triggers the goals table to be updated
    * with the active or archived goals.
@@ -143,7 +153,7 @@ export default function Goals(): React.JSX.Element {
    */
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
-  }
+  };
 
   /**
    * Updates a goal through the API.
@@ -156,16 +166,16 @@ export default function Goals(): React.JSX.Element {
   const saveGoal = async (goal: Goal, successMessage: string, errorMessage: string) => {
     try {
       await updateGoal(goal).unwrap();
-      
+
       enqueueSnackbar(t(successMessage), { variant: 'success' });
     } catch {
       enqueueSnackbar(t(errorMessage), { variant: 'error' });
     }
-  }
+  };
 
   /**
    * Archives a goal through the API.
-   * 
+   *
    * @remarks
    * Just updates the archived flag to true.
    *
@@ -174,11 +184,11 @@ export default function Goals(): React.JSX.Element {
    */
   const handleArchiveGoal = async (goal: Goal) => {
     saveGoal({ ...goal, archived: true }, 'goalArchived', 'goalArchiveFailed');
-  }
+  };
 
   /**
    * Unarchives a goal through the API.
-   * 
+   *
    * @remarks
    * Just updates the archived flag to false.
    *
@@ -187,7 +197,7 @@ export default function Goals(): React.JSX.Element {
    */
   const handleUnarchiveGoal = async (goal: Goal) => {
     saveGoal({ ...goal, archived: false }, 'goalUnarchived', 'goalUnarchiveFailed');
-  }
+  };
 
   /**
    * Deletes a goal through the API.
@@ -204,7 +214,7 @@ export default function Goals(): React.JSX.Element {
     } finally {
       closeModal();
     }
-  }
+  };
 
   /**
    * Handles the deletion goal action by showing
@@ -223,7 +233,7 @@ export default function Goals(): React.JSX.Element {
         onCancel={() => closeModal()}
       />,
     );
-  }
+  };
 
   /**
    * Handles the saving of the goal in the goal form.
@@ -262,7 +272,7 @@ export default function Goals(): React.JSX.Element {
     } catch {
       enqueueSnackbar(t('goalCreationFailed'), { variant: 'error' });
     }
-  }
+  };
 
   /**
    * Filters the goals by name.
@@ -270,9 +280,15 @@ export default function Goals(): React.JSX.Element {
    * @param goals - The goals to filter
    * @returns The filtered goals
    */
-  const filterGoals = useCallback((goals: Goal[]) => {
-    return goals.filter((goal) => goal.name.toLowerCase().includes(search.toLowerCase()));
-  }, [search]);
+  const filterGoals = useCallback(
+    (goalsToFilter: Goal[]): Goal[] => goalsToFilter
+      .filter((curGoal: Goal): boolean => curGoal.name
+        .toLowerCase()
+        .includes(
+          search.toLowerCase(),
+        )),
+    [search],
+  );
 
   /**
    * Calculates the progress of the goal.
@@ -287,7 +303,7 @@ export default function Goals(): React.JSX.Element {
     }
 
     return (savedValue / value) * 100;
-  }
+  };
 
   /**
    * Handles the change of the active tab. Updated the goals
@@ -319,7 +335,7 @@ export default function Goals(): React.JSX.Element {
    */
   useEffect(() => {
     if (allGoals && allGoals.length > 0) {
-      const [active, archived] = allGoals.reduce<[Goal[], Goal[]]>(
+      const [newActiveGoals, newArchivedGoals] = allGoals.reduce<[Goal[], Goal[]]>(
         ([active, archived], goal) => {
           const formattedGoal: Goal = {
             ...goal,
@@ -334,16 +350,16 @@ export default function Goals(): React.JSX.Element {
 
           return [active, archived];
         },
-        [[], []] as [Goal[], Goal[]]
+        [[], []] as [Goal[], Goal[]],
       );
 
-      setActiveGoals(active);
-      setArchivedGoals(archived);
+      setActiveGoals(newActiveGoals);
+      setArchivedGoals(newArchivedGoals);
 
       if (activeTab === 0) {
-        setGoals(active);
+        setGoals(newActiveGoals);
       } else {
-        setGoals(archived);
+        setGoals(newArchivedGoals);
       }
     }
   }, [allGoals]);
@@ -352,7 +368,7 @@ export default function Goals(): React.JSX.Element {
     <GoalsMain>
       <Typography variant="h2">{t('goals')}</Typography>
       <GoalsRowInput>
-        <TextField 
+        <TextField
           label={t('goalName')}
           value={goalState.name}
           onChange={handleNameChange}
@@ -364,7 +380,7 @@ export default function Goals(): React.JSX.Element {
             },
           }}
         />
-        <TextField 
+        <TextField
           label={t('goalValue')}
           value={goalState.value}
           onChange={handleValueChange}
@@ -421,4 +437,3 @@ export default function Goals(): React.JSX.Element {
     </GoalsMain>
   );
 }
-
