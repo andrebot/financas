@@ -362,7 +362,7 @@ export default function Goals(): React.JSX.Element {
         setGoals(newArchivedGoals);
       }
     }
-  }, [allGoals]);
+  }, [allGoals, activeTab]);
 
   return (
     <GoalsMain>
