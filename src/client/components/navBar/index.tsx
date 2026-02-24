@@ -14,6 +14,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import CollectionsBookmarkIcon from '@mui/icons-material/CollectionsBookmark';
 import GoalsIcon from '@mui/icons-material/EmojiEvents';
+import BudgetIcon from '@mui/icons-material/Wallet';
 import CustomListItem from './customListItem';
 import {
   NavMenuIcon,
@@ -76,6 +77,9 @@ export default function NavBar() {
             </CustomListItem>
             <CustomListItem text={t('goals')} onClick={() => navigate('/goals')}>
               <GoalsIcon />
+            </CustomListItem>
+            <CustomListItem text={t('budget')} onClick={() => navigate('/budget')}>
+              <BudgetIcon />
             </CustomListItem>
           </List>
           <Divider />
