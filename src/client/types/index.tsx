@@ -22,6 +22,7 @@ import { ApiBuilder, RTKApi } from './requests';
 import {
   GoalState, GoalAction, Goal, GoalsTableProps,
 } from './goals';
+import { Budget } from './budget';
 
 export {
   UserType,
@@ -53,4 +54,5 @@ export {
   GoalAction,
   Goal,
   GoalsTableProps,
+  Budget,
 };

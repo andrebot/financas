@@ -43,3 +43,11 @@ export enum GoalsTableActionType {
   UNARCHIVE = 'unarchive',
   DESELECT = 'deselect',
 }
+
+export enum BUDGET_TYPES {
+  ANNUALY = 'annualy',
+  QUARTERLY = 'quarterly',
+  MONTHLY = 'monthly',
+  WEEKLY = 'weekly',
+  DAILY = 'daily',
+}
