@@ -115,6 +115,13 @@ export default function GoalsTable({
     return 'primary';
   };
 
+  const formatValueToCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: t('currencyFormat'),
+    }).format(value);
+  };
+
   const ActionIcons = {
     [GoalsTableActionType.EDIT]: <EditIcon />,
     [GoalsTableActionType.DELETE]: <DeleteIcon color="error" />,
@@ -172,7 +179,7 @@ export default function GoalsTable({
             {sortedGoals.map((goal) => (
               <TableRow key={goal.id} selected={activeGoalId === goal.id}>
                 <TableCell>{goal.name}</TableCell>
-                <TableCell>{goal.value}</TableCell>
+                <TableCell>{formatValueToCurrency(goal.value)}</TableCell>
                 <TableCell>{dayjs(goal.dueDate).format('MM/YYYY')}</TableCell>
                 <TableCell>
                   <Tooltip title={`${goal.progress}%`}>
