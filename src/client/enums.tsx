@@ -36,6 +36,16 @@ export enum GoalActionType {
   EDIT = 'EDIT',
 }
 
+export enum BudgetFormActionType {
+  SET_NAME = 'SET_NAME',
+  SET_VALUE = 'SET_VALUE',
+  SET_START_DATE = 'SET_START_DATE',
+  SET_END_DATE = 'SET_END_DATE',
+  SET_TYPE = 'SET_TYPE',
+  EDIT = 'EDIT',
+  RESET = 'RESET',
+}
+
 export enum GoalsTableActionType {
   EDIT = 'edit',
   DELETE = 'delete',

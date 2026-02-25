@@ -17,6 +17,15 @@ export const BudgetMain = styled('div')(({ theme }: StyleCompProp) => ({
   width: '100%',
 }));
 
+export const BudgetFormHolder = styled('div')(({ theme }: StyleCompProp) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '20px',
+  width: '100%',
+}));
+
 export const BudgetRowInput = styled(RowInput)(({ theme }: StyleCompProp) => ({
   [theme.breakpoints.down('md')]: {
     width: '100%',
