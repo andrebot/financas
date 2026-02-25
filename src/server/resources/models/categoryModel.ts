@@ -5,7 +5,10 @@ import { transformMongooseObject } from '../../utils/misc';
 const CategorySchema = new Schema<ICategoryDocument>({
   name: { type: String, required: true },
   user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  parentCategory: { type: Schema.Types.ObjectId, ref: 'Category' },
+  parentCategory: {
+    details: { type: Schema.Types.ObjectId, ref: 'Category' },
+    name: { type: String },
+  },
 }, {
   toObject: {
     transform: transformMongooseObject,

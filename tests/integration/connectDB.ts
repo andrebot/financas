@@ -204,12 +204,20 @@ export const createAccount = async (account: IAccount, userID: string) => {
   account.id = newAccount._id.toString();
 };
 
-export const createCategory = async (category: ICategory, userID: string, parentCategory?: string) => {
-  const newCategory: ICategoryDocument = new categoryModel({
+export const createCategory = async (category: ICategory, userID: string, parentCategoryId?: string) => {
+  const newCategoryPayload: any = {
     ...category,
     user: userID,
-    parentCategory,
-  });
+  };
+
+  if (parentCategoryId) {
+    newCategoryPayload.parentCategory = {
+      details: parentCategoryId,
+      name: category.name,
+    };
+  }
+
+  const newCategory: ICategoryDocument = new categoryModel(newCategoryPayload);
   await newCategory.save();
 
   category.id = newCategory._id.toString();

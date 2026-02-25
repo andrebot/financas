@@ -81,7 +81,7 @@ export default function Categories(): React.JSX.Element {
 
     categories.forEach((category) => {
       if (category.parentCategory) {
-        newFormattedCategories.find((c) => c.id === category.parentCategory)?.children
+        newFormattedCategories.find((c) => c.id === category.parentCategory?.details)?.children
           .push(category);
       } else {
         newFormattedCategories.push({
@@ -119,12 +119,15 @@ export default function Categories(): React.JSX.Element {
    * @param parentCategoryId - The id of the parent category
    * @param subCategoryName - The name of the sub-category
    */
-  const handleAddSubCategory = async (parentCategoryId: string, subCategoryName: string) => {
+  const handleAddSubCategory = async (parentCategoryId: string, parentCategoryName: string, subCategoryName: string) => {
     try {
       await createCategory({
         name: subCategoryName,
         user: user!.id,
-        parentCategory: parentCategoryId,
+        parentCategory: {
+          details: parentCategoryId,
+          name: parentCategoryName,
+        },
       }).unwrap();
 
       enqueueSnackbar(t('subCategoryCreated'), { variant: 'success' });
@@ -273,6 +276,7 @@ export default function Categories(): React.JSX.Element {
               <SubCategoryForm
                 onAddSubCategory={(subCategoryName) => handleAddSubCategory(
                   category.id!,
+                  category.name,
                   subCategoryName,
                 )}
                 data-testid="subCategoryForm"

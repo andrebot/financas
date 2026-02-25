@@ -60,11 +60,11 @@ export default function Budget(): React.JSX.Element {
   useEffect(() => {
     setFormattedCategories(categories.reduce((acc, category) => {
       if (category.parentCategory) {
-        acc.push(`${category.parentCategory} - ${category.name}`);
+        acc.push(`${category.parentCategory.name} - ${category.name}`);
       }
 
       return acc;
-    }, [] as string[]));
+    }, [] as string[]).sort());
   }, [categories]);
 
   return (

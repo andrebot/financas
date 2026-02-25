@@ -23,7 +23,7 @@ describe('Category Repository', function() {
     const result = await categoryRepo.findAllSubcategories(parentCategoryId);
 
     categoryModel.find.should.have.been.calledOnce;
-    categoryModel.find.should.have.been.calledWith({ parentCategory: parentCategoryId });
+    categoryModel.find.should.have.been.calledWith({ 'parentCategory.details': parentCategoryId });
     result.should.be.an.instanceOf(Array);
     result.should.have.lengthOf(1);
     result[0].should.equal(subcategories[0]);
@@ -37,7 +37,7 @@ describe('Category Repository', function() {
     const result = await categoryRepo.deleteAllSubcategories(parentCategoryId);
 
     categoryModel.deleteMany.should.have.been.calledOnce;
-    categoryModel.deleteMany.should.have.been.calledWith({ parentCategory: parentCategoryId });
+    categoryModel.deleteMany.should.have.been.calledWith({ 'parentCategory.details': parentCategoryId });
     result.should.equal(deletedCount);
   });
 });

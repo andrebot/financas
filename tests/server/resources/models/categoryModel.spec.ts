@@ -4,7 +4,7 @@ import { ICategoryDocument } from '../../../../src/server/types';
 import checkRequiredField from '../../checkRequiredField';
 import { Types } from 'mongoose';
 
-describe('AccountModel', () => {
+describe('CategoryModel', () => {
   let category: ICategoryDocument;
 
   beforeEach(() => {
@@ -23,6 +23,17 @@ describe('AccountModel', () => {
   });
 
   it('should be able to save', () => {
+    const error = category.validateSync();
+
+    should().not.exist(error);
+  });
+
+  it('should be able to save with parentCategory', () => {
+    (category as any).parentCategory = {
+      details: new Types.ObjectId().toString(),
+      name: 'Parent Category',
+    };
+
     const error = category.validateSync();
 
     should().not.exist(error);

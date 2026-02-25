@@ -15,7 +15,7 @@ export class CategoryRepo extends Repository<ICategoryDocument, ICategory>
    * @returns The subcategories.
    */
   async findAllSubcategories(parentCategoryId: string): Promise<ICategory[]> {
-    return this.Model.find({ parentCategory: parentCategoryId });
+    return this.Model.find({ 'parentCategory.details': parentCategoryId });
   }
 
   /**
@@ -27,7 +27,7 @@ export class CategoryRepo extends Repository<ICategoryDocument, ICategory>
   async deleteAllSubcategories(parentCategoryId: string): Promise<number> {
     this.logger.info(`Deleting all subcategories of parent category: ${parentCategoryId}`);
 
-    const result = await this.Model.deleteMany({ parentCategory: parentCategoryId });
+    const result = await this.Model.deleteMany({ 'parentCategory.details': parentCategoryId });
 
     return result.deletedCount;
   }
