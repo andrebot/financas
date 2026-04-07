@@ -83,7 +83,7 @@ export default function BudgetForm({ categories }: { categories: Category[] }): 
   };
 
   const handleValueChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    budgetFormDispatch({ type: BudgetFormActionType.SET_VALUE, payload: event.target.value });
+    budgetFormDispatch({ type: BudgetFormActionType.SET_VALUE, payload: Number(event.target.value) });
   };
 
   const handleStartDateChange = (event: PickerValue) => {
