@@ -1,165 +1,211 @@
 import chai, { should } from 'chai';
-import sinon from 'sinon';
-import { Document } from 'mongoose';
+import sinon, { SinonStub } from 'sinon';
+import * as databaseConnection from '../../../../src/server/utils/databaseConnection';
 import Repository from '../../../../src/server/resources/repositories/repository';
-
-interface IMockModel {
-  name: string;
-  user?: string;
-  id?: string;
-}
-
-interface IMockModelDocument extends Omit<IMockModel, 'id'>, Document {}
-
-const findStub = sinon.stub();
-const findByIdStub = sinon.stub();
-const findByIdAndDeleteStub = sinon.stub();
-const findByIdAndUpdateStub = sinon.stub();
-const findOneStub = sinon.stub();
-const saveStub = sinon.stub();
-
-class MockModel {
-  static find = findStub;
-  static findById = findByIdStub;
-  static findByIdAndDelete = findByIdAndDeleteStub;
-  static findByIdAndUpdate = findByIdAndUpdateStub;
-  static findOne = findOneStub;
-  save = saveStub;
-
-  constructor(data: any) {
-    Object.assign(this, data);
-  }
-}
+import { categories } from '../../../../src/server/resources/models/categoryModel';
+import { ICategory } from '../../../../src/server/types';
 
 describe('Repository', () => {
-  let repository: Repository<IMockModelDocument, IMockModel>;
+  const dbHolder = databaseConnection as unknown as {
+    db: Partial<Record<'select' | 'insert' | 'delete' | 'update', SinonStub>>;
+  };
+
+  let originalDb: unknown;
+  const repository = Repository(categories, 'Category');
+
+  const mockCategoryRow = {
+    id: 1,
+    name: 'Groceries',
+    userId: 10,
+    parentCategoryId: null as number | null,
+    createdAt: new Date(),
+    updatedAt: null as Date | null,
+  };
 
   before(() => {
-    repository = new Repository<IMockModelDocument, IMockModel>(MockModel as any);
+    originalDb = dbHolder.db;
   });
 
-  beforeEach(() => {
-    findStub.reset();
-    findByIdStub.reset();
-    findByIdAndDeleteStub.reset();
-    findOneStub.reset();
-    saveStub.reset();
-    findByIdAndUpdateStub.reset();
+  afterEach(() => {
+    dbHolder.db = originalDb as typeof dbHolder.db;
   });
 
-  it('should be a class', () => {
+  it('should be a repository factory function', () => {
     Repository.should.be.a('function');
   });
 
-  it('should find document by id', async () => {
-    findByIdStub.returns({
-      toObject: sinon.stub().returns(Promise.resolve({ name: 'test' })),
+  describe('findById', () => {
+    beforeEach(() => {
+      const limitStub = sinon.stub().resolves([mockCategoryRow]);
+      const whereStub = sinon.stub().returns({ limit: limitStub });
+      const fromStub = sinon.stub().returns({ where: whereStub });
+      const selectStub = sinon.stub().returns({ from: fromStub });
+      dbHolder.db = { select: selectStub };
     });
 
-    const result = await repository.findById('1');
+    it('should return the object when an object is found', async () => {
+      const selectStub = dbHolder.db.select as SinonStub;
 
-    should().exist(result);
-    findByIdStub.should.have.been.calledOnceWithExactly('1');
-    result!.should.be.deep.equal({ name: 'test' });
-  });
+      const result = await repository.findById(1);
 
-  it('should find document by id and delete', async () => {
-    findByIdAndDeleteStub.returns({
-      toObject: sinon.stub().resolves({ name: 'test' }),
+      selectStub.should.have.been.calledOnce;
+      should().exist(result);
+      result!.should.deep.equal(mockCategoryRow);
     });
 
-    const result = await repository.findByIdAndDelete('1');
+    it('should return null when no object matches id', async () => {
+      const limitStub = sinon.stub().resolves([]);
+      const whereStub = sinon.stub().returns({ limit: limitStub });
+      const fromStub = sinon.stub().returns({ where: whereStub });
+      const selectStub = sinon.stub().returns({ from: fromStub });
+      dbHolder.db = { select: selectStub };
 
-    should().exist(result);
-    findByIdAndDeleteStub.should.have.been.calledOnceWithExactly('1');
-    result!.should.be.deep.equal({ name: 'test' });
-  });
+      const result = await repository.findById(999);
 
-  it('should save document', async () => {
-    const mockReturn = { name: 'test' };
-
-    saveStub.resolves({
-      toObject: () => mockReturn,
+      should().not.exist(result);
     });
 
-    const result = await repository.save(mockReturn);
+    it('should throw when id is null or undefined', async () => {
+      const selectStub = sinon.stub();
+      dbHolder.db = { select: selectStub };
 
-    should().exist(result);
-    saveStub.should.have.been.calledOnce;
-    result!.should.be.deep.equal(mockReturn);
+      for (const badId of [undefined, null] as const) {
+        try {
+          await repository.findById(badId as unknown as number);
+          chai.assert.fail('Should have thrown');
+        } catch (err) {
+          (err as Error).message.should.contain('Invalid id:');
+        }
+      }
+
+      selectStub.should.not.have.been.called;
+    });
   });
 
-  it('should handle an error if the document is not saved', async () => {
-    const mockReturn = { name: 'test' };
-    saveStub.rejects(new Error('Test error'));
+  describe('save', () => {
+    it('should insert and return the saved object', async () => {
+      const insertPayload = {
+        name: 'test',
+        userId: 10,
+      };
+      const returned = {
+        id: 42,
+        name: insertPayload.name,
+        userId: insertPayload.userId,
+        parentCategoryId: mockCategoryRow.parentCategoryId,
+        createdAt: mockCategoryRow.createdAt,
+        updatedAt: mockCategoryRow.updatedAt,
+      };
 
-    try {
-      await repository.save(mockReturn);
-      chai.assert.fail('Should have thrown an error');
-    } catch (error) {
-      (error as Error).message.should.contain('Test error');
-    }
-  });
+      const returningStub = sinon.stub().resolves([returned]);
+      const valuesStub = sinon.stub().returns({ returning: returningStub });
+      const insertStub = sinon.stub().returns({ values: valuesStub });
 
-  it('should update document', async () => {
-    findByIdAndUpdateStub.returns({
-      toObject: sinon.stub().resolves({ name: 'test' }),
+      dbHolder.db = { insert: insertStub };
+
+      const result = await repository.save(insertPayload as never);
+
+      insertStub.should.have.been.calledOnceWithExactly(categories);
+      valuesStub.should.have.been.calledOnceWith(insertPayload);
+      returningStub.should.have.been.calledOnce;
+      (result as unknown as ICategory).should.deep.equal(returned);
     });
 
-    const result = await repository.update('1', { name: 'test' });
+    it('should throw when insert fails', async () => {
+      const returningStub = sinon.stub().rejects(new Error('Test error'));
+      const valuesStub = sinon.stub().returns({ returning: returningStub });
+      dbHolder.db = { insert: sinon.stub().returns({ values: valuesStub }) };
 
-    should().exist(result);
-    findByIdAndUpdateStub.should.have.been.calledOnceWithExactly('1', { name: 'test' }, { new: true, runValidators: true });
-    result!.should.be.deep.equal({ name: 'test' });
+      try {
+        await repository.save({ name: 'x', userId: 1 } as never);
+        chai.assert.fail('Should have thrown');
+      } catch (error) {
+        (error as Error).message.should.contain('Test error');
+      }
+    });
   });
 
-  it('should return null if document to delete is not found', async () => {
-    findByIdAndDeleteStub.resolves(null);
+  describe('deleteById', () => {
+    it('should delete by id and return the deleted object', async () => {
+      const returningStub = sinon.stub().resolves([mockCategoryRow]);
+      const whereStub = sinon.stub().returns({ returning: returningStub });
+      dbHolder.db = { delete: sinon.stub().returns({ where: whereStub }) };
 
-    const result = await repository.findByIdAndDelete('1');
+      const result = await repository.deleteById(mockCategoryRow.id);
 
-    should().not.exist(result);
+      dbHolder.db.delete!.should.have.been.calledOnceWithExactly(categories);
+      returningStub.should.have.been.calledOnce;
+      chai.expect(result).to.deep.equal(mockCategoryRow);
+    });
+
+    it('should return null when no object matches id', async () => {
+      const returningStub = sinon.stub().resolves([]);
+      const whereStub = sinon.stub().returns({ returning: returningStub });
+      dbHolder.db = { delete: sinon.stub().returns({ where: whereStub }) };
+
+      const result = await repository.deleteById(1);
+
+      should().not.exist(result);
+    });
   });
 
-  it('should return null if the document by id to find is not found', async () => {
-    findByIdStub.resolves(null);
+  describe('update', () => {
+    it('should update by id and return the updated object', async () => {
+      const updated = { ...mockCategoryRow, name: 'renamed' };
+      const returningStub = sinon.stub().resolves([updated]);
+      const whereStub = sinon.stub().returns({ returning: returningStub });
+      const setStub = sinon.stub().returns({ where: whereStub });
 
-    const result = await repository.findById('1');
+      dbHolder.db = {
+        update: sinon.stub().returns({ set: setStub }),
+      };
 
-    should().not.exist(result);
+      const result = await repository.update(1, { name: 'renamed' } as never);
+
+      dbHolder.db.update!.should.have.been.calledOnceWithExactly(categories);
+      setStub.should.have.been.calledOnceWith({ name: 'renamed' });
+      returningStub.should.have.been.calledOnce;
+      (result as unknown as ICategory).should.deep.equal(updated);
+    });
+
+    it('should return null when no object matches id', async () => {
+      const returningStub = sinon.stub().resolves([]);
+      const whereStub = sinon.stub().returns({ returning: returningStub });
+      dbHolder.db = {
+        update: sinon.stub().returns({ set: sinon.stub().returns({ where: whereStub }) }),
+      };
+
+      const result = await repository.update(1, { name: 'nope' } as never);
+
+      should().not.exist(result);
+    });
   });
 
-  it('should return null if the document to update is not found', async () => {
-    findByIdAndUpdateStub.resolves(null);
+  describe('listAll', () => {
+    it('should return all objects when no user filter is passed', async () => {
+      const fromStub = sinon.stub().resolves([mockCategoryRow]);
+      const selectStub = sinon.stub().returns({ from: fromStub });
+      dbHolder.db = { select: selectStub };
 
-    const result = await repository.update('1', { name: 'test' });
+      const rows = await repository.listAll();
 
-    should().not.exist(result);
-  });
+      selectStub.should.have.been.calledOnce;
+      fromStub.should.have.been.calledOnceWithExactly(categories);
+      rows.should.deep.equal([mockCategoryRow]);
+    });
 
-  it('should list all documents if no user is provided', async () => {
-    findStub.resolves([{
-      toObject: sinon.stub().resolves({ name: 'test' }),
-    }]);
+    it('should filter by userId when provided', async () => {
+      const whereStub = sinon.stub().resolves([mockCategoryRow]);
+      const fromStub = sinon.stub().returns({ where: whereStub });
+      const selectStub = sinon.stub().returns({ from: fromStub });
+      dbHolder.db = { select: selectStub };
 
-    const result = await repository.listAll();
+      const rows = await repository.listAll(10);
 
-    result.should.be.instanceOf(Array);
-    result.should.have.lengthOf(1);
-    findStub.should.have.been.calledOnce;
-    findStub.should.have.been.calledWith({ user: undefined });
-  });
-
-  it('should list all documents related to a user if a user is provided', async () => {
-    findStub.resolves([{
-      toObject: sinon.stub().resolves({ name: 'test' }),
-    }]);
-
-    const result = await repository.listAll('1');
-
-    result.should.be.instanceOf(Array);
-    result.should.have.lengthOf(1);
-    findStub.should.have.been.calledOnce;
-    findStub.should.have.been.calledWith({ user: '1' });
+      fromStub.should.have.been.calledOnceWithExactly(categories);
+      whereStub.should.have.been.calledOnce;
+      chai.assert.exists(whereStub.firstCall.args[0]);
+      rows.should.deep.equal([mockCategoryRow]);
+    });
   });
 });

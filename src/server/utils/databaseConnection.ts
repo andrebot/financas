@@ -1,18 +1,23 @@
-import mongoose from 'mongoose';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { Pool } from 'pg';
+import * as schema from '../resources/models/schema';
 import { createLogger } from './logger';
-import { DB_URL, MONGO_OPT } from '../config/mongo';
+import { DB_URL } from '../config/drizzle';
 
 const logger = createLogger('DatabaseConnection');
+export let db: ReturnType<typeof drizzle>;
+let pool: Pool;
 
 /**
  * Connects to a MongoDB database
  *
  * @returns A promise that resolves when the connection is successful
  */
-async function connectToDatabase(): Promise<void> {
+function connectToDatabase(): void {
   try {
-    logger.info(`Connecting to mongo: ${DB_URL}`);
-    await mongoose.connect(DB_URL, MONGO_OPT);
+    logger.info(`Connecting to drizzle: ${DB_URL}`);
+    pool = new Pool({ connectionString: DB_URL });
+    db = drizzle(pool, { schema, casing: 'snake_case', logger: true });
 
     logger.info('Connected to database');
   } catch (error) {
@@ -27,7 +32,7 @@ async function connectToDatabase(): Promise<void> {
  */
 async function disconnectFromDatabase(): Promise<void> {
   try {
-    await mongoose.disconnect();
+    await pool.end();
 
     logger.info('Disconnected from database');
   } catch (error) {

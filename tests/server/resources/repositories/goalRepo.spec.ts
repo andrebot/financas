@@ -1,42 +1,52 @@
-import sinon from 'sinon';
-import { Types } from 'mongoose';
-import { GoalRepo } from '../../../../src/server/resources/repositories/goalRepo';
+import chai from 'chai';
+import sinon, { SinonStub } from 'sinon';
+import goalRepo from '../../../../src/server/resources/repositories/goalRepo';
+import * as databaseConnection from '../../../../src/server/utils/databaseConnection';
+import { goals } from '../../../../src/server/resources/models/goalModel';
 
 describe('Goal Repository', () => {
-  let goalRepo: GoalRepo;
-  let goalModel = {
-    collection: {
-      bulkWrite: sinon.stub(),
-    },
-  };
+  const dbHolder = databaseConnection as unknown as { db: { update: SinonStub } };
+
+  let originalDb: unknown;
+  let updateStub: SinonStub;
+  let setStub: SinonStub;
+  let whereStub: SinonStub;
+
+  before(() => {
+    originalDb = dbHolder.db;
+  });
 
   beforeEach(() => {
-    goalModel.collection.bulkWrite.reset();
-    goalRepo = new GoalRepo(goalModel as any);
+    whereStub = sinon.stub().resolves();
+    const fromStub = sinon.stub().returns({ where: whereStub });
+    setStub = sinon.stub().returns({ from: fromStub });
+    updateStub = sinon.stub().returns({ set: setStub });
+    dbHolder.db = { update: updateStub };
   });
 
-  it('should update the goals by a bulk goals update', async () => {
-    const goalIds = [new Types.ObjectId().toString(), new Types.ObjectId().toString(), new Types.ObjectId().toString()];
-
-    goalModel.collection.bulkWrite.resolves();
-    await goalRepo.incrementGoalsInBulk([
-      { goalId: goalIds[0], amount: 100 },
-      { goalId: goalIds[1], amount: 200 },
-      { goalId: goalIds[2], amount: 300 },
-    ]);
-
-    goalModel.collection.bulkWrite.should.have.been.calledOnce;
-    goalModel.collection.bulkWrite.should.have.been.calledWith([
-      { updateOne: { filter: { _id: new Types.ObjectId(goalIds[0]) }, update: { $inc: { amount: 100 } }, upsert: true } },
-      { updateOne: { filter: { _id: new Types.ObjectId(goalIds[1]) }, update: { $inc: { amount: 200 } }, upsert: true } },
-      { updateOne: { filter: { _id: new Types.ObjectId(goalIds[2]) }, update: { $inc: { amount: 300 } }, upsert: true } },
-    ]);
+  afterEach(() => {
+    dbHolder.db = originalDb as { update: SinonStub };
   });
 
-  it('should not call bulkWrite if no goals are provided', async () => {
+  it('should update goals from a bulk goals update', async () => {
+    const bulk = [
+      { goalId: 1, amount: 100 },
+      { goalId: 2, amount: 200 },
+      { goalId: 3, amount: 300 },
+    ];
+
+    await goalRepo.incrementGoalsInBulk(bulk);
+
+    updateStub.should.have.been.calledOnceWithExactly(goals);
+    setStub.should.have.been.calledOnce;
+    setStub.firstCall.args[0].should.have.keys('value');
+    whereStub.should.have.been.calledOnce;
+    chai.assert.exists(whereStub.firstCall.args[0]);
+  });
+
+  it('should not run a DB update when no goals are provided', async () => {
     await goalRepo.incrementGoalsInBulk([]);
 
-    goalModel.collection.bulkWrite.should.not.have.been.called;
+    updateStub.should.not.have.been.called;
   });
 });
-

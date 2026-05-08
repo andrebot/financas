@@ -84,7 +84,7 @@ export function checkVoidPayload(content: any, modelName: string, action: string
  * @param instance - The instance to check
  * @param modelName - The name of the model
  */
-export function checkVoidInstance(instance: any, modelName: string, id: string): void {
+export function checkVoidInstance(instance: any, modelName: string, id: number): void {
   if (!instance) {
     throw new Error(`${modelName} not found with id ${id}`);
   }
@@ -171,11 +171,11 @@ export function transformMongooseObject(
  * @param logger - The logger to use.
  */
 export function checkUserAccess(
-  contentOwnerId: string,
-  userId: string,
+  contentOwnerId: number,
+  userId: number,
   isAdmin: boolean,
   modelName: string,
-  contentId: string,
+  contentId: number,
   action: string,
   logger: Logger,
 ): void {

@@ -1,117 +1,99 @@
-import { Model, Document } from 'mongoose';
-import type { Logger } from 'winston';
-import { createLogger } from '../../utils/logger';
-import type { IRepository } from './IRepository';
-import type { ErrorHandler } from '../../types';
+import { and, eq, InferInsertModel } from "drizzle-orm";
+import { Logger } from "winston";
+import { db } from "../../utils/databaseConnection";
+import { createLogger } from "../../utils/logger";
+import { getAutorizationDatabaseContext } from "../../utils/authorization";
+import { IRepository, Table } from "../../types";
 
-/**
- * Default error handler. Just returns the error.
- *
- * @param error - The error to handle.
- * @returns The error.
- */
-function defaultErrorHandler(error: Error): Error {
-  return error;
-}
+export default function Repository<T extends Table, K>(table: T, modelName: string, clogger?: Logger): IRepository<T, K> {
+  type InsertEntity = InferInsertModel<typeof table>;
 
-export default class Repository<T extends Document, K> implements IRepository<T, K> {
-  protected Model: Model<T>;
+  const logger = clogger || createLogger(`Repository:${modelName}`);
 
-  protected errorHandler: ErrorHandler;
+  async function findById(id: number): Promise<K | null> {
+    if (id === null || id === undefined) {
+      logger.error(`Invalid id: ${id}`);
 
-  protected logger: Logger;
-
-  modelName: string;
-
-  constructor(model: Model<T>, errorHandler: ErrorHandler = defaultErrorHandler) {
-    this.Model = model;
-    this.modelName = model.modelName;
-    this.errorHandler = errorHandler;
-    this.logger = createLogger(`Repository:${this.modelName}`);
-  }
-
-  /**
-   * Finds a document by id.
-   *
-   * @param id - The id of the document to find.
-   * @returns The document.
-   */
-  async findById(id: string): Promise<K | null> {
-    this.logger.info(`Finding document by id: ${id}`);
-
-    const doc = await this.Model.findById(id);
-
-    return doc ? (doc.toObject() as K) : null;
-  }
-
-  /**
-   * Finds a document by id and deletes it.
-   *
-   * @param id - The id of the document to delete.
-   * @returns The deleted document.
-   */
-  async findByIdAndDelete(id: string): Promise<K | null> {
-    this.logger.info(`Deleting document: ${id}`);
-
-    const doc = await this.Model.findByIdAndDelete(id);
-
-    return doc ? (doc.toObject() as K) : null;
-  }
-
-  /**
-   * Finds all documents.
-   *
-   * @param userId - The id of the user to filter the documents by.
-   * @returns The documents.
-   */
-  async listAll(userId?: string): Promise<K[]> {
-    this.logger.info(`Listing all documents for user: ${userId}`);
-
-    const docs = await this.Model.find({
-      user: userId,
-    });
-
-    return docs.map((doc) => doc.toObject() as K);
-  }
-
-  /**
-   * Saves a document.
-   *
-   * @param entity - The document to save.
-   * @returns The saved document.
-   */
-  async save(entity?: K): Promise<K> {
-    this.logger.info(`Saving document: ${entity}`);
-
-    try {
-      const instance = new this.Model(entity);
-
-      const result = await instance.save();
-
-      return result.toObject() as K;
-    } catch (error) {
-      this.logger.error(error);
-
-      throw this.errorHandler(error as Error);
+      throw new Error(`Invalid id: ${id}`);
     }
+
+    logger.info(`Finding ${modelName} by id: ${id}`);
+
+    const rows = await db
+      .select()
+      .from(table as never)
+      .where(
+        and(
+          eq(table.id, id),
+          getAutorizationDatabaseContext(table),
+        )
+      )
+      .limit(1);
+
+    if (rows.length === 0) {
+      logger.info(`${modelName} not found by id: ${id}`);
+
+      return null;
+    }
+
+    return rows[0];
   }
 
-  /**
-   * Updates a document by id.
-   *
-   * @param id - The id of the document to update.
-   * @param entity - The document to update.
-   * @returns The updated document.
-   */
-  async update(id: string, entity: Partial<K>): Promise<K | null> {
-    this.logger.info(`Updating document: ${id}`);
+  async function save(entity: K): Promise<K> {
+    logger.info(`Saving ${modelName}`);
 
-    const result = await this.Model.findByIdAndUpdate(
-      id,
-      entity as any,
-      { new: true, runValidators: true },
-    );
+    const rows = await db.insert(table).values(entity as InsertEntity).returning();
 
-    return result ? (result.toObject() as K) : null;
+    return rows[0] as K;
   }
+
+  async function deleteById(id: number): Promise<K> {
+    logger.info(`Deleting ${modelName} by id: ${id}`);
+
+    const rows = await db.delete(table).where(
+      and(
+        eq(table.id, id),
+        getAutorizationDatabaseContext(table),
+      )
+    ).returning();
+
+    return rows[0] as K;
+  }
+
+  async function listAll(userId?: number): Promise<K[]> {
+    logger.info(`Listing all ${modelName} for user: ${userId}`);
+
+    if (userId) {
+      return await db.select().from(table as never).where(
+        and(
+          eq(table.userId!, userId),
+          getAutorizationDatabaseContext(table),
+        )
+      );
+    }
+
+    return await db.select().from(table as never);
+  }
+
+  async function update(id: number, entity: Partial<K>): Promise<K> {
+    logger.info(`Updating ${modelName} by id: ${id}`);
+
+    const rows = await db.update(table).set(entity as InsertEntity).where(
+      and(
+        eq(table.id, id),
+        getAutorizationDatabaseContext(table),
+      )
+    ).returning();
+
+    return (rows as unknown as K[])[0];
+  }
+
+  return {
+    modelName,
+    findById,
+    deleteById,
+    listAll,
+    update,
+    save,
+  };
 }

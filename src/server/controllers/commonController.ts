@@ -50,10 +50,8 @@ export default function CommonController<T extends Content>(
         checkVoidPayload(updateProperties, controllerName, 'update');
 
         const content = await manager.updateContent(
-          contentId,
+          Number(contentId),
           updateProperties,
-          user!.id!,
-          user!.role === 'admin',
         );
 
         logger.info('Content updated');
@@ -80,9 +78,7 @@ export default function CommonController<T extends Content>(
         }
 
         const content = await manager.deleteContent(
-          contentId,
-          user!.id!,
-          user!.role === 'admin',
+          Number(contentId),
         );
 
         logger.info('Content deleted');
@@ -101,7 +97,7 @@ export default function CommonController<T extends Content>(
       try {
         checkVoidUser(req.user, controllerName, 'list');
 
-        const content = await manager.listContent(req.user!.id!);
+        const content = await manager.listContent();
 
         logger.info(`Listed ${content.length} content(s) for user: ${req.user?.id}`);
 
@@ -126,7 +122,7 @@ export default function CommonController<T extends Content>(
           throw new Error('Content id is required for getting action');
         }
 
-        const content = await manager.getContent(contentId, user!.id!, user!.role === 'admin');
+        const content = await manager.getContent(Number(contentId));
 
         logger.info(`Content retrieved: ${contentId}`);
 

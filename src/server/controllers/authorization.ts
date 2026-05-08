@@ -30,7 +30,7 @@ const logger = createLogger('AuthorizationController');
  * @param userId - The id of the user to delete
  * @returns - True if the action is valid, false otherwise
  */
-function isDeleteActionValid(req: RequestWithUser, res: Response, userId: string) {
+function isDeleteActionValid(req: RequestWithUser, res: Response, userId: number) {
   if (req.user?.role !== 'admin' && req.user?.id !== userId) {
     handleError(new Error('Current user does not have permission to delete this user'), res, 401);
 
@@ -171,7 +171,7 @@ export async function updateUserController(req: RequestWithUser, res: Response) 
   try {
     const user = await updateUser(
       req.user,
-      req.params.userId,
+      Number(req.params.userId),
       {
         email,
         firstName,
@@ -225,7 +225,7 @@ export async function listUsersController(req: Request, res: Response) {
  */
 export async function getUserController(req:Request, res: Response) {
   try {
-    const user = await getUser(req.params.userId);
+    const user = await getUser(Number(req.params.userId));
 
     logger.info(`User retrieved: ${req.params.userId}`);
 
@@ -251,13 +251,13 @@ export async function deleteUserController(
   try {
     const { userId } = req.params;
 
-    if (!isDeleteActionValid(req, res, userId)) {
+    if (!isDeleteActionValid(req, res, Number(userId))) {
       logger.error(new Error(`Unauthorized: ${req.user?.email} cannot delete ${userId}`));
 
       return res.status(403).json({ message: 'Unauthorized' });
     }
 
-    await deleteUser(userId);
+    await deleteUser(Number(userId));
 
     logger.info(`User deleted: id ${userId}`);
 

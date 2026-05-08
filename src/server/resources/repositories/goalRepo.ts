@@ -1,41 +1,33 @@
-import { AnyBulkWriteOperation } from 'mongodb';
-import mongoose from 'mongoose';
 import Repository from './repository';
-import GoalModel from '../models/goalModel';
-import type {
-  IGoal,
-  IGoalDocument,
-  BulkGoalsUpdate,
-  IGoalRepo,
-} from '../../types';
+import { eq, and, sql } from 'drizzle-orm';
+import { getAutorizationDatabaseContext } from '../../utils/authorization';
+import { goals } from '../models/goalModel';
+import { transactionToGoals } from '../models/transactionModel';
+import { createLogger } from '../../utils/logger';
+import type { IMonthlyBalance, ITransaction } from '../../types';
+import { db } from '../../utils/databaseConnection';
 
-export class GoalRepo extends Repository<IGoalDocument, IGoal> implements IGoalRepo {
-  constructor(goalModel: typeof GoalModel = GoalModel) {
-    super(goalModel);
-  }
+const logger = createLogger('Repository:Goals');
+const goalRepo = Repository<typeof goals, IMonthlyBalance>(goals, 'Goals', logger);
 
-  /**
-   * Updates the goals by a transaction. If the transaction is an update, the old value is
-   * provided to calculate the difference.
-   *
-   * @param transaction - The transaction to update the goals by
-   * @param oldTransactionValue - The old value of the transaction
-   */
-  async incrementGoalsInBulk(bulkGoalsUpdate: BulkGoalsUpdate[]): Promise<void> {
-    this.logger.info(`Updating ${bulkGoalsUpdate.length} goals in bulk`);
+async function updateGoalFromTransaction(transaction: ITransaction, shouldInvertValue: boolean = false): Promise<void> {
+  logger.info(`Updating goal from transaction: ${transaction.id}`);
 
-    const goalsToUpdate = bulkGoalsUpdate.map(({ goalId, amount }) => ({
-      updateOne: {
-        filter: { _id: new mongoose.Types.ObjectId(goalId) },
-        update: { $inc: { amount } },
-        upsert: true,
-      },
-    })) as unknown as AnyBulkWriteOperation<IGoalDocument>[];
+  const transactionValue = Number(transaction.value);
 
-    if (goalsToUpdate.length > 0) {
-      await this.Model.collection.bulkWrite(goalsToUpdate as any);
-    }
-  }
+  await db.update(goals)
+    .set({
+      savedValue: sql`${goals.savedValue} ${shouldInvertValue ? '-' : '+'} ${transactionValue} * ${transactionToGoals.percentage}`,
+    })
+    .from(transactionToGoals)
+    .where(and(
+      eq(transactionToGoals.goalId, goals.id),
+      eq(transactionToGoals.transactionId, transaction.id),
+      getAutorizationDatabaseContext(goals),
+    ));
 }
 
-export default new GoalRepo();
+export default {
+  ...goalRepo,
+  updateGoalFromTransaction,
+};

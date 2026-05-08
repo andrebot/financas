@@ -1,8 +1,7 @@
-import { Document } from 'mongoose';
+import { Table } from '../../types';
 import { createLogger } from '../../utils/logger';
-import { checkVoidPayload, checkVoidInstance, checkUserAccess } from '../../utils/misc';
-import type { Content, ICommonActions } from '../../types';
-import type { IRepository } from '../../resources/repositories/IRepository';
+import { checkVoidPayload } from '../../utils/misc';
+import type { Content, ICommonActions, IRepository } from '../../types';
 
 /**
  * Creates a common actions for a given repository and model name.
@@ -15,7 +14,7 @@ import type { IRepository } from '../../resources/repositories/IRepository';
  * @param modelName - The name of the model.
  * @returns The common actions.
  */
-export default function CommonActions<T extends Document, K extends Content>(
+export default function CommonActions<K extends Content, T extends Table>(
   repository: IRepository<T, K>,
   modelName: string,
 ): ICommonActions<K> {
@@ -53,19 +52,12 @@ export default function CommonActions<T extends Document, K extends Content>(
    * @returns The updated content.
    */
   async function updateContent(
-    id: string,
+    id: number,
     payload: Partial<K>,
-    userId: string,
-    isAdmin: boolean,
   ): Promise<K | null> {
     logger.info(`Updating content for ${modelName} with id ${id}`);
 
     checkVoidPayload(payload, modelName, 'update');
-
-    const instance = await repository.findById(id);
-
-    checkVoidInstance(instance, modelName, id);
-    checkUserAccess(instance!.user.toString(), userId, isAdmin, modelName, id, 'update', logger);
 
     return repository.update(id, payload);
   }
@@ -82,18 +74,11 @@ export default function CommonActions<T extends Document, K extends Content>(
    * @returns The deleted content.
    */
   async function deleteContent(
-    id: string,
-    userId: string,
-    isAdmin: boolean,
+    id: number,
   ): Promise<K | null> {
     logger.info(`Deleting content for ${modelName} with id ${id}`);
 
-    const instance = await repository.findById(id);
-
-    checkVoidInstance(instance, modelName, id);
-    checkUserAccess(instance!.user.toString(), userId, isAdmin, modelName, id, 'delete', logger);
-
-    return repository.findByIdAndDelete(id);
+    return repository.deleteById(id);
   }
 
   /**
@@ -102,12 +87,10 @@ export default function CommonActions<T extends Document, K extends Content>(
    * @param userId - The id of the user listing the content.
    * @returns The list of content.
    */
-  async function listContent(
-    userId: string,
-  ): Promise<K[]> {
-    logger.info(`Listing content for ${modelName} for user ${userId}`);
+  async function listContent(): Promise<K[]> {
+    logger.info(`Listing content for ${modelName}`);
 
-    return repository.listAll(userId);
+    return repository.listAll();
   }
 
   /**
@@ -120,11 +103,7 @@ export default function CommonActions<T extends Document, K extends Content>(
    * @param isAdmin - Whether the user is an admin.
    * @returns The content.
    */
-  async function getContent(
-    id: string,
-    userId: string,
-    isAdmin: boolean,
-  ): Promise<K | null> {
+  async function getContent(id: number): Promise<K | null> {
     logger.info(`Getting content for ${modelName} with id ${id}`);
 
     const instance = await repository.findById(id);
@@ -132,8 +111,6 @@ export default function CommonActions<T extends Document, K extends Content>(
     if (!instance) {
       return null;
     }
-
-    checkUserAccess(instance.user.toString(), userId, isAdmin, modelName, id, 'get', logger);
 
     return instance;
   }

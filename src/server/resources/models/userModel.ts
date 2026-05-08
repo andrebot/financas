@@ -1,29 +1,24 @@
-import { Schema, model } from 'mongoose';
-import { regExpEmail } from '../../utils/validators';
-import { transformMongooseObject } from '../../utils/misc';
-import type { IUserDocument } from '../../types';
+import { pgTable, serial, text, pgEnum } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
+import { timestampColumns } from './columHelpers';
+import { accounts } from './accountModel';
+import { goals } from './goalModel';
+import { budgets } from './budgetModel';
 
-/**
- * Schema for the User
- */
-const UserModel = new Schema<IUserDocument>({
-  email: {
-    type: String, match: regExpEmail, unique: true, required: true,
-  },
-  firstName: { type: String, required: true },
-  lastName: { type: String, required: true },
-  role: {
-    type: String, required: true, enum: ['admin', 'user'], default: 'user',
-  },
-  password: { type: String, required: true },
-}, {
-  timestamps: true,
-  toObject: {
-    transform: transformMongooseObject,
-  },
-  toJSON: {
-    transform: transformMongooseObject,
-  },
+export const roles = pgEnum('roles', ['admin', 'user']);
+
+export const users = pgTable('users', {
+  id: serial('id').primaryKey(),
+  email: text('email').notNull().unique(),
+  firstName: text('firstName').notNull(),
+  lastName: text('lastName').notNull(),
+  role: roles('role').default('user').notNull(),
+  password: text('password').notNull(),
+  ...timestampColumns,
 });
 
-export default model<IUserDocument>('user', UserModel);
+export const userRelations = relations(users, ({ many }) => ({
+  accounts: many(accounts),
+  goals: many(goals),
+  budgets: many(budgets),
+}));

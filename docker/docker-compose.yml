@@ -1,12 +1,15 @@
 services:
-  mongo:
-    image: mongo:7.0
-    container_name: financas-mongo
+  postgres:
+    image: postgres:17-alpine
+    container_name: financas-postgres
     ports:
-      - "27017:27017"
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: financas
+      POSTGRES_PASSWORD: financas
+      POSTGRES_DB: financas
     volumes:
-      - mongo-data:/data/db
-    command: ["--noauth"]
+      - postgres-data:/var/lib/postgresql/data
 
 volumes:
-  mongo-data:
+  postgres-data:

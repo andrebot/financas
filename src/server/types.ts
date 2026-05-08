@@ -2,11 +2,26 @@ import jwt from 'jsonwebtoken';
 import {
   Request, Response, NextFunction,
 } from 'express';
-import { Document, ObjectId, Types } from 'mongoose';
-import type { IRepository } from './resources/repositories/IRepository';
+import { PgColumn, PgTable } from "drizzle-orm/pg-core";
+import { InferSelectModel } from 'drizzle-orm';
+import { transactions, investmentTypes, transactionTypes } from './resources/models/transactionModel';
+import { categories } from './resources/models/categoryModel';
+import { budgets, budgetTypes } from './resources/models/budgetModel';
+import { goals } from './resources/models/goalModel';
+import { monthlyBalances } from './resources/models/monthlyBalanceModel';
+import { users } from './resources/models/userModel';
+import { accounts, cards } from './resources/models/accountModel';
+
 /* eslint-disable no-unused-vars */
 
-export type Content = { user: string };
+export type Content = { userId: number | undefined };
+
+export type RequestContext = {
+  userId: number;
+  isAdmin: boolean;
+};
+
+export type TableWithUserId = Table & { userId: number };
 
 /**
  * Interface for the Token
@@ -37,7 +52,7 @@ export type LoginResponse = {
   /**
    * User object
    */
-  user: Omit<IUser, 'password'>;
+  user: Omit<IUser, 'password' | 'createdAt' | 'updatedAt'>;
 };
 
 /**
@@ -72,7 +87,7 @@ export type UserPayload = {
   /** Role of the user. Can be either 'admin' or 'user' */
   role?: 'admin' | 'user';
   /** Id of the user */
-  id?: string;
+  id?: number;
 };
 
 export interface RequestWithUser extends Request {
@@ -143,132 +158,9 @@ export interface IBudgetController extends IContentController {
   getBudget(req: RequestWithUser, res: Response): Promise<Response>;
 }
 
-/**
- * Interface for the Card
- */
-export interface ICard {
-  /**
-   * Id of the card
-   */
-  id?: string;
-  /**
-   * Number of the card
-   */
-  number: string;
-  /**
-   * Expiration date of the card
-   */
-  expirationDate: string;
-}
-
-/**
- * Mongoose document type for the Card
- */
-export interface ICardDocument extends Omit<ICard, 'id'>, Document {}
-
-/**
- * Interface for the Account
- */
-export interface IAccount {
-  /**
-   * Id of the account
-   */
-  id?: string;
-  /**
-   * Name of the account
-   */
-  name: string;
-  /**
-   * Agency of the account
-   */
-  agency: string;
-  /**
-   * Account number
-   */
-  accountNumber: string;
-  /**
-   * Currency of the account
-   */
-  currency: string;
-  /**
-   * User of the account
-   */
-  user: string;
-  /**
-   * Cards of the account
-   */
-  cards: ICard[];
-}
-
-/**
- * Mongoose document type for the Account
- */
-export interface IAccountDocument extends Omit<IAccount, 'id' | 'user'>, Document {
-  _id: Types.ObjectId;
-  user: ObjectId;
-}
-
-/**
- * Interface for the User
- */
-export interface IUser {
-  /**
-   * Unique identifier of the user
-   */
-  id?: string; // Optional to account for new objects
-  /**
-   * Email of the user
-   */
-  email: string;
-  /**
-   * First name of the user
-   */
-  firstName: string;
-  /**
-   * Last name of the user
-   */
-  lastName: string;
-  /**
-   * Role of the user. Can be either 'admin' or 'user'
-   */
-  role: 'admin' | 'user';
-  /**
-   * Password of the user
-   */
-  password: string;
-}
-
-/**
- * Mongoose document type for the User
- */
-export interface IUserDocument extends Omit<IUser, 'id'>, Document {
-  _id: Types.ObjectId;
-}
-
-export enum TRANSACTION_TYPES {
-  WITHDRAW = 'withdraw',
-  DEPOSIT = 'deposit',
-  TRANSFER = 'transfer',
-  BANK_SLIP = 'bank_slip',
-  CARD = 'card',
-  INVESTMENT = 'investment',
-}
-
-export enum INVESTMENT_TYPES {
-  CDB = 'cdb',
-  LCI = 'lci',
-  LCA = 'lca',
-  STOCK = 'stock',
-  FUND = 'fund',
-  CRA = 'cra',
-  CRI = 'cri',
-  DEBENTURE = 'debenture',
-  CURRENCY = 'currency',
-  LC = 'lc',
-  LF = 'lf',
-  FII = 'fii',
-  TRESURY = 'tresury',
-}
+export const INVESTMENT_TYPES = investmentTypes.enumValues;
+export const TRANSACTION_TYPES = transactionTypes.enumValues;
+export const BUDGET_TYPES = budgetTypes.enumValues;
 
 export interface IGoalItem {
   goal: IGoal;
@@ -276,242 +168,76 @@ export interface IGoalItem {
   percentage: number;
 }
 
-export interface ITransaction {
-  id?: string;
-  name: string;
-  category: string;
-  parentCategory: string;
-  account: string;
-  type: TRANSACTION_TYPES;
-  date: Date | string;
-  value: number;
-  investmentType?: INVESTMENT_TYPES;
-  user: string;
-  goalsList: IGoalItem[];
+export interface ICard extends InferSelectModel<typeof cards> {}
+
+export interface IAccount extends InferSelectModel<typeof accounts> {}
+
+export interface IUser extends InferSelectModel<typeof users> {}
+
+export interface ITransaction extends InferSelectModel<typeof transactions> {}
+
+export interface IGoal extends InferSelectModel<typeof goals> {}
+
+export interface ICategory extends InferSelectModel<typeof categories> {}
+
+export interface IBudget extends InferSelectModel<typeof budgets> {
+  spent: number;
 }
 
-/**
- * Mongoose document type for the Transaction
- */
-export interface ITransactionDocument extends Omit<ITransaction, 'id' | 'user' | 'goalsList' | 'account'>, Document {
-  _id: Types.ObjectId;
-  user: ObjectId;
-  account: ObjectId;
-  goalsList: {
-    goal: Types.ObjectId;
-    goalName: string;
-    percentage: number;
-  }[];
-}
-
-export interface IGoal extends Content {
-  /**
-   * Unique identifier
-   */
-  id?: string;
-  /**
-   * Name of the Goal
-   */
-  name: string;
-  /**
-   * Goal's target value
-   */
-  value: number;
-  /**
-   * Due date for the goal
-   */
-  dueDate: Date;
-  /**
-   * Whether the goal is archived
-   */
-  archived: boolean;
-  /**
-   * Goal owner
-   */
-  user: string;
-  /**
-   * Saved value of the goal
-   */
-  savedValue: number;
-}
-
-/**
- * Mongoose document type for the Goal
- */
-export interface IGoalDocument extends Omit<IGoal, 'id' | 'user'>, Document {
-  _id: Types.ObjectId;
-  user: ObjectId;
-}
-
-export interface ICategory {
-  /**
-   * Unique identifier
-   */
-  id?: string;
-  /**
-   * Name of the category
-   */
-  name: string;
-  /**
-   * Category owner
-   */
-  user: string;
-  /**
-   * Parent category, if this is a sub-category
-   */
-  parentCategory?: string;
-}
-
-/**
- * Mongoose document type for the Category
- */
-export interface ICategoryDocument extends Omit<ICategory, 'id' | 'user' | 'parentCategory'>, Document {
-  _id: Types.ObjectId;
-  user: ObjectId;
-  parentCategory: ObjectId;
-}
-
-export enum BUDGET_TYPES {
-  ANNUALY = 'annualy',
-  QUARTERLY = 'quarterly',
-  MONTHLY = 'monthly',
-  WEEKLY = 'weekly',
-  DAILY = 'daily',
-}
-
-export interface IBudget extends Content {
-  /**
-   * Unique identifier of the budget
-   */
-  id?: string;
-  /**
-   * Budget's name
-   */
-  name: string;
-  /**
-   * Budget's target value
-   */
-  value: number;
-  /**
-   * Budget type
-   */
-  type: BUDGET_TYPES;
-  /**
-   * Budget's spent value
-   */
-  spent?: number;
-  /**
-   * Budget's start date
-   */
-  startDate: Date;
-  /**
-   * Budget's end date
-   */
-  endDate: Date;
-  /**
-   * Categories related to this budget
-   */
-  categories: string[];
-  /**
-   * Budget owner
-   */
-  user: string;
-}
-
-/**
- * Mongoose document type for the Budget
- */
-export interface IBudgetDocument extends Omit<IBudget, 'id' | 'user'>, Document {
-  _id: Types.ObjectId;
-  user: ObjectId;
-}
-
-export interface IMonthlyBalance {
-  /**
-   * Unique identifier
-   */
-  id?: string;
-  /**
-   * Monthly balance owner
-   */
-  user: string;
-  /**
-   * Monthly balance account
-   */
-  account: string;
-  /**
-   * Month of the monthly balance
-   */
-  month: number;
-  /**
-   * Year of the monthly balance
-   */
-  year: number;
-  /**
-   * Opening balance of the monthly balance
-   */
-  openingBalance: number;
-  /**
-   * Closing balance of the monthly balance
-   */
-  closingBalance: number;
-  /**
-   * Transactions of the monthly balance
-   */
-  transactions: ITransaction[];
-}
-
-/**
- * Mongoose document type for the Monthly Balance
- */
-export interface IMonthlyBalanceDocument extends Omit<IMonthlyBalance, 'id' | 'user' | 'account' | 'transactions'>, Document {
-  user: ObjectId;
-  account: ObjectId;
-  transactions: ObjectId[];
-}
+export interface IMonthlyBalance extends InferSelectModel<typeof monthlyBalances> {}
 
 export type BulkGoalsUpdate = {
-  goalId: string;
+  goalId: number;
   amount: number;
 };
 
-/**
- * Repository interfaces - extend IRepository with repo-specific methods.
- * Use these instead of typeof for dependency injection and testability.
- */
-export interface ITransactionRepo extends IRepository<ITransactionDocument, ITransaction> {
-  deleteGoalFromTransactions(goalId: string): Promise<number>;
-  removeCategoriesFromTransactions(categoryIds: string[]): Promise<number>;
+export interface Table extends PgTable {
+  id: PgColumn;
+  userId?: PgColumn;
+}
+
+export interface IRepository<T extends Table, K> {
+  modelName: string;
+  findById(id: number): Promise<K | null>;
+  save(entity: Partial<K>): Promise<K>;
+  deleteById(id: number): Promise<K | null>;
+  listAll(userId?: number): Promise<K[]>;
+  update(id: number, entity: Partial<K>): Promise<K>;
+}
+
+export interface ITransactionRepo extends IRepository<typeof transactions, ITransaction> {
+  deleteGoalFromTransactions(goalId: number): Promise<number>;
+  removeCategoriesFromTransactions(categoryIds: number[]): Promise<number>;
   findByCategoryWithDateRange(
-    userId: string,
-    categories: string[],
+    userId: number,
+    categoryIds: number[],
     startDate: Date,
     endDate: Date,
-  ): Promise<ITransaction[] | { value: number }[]>;
+  ): Promise<ITransaction[]>;
+  findByMonthAndYear(year: number, month: number): Promise<ITransaction[]>;
+  deleteTransactionFromGoals(transactionId: number): Promise<number>;
 }
 
-export interface ICategoryRepo extends IRepository<ICategoryDocument, ICategory> {
-  findAllSubcategories(parentCategoryId: string): Promise<ICategory[]>;
-  deleteAllSubcategories(parentCategoryId: string): Promise<number>;
+export interface ICategoryRepo extends IRepository<typeof categories, ICategory> {
+  findAllSubcategories(parentCategoryId: number): Promise<ICategory[]>;
+  deleteAllSubcategories(parentCategoryId: number): Promise<number | null>;
+  listCategoriesByBudgetId(budgetId: number): Promise<number[]>;
 }
 
-export interface IBudgetRepo extends IRepository<IBudgetDocument, IBudget> {
-  updateBudgetsByNewTransaction(transaction: ITransaction): Promise<void>;
+export interface IGoalRepo extends IRepository<typeof goals, IGoal> {
+  updateGoalFromTransaction(transaction: ITransaction, shouldInvertValue?: boolean): Promise<void>;
 }
 
-export interface IGoalRepo extends IRepository<IGoalDocument, IGoal> {
-  incrementGoalsInBulk(bulkGoalsUpdate: BulkGoalsUpdate[]): Promise<void>;
-}
-
-export interface IMonthlyBalanceRepo extends IRepository<IMonthlyBalanceDocument, IMonthlyBalance> {
+export interface IMonthlyBalanceRepo extends IRepository<typeof monthlyBalances, IMonthlyBalance> {
   findMonthlyBalance(transaction: ITransaction, date: Date): Promise<IMonthlyBalance | null>;
+  updateMonthlyBalanceWithTransaction(transaction: ITransaction, shouldInvertValue: boolean): Promise<void>;
 }
 
-export interface IUserRepo extends IRepository<IUserDocument, IUser> {
+export interface IUserRepo extends IRepository<typeof users, IUser> {
   findByEmail(email: string): Promise<IUser | null>;
 }
 
-export type IAccountRepo = IRepository<IAccountDocument, IAccount>;
+export type IAccountRepo = IRepository<typeof accounts, IAccount>;
 
 export type ErrorHandler = (error: Error) => void;
 
@@ -525,15 +251,15 @@ export type RouteOverrides = {
 
 export interface IAccountantManager {
   createTransaction: (content: ITransaction) => Promise<ITransaction>;
-  deleteTransaction: (id: string, userId: string, isAdmin: boolean) => Promise<ITransaction | null>;
+  deleteTransaction: (id: number, userId: number, isAdmin: boolean) => Promise<ITransaction | null>;
   updateTransaction: (
-    id: string,
+    id: number,
     payload: Partial<ITransaction>,
-    userId: string,
+    userId: number,
     isAdmin: boolean,
   ) => Promise<ITransaction | null>;
-  getTransaction: (id: string, userId: string, isAdmin: boolean) => Promise<ITransaction | null>;
-  listTransactions: (userId: string) => Promise<ITransaction[]>;
+  getTransaction: (id: number, userId: number, isAdmin: boolean) => Promise<ITransaction | null>;
+  listTransactions: (userId: number) => Promise<ITransaction[]>;
   getTransactionTypes: () => { transactionTypes: string[]; investmentTypes: string[] };
 }
 
@@ -618,15 +344,11 @@ export interface ICommonActions<K extends Content> {
    *
    * @param id - The id of the content to update.
    * @param payload - The payload to update the content with.
-   * @param userId - The id of the user updating the content.
-   * @param isAdmin - Whether the user is an admin.
    * @returns The updated content.
    */
   updateContent: (
-    id: string,
+    id: number,
     payload: Partial<K>,
-    userId: string,
-    isAdmin: boolean,
   ) => Promise<K | null>;
   /**
    * Deletes a content by id.
@@ -635,20 +357,17 @@ export interface ICommonActions<K extends Content> {
    * @throws {Error} - If the user is not authorized to delete the content.
    *
    * @param id - The id of the content to delete.
-   * @param userId - The id of the user deleting the content.
-   * @param isAdmin - Whether the user is an admin.
    * @returns The deleted content.
    */
-  deleteContent: (id: string, userId: string, isAdmin: boolean) => Promise<K | null>;
+  deleteContent: (id: number) => Promise<K | null>;
   /**
    * Lists all content for a user.
    *
    * @throws {Error} - If the user is not authorized to list the content.
    *
-   * @param userId - The id of the user listing the content.
    * @returns The list of content.
    */
-  listContent: (userId: string) => Promise<K[]>;
+  listContent: () => Promise<K[]>;
   /**
    * Gets a content by id.
    *
@@ -656,11 +375,9 @@ export interface ICommonActions<K extends Content> {
    * @throws {Error} - If the user is not authorized to get the content.
    *
    * @param id - The id of the content to get.
-   * @param userId - The id of the user getting the content.
-   * @param isAdmin - Whether the user is an admin.
    * @returns The content.
    */
-  getContent: (id: string, userId: string, isAdmin: boolean) => Promise<K | null>;
+  getContent: (id: number) => Promise<K | null>;
 }
 
 export type ContentManagerActions = {

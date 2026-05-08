@@ -1,107 +1,135 @@
-import sinon from 'sinon';
-import { TransactionRepo } from '../../../../src/server/resources/repositories/transactionRepo';
+import chai from 'chai';
+import sinon, { SinonStub } from 'sinon';
+import transactionRepo from '../../../../src/server/resources/repositories/transactionRepo';
+import * as databaseConnection from '../../../../src/server/utils/databaseConnection';
+import { transactions, transactionToGoals } from '../../../../src/server/resources/models/transactionModel';
+
+type DrizzleDbStub = {
+  select: SinonStub;
+  update: SinonStub;
+  delete: SinonStub;
+};
 
 describe('TransactionRepo', () => {
-  let transactionRepo: TransactionRepo;
-  let transactionModel: {
-    find: sinon.SinonStub;
-    updateMany: sinon.SinonStub;
-  };
+  const dbHolder = databaseConnection as unknown as { db: DrizzleDbStub };
+
+  let originalDb: unknown;
+  let selectStub: SinonStub;
+  let selectFromStub: SinonStub;
+  let selectWhereStub: SinonStub;
+  let updateStub: SinonStub;
+  let updateSetStub: SinonStub;
+  let updateWhereStub: SinonStub;
+  let deleteStub: SinonStub;
+  let deleteWhereStub: SinonStub;
+
+  before(() => {
+    originalDb = dbHolder.db;
+  });
 
   beforeEach(() => {
-    transactionModel = {
-      find: sinon.stub(),
-      updateMany: sinon.stub(),
+    selectWhereStub = sinon.stub().resolves([]);
+    selectFromStub = sinon.stub().returns({ where: selectWhereStub });
+    selectStub = sinon.stub().returns({ from: selectFromStub });
+
+    updateWhereStub = sinon.stub().resolves({ rowCount: 0 });
+    updateSetStub = sinon.stub().returns({ where: updateWhereStub });
+    updateStub = sinon.stub().returns({ set: updateSetStub });
+
+    deleteWhereStub = sinon.stub().resolves({ rowCount: 0 });
+    deleteStub = sinon.stub().returns({ where: deleteWhereStub });
+
+    dbHolder.db = {
+      select: selectStub,
+      update: updateStub,
+      delete: deleteStub,
     };
-    transactionRepo = new TransactionRepo(transactionModel as any);
+  });
+
+  afterEach(() => {
+    dbHolder.db = originalDb as DrizzleDbStub;
   });
 
   describe('findByCategoryWithDateRange', () => {
-    it('should find transactions by category and date range', async () => {
-      const userId = 'user-1';
-      const categories = ['Food', 'Transport'];
+    it('should query transactions by user, categories, and date bounds', async () => {
+      const userId = 1;
+      const categories = [10, 20];
       const startDate = new Date('2021-01-01');
       const endDate = new Date('2021-01-31');
 
-      transactionModel.find.resolves([{ id: '1', value: 100 }]);
+      selectWhereStub.resolves([{ id: 99, userId }]);
 
-      const transactions = await transactionRepo.findByCategoryWithDateRange(
+      const rows = await transactionRepo.findByCategoryWithDateRange(
         userId,
         categories,
         startDate,
         endDate,
       );
 
-      transactionModel.find.should.have.been.calledOnce;
-      transactionModel.find.should.have.been.calledWith({
-        user: userId,
-        category: { $in: categories },
-        date: { $gte: startDate, $lte: endDate },
-      });
-      transactions.should.be.an('array');
-      transactions.should.have.lengthOf(1);
-      transactions[0].should.have.property('id', '1');
+      selectStub.should.have.been.calledOnce;
+      selectFromStub.should.have.been.calledOnceWithExactly(transactions);
+      selectWhereStub.should.have.been.calledOnce;
+      chai.assert.exists(selectWhereStub.firstCall.args[0]);
+
+      rows.should.be.an('array');
+      rows.should.have.lengthOf(1);
+      (rows[0] as { id: number }).should.have.property('id', 99);
     });
 
-    it('should return empty array when no transactions found', async () => {
-      transactionModel.find.resolves([]);
+    it('should return empty array when no transactions match', async () => {
+      selectWhereStub.resolves([]);
 
-      const transactions = await transactionRepo.findByCategoryWithDateRange(
-        'user-1',
-        ['Food'],
+      const rows = await transactionRepo.findByCategoryWithDateRange(
+        100,
+        [1],
         new Date('2021-01-01'),
         new Date('2021-01-31'),
       );
 
-      transactions.should.be.an('array').that.is.empty;
+      rows.should.be.an('array').that.is.empty;
     });
   });
 
   describe('removeCategoriesFromTransactions', () => {
-    it('should remove categories from transactions', async () => {
-      const categoryIds = ['cat-1', 'cat-2'];
-
-      transactionModel.updateMany.resolves({ modifiedCount: 2 });
+    it('should clear categoryId where category is in the list', async () => {
+      const categoryIds = [1, 2];
+      updateWhereStub.resolves({ rowCount: 2 });
 
       const result = await transactionRepo.removeCategoriesFromTransactions(categoryIds);
 
-      transactionModel.updateMany.should.have.been.calledOnce;
-      transactionModel.updateMany.should.have.been.calledWith(
-        { category: { $in: categoryIds } },
-        { $unset: { category: 1 } },
-      );
+      updateStub.should.have.been.calledOnceWithExactly(transactions);
+      updateSetStub.should.have.been.calledOnceWithExactly({ categoryId: null });
+      updateWhereStub.should.have.been.calledOnce;
+      chai.assert.exists(updateWhereStub.firstCall.args[0]);
       result.should.equal(2);
     });
 
-    it('should return 0 when no transactions updated', async () => {
-      transactionModel.updateMany.resolves({ modifiedCount: 0 });
+    it('should return 0 when no rowCount is reported', async () => {
+      updateWhereStub.resolves({ rowCount: 0 });
 
-      const result = await transactionRepo.removeCategoriesFromTransactions(['cat-999']);
+      const result = await transactionRepo.removeCategoriesFromTransactions([999]);
 
       result.should.equal(0);
     });
   });
 
   describe('deleteGoalFromTransactions', () => {
-    it('should delete goal from transactions', async () => {
-      const goalId = 'goal-123';
-
-      transactionModel.updateMany.resolves({ modifiedCount: 3 });
+    it('should delete rows from transactionToGoals', async () => {
+      const goalId = 55;
+      deleteWhereStub.resolves({ rowCount: 3 });
 
       const result = await transactionRepo.deleteGoalFromTransactions(goalId);
 
-      transactionModel.updateMany.should.have.been.calledOnce;
-      transactionModel.updateMany.should.have.been.calledWith(
-        { goalsList: { $elemMatch: { goal: goalId } } },
-        { $pull: { goalsList: { goal: goalId } } },
-      );
+      deleteStub.should.have.been.calledOnceWithExactly(transactionToGoals);
+      deleteWhereStub.should.have.been.calledOnce;
+      chai.assert.exists(deleteWhereStub.firstCall.args[0]);
       result.should.equal(3);
     });
 
-    it('should return 0 when no transactions contain the goal', async () => {
-      transactionModel.updateMany.resolves({ modifiedCount: 0 });
+    it('should return 0 when no rows are deleted', async () => {
+      deleteWhereStub.resolves({ rowCount: null });
 
-      const result = await transactionRepo.deleteGoalFromTransactions('goal-999');
+      const result = await transactionRepo.deleteGoalFromTransactions(777);
 
       result.should.equal(0);
     });

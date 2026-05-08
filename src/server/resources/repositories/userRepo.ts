@@ -1,42 +1,22 @@
-import { Model } from 'mongoose';
-import UserModel from '../models/userModel';
+import { eq } from 'drizzle-orm';
 import Repository from './repository';
-import type { IUser, IUserDocument, IUserRepo } from '../../types';
+import { users } from '../models/userModel';
+import { db } from '../../utils/databaseConnection';
+import { createLogger } from '../../utils/logger';
+import type { IUser } from '../../types';
 
-/**
- * Error handler for the user repository.
- *
- * @remarks
- * This error handler is used to translate server errors to
- * client errors using i18n keys.
- *
- * @param error - The error to handle.
- * @returns The error.
- */
-export function errorHandler(error: Error): Error {
-  if ((error as any).code === 11000) {
-    return new Error('duplicateUser');
-  }
+const logger = createLogger('Repository:User');
+const userRepo = Repository<typeof users, IUser>(users, 'User', logger);
 
-  return error;
+async function findByEmail(email: string): Promise<IUser | null> {
+  logger.info(`Finding user by email: ${email}`);
+
+  const user = await db.select().from(users).where(eq(users.email, email)).limit(1);
+
+  return user.length > 0 ? user[0] : null;
 }
 
-export class UserRepo extends Repository<IUserDocument, IUser> implements IUserRepo {
-  constructor(model: Model<IUserDocument> = UserModel) {
-    super(model, errorHandler);
-  }
-
-  /**
-   * Finds a user by email.
-   *
-   * @param email - The email of the user to find.
-   * @returns The user.
-   */
-  findByEmail(email: string): Promise<IUser | null> {
-    this.logger.info(`Finding user by email: ${email}`);
-
-    return this.Model.findOne({ email }).then((doc) => doc?.toObject() as IUser);
-  }
-}
-
-export default new UserRepo();
+export default {
+  ...userRepo,
+  findByEmail,
+};

@@ -6,26 +6,23 @@ import GoalRepo from '../../resources/repositories/goalRepo';
 import TransactionRepo from '../../resources/repositories/transactionRepo';
 import { createLogger } from '../../utils/logger';
 import { checkVoidInstance, checkUserAccess } from '../../utils/misc';
-import Repository from '../../resources/repositories/repository';
-import AccountModel from '../../resources/models/accountModel';
 import type {
-  IAccount,
-  IAccountDocument,
   IAccountRepo,
   ICategoryRepo,
   ICommonActions,
   ContentManagerActions,
   IBudget,
-  IBudgetDocument,
   IBudgetRepo,
   ICategory,
-  ICategoryDocument,
   IGoal,
-  IGoalDocument,
+  IGoalRepo,
   ITransactionRepo,
+  IAccount,
 } from '../../types';
+import Repository from '../../resources/repositories/repository';
+import { accounts } from '../../resources/models/accountModel';
 
-const AccountRepo = new Repository<IAccountDocument, IAccount>(AccountModel);
+const AccountRepo = Repository<typeof accounts, IAccount>(accounts, 'Account');
 
 /**
  * Creates the goal actions. Deleting a goal is different from the
@@ -37,31 +34,28 @@ const AccountRepo = new Repository<IAccountDocument, IAccount>(AccountModel);
  * @returns The goal actions.
  */
 function createGoalActions(
-  goalRepo: Repository<IGoalDocument, IGoal>,
+  goalRepo: IGoalRepo,
   transactionRepo: ITransactionRepo,
   logger: Logger,
 ): ICommonActions<IGoal> {
   return {
-    ...commonActions<IGoalDocument, IGoal>(goalRepo, 'Goal'),
-    deleteContent: async (id: string, userId: string, isAdmin: boolean): Promise<IGoal | null> => {
+    ...commonActions(goalRepo, 'Goal'),
+    deleteContent: async (id: number): Promise<IGoal | null> => {
       if (!id) {
         throw new Error('Goal id is required for deleting action');
       }
 
-      const instance = await goalRepo.findById(id);
-
       logger.info(`Deleting goal: ${id}`);
 
-      checkVoidInstance(instance, goalRepo.modelName, id);
-      checkUserAccess(instance!.user.toString(), userId, isAdmin, goalRepo.modelName, id, 'delete', logger);
+      const goal = await goalRepo.deleteById(id);
 
-      await goalRepo.findByIdAndDelete(id);
+      checkVoidInstance(goal, goalRepo.modelName, id);
 
       logger.info('Removing goal from transactions');
 
       await transactionRepo.deleteGoalFromTransactions(id);
 
-      return instance;
+      return goal;
     },
   };
 }
@@ -81,31 +75,15 @@ function createCategoryActions(
   logger: Logger,
 ): ICommonActions<ICategory> {
   return {
-    ...commonActions<ICategoryDocument, ICategory>(categoryRepo, 'Category'),
+    ...commonActions(categoryRepo, 'Category'),
     deleteContent: async (
-      id: string,
-      userId: string,
-      isAdmin: boolean,
+      id: number,
     ): Promise<ICategory | null> => {
       if (!id) {
         throw new Error('Category id is required for deleting action');
       }
 
-      const instance = await categoryRepo.findById(id);
-      const catModelName = categoryRepo.modelName;
-
       logger.info(`Deleting category and all its subcategories with id: ${id}`);
-
-      checkVoidInstance(instance, catModelName, id);
-      checkUserAccess(
-        instance!.user.toString(),
-        userId,
-        isAdmin,
-        catModelName,
-        id,
-        'delete',
-        logger,
-      );
 
       const categoriesDeleted = [id];
       const subcategories = await categoryRepo.findAllSubcategories(id);
@@ -125,7 +103,7 @@ function createCategoryActions(
 
       logger.info(`Removed categories from ${updatedTransactions} transactions`);
 
-      return categoryRepo.findByIdAndDelete(id);
+      return categoryRepo.deleteById(id);
     },
   };
 }
@@ -141,31 +119,32 @@ function createCategoryActions(
 export async function calculateBudgetSpent(
   budget: IBudget | null,
   transactionRepo: ITransactionRepo,
+  categoryRepo: ICategoryRepo,
   logger: Logger,
 ): Promise<number> {
   if (!budget) {
     throw new Error('We need a budget to calculate the spent');
   }
 
-  logger.info(`Calculating spent for budget: ${budget.id} from user: ${budget.user}`);
+  logger.info(`Calculating spent for budget: ${budget.id} from user: ${budget.userId}`);
 
   const {
-    user,
-    categories,
+    userId,
     startDate,
     endDate,
   } = budget;
+  const categoryIds = await categoryRepo.listCategoriesByBudgetId(budget.id);
   const transactions = await transactionRepo.findByCategoryWithDateRange(
-    user,
-    categories,
+    userId,
+    categoryIds,
     startDate,
     endDate,
   );
 
-  logger.info(`Found ${transactions.length} transactions for budget: ${budget.id} from user: ${user}`);
-  logger.info(`Calculating spent for budget: ${budget.id} from user: ${user}`);
+  logger.info(`Found ${transactions.length} transactions for budget: ${budget.id} from user: ${userId}`);
+  logger.info(`Calculating spent for budget: ${budget.id} from user: ${userId}`);
 
-  return transactions.reduce((acc, curr) => acc + curr.value, 0);
+  return transactions.reduce((acc, curr) => acc + Number(curr.value), 0);
 }
 
 /**
@@ -180,26 +159,25 @@ export async function calculateBudgetSpent(
 function createBudgetActions(
   budgetRepo: IBudgetRepo,
   transactionRepo: ITransactionRepo,
+  categoryRepo: ICategoryRepo,
   logger: Logger,
 ): ICommonActions<IBudget> {
-  const commonBudgetActions = commonActions<IBudgetDocument, IBudget>(budgetRepo, 'Budget');
+  const commonBudgetActions = commonActions(budgetRepo, 'Budget');
 
   return {
     ...commonBudgetActions,
     getContent: async (
-      id: string,
-      userId: string,
-      isAdmin: boolean,
+      id: number,
     ): Promise<IBudget | null> => {
-      const budget = await commonBudgetActions.getContent(id, userId, isAdmin);
+      const budget = await commonBudgetActions.getContent(id);
 
       if (!budget) {
         return null;
       }
 
-      logger.info(`Calculating spent for budget: ${id} from user: ${budget.user}`);
+      logger.info(`Calculating spent for budget: ${id} from user: ${budget.userId}`);
 
-      const spent = await calculateBudgetSpent(budget, transactionRepo, logger);
+      const spent = await calculateBudgetSpent(budget, transactionRepo, categoryRepo, logger);
 
       return { ...budget, spent };
     },
@@ -219,15 +197,15 @@ function createBudgetActions(
 export function createContentManager(
   budgetRepo: IBudgetRepo,
   categoryRepo: ICategoryRepo,
-  goalRepo: Repository<IGoalDocument, IGoal>,
+  goalRepo: IGoalRepo,
   transactionRepo: ITransactionRepo,
   accountRepo: IAccountRepo,
 ): ContentManagerActions {
   const logger = createLogger('ContentManager');
-  const budgetActions = createBudgetActions(budgetRepo, transactionRepo, logger);
+  const budgetActions = createBudgetActions(budgetRepo, transactionRepo, categoryRepo, logger);
   const categoryActions = createCategoryActions(categoryRepo, transactionRepo, logger);
   const goalActions = createGoalActions(goalRepo, transactionRepo, logger);
-  const accountActions = commonActions<IAccountDocument, IAccount>(accountRepo, 'Account');
+  const accountActions = commonActions(accountRepo, 'Account');
 
   return {
     budgetActions,

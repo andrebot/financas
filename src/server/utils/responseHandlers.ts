@@ -28,6 +28,6 @@ export function handleError(error: Error, res: Response, status = 500): Response
  * @param {string} id The string to validate as a Mongoose ObjectId.
  * @returns {boolean} True if the string is a valid ObjectId, false otherwise.
  */
-export function isValidObjectId(id: string): boolean {
-  return Types.ObjectId.isValid(id) && new Types.ObjectId(id).toString() === id;
+export function isValidObjectId(id: number): boolean {
+  return Types.ObjectId.isValid(id) && typeof id === 'number';
 }
