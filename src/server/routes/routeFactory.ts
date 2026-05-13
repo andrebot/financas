@@ -15,9 +15,9 @@ export default function newRouteFactory<T extends Content>(commonController: ICo
 
   router.get('/', createAccessTokenValidation(), commonController.listContent);
   router.post('/', createAccessTokenValidation(), commonController.createContent);
-  router.get('/:id([0-9a-fA-F]{24})', createAccessTokenValidation(), commonController.getContent);
-  router.put('/:id([0-9a-fA-F]{24})', createAccessTokenValidation(), commonController.updateContent);
-  router.delete('/:id([0-9a-fA-F]{24})', createAccessTokenValidation(), commonController.deleteContent);
+  router.get('/:id([0-9]+)', createAccessTokenValidation(), commonController.getContent);
+  router.put('/:id([0-9]+)', createAccessTokenValidation(), commonController.updateContent);
+  router.delete('/:id([0-9]+)', createAccessTokenValidation(), commonController.deleteContent);
 
   return router;
 }

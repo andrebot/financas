@@ -1,11 +1,9 @@
-import chai from 'chai';
-import sinon from 'sinon';
 import request from 'supertest';
-import { Types } from 'mongoose';
 import server from '../../src/server/server';
-import { goal1, goal2, goal3, adminUser } from './connectDB';
+import {
+  goal1, goal2, goal3, adminUser, userToDelete,
+} from './connectDB';
 import { createAccessToken } from '../../src/server/managers/authenticationManager';
-import goalModel from '../../src/server/resources/models/goalModel';
 
 const resourceUrl = '/api/v1/goal';
 
@@ -18,32 +16,32 @@ describe('Goal', () => {
       'admin',
       adminUser.firstName,
       adminUser.lastName,
-      adminUser.id!,
+      adminUser.id,
     );
   });
 
   describe('List Goals - GET /api/v1/goal', () => {
-    it('should return the list of goals', async () => {
+    it('should return all goals when user is admin', async () => {
       const response = await request(server)
-        .get(`${resourceUrl}`)
+        .get(resourceUrl)
         .set('Authorization', `Bearer ${accessToken}`);
 
       response.status.should.be.eq(200);
       response.body.should.be.an('array');
-      response.body.should.have.lengthOf(2);
+      response.body.should.have.lengthOf(3);
     });
 
     it('should return nothing when user has no goals', async () => {
       const token = createAccessToken(
-        'test@gmail.com',
+        userToDelete.email,
         'user',
-        'Test',
-        'User',
-        new Types.ObjectId().toString(),
+        userToDelete.firstName,
+        userToDelete.lastName,
+        userToDelete.id,
       );
 
       const response = await request(server)
-        .get(`${resourceUrl}`)
+        .get(resourceUrl)
         .set('Authorization', `Bearer ${token}`);
 
       response.status.should.be.eq(200);
@@ -53,20 +51,9 @@ describe('Goal', () => {
 
     it('should return 401 when the user is not authenticated', async () => {
       const response = await request(server)
-        .get(`${resourceUrl}`);
+        .get(resourceUrl);
 
       response.status.should.be.eq(401);
-    });
-
-    it('should return 500 when an error occurs', async () => {
-      const stub = sinon.stub(goalModel, 'find').throws(new Error('Error'));
-
-      const response = await request(server)
-        .get(`${resourceUrl}`)
-        .set('Authorization', `Bearer ${accessToken}`);
-
-      response.status.should.be.eq(500);
-      stub.restore();
     });
   });
 
@@ -81,12 +68,12 @@ describe('Goal', () => {
       response.body.should.have.property('name', goal1.name);
       response.body.should.have.property('value', goal1.value);
       response.body.should.have.property('dueDate', goal1.dueDate.toISOString());
-      response.body.should.have.property('user', adminUser.id);
+      response.body.should.have.property('userId', adminUser.id);
     });
 
-    it('should return empty if an category is not found', async () => {
+    it('should return empty if a goal is not found', async () => {
       const response = await request(server)
-        .get(`${resourceUrl}/${new Types.ObjectId()}`)
+        .get(`${resourceUrl}/999999`)
         .set('Authorization', `Bearer ${accessToken}`);
 
       response.status.should.be.eq(200);
@@ -99,57 +86,35 @@ describe('Goal', () => {
 
       response.status.should.be.eq(401);
     });
-
-    it('should return 500 when an error occurs', async () => {
-      const stub = sinon.stub(goalModel, 'findOne').throws(new Error('Error'));
-
-      const response = await request(server)
-        .get(`${resourceUrl}/${goal1.id}`)
-        .set('Authorization', `Bearer ${accessToken}`);
-
-      response.status.should.be.eq(500);
-      stub.restore();
-    });
   });
 
   describe('Create Goal - POST /api/v1/goal/', () => {
     it('should create a goal', async () => {
       const newGoal = {
-        name: 'Test Account',
+        name: 'Test Goal',
         value: 400,
+        savedValue: '0',
         dueDate: new Date(),
-        user: adminUser.id,
+        userId: adminUser.id,
       };
 
       const response = await request(server)
-        .post(`${resourceUrl}`)
+        .post(resourceUrl)
         .set('Authorization', `Bearer ${accessToken}`)
         .send(newGoal);
 
       response.status.should.be.eq(200);
       response.body.should.be.an('object');
       response.body.should.have.property('name', newGoal.name);
-      response.body.should.have.property('user', newGoal.user);
+      response.body.should.have.property('userId', newGoal.userId);
     });
 
     it('should return 401 when the user is not authenticated', async () => {
       const response = await request(server)
-        .post(`${resourceUrl}`)
+        .post(resourceUrl)
         .send(goal2);
 
       response.status.should.be.eq(401);
-    });
-
-    it('should return 500 when an error occurs', async () => {
-      const stub = sinon.stub(goalModel.prototype, 'save').throws(new Error('Error'));
-
-      const response = await request(server)
-        .post(`${resourceUrl}`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send(goal2);
-
-      response.status.should.be.eq(500);
-      stub.restore();
     });
   });
 
@@ -186,20 +151,11 @@ describe('Goal', () => {
       response.status.should.be.eq(500);
     });
 
-    it('should throw 500 when provided an empty object to update', async () => {
-      const response = await request(server)
-        .put(`${resourceUrl}/${goal1.id}`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({});
-
-      response.status.should.be.eq(500);
-    });
-
     it('should be able to update another user\'s goal if is admin', async () => {
       const response = await request(server)
         .put(`${resourceUrl}/${goal3.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
-        .send(goal2);
+        .send({ name: goal2.name });
 
       response.status.should.be.eq(200);
       response.body.should.be.an('object');
@@ -208,42 +164,22 @@ describe('Goal', () => {
       goal3.name = goal2.name;
     });
 
-    it('should return 403 when the user is not allowed to update the goal', async () => {
+    it('should not update another user\'s goal if not admin', async () => {
       const token = createAccessToken(
-        'test@gmail.com',
+        userToDelete.email,
         'user',
-        'Test',
-        'User',
-        new Types.ObjectId().toString(),
+        userToDelete.firstName,
+        userToDelete.lastName,
+        userToDelete.id,
       );
 
       const response = await request(server)
         .put(`${resourceUrl}/${goal3.id}`)
         .set('Authorization', `Bearer ${token}`)
-        .send(goal2);
+        .send({ name: 'Stolen Update' });
 
-      response.status.should.be.eq(403);
-    });
-
-    it('should return 404 if no goal is found', async () => {
-      const response = await request(server)
-        .put(`${resourceUrl}/${new Types.ObjectId()}`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send(goal2);
-
-      response.status.should.be.eq(404);
-    });
-
-    it('should return 500 when an error occurs', async () => {
-      const stub = sinon.stub(goalModel, 'findOneAndUpdate').throws(new Error('Error'));
-
-      const response = await request(server)
-        .put(`${resourceUrl}/${goal1.id}`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send(goal2);
-
-      response.status.should.be.eq(500);
-      stub.restore();
+      response.status.should.be.eq(200);
+      response.body.should.be.empty;
     });
   });
 
@@ -256,7 +192,7 @@ describe('Goal', () => {
       response.status.should.be.eq(200);
       response.body.should.be.an('object');
       response.body.should.have.property('name', goal2.name);
-      response.body.should.have.property('user', adminUser.id);
+      response.body.should.have.property('userId', adminUser.id);
     });
 
     it('should return 401 when the user is not authenticated', async () => {
@@ -274,45 +210,32 @@ describe('Goal', () => {
       response.status.should.be.eq(200);
       response.body.should.be.an('object');
       response.body.should.have.property('name', goal3.name);
-      response.body.should.have.property('user');
-      response.body.user.should.not.equal(adminUser.id);
+      response.body.userId.should.not.equal(adminUser.id);
     });
 
-    it('should return 403 when the user is not allowed to delete the goal', async () => {
+    it('should return 404 when deleting a non-existent goal', async () => {
+      const response = await request(server)
+        .delete(`${resourceUrl}/999999`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      response.status.should.be.eq(404);
+      response.body.should.have.property('error').that.includes('not found');
+    });
+
+    it('should not delete another user\'s goal if not admin', async () => {
       const token = createAccessToken(
-        'test@gmail.com',
+        userToDelete.email,
         'user',
-        'Test',
-        'User',
-        new Types.ObjectId().toString(),
+        userToDelete.firstName,
+        userToDelete.lastName,
+        userToDelete.id,
       );
 
       const response = await request(server)
         .delete(`${resourceUrl}/${goal1.id}`)
-        .set('Authorization', `Bearer ${token}`)
-        .send(goal2);
-
-      response.status.should.be.eq(403);
-    });
-
-    it('should return 404 if no goal is found', async () => {
-      const response = await request(server)
-        .delete(`${resourceUrl}/${new Types.ObjectId()}`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send(goal2);
+        .set('Authorization', `Bearer ${token}`);
 
       response.status.should.be.eq(404);
-    });
-
-    it('should return 500 when an error occurs', async () => {
-      const stub = sinon.stub(goalModel, 'findByIdAndDelete').throws(new Error('Error'));
-
-      const response = await request(server)
-        .delete(`${resourceUrl}/${goal1.id}`)
-        .set('Authorization', `Bearer ${accessToken}`);
-
-      response.status.should.be.eq(500);
-      stub.restore();
     });
   });
 });

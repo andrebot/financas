@@ -5,6 +5,32 @@ import { getAutorizationDatabaseContext } from '../../utils/authorization';
 import { getDb } from '../../utils/transaction';
 import { IRepository, Table } from '../../types';
 
+const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})?$/;
+
+/**
+ * Converts ISO date strings in an entity to Date objects so that Drizzle's
+ * timestamp column mapper (which calls `.toISOString()`) receives the expected type.
+ * JSON-serialised request bodies always carry dates as strings; this normalises them.
+ *
+ * @param entity - The entity to preprocess.
+ * @returns A shallow copy of the entity with string dates replaced by Date objects.
+ */
+function coerceDates<T>(entity: T): T {
+  if (!entity || typeof entity !== 'object') {
+    return entity;
+  }
+
+  const result: Record<string, unknown> = {};
+
+  for (const [key, value] of Object.entries(entity as object)) {
+    result[key] = typeof value === 'string' && ISO_DATE_REGEX.test(value)
+      ? new Date(value)
+      : value;
+  }
+
+  return result as T;
+}
+
 /**
  * Creates a generic repository with standard CRUD operations for a Drizzle table.
  * All operations are scoped to the current authorization context and participate
@@ -68,7 +94,7 @@ export default function Repository<T extends Table, K>(table: T, modelName: stri
   async function save(entity: K): Promise<K> {
     logger.info(`Saving ${modelName}`);
 
-    const rows = await getDb().insert(table).values(entity as InsertEntity).returning();
+    const rows = await getDb().insert(table).values(coerceDates(entity) as InsertEntity).returning();
 
     return rows[0] as K;
   }
@@ -119,7 +145,7 @@ export default function Repository<T extends Table, K>(table: T, modelName: stri
   async function update(id: number, entity: Partial<K>): Promise<K> {
     logger.info(`Updating ${modelName} by id: ${id}`);
 
-    const rows = await getDb().update(table).set(entity as InsertEntity).where(
+    const rows = await getDb().update(table).set(coerceDates(entity) as InsertEntity).where(
       and(
         eq(table.id, id),
         getAutorizationDatabaseContext(table),

@@ -104,6 +104,7 @@
     "@babel/preset-env": "^7.26.9",
     "@babel/preset-react": "^7.26.3",
     "@babel/preset-typescript": "^7.27.1",
+    "@electric-sql/pglite": "^0.4.5",
     "@emotion/babel-plugin": "^11.13.5",
     "@istanbuljs/nyc-config-typescript": "^1.0.2",
     "@playwright/test": "^1.51.1",

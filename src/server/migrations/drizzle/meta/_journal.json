@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1775580141046,
-      "tag": "0000_fast_squadron_sinister",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1775580200000,
-      "tag": "0001_goals_saved_monthly_tx_json",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1775789412169,
-      "tag": "0002_calm_adam_warlock",
+      "when": 1778864540154,
+      "tag": "0000_initial_schema",
       "breakpoints": true
     }
   ]
