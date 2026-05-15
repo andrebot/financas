@@ -1,4 +1,6 @@
-import { pgTable, serial, text, integer, timestamp, numeric, pgEnum, primaryKey } from 'drizzle-orm/pg-core';
+import {
+  pgTable, serial, text, integer, timestamp, numeric, pgEnum, primaryKey,
+} from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { users } from './userModel';
 import { categories } from './categoryModel';

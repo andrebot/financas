@@ -1,4 +1,6 @@
-import { pgTable, serial, text, pgEnum } from 'drizzle-orm/pg-core';
+import {
+  pgTable, serial, text, pgEnum,
+} from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { timestampColumns } from './columHelpers';
 import { accounts } from './accountModel';

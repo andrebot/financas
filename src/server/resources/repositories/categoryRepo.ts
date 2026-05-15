@@ -18,12 +18,12 @@ const categoryRepo = Repository<typeof categories, ICategory>(categories, 'Categ
  */
 async function findAllSubcategories(parentCategoryId: number): Promise<ICategory[]> {
   logger.info(`Finding all subcategories of parent category: ${parentCategoryId}`);
-  
+
   return await db.select().from(categories).where(
     and(
       eq(categories.parentCategoryId, parentCategoryId),
       getAutorizationDatabaseContext(categories),
-    )
+    ),
   );
 }
 
@@ -40,7 +40,7 @@ async function deleteAllSubcategories(parentCategoryId: number): Promise<number 
     and(
       eq(categories.parentCategoryId, parentCategoryId),
       getAutorizationDatabaseContext(categories),
-    )
+    ),
   );
 
   return deletedCount.rowCount;

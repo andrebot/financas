@@ -1,33 +1,49 @@
-import chai from 'chai';
 import sinon, { SinonStub } from 'sinon';
 import budgetRepo from '../../../../src/server/resources/repositories/budgetRepo';
 import * as databaseConnection from '../../../../src/server/utils/databaseConnection';
-import { budgets, budgetToCategories } from '../../../../src/server/resources/models/budgetModel';
+import { budgetUsage } from '../../../../src/server/resources/models/budgetModel';
+import { requestContext } from '../../../../src/server/utils/authorization';
 import type { ITransaction } from '../../../../src/server/types';
 
-describe('Budget Repository', function () {
-  const dbHolder = databaseConnection as unknown as { db: { update: SinonStub } };
+type DrizzleDbStub = {
+  insert: SinonStub;
+  select: SinonStub;
+};
+
+describe('Budget Repository', () => {
+  const dbHolder = databaseConnection as unknown as { db: DrizzleDbStub };
 
   let originalDb: unknown;
-  let updateStub: SinonStub;
-  let setStub: SinonStub;
-  let fromStub: SinonStub;
-  let whereStub: SinonStub;
+  let insertStub: SinonStub;
+  let insertSelectStub: SinonStub;
+  let onConflictDoUpdateStub: SinonStub;
+  let selectStub: SinonStub;
+  let selectFromStub: SinonStub;
+  let innerJoinStub: SinonStub;
+  let selectWhereStub: SinonStub;
 
   before(() => {
     originalDb = dbHolder.db;
   });
 
   beforeEach(() => {
-    whereStub = sinon.stub().resolves();
-    fromStub = sinon.stub().returns({ where: whereStub });
-    setStub = sinon.stub().returns({ from: fromStub });
-    updateStub = sinon.stub().returns({ set: setStub });
-    dbHolder.db = { update: updateStub };
+    onConflictDoUpdateStub = sinon.stub().resolves();
+    insertSelectStub = sinon.stub().returns({ onConflictDoUpdate: onConflictDoUpdateStub });
+    insertStub = sinon.stub().returns({ select: insertSelectStub });
+
+    selectWhereStub = sinon.stub().returns({ kind: 'select-query' });
+    innerJoinStub = sinon.stub().returns({ where: selectWhereStub });
+    selectFromStub = sinon.stub().returns({ innerJoin: innerJoinStub });
+    selectStub = sinon.stub().returns({ from: selectFromStub });
+
+    dbHolder.db = {
+      insert: insertStub,
+      select: selectStub,
+    };
   });
 
   afterEach(() => {
-    dbHolder.db = originalDb as { update: SinonStub };
+    dbHolder.db = originalDb as DrizzleDbStub;
   });
 
   function buildTxn(overrides: Partial<ITransaction>): ITransaction {
@@ -50,25 +66,31 @@ describe('Budget Repository', function () {
   it('should skip update when the transaction has no category', async () => {
     const mockTransaction = buildTxn({ categoryId: null });
 
-    await budgetRepo.updateBudgetsByNewTransaction(mockTransaction);
+    await requestContext.run({ userId: 1, isAdmin: false }, async () => {
+      await budgetRepo.updateBudgetsByNewTransaction(mockTransaction);
+    });
 
-    updateStub.should.not.have.been.called;
+    sinon.assert.notCalled(insertStub);
+    sinon.assert.notCalled(selectStub);
   });
 
-  it('should update budgets scoped by category and date bounds', async () => {
+  it('should upsert budget usage with a single insert-select query builder chain', async () => {
     const mockTransaction = buildTxn({
       categoryId: 42,
       date: new Date('2026-03-01'),
       value: '50.50',
     });
 
-    await budgetRepo.updateBudgetsByNewTransaction(mockTransaction);
+    await requestContext.run({ userId: 1, isAdmin: false }, async () => {
+      await budgetRepo.updateBudgetsByNewTransaction(mockTransaction);
+    });
 
-    updateStub.should.have.been.calledOnceWithExactly(budgets);
-    setStub.should.have.been.calledOnce;
-    setStub.firstCall.args[0].should.have.keys('value');
-    fromStub.should.have.been.calledOnceWithExactly(budgetToCategories);
-    whereStub.should.have.been.calledOnce;
-    chai.assert.exists(whereStub.firstCall.args[0]);
+    sinon.assert.calledOnceWithExactly(insertStub, budgetUsage);
+    sinon.assert.calledOnce(selectStub);
+    sinon.assert.calledOnce(selectFromStub);
+    sinon.assert.calledOnce(innerJoinStub);
+    sinon.assert.calledOnce(selectWhereStub);
+    sinon.assert.calledOnceWithExactly(insertSelectStub, { kind: 'select-query' });
+    sinon.assert.calledOnce(onConflictDoUpdateStub);
   });
 });

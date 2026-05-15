@@ -1,4 +1,6 @@
-import { integer, pgTable, serial, text, numeric } from 'drizzle-orm/pg-core';
+import {
+  integer, pgTable, serial, text, numeric,
+} from 'drizzle-orm/pg-core';
 import { InferInsertModel, InferSelectModel, relations } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
@@ -67,4 +69,3 @@ export const accountSchema = z.union([
 export type Account = z.infer<typeof accountSchema>;
 export type AccountInsert = InferInsertModel<typeof accounts>;
 export type AccountSelect = InferSelectModel<typeof accounts>;
-
