@@ -10,6 +10,14 @@ import { getDb } from '../../utils/transaction';
 const logger = createLogger('Repository:Goals');
 const goalRepo = Repository<typeof goals, IGoal>(goals, 'Goals', logger);
 
+/**
+ * Updates the savedValue of all goals linked to a transaction by the percentage
+ * defined in the transactionToGoals junction table.
+ * When shouldInvertValue is true, the contribution is subtracted (used on delete/revert).
+ *
+ * @param transaction - The transaction whose linked goals should be updated.
+ * @param shouldInvertValue - Whether to subtract instead of add the contribution.
+ */
 async function updateGoalFromTransaction(transaction: ITransaction, shouldInvertValue: boolean = false): Promise<void> {
   logger.info(`Updating goal from transaction: ${transaction.id}`);
 

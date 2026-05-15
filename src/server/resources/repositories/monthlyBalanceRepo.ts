@@ -9,6 +9,13 @@ import { getDb } from '../../utils/transaction';
 const logger = createLogger('Repository:MonthlyBalance');
 const monthlyBalanceRepo = Repository<typeof monthlyBalances, IMonthlyBalance>(monthlyBalances, 'MonthlyBalance', logger);
 
+/**
+ * Finds the monthly balance for a transaction's account on a given month.
+ *
+ * @param transaction - The transaction used to match accountId.
+ * @param date - The date whose year and month are used to look up the balance.
+ * @returns The monthly balance, or null if none exists for that account and month.
+ */
 async function findMonthlyBalance(
   transaction: ITransaction,
   date: Date,

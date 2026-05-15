@@ -14,13 +14,16 @@ import { accounts, cards } from './resources/models/accountModel';
 
 /* eslint-disable no-unused-vars */
 
+/** Base shape for any domain entity that is owned by a user. */
 export type Content = { userId: number | undefined };
 
+/** Authorization context stored in AsyncLocalStorage for the lifetime of a request. */
 export type RequestContext = {
   userId: number;
   isAdmin: boolean;
 };
 
+/** A Drizzle table schema that is guaranteed to have a non-nullable userId column. */
 export type TableWithUserId = Table & { userId: number };
 
 /**
@@ -158,100 +161,270 @@ export interface IBudgetController extends IContentController {
   getBudget(req: RequestWithUser, res: Response): Promise<Response>;
 }
 
+/** All valid investment type values derived from the database enum. */
 export const INVESTMENT_TYPES = investmentTypes.enumValues;
+/** All valid transaction type values derived from the database enum. */
 export const TRANSACTION_TYPES = transactionTypes.enumValues;
+/** All valid budget type values derived from the database enum. */
 export const BUDGET_TYPES = budgetTypes.enumValues;
 
+/** A goal with its display name and the percentage allocated to it. */
 export interface IGoalItem {
+  /** The full goal record. */
   goal: IGoal;
+  /** Human-readable name of the goal. */
   goalName: string;
+  /** Fraction of the transaction amount directed to this goal (0–1). */
   percentage: number;
 }
 
+/** Domain entity representing a payment card. */
 export interface ICard extends InferSelectModel<typeof cards> {}
 
+/** Domain entity representing a bank or financial account. */
 export interface IAccount extends InferSelectModel<typeof accounts> {}
 
+/** Domain entity representing an application user. */
 export interface IUser extends InferSelectModel<typeof users> {}
 
+/** Domain entity representing a financial transaction. */
 export interface ITransaction extends InferSelectModel<typeof transactions> {}
 
+/** Domain entity representing a savings goal. */
 export interface IGoal extends InferSelectModel<typeof goals> {}
 
+/** Domain entity representing a spending category. */
 export interface ICategory extends InferSelectModel<typeof categories> {}
 
+/** Domain entity representing a budget with its computed total spent amount. */
 export interface IBudget extends InferSelectModel<typeof budgets> {
+  /** Total amount spent against this budget in the relevant period. */
   spent: number;
 }
 
+/** Domain entity representing a monthly balance snapshot for an account. */
 export interface IMonthlyBalance extends InferSelectModel<typeof monthlyBalances> {}
 
+/** Payload used to bulk-update a goal's saved value by a fixed amount. */
 export type BulkGoalsUpdate = {
+  /** The id of the goal to update. */
   goalId: number;
+  /** The absolute amount to add or subtract from the goal's saved value. */
   amount: number;
 };
 
+/** A single goal allocation entry within a transaction, defined by fraction. */
 export type ITransactionGoalEntry = {
+  /** The id of the goal receiving this allocation. */
   goalId: number;
+  /** Fraction of the transaction amount directed to this goal (0–1). */
   percentage: number;
 };
 
+/**
+ * Minimal shape every Drizzle table must satisfy to be usable with
+ * {@link Repository} and {@link getAutorizationDatabaseContext}.
+ */
 export interface Table extends PgTable {
+  /** Primary key column. */
   id: PgColumn;
+  /** Optional user ownership column used for authorization filtering. */
   userId?: PgColumn;
 }
 
+/**
+ * Generic CRUD contract shared by all repository implementations.
+ *
+ * @template T - The Drizzle table type.
+ * @template K - The domain entity type.
+ */
 export interface IRepository<T extends Table, K> {
+  /** Human-readable model name used in log messages and error strings. */
   modelName: string;
+  /**
+   * Finds a record by primary key within the current authorization context.
+   *
+   * @param id - The primary key to look up.
+   * @returns The matching record, or null if not found.
+   */
   findById(id: number): Promise<K | null>;
+  /**
+   * Inserts a new record and returns the persisted row.
+   *
+   * @param entity - The entity data to insert.
+   * @returns The newly inserted row.
+   */
   save(entity: Partial<K>): Promise<K>;
+  /**
+   * Deletes the record identified by id and returns the deleted row.
+   *
+   * @param id - The primary key of the record to delete.
+   * @returns The deleted row, or null if not found.
+   */
   deleteById(id: number): Promise<K | null>;
+  /**
+   * Returns all records visible to the current authorization context.
+   *
+   * @returns An array of all matching records.
+   */
   listAll(): Promise<K[]>;
+  /**
+   * Applies a partial update to the record identified by id.
+   *
+   * @param id - The primary key of the record to update.
+   * @param entity - Partial fields to apply.
+   * @returns The updated row.
+   */
   update(id: number, entity: Partial<K>): Promise<K>;
 }
 
+/** Repository contract for the transactions table, extending base CRUD with domain-specific queries. */
 export interface ITransactionRepo extends IRepository<typeof transactions, ITransaction> {
+  /**
+   * Returns the count of transaction-goal links for a goal, scoped to the authorization context.
+   *
+   * @param goalId - The goal to check.
+   * @returns Count of linked transaction rows.
+   */
   deleteGoalFromTransactions(goalId: number): Promise<number>;
+  /**
+   * Sets categoryId to null on all transactions belonging to the given categories.
+   *
+   * @param categoryIds - The category ids to disassociate.
+   * @returns Number of transactions updated.
+   */
   removeCategoriesFromTransactions(categoryIds: number[]): Promise<number>;
+  /**
+   * Finds transactions for a user filtered by category ids and date range.
+   *
+   * @param userId - The owning user's id.
+   * @param categoryIds - Category ids to match.
+   * @param startDate - Range start (inclusive).
+   * @param endDate - Range end (inclusive).
+   * @returns Matching transactions.
+   */
   findByCategoryWithDateRange(
     userId: number,
     categoryIds: number[],
     startDate: Date,
     endDate: Date,
   ): Promise<ITransaction[]>;
+  /**
+   * Finds all transactions for a given year and month without authorization filtering.
+   *
+   * @param year - The four-digit year.
+   * @param month - The month (1-indexed).
+   * @returns Matching transactions.
+   */
   findByMonthAndYear(year: number, month: number): Promise<ITransaction[]>;
+  /**
+   * Removes all goal junction rows for the given transaction.
+   *
+   * @param transactionId - The transaction whose goal links should be removed.
+   * @returns Number of rows deleted.
+   */
   deleteTransactionFromGoals(transactionId: number): Promise<number>;
+  /**
+   * Inserts goal allocation rows linking a transaction to a set of goals.
+   *
+   * @param transactionId - The transaction to link.
+   * @param goals - The goal entries with goalId and percentage.
+   */
   saveTransactionGoals(transactionId: number, goals: ITransactionGoalEntry[]): Promise<void>;
 }
 
+/** Repository contract for the categories table, extending base CRUD with hierarchy queries. */
 export interface ICategoryRepo extends IRepository<typeof categories, ICategory> {
+  /**
+   * Returns all categories whose parent is the given category id.
+   *
+   * @param parentCategoryId - The parent category to query under.
+   * @returns All direct child categories.
+   */
   findAllSubcategories(parentCategoryId: number): Promise<ICategory[]>;
+  /**
+   * Deletes all subcategories of the given parent category.
+   *
+   * @param parentCategoryId - The parent whose children should be deleted.
+   * @returns Number of rows deleted, or null if none matched.
+   */
   deleteAllSubcategories(parentCategoryId: number): Promise<number | null>;
+  /**
+   * Returns the category ids associated with a given budget.
+   *
+   * @param budgetId - The budget to look up categories for.
+   * @returns An array of category ids.
+   */
   listCategoriesByBudgetId(budgetId: number): Promise<number[]>;
 }
 
+/** Repository contract for the goals table, extending base CRUD with transaction-driven updates. */
 export interface IGoalRepo extends IRepository<typeof goals, IGoal> {
+  /**
+   * Updates the savedValue of all goals linked to the transaction by their percentage.
+   *
+   * @param transaction - The transaction whose linked goals should be updated.
+   * @param shouldInvertValue - When true the contribution is subtracted (used on delete/revert).
+   */
   updateGoalFromTransaction(transaction: ITransaction, shouldInvertValue?: boolean): Promise<void>;
 }
 
+/** Repository contract for the budgets table, extending base CRUD with usage tracking. */
 export interface IBudgetRepo extends IRepository<typeof budgets, IBudget> {
+  /**
+   * Inserts a budgetUsage row for every budget whose categories include the transaction's category.
+   *
+   * @param transaction - The newly created transaction to record.
+   */
   updateBudgetsByNewTransaction(transaction: ITransaction): Promise<void>;
+  /**
+   * Removes the budgetUsage row associated with the given transaction.
+   *
+   * @param transaction - The transaction whose usage entry should be deleted.
+   */
   revertBudgetsByTransaction(transaction: ITransaction): Promise<void>;
 }
 
+/** Repository contract for the monthlyBalances table, extending base CRUD with balance management. */
 export interface IMonthlyBalanceRepo extends IRepository<typeof monthlyBalances, IMonthlyBalance> {
+  /**
+   * Finds the monthly balance for the transaction's account on the given date's month.
+   *
+   * @param transaction - Used to match the accountId.
+   * @param date - The date whose year and month identify the balance record.
+   * @returns The monthly balance, or null if none exists.
+   */
   findMonthlyBalance(transaction: ITransaction, date: Date): Promise<IMonthlyBalance | null>;
+  /**
+   * Atomically updates closingBalance, totalIn, and totalOut for the transaction's account month.
+   *
+   * @param transaction - The transaction to apply or revert.
+   * @param shouldInvertValue - When true the transaction's impact is subtracted.
+   */
   updateMonthlyBalanceWithTransaction(transaction: ITransaction, shouldInvertValue: boolean): Promise<void>;
 }
 
+/** Repository contract for the users table, extending base CRUD with email lookup. */
 export interface IUserRepo extends IRepository<typeof users, IUser> {
+  /**
+   * Finds a user by their email address.
+   *
+   * @param email - The email address to search for.
+   * @returns The matching user, or null if not found.
+   */
   findByEmail(email: string): Promise<IUser | null>;
 }
 
+/** Repository contract for the accounts table using standard CRUD only. */
 export type IAccountRepo = IRepository<typeof accounts, IAccount>;
 
+/** Callback invoked when a controller catches an unhandled error. */
 export type ErrorHandler = (error: Error) => void;
 
+/**
+ * Optional route handler overrides passed to a router factory.
+ * Any provided handler replaces the default implementation for that route.
+ */
 export type RouteOverrides = {
   listContent?: (req: RequestWithUser, res: Response) => Promise<Response>;
   createContent?: (req: RequestWithUser, res: Response) => Promise<Response>;
@@ -390,10 +563,18 @@ export interface ICommonActions<K extends Content> {
   getContent: (id: number) => Promise<K | null>;
 }
 
+/**
+ * Aggregated manager actions passed to the budget page controller,
+ * covering the four content types that a budget view can interact with.
+ */
 export type ContentManagerActions = {
+  /** CRUD actions for budgets. */
   budgetActions: ICommonActions<IBudget>;
+  /** CRUD actions for categories. */
   categoryActions: ICommonActions<ICategory>;
+  /** CRUD actions for goals. */
   goalActions: ICommonActions<IGoal>;
+  /** CRUD actions for accounts. */
   accountActions: ICommonActions<IAccount>;
 };
 

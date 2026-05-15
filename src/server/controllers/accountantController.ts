@@ -61,6 +61,15 @@ export function AccountantController(
     getContent: AccountantManager.getTransaction,
   }, 'Transaction');
 
+  /**
+   * Handles POST requests to create a new transaction with optional goal allocations.
+   * Splits the `goals` array out of the request body before passing the remainder
+   * to the accountant manager.
+   *
+   * @param req - The request object containing the transaction payload and optional goals.
+   * @param res - The response object.
+   * @returns The created transaction.
+   */
   const createContent = async (req: RequestWithUser, res: Response): Promise<Response> => {
     try {
       checkVoidUser(req.user, 'Transaction', 'create');
@@ -79,6 +88,15 @@ export function AccountantController(
     }
   };
 
+  /**
+   * Handles PUT/PATCH requests to update an existing transaction with optional goal allocations.
+   * Splits the optional `goals` array out of the request body before passing the remainder
+   * to the accountant manager.
+   *
+   * @param req - The request object containing the transaction id and update payload.
+   * @param res - The response object.
+   * @returns The updated transaction.
+   */
   const updateContent = async (req: RequestWithUser, res: Response): Promise<Response> => {
     try {
       const { id: contentId } = req.params;
