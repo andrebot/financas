@@ -1,7 +1,10 @@
-import { pgTable, serial, text, integer, timestamp, primaryKey, numeric, pgEnum } from 'drizzle-orm/pg-core';
+import {
+  pgTable, serial, text, integer, timestamp, primaryKey, numeric, pgEnum,
+} from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { users } from './userModel';
 import { categories } from './categoryModel';
+import { transactions } from './transactionModel';
 import { timestampColumns } from './columHelpers';
 
 export const budgetTypes = pgEnum('budgetTypes', [
@@ -25,10 +28,12 @@ export const budgets = pgTable('budgets', {
 
 export const budgetUsage = pgTable('budgetUsage', {
   budgetId: integer().notNull().references(() => budgets.id),
+  transactionId: integer().notNull().references(() => transactions.id),
+  date: timestamp().notNull(),
   valueUsed: numeric({ precision: 14, scale: 2 }).notNull(),
   ...timestampColumns,
 }, (table) => ([
-  primaryKey({ columns: [table.budgetId, table.date] }),
+  primaryKey({ columns: [table.budgetId, table.transactionId] }),
 ]));
 
 export const budgetToCategories = pgTable('budgetToCategories', {
@@ -55,5 +60,16 @@ export const budgetToCategoriesRelations = relations(budgetToCategories, ({ one 
   category: one(categories, {
     fields: [budgetToCategories.categoryId],
     references: [categories.id],
+  }),
+}));
+
+export const budgetUsageRelations = relations(budgetUsage, ({ one }) => ({
+  budget: one(budgets, {
+    fields: [budgetUsage.budgetId],
+    references: [budgets.id],
+  }),
+  transaction: one(transactions, {
+    fields: [budgetUsage.transactionId],
+    references: [transactions.id],
   }),
 }));

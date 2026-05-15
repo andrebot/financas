@@ -1,7 +1,7 @@
 import { Express, Router } from 'express';
 import { API_PREFIX } from '../config/server';
 import { createLogger } from '../utils/logger';
-import transactionRouter from './transaction';
+import accountantRouter from './accountant';
 import userRouter from './authentication';
 import CommonController from '../controllers/commonController';
 import ContentManager from '../managers/contentManager';
@@ -22,8 +22,8 @@ const routes: { prefix: string; router: Router }[] = [
     router: userRouter,
   },
   {
-    prefix: 'transaction',
-    router: transactionRouter,
+    prefix: 'accountant',
+    router: accountantRouter,
   },
   {
     prefix: 'category',

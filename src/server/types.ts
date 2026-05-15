@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import {
   Request, Response, NextFunction,
 } from 'express';
-import { PgColumn, PgTable } from "drizzle-orm/pg-core";
+import { PgColumn, PgTable } from 'drizzle-orm/pg-core';
 import { InferSelectModel } from 'drizzle-orm';
 import { transactions, investmentTypes, transactionTypes } from './resources/models/transactionModel';
 import { categories } from './resources/models/categoryModel';
@@ -191,6 +191,11 @@ export type BulkGoalsUpdate = {
   amount: number;
 };
 
+export type ITransactionGoalEntry = {
+  goalId: number;
+  percentage: number;
+};
+
 export interface Table extends PgTable {
   id: PgColumn;
   userId?: PgColumn;
@@ -201,7 +206,7 @@ export interface IRepository<T extends Table, K> {
   findById(id: number): Promise<K | null>;
   save(entity: Partial<K>): Promise<K>;
   deleteById(id: number): Promise<K | null>;
-  listAll(userId?: number): Promise<K[]>;
+  listAll(): Promise<K[]>;
   update(id: number, entity: Partial<K>): Promise<K>;
 }
 
@@ -216,6 +221,7 @@ export interface ITransactionRepo extends IRepository<typeof transactions, ITran
   ): Promise<ITransaction[]>;
   findByMonthAndYear(year: number, month: number): Promise<ITransaction[]>;
   deleteTransactionFromGoals(transactionId: number): Promise<number>;
+  saveTransactionGoals(transactionId: number, goals: ITransactionGoalEntry[]): Promise<void>;
 }
 
 export interface ICategoryRepo extends IRepository<typeof categories, ICategory> {
@@ -226,6 +232,11 @@ export interface ICategoryRepo extends IRepository<typeof categories, ICategory>
 
 export interface IGoalRepo extends IRepository<typeof goals, IGoal> {
   updateGoalFromTransaction(transaction: ITransaction, shouldInvertValue?: boolean): Promise<void>;
+}
+
+export interface IBudgetRepo extends IRepository<typeof budgets, IBudget> {
+  updateBudgetsByNewTransaction(transaction: ITransaction): Promise<void>;
+  revertBudgetsByTransaction(transaction: ITransaction): Promise<void>;
 }
 
 export interface IMonthlyBalanceRepo extends IRepository<typeof monthlyBalances, IMonthlyBalance> {
@@ -250,16 +261,15 @@ export type RouteOverrides = {
 };
 
 export interface IAccountantManager {
-  createTransaction: (content: ITransaction) => Promise<ITransaction>;
-  deleteTransaction: (id: number, userId: number, isAdmin: boolean) => Promise<ITransaction | null>;
+  createTransaction: (content: ITransaction, goals?: ITransactionGoalEntry[]) => Promise<ITransaction>;
+  deleteTransaction: (id: number) => Promise<ITransaction | null>;
   updateTransaction: (
     id: number,
     payload: Partial<ITransaction>,
-    userId: number,
-    isAdmin: boolean,
+    goals: ITransactionGoalEntry[] | undefined,
   ) => Promise<ITransaction | null>;
-  getTransaction: (id: number, userId: number, isAdmin: boolean) => Promise<ITransaction | null>;
-  listTransactions: (userId: number) => Promise<ITransaction[]>;
+  getTransaction: (id: number) => Promise<ITransaction | null>;
+  listTransactions: () => Promise<ITransaction[]>;
   getTransactionTypes: () => { transactionTypes: string[]; investmentTypes: string[] };
 }
 

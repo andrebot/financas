@@ -1,0 +1,68 @@
+import {
+  and, eq, gte, lte, sql,
+} from 'drizzle-orm';
+import Repository from './repository';
+import { budgets, budgetToCategories, budgetUsage } from '../models/budgetModel';
+import { createLogger } from '../../utils/logger';
+import { getAutorizationDatabaseContext } from '../../utils/authorization';
+import { getDb } from '../../utils/transaction';
+import type { IBudget, ITransaction } from '../../types';
+
+const logger = createLogger('Repository:Budget');
+const budgetRepo = Repository<typeof budgets, IBudget>(budgets, 'Budget', logger);
+
+/**
+ * Inserts one budgetUsage row per matching budget for a new transaction.
+ * Uses INSERT...SELECT to find all budgets whose category and date range match
+ * the transaction, then inserts in a single query.
+ *
+ * @param transaction - The transaction to record budget usage for.
+ */
+async function updateBudgetsByNewTransaction(transaction: ITransaction): Promise<void> {
+  logger.info(`Updating all budgets affected by new transaction: ${transaction.id}`);
+
+  if (!transaction.categoryId) {
+    logger.info(`Transaction: ${transaction.id} has no category, skipping budget update`);
+    return;
+  }
+
+  const client = getDb();
+
+  await client
+    .insert(budgetUsage)
+    .select(client
+      .select({
+        budgetId: budgets.id,
+        transactionId: sql<number>`${transaction.id}`.as('transactionId'),
+        date: sql<Date>`${transaction.date}`.as('date'),
+        valueUsed: sql<string>`${transaction.value}`.as('valueUsed'),
+      })
+      .from(budgets)
+      .innerJoin(budgetToCategories, eq(budgetToCategories.budgetId, budgets.id))
+      .where(and(
+        eq(budgetToCategories.categoryId, transaction.categoryId),
+        lte(budgets.startDate, transaction.date),
+        gte(budgets.endDate, transaction.date),
+        getAutorizationDatabaseContext(budgets),
+      )))
+    .onConflictDoNothing();
+}
+
+/**
+ * Removes all budgetUsage rows associated with a transaction being deleted.
+ *
+ * @param transaction - The transaction whose budget usage rows should be removed.
+ */
+async function revertBudgetsByTransaction(transaction: ITransaction): Promise<void> {
+  logger.info(`Reverting budget usage for transaction: ${transaction.id}`);
+
+  await getDb()
+    .delete(budgetUsage)
+    .where(eq(budgetUsage.transactionId, transaction.id!));
+}
+
+export default {
+  ...budgetRepo,
+  updateBudgetsByNewTransaction,
+  revertBudgetsByTransaction,
+};

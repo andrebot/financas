@@ -1,21 +1,21 @@
-import Repository from './repository';
 import { eq, and, sql } from 'drizzle-orm';
+import Repository from './repository';
 import { getAutorizationDatabaseContext } from '../../utils/authorization';
 import { goals } from '../models/goalModel';
 import { transactionToGoals } from '../models/transactionModel';
 import { createLogger } from '../../utils/logger';
-import type { IMonthlyBalance, ITransaction } from '../../types';
-import { db } from '../../utils/databaseConnection';
+import type { IGoal, ITransaction } from '../../types';
+import { getDb } from '../../utils/transaction';
 
 const logger = createLogger('Repository:Goals');
-const goalRepo = Repository<typeof goals, IMonthlyBalance>(goals, 'Goals', logger);
+const goalRepo = Repository<typeof goals, IGoal>(goals, 'Goals', logger);
 
 async function updateGoalFromTransaction(transaction: ITransaction, shouldInvertValue: boolean = false): Promise<void> {
   logger.info(`Updating goal from transaction: ${transaction.id}`);
 
   const transactionValue = Number(transaction.value);
 
-  await db.update(goals)
+  await getDb().update(goals)
     .set({
       savedValue: sql`${goals.savedValue} ${shouldInvertValue ? '-' : '+'} ${transactionValue} * ${transactionToGoals.percentage}`,
     })
