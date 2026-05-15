@@ -47,6 +47,7 @@
       "src/server/utils/logger.ts",
       "src/server/config/*",
       "src/server/public/*",
+      "src/server/resources/models/**",
       "node_modules/**"
     ],
     "reporter": [

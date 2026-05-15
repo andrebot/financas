@@ -206,34 +206,34 @@ describe('misc Utilities', () => {
   describe('checkVoidInstance', () => {
     it('should throw an error if the instance is undefined', () => {
       try {
-        checkVoidInstance(undefined, 'test', 'test');
+        checkVoidInstance(undefined, 'test', 1);
       } catch (error) {
         (error as Error).should.be.an('error');
-        (error as Error).message.should.contain('test not found with id test');
+        (error as Error).message.should.contain('test not found with id 1');
       }
     });
 
     it('should throw an error if the instance is null', () => {
       try {
-        checkVoidInstance(null, 'test', 'test');
+        checkVoidInstance(null, 'test', 1);
       } catch (error) {
         (error as Error).should.be.an('error');
-        (error as Error).message.should.contain('test not found with id test');
+        (error as Error).message.should.contain('test not found with id 1');
       }
     });
 
     it('should throw an error if the instance is empty', () => {
       try {
-        checkVoidInstance({}, 'test', 'test');
+        checkVoidInstance({}, 'test', 1);
       } catch (error) {
         (error as Error).should.be.an('error');
-        (error as Error).message.should.contain('test not found with id test');
+        (error as Error).message.should.contain('test not found with id 1');
       }
     });
 
     it('should not throw an error if the instance is not empty', () => {
       try {
-        checkVoidInstance({ a: 1 }, 'test', 'test');
+        checkVoidInstance({ a: 1 }, 'test', 1);
       } catch (error) {
         should().fail();
       }
@@ -261,7 +261,7 @@ describe('misc Utilities', () => {
 
     it('should not throw an error if the user is not empty', () => {
       try {
-        checkVoidUser({ id: '1' }, 'test', 'test');
+        checkVoidUser({ id: 1 }, 'test', 'test');
       } catch (error) {
         should().fail();
       }

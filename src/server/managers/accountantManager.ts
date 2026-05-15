@@ -176,7 +176,7 @@ async function addTransactionToOtherModels(
    */
 async function createTransaction(
   content: ITransaction,
-  goals: ITransactionGoalEntry[] = [],
+  goals: ITransactionGoalEntry[],
   transactionRepo: ITransactionRepo,
   monthlyBalanceRepo: IMonthlyBalanceRepo,
   goalRepo: IGoalRepo,

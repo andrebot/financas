@@ -59,16 +59,24 @@ describe('responseHandlers', () => {
   });
 
   describe('isValidObjectId', () => {
-    it('should return true if the string is a valid ObjectId', () => {
-      const result = isValidObjectId('5f0c0d9b0b4e3f001f2e8b2e');
-
-      result.should.be.true;
+    it('should return true for a positive integer', () => {
+      isValidObjectId(1).should.be.true;
     });
 
-    it('should return false if the string is not a valid ObjectId', () => {
-      const result = isValidObjectId('test');
+    it('should return true for a large positive integer', () => {
+      isValidObjectId(999999).should.be.true;
+    });
 
-      result.should.be.false;
+    it('should return false for zero', () => {
+      isValidObjectId(0).should.be.false;
+    });
+
+    it('should return false for a negative integer', () => {
+      isValidObjectId(-1).should.be.false;
+    });
+
+    it('should return false for a float', () => {
+      isValidObjectId(1.5).should.be.false;
     });
   });
 });

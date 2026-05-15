@@ -14,7 +14,7 @@ import type { Content, ICommonController, ICommonActions } from '../types';
  * @returns The common controller.
  */
 export default function CommonController<T extends Content>(
-  manager: ICommonActions<T>,
+  manager: Partial<ICommonActions<T>>,
   controllerName: string,
   errorHandler: (error: Error, res: Response) => Response = handleError,
 ): ICommonController<T> {
@@ -26,7 +26,7 @@ export default function CommonController<T extends Content>(
         checkVoidUser(req.user, controllerName, 'create');
         checkVoidPayload(req.body, controllerName, 'create');
 
-        const content = await manager.createContent(req.body);
+        const content = await manager.createContent!(req.body);
 
         logger.info('Content created');
 
@@ -37,10 +37,7 @@ export default function CommonController<T extends Content>(
         return errorHandler(error as Error, res);
       }
     },
-    updateContent: async (
-      req: RequestWithUser,
-      res: Response,
-    ): Promise<Response<T>> => {
+    updateContent: async (req: RequestWithUser, res: Response): Promise<Response<T>> => {
       try {
         const { id: contentId } = req.params;
         const { user } = req;
@@ -49,10 +46,7 @@ export default function CommonController<T extends Content>(
         checkVoidUser(user, controllerName, 'update');
         checkVoidPayload(updateProperties, controllerName, 'update');
 
-        const content = await manager.updateContent(
-          Number(contentId),
-          updateProperties,
-        );
+        const content = await manager.updateContent!(Number(contentId), updateProperties);
 
         logger.info('Content updated');
 
@@ -63,10 +57,7 @@ export default function CommonController<T extends Content>(
         return errorHandler(error as Error, res);
       }
     },
-    deleteContent: async (
-      req: RequestWithUser,
-      res: Response,
-    ): Promise<Response<T>> => {
+    deleteContent: async (req: RequestWithUser, res: Response): Promise<Response<T>> => {
       try {
         const { id: contentId } = req.params;
         const { user } = req;
@@ -77,9 +68,7 @@ export default function CommonController<T extends Content>(
           throw new Error('Content id is required for deleting action');
         }
 
-        const content = await manager.deleteContent(
-          Number(contentId),
-        );
+        const content = await manager.deleteContent!(Number(contentId));
 
         logger.info('Content deleted');
 
@@ -90,14 +79,11 @@ export default function CommonController<T extends Content>(
         return errorHandler(error as Error, res);
       }
     },
-    listContent: async (
-      req: RequestWithUser,
-      res: Response,
-    ): Promise<Response<T>> => {
+    listContent: async (req: RequestWithUser, res: Response): Promise<Response<T>> => {
       try {
         checkVoidUser(req.user, controllerName, 'list');
 
-        const content = await manager.listContent();
+        const content = await manager.listContent!();
 
         logger.info(`Listed ${content.length} content(s) for user: ${req.user?.id}`);
 
@@ -108,10 +94,7 @@ export default function CommonController<T extends Content>(
         return errorHandler(error as Error, res);
       }
     },
-    getContent: async (
-      req: RequestWithUser,
-      res: Response,
-    ): Promise<Response<T>> => {
+    getContent: async (req: RequestWithUser, res: Response): Promise<Response<T>> => {
       try {
         const { id: contentId } = req.params;
         const { user } = req;
@@ -122,7 +105,7 @@ export default function CommonController<T extends Content>(
           throw new Error('Content id is required for getting action');
         }
 
-        const content = await manager.getContent(Number(contentId));
+        const content = await manager.getContent!(Number(contentId));
 
         logger.info(`Content retrieved: ${contentId}`);
 

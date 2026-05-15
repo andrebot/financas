@@ -54,8 +54,6 @@ export function AccountantController(
   errorHandler = handleError,
 ) {
   const commonTransactionController = CommonController<ITransaction>({
-    createContent: (content) => AccountantManager.createTransaction(content),
-    updateContent: (id, payload) => AccountantManager.updateTransaction(id, payload, undefined),
     deleteContent: AccountantManager.deleteTransaction,
     listContent: AccountantManager.listTransactions,
     getContent: AccountantManager.getTransaction,

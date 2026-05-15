@@ -4,7 +4,7 @@ import proxyquire from 'proxyquire';
 
 const accessTokenValidationStub = sinon.stub().callsFake(() => (_req: any, _res: any, next: any) => next());
 
-const transactionControllerStub = {
+const accountantControllerStub = {
   listContent: sinon.stub(),
   createContent: sinon.stub(),
   getContent: sinon.stub(),
@@ -13,16 +13,16 @@ const transactionControllerStub = {
   getTransactionTypes: sinon.stub(),
 };
 
-const transactionRouter = proxyquire('../../../src/server/routes/transaction', {
-  '../controllers/transactionController': {
-    default: transactionControllerStub,
+const accountantRouter = proxyquire('../../../src/server/routes/accountant', {
+  '../controllers/accountantController': {
+    default: accountantControllerStub,
   },
   '../utils/authorization': {
     default: accessTokenValidationStub,
   },
 }).default;
 
-describe('Transaction routes', () => {
+describe('Accountant routes', () => {
   const idPattern = '/:id([0-9a-fA-F]{24})';
 
   beforeEach(() => {
@@ -30,17 +30,17 @@ describe('Transaction routes', () => {
   });
 
   it('should return an Express Router', () => {
-    transactionRouter.should.have.property('stack');
-    transactionRouter.stack.should.be.an('array');
-    chai.expect(transactionRouter).to.be.a('function');
+    accountantRouter.should.have.property('stack');
+    accountantRouter.stack.should.be.an('array');
+    chai.expect(accountantRouter).to.be.a('function');
   });
 
   it('should register 6 routes (5 CRUD from routeFactory + GET /types)', () => {
-    transactionRouter.stack.should.have.lengthOf(6);
+    accountantRouter.stack.should.have.lengthOf(6);
   });
 
   it('should register GET /types for getTransactionTypes with auth middleware', () => {
-    const typesRoute = transactionRouter.stack.find(
+    const typesRoute = accountantRouter.stack.find(
       (layer: any) => layer.route?.path === '/types' && layer.route?.methods?.get,
     );
     chai.expect(typesRoute).to.exist;
@@ -48,19 +48,19 @@ describe('Transaction routes', () => {
   });
 
   it('should register standard CRUD routes', () => {
-    const hasListRoute = transactionRouter.stack.some(
+    const hasListRoute = accountantRouter.stack.some(
       (layer: any) => layer.route?.path === '/' && layer.route?.methods?.get,
     );
-    const hasCreateRoute = transactionRouter.stack.some(
+    const hasCreateRoute = accountantRouter.stack.some(
       (layer: any) => layer.route?.path === '/' && layer.route?.methods?.post,
     );
-    const hasGetByIdRoute = transactionRouter.stack.some(
+    const hasGetByIdRoute = accountantRouter.stack.some(
       (layer: any) => layer.route?.path === idPattern && layer.route?.methods?.get,
     );
-    const hasUpdateRoute = transactionRouter.stack.some(
+    const hasUpdateRoute = accountantRouter.stack.some(
       (layer: any) => layer.route?.path === idPattern && layer.route?.methods?.put,
     );
-    const hasDeleteRoute = transactionRouter.stack.some(
+    const hasDeleteRoute = accountantRouter.stack.some(
       (layer: any) => layer.route?.path === idPattern && layer.route?.methods?.delete,
     );
 
@@ -70,5 +70,4 @@ describe('Transaction routes', () => {
     hasUpdateRoute.should.be.true;
     hasDeleteRoute.should.be.true;
   });
-
 });

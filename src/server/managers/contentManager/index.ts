@@ -5,7 +5,7 @@ import CategoryRepo from '../../resources/repositories/categoryRepo';
 import GoalRepo from '../../resources/repositories/goalRepo';
 import TransactionRepo from '../../resources/repositories/transactionRepo';
 import { createLogger } from '../../utils/logger';
-import { checkVoidInstance, checkUserAccess } from '../../utils/misc';
+import { checkVoidInstance } from '../../utils/misc';
 import type {
   IAccountRepo,
   ICategoryRepo,

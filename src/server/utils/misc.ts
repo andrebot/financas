@@ -1,4 +1,3 @@
-import { Logger } from 'winston';
 import { UserPayload } from '../types';
 
 /**
@@ -129,35 +128,4 @@ export function calculateLastMonth(year: number, month: number): { year: number,
    */
 export function parseDate(date: Date | string): Date {
   return date instanceof Date ? date : new Date(date);
-}
-
-/**
- * Checks if the user has access to the content.
- *
- * @throws {Error} - If the user is not allowed to access the content.
- *
- * @param contentOwnerId - The id of the content owner.
- * @param userId - The id of the user.
- * @param isAdmin - Whether the user is an admin.
- * @param modelName - The name of the model.
- * @param contentId - The id of the content.
- * @param action - The action to check.
- * @param logger - The logger to use.
- */
-export function checkUserAccess(
-  contentOwnerId: number,
-  userId: number,
-  isAdmin: boolean,
-  modelName: string,
-  contentId: number,
-  action: string,
-  logger: Logger,
-): void {
-  logger.info(`Checking user access for ${action} ${modelName} with id ${contentId} for user ${userId}`);
-
-  if (!isAdmin && contentOwnerId !== userId) {
-    throw new Error(`User ${userId} is not allowed to ${action} ${modelName} with id ${contentId}`);
-  }
-
-  logger.info(`User ${userId} is allowed to ${action} ${modelName} with id ${contentId}`);
 }

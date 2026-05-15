@@ -4,6 +4,10 @@ import * as databaseConnection from '../../../../src/server/utils/databaseConnec
 import Repository from '../../../../src/server/resources/repositories/repository';
 import { categories } from '../../../../src/server/resources/models/categoryModel';
 import { ICategory } from '../../../../src/server/types';
+import { requestContext } from '../../../../src/server/utils/authorization';
+
+const runWithContext = (fn: () => Promise<unknown>) =>
+  requestContext.run({ userId: 1, isAdmin: true }, fn);
 
 describe('Repository', () => {
   const dbHolder = databaseConnection as unknown as {
@@ -46,11 +50,11 @@ describe('Repository', () => {
     it('should return the object when an object is found', async () => {
       const selectStub = dbHolder.db.select as SinonStub;
 
-      const result = await repository.findById(1);
+      const result = await runWithContext(() => repository.findById(1));
 
       selectStub.should.have.been.calledOnce;
       should().exist(result);
-      result!.should.deep.equal(mockCategoryRow);
+      (result as ICategory)!.should.deep.equal(mockCategoryRow);
     });
 
     it('should return null when no object matches id', async () => {
@@ -60,7 +64,7 @@ describe('Repository', () => {
       const selectStub = sinon.stub().returns({ from: fromStub });
       dbHolder.db = { select: selectStub };
 
-      const result = await repository.findById(999);
+      const result = await runWithContext(() => repository.findById(999));
 
       should().not.exist(result);
     });
@@ -131,7 +135,7 @@ describe('Repository', () => {
       const whereStub = sinon.stub().returns({ returning: returningStub });
       dbHolder.db = { delete: sinon.stub().returns({ where: whereStub }) };
 
-      const result = await repository.deleteById(mockCategoryRow.id);
+      const result = await runWithContext(() => repository.deleteById(mockCategoryRow.id));
 
       dbHolder.db.delete!.should.have.been.calledOnceWithExactly(categories);
       returningStub.should.have.been.calledOnce;
@@ -143,7 +147,7 @@ describe('Repository', () => {
       const whereStub = sinon.stub().returns({ returning: returningStub });
       dbHolder.db = { delete: sinon.stub().returns({ where: whereStub }) };
 
-      const result = await repository.deleteById(1);
+      const result = await runWithContext(() => repository.deleteById(1));
 
       should().not.exist(result);
     });
@@ -160,7 +164,7 @@ describe('Repository', () => {
         update: sinon.stub().returns({ set: setStub }),
       };
 
-      const result = await repository.update(1, { name: 'renamed' } as never);
+      const result = await runWithContext(() => repository.update(1, { name: 'renamed' } as never));
 
       dbHolder.db.update!.should.have.been.calledOnceWithExactly(categories);
       setStub.should.have.been.calledOnceWith({ name: 'renamed' });
@@ -175,37 +179,25 @@ describe('Repository', () => {
         update: sinon.stub().returns({ set: sinon.stub().returns({ where: whereStub }) }),
       };
 
-      const result = await repository.update(1, { name: 'nope' } as never);
+      const result = await runWithContext(() => repository.update(1, { name: 'nope' } as never));
 
       should().not.exist(result);
     });
   });
 
   describe('listAll', () => {
-    it('should return all objects when no user filter is passed', async () => {
-      const fromStub = sinon.stub().resolves([mockCategoryRow]);
-      const selectStub = sinon.stub().returns({ from: fromStub });
-      dbHolder.db = { select: selectStub };
-
-      const rows = await repository.listAll();
-
-      selectStub.should.have.been.calledOnce;
-      fromStub.should.have.been.calledOnceWithExactly(categories);
-      rows.should.deep.equal([mockCategoryRow]);
-    });
-
-    it('should filter by userId when provided', async () => {
+    it('should return all records scoped to the authorization context', async () => {
       const whereStub = sinon.stub().resolves([mockCategoryRow]);
       const fromStub = sinon.stub().returns({ where: whereStub });
       const selectStub = sinon.stub().returns({ from: fromStub });
       dbHolder.db = { select: selectStub };
 
-      const rows = await repository.listAll(10);
+      const rows = await runWithContext(() => repository.listAll());
 
+      selectStub.should.have.been.calledOnce;
       fromStub.should.have.been.calledOnceWithExactly(categories);
       whereStub.should.have.been.calledOnce;
-      chai.assert.exists(whereStub.firstCall.args[0]);
-      rows.should.deep.equal([mockCategoryRow]);
+      (rows as ICategory[]).should.deep.equal([mockCategoryRow]);
     });
   });
 });

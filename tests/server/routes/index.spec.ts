@@ -19,7 +19,7 @@ const contentManagerStub = {
 const commonControllerStub = sinon.stub().returns({});
 const routeFactoryStub = sinon.stub().returns({});
 const userRouteStub = {};
-const transactionRouteStub = {};
+const accountantRouteStub = {};
 
 const setRoutes = proxyquire('../../../src/server/routes/index', {
   '../utils/logger': {
@@ -37,8 +37,8 @@ const setRoutes = proxyquire('../../../src/server/routes/index', {
   './authentication': {
     default: userRouteStub,
   },
-  './transaction': {
-    default: transactionRouteStub,
+  './accountant': {
+    default: accountantRouteStub,
   },
 }).default;
 
@@ -63,7 +63,7 @@ describe('setRoutes', () => {
 
     const paths = appUseStub.getCalls().map((call) => call.args[0]);
     paths.should.include(`${API_PREFIX}/user`);
-    paths.should.include(`${API_PREFIX}/transaction`);
+    paths.should.include(`${API_PREFIX}/accountant`);
     paths.should.include(`${API_PREFIX}/category`);
     paths.should.include(`${API_PREFIX}/account`);
     paths.should.include(`${API_PREFIX}/goal`);
@@ -85,7 +85,7 @@ describe('setRoutes', () => {
 
     loggerStub.info.should.have.callCount(6);
     loggerStub.info.should.have.been.calledWith(`Route added: ${API_PREFIX}/user`);
-    loggerStub.info.should.have.been.calledWith(`Route added: ${API_PREFIX}/transaction`);
+    loggerStub.info.should.have.been.calledWith(`Route added: ${API_PREFIX}/accountant`);
     loggerStub.info.should.have.been.calledWith(`Route added: ${API_PREFIX}/category`);
     loggerStub.info.should.have.been.calledWith(`Route added: ${API_PREFIX}/account`);
     loggerStub.info.should.have.been.calledWith(`Route added: ${API_PREFIX}/goal`);

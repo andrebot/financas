@@ -1,13 +1,22 @@
 import chai from 'chai';
 import sinon, { SinonStub } from 'sinon';
+import sinonChai from 'sinon-chai';
 import transactionRepo from '../../../../src/server/resources/repositories/transactionRepo';
 import * as databaseConnection from '../../../../src/server/utils/databaseConnection';
 import { transactions, transactionToGoals } from '../../../../src/server/resources/models/transactionModel';
+import type { ITransactionGoalEntry } from '../../../../src/server/types';
+import { requestContext } from '../../../../src/server/utils/authorization';
+
+const runWithContext = (fn: () => Promise<unknown>) =>
+  requestContext.run({ userId: 1, isAdmin: true }, fn);
+
+chai.use(sinonChai);
 
 type DrizzleDbStub = {
   select: SinonStub;
   update: SinonStub;
   delete: SinonStub;
+  insert: SinonStub;
 };
 
 describe('TransactionRepo', () => {
@@ -16,12 +25,15 @@ describe('TransactionRepo', () => {
   let originalDb: unknown;
   let selectStub: SinonStub;
   let selectFromStub: SinonStub;
+  let selectInnerJoinStub: SinonStub;
   let selectWhereStub: SinonStub;
   let updateStub: SinonStub;
   let updateSetStub: SinonStub;
   let updateWhereStub: SinonStub;
   let deleteStub: SinonStub;
   let deleteWhereStub: SinonStub;
+  let insertStub: SinonStub;
+  let insertValuesStub: SinonStub;
 
   before(() => {
     originalDb = dbHolder.db;
@@ -29,7 +41,9 @@ describe('TransactionRepo', () => {
 
   beforeEach(() => {
     selectWhereStub = sinon.stub().resolves([]);
-    selectFromStub = sinon.stub().returns({ where: selectWhereStub });
+    selectInnerJoinStub = sinon.stub();
+    selectInnerJoinStub.returns({ innerJoin: selectInnerJoinStub, where: selectWhereStub });
+    selectFromStub = sinon.stub().returns({ where: selectWhereStub, innerJoin: selectInnerJoinStub });
     selectStub = sinon.stub().returns({ from: selectFromStub });
 
     updateWhereStub = sinon.stub().resolves({ rowCount: 0 });
@@ -39,10 +53,14 @@ describe('TransactionRepo', () => {
     deleteWhereStub = sinon.stub().resolves({ rowCount: 0 });
     deleteStub = sinon.stub().returns({ where: deleteWhereStub });
 
+    insertValuesStub = sinon.stub().resolves();
+    insertStub = sinon.stub().returns({ values: insertValuesStub });
+
     dbHolder.db = {
       select: selectStub,
       update: updateStub,
       delete: deleteStub,
+      insert: insertStub,
     };
   });
 
@@ -59,12 +77,12 @@ describe('TransactionRepo', () => {
 
       selectWhereStub.resolves([{ id: 99, userId }]);
 
-      const rows = await transactionRepo.findByCategoryWithDateRange(
+      const rows = await runWithContext(() => transactionRepo.findByCategoryWithDateRange(
         userId,
         categories,
         startDate,
         endDate,
-      );
+      )) as Awaited<ReturnType<typeof transactionRepo.findByCategoryWithDateRange>>;
 
       selectStub.should.have.been.calledOnce;
       selectFromStub.should.have.been.calledOnceWithExactly(transactions);
@@ -79,12 +97,12 @@ describe('TransactionRepo', () => {
     it('should return empty array when no transactions match', async () => {
       selectWhereStub.resolves([]);
 
-      const rows = await transactionRepo.findByCategoryWithDateRange(
+      const rows = await runWithContext(() => transactionRepo.findByCategoryWithDateRange(
         100,
         [1],
         new Date('2021-01-01'),
         new Date('2021-01-31'),
-      );
+      )) as Awaited<ReturnType<typeof transactionRepo.findByCategoryWithDateRange>>;
 
       rows.should.be.an('array').that.is.empty;
     });
@@ -95,7 +113,7 @@ describe('TransactionRepo', () => {
       const categoryIds = [1, 2];
       updateWhereStub.resolves({ rowCount: 2 });
 
-      const result = await transactionRepo.removeCategoriesFromTransactions(categoryIds);
+      const result = await runWithContext(() => transactionRepo.removeCategoriesFromTransactions(categoryIds)) as number;
 
       updateStub.should.have.been.calledOnceWithExactly(transactions);
       updateSetStub.should.have.been.calledOnceWithExactly({ categoryId: null });
@@ -107,18 +125,64 @@ describe('TransactionRepo', () => {
     it('should return 0 when no rowCount is reported', async () => {
       updateWhereStub.resolves({ rowCount: 0 });
 
-      const result = await transactionRepo.removeCategoriesFromTransactions([999]);
+      const result = await runWithContext(() => transactionRepo.removeCategoriesFromTransactions([999])) as number;
 
       result.should.equal(0);
     });
   });
 
   describe('deleteGoalFromTransactions', () => {
-    it('should delete rows from transactionToGoals', async () => {
+    it('should select from transactionToGoals with inner joins and return row count', async () => {
       const goalId = 55;
+      selectWhereStub.resolves([{ goalId: 55 }, { goalId: 55 }]);
+
+      const result = await runWithContext(() => transactionRepo.deleteGoalFromTransactions(goalId)) as number;
+
+      selectStub.should.have.been.calledOnce;
+      selectFromStub.should.have.been.calledOnceWithExactly(transactionToGoals);
+      selectInnerJoinStub.should.have.been.called;
+      selectWhereStub.should.have.been.calledOnce;
+      result.should.equal(2);
+    });
+
+    it('should return 0 when no rows are found', async () => {
+      selectWhereStub.resolves([]);
+
+      const result = await runWithContext(() => transactionRepo.deleteGoalFromTransactions(777)) as number;
+
+      result.should.equal(0);
+    });
+  });
+
+  describe('findByMonthAndYear', () => {
+    it('should query transactions for the given month and year', async () => {
+      const expected = [{ id: 1 }, { id: 2 }];
+      selectWhereStub.resolves(expected);
+
+      const rows = await transactionRepo.findByMonthAndYear(2024, 3);
+
+      selectStub.should.have.been.calledOnce;
+      selectFromStub.should.have.been.calledOnceWithExactly(transactions);
+      selectWhereStub.should.have.been.calledOnce;
+      chai.assert.exists(selectWhereStub.firstCall.args[0]);
+      rows.should.deep.equal(expected);
+    });
+
+    it('should return empty array when no transactions are found', async () => {
+      selectWhereStub.resolves([]);
+
+      const rows = await transactionRepo.findByMonthAndYear(2024, 1);
+
+      rows.should.be.an('array').that.is.empty;
+    });
+  });
+
+  describe('deleteTransactionFromGoals', () => {
+    it('should delete goal junction rows for the given transaction', async () => {
+      const transactionId = 42;
       deleteWhereStub.resolves({ rowCount: 3 });
 
-      const result = await transactionRepo.deleteGoalFromTransactions(goalId);
+      const result = await transactionRepo.deleteTransactionFromGoals(transactionId);
 
       deleteStub.should.have.been.calledOnceWithExactly(transactionToGoals);
       deleteWhereStub.should.have.been.calledOnce;
@@ -126,12 +190,37 @@ describe('TransactionRepo', () => {
       result.should.equal(3);
     });
 
-    it('should return 0 when no rows are deleted', async () => {
+    it('should return 0 when rowCount is null', async () => {
       deleteWhereStub.resolves({ rowCount: null });
 
-      const result = await transactionRepo.deleteGoalFromTransactions(777);
+      const result = await transactionRepo.deleteTransactionFromGoals(99);
 
       result.should.equal(0);
+    });
+  });
+
+  describe('saveTransactionGoals', () => {
+    it('should insert goal entries for the given transaction', async () => {
+      const transactionId = 10;
+      const goals: ITransactionGoalEntry[] = [
+        { goalId: 1, percentage: 0.5 },
+        { goalId: 2, percentage: 0.5 },
+      ];
+
+      await transactionRepo.saveTransactionGoals(transactionId, goals);
+
+      insertStub.should.have.been.calledOnceWithExactly(transactionToGoals);
+      insertValuesStub.should.have.been.calledOnce;
+      const insertedRows = insertValuesStub.firstCall.args[0];
+      insertedRows.should.have.lengthOf(2);
+      insertedRows[0].should.deep.include({ transactionId: 10, goalId: 1 });
+      insertedRows[1].should.deep.include({ transactionId: 10, goalId: 2 });
+    });
+
+    it('should not insert when goals list is empty', async () => {
+      await transactionRepo.saveTransactionGoals(10, []);
+
+      insertStub.should.not.have.been.called;
     });
   });
 });
