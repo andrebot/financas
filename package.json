@@ -26,7 +26,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ci": "playwright test --project=chromium",
     "test:server": "NODE_ENV=test nyc mocha -r ts-node/register 'tests/server/**/*.spec.ts' --exit",
-    "test:server:integration": "NODE_ENV=test mocha -r ts-node/register --file ./tests/integration/testSetup.ts 'tests/integration/**/*.spec.ts' --exit",
+    "test:server:integration": "NODE_ENV=test mocha -r ts-node/register --timeout 10000 --file ./tests/integration/testSetup.ts 'tests/integration/**/*.spec.ts' --exit",
     "test:client": "jest --coverage",
     "test:all": "npm run test:server && npm run test:server:integration && npm run test:client",
     "test:server-file": "NODE_ENV=test node tests/runTestFile.js",

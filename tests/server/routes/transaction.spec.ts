@@ -23,7 +23,7 @@ const accountantRouter = proxyquire('../../../src/server/routes/accountant', {
 }).default;
 
 describe('Accountant routes', () => {
-  const idPattern = '/:id([0-9a-fA-F]{24})';
+  const idPattern = '/:id([0-9]+)';
 
   beforeEach(() => {
     accessTokenValidationStub.resetHistory();

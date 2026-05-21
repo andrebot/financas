@@ -9,7 +9,7 @@ export let db: ReturnType<typeof drizzle>;
 let pool: Pool;
 
 /**
- * Connects to a MongoDB database
+ * Connects to a PostgreSQL database through Drizzle.
  *
  * @returns A promise that resolves when the connection is successful
  */
@@ -26,7 +26,7 @@ function connectToDatabase(): void {
 }
 
 /**
- * Disconnects from the MongoDB database
+ * Disconnects from the PostgreSQL database.
  *
  * @returns A promise that resolves when the disconnection is successful
  */

@@ -1,6 +1,6 @@
 import sinon from 'sinon';
 import { Response } from 'express';
-import { handleError, isValidObjectId } from '../../../src/server/utils/responseHandlers';
+import { handleError, isValidSqlId } from '../../../src/server/utils/responseHandlers';
 
 describe('responseHandlers', () => {
   describe('handleError', () => {
@@ -58,25 +58,25 @@ describe('responseHandlers', () => {
     });
   });
 
-  describe('isValidObjectId', () => {
+  describe('isValidSqlId', () => {
     it('should return true for a positive integer', () => {
-      isValidObjectId(1).should.be.true;
+      isValidSqlId(1).should.be.true;
     });
 
     it('should return true for a large positive integer', () => {
-      isValidObjectId(999999).should.be.true;
+      isValidSqlId(999999).should.be.true;
     });
 
     it('should return false for zero', () => {
-      isValidObjectId(0).should.be.false;
+      isValidSqlId(0).should.be.false;
     });
 
     it('should return false for a negative integer', () => {
-      isValidObjectId(-1).should.be.false;
+      isValidSqlId(-1).should.be.false;
     });
 
     it('should return false for a float', () => {
-      isValidObjectId(1.5).should.be.false;
+      isValidSqlId(1.5).should.be.false;
     });
   });
 });

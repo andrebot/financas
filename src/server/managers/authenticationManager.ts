@@ -96,6 +96,12 @@ export async function createUser(
   role: 'admin' | 'user' = 'user',
 ): Promise<Omit<IUser, 'password'>> {
   if (regExpPassword.test(password)) {
+    const existingUser = await UserRepo.findByEmail(email);
+
+    if (existingUser) {
+      throw new Error(`duplicate key: user email already exists: ${email}`);
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _, ...newUser } = await UserRepo.save({
       email,
@@ -394,7 +400,7 @@ export async function resetPassword(email: string): Promise<boolean> {
     logger.info(`Resetting password for user: ${email}`);
 
     user.password = bcrypt.hashSync(newPassword, bcrypt.genSaltSync(WORK_FACTOR));
-    await UserRepo.update(user.id!, user);
+    await UserRepo.updatePasswordById(user.id!, user.password);
 
     sendNotification(email, `Your new password is: ${newPassword}`);
 

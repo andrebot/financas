@@ -41,6 +41,7 @@ const UserRepo = {
   deleteById: sinon.stub(),
   save: sinon.stub(),
   update: sinon.stub(),
+  updatePasswordById: sinon.stub(),
   listAll: sinon.stub(),
   findByEmail: sinon.stub(),
 }
@@ -76,6 +77,7 @@ describe('AuthenticationManager', function () {
     UserRepo.save.reset();
     UserRepo.findById.reset();
     UserRepo.update.reset();
+    UserRepo.updatePasswordById.reset();
     UserRepo.listAll.reset();
     UserRepo.findByEmail.reset();
     UserRepo.deleteById.reset();
@@ -536,14 +538,14 @@ describe('AuthenticationManager', function () {
         password: 'oldPassword',
       };
       UserRepo.findByEmail.resolves(mockUser);
-      UserRepo.update.resolves(mockUser);
+      UserRepo.updatePasswordById.resolves(mockUser);
 
       const result = await resetPassword(mockUser.email);
 
       should().exist(result);
       result.should.be.true;
       UserRepo.findByEmail.should.have.been.calledOnce;
-      UserRepo.update.should.have.been.calledOnce;
+      UserRepo.updatePasswordById.should.have.been.calledOnce;
       sendNotificationStub.should.have.been.calledOnce;
       sendNotificationStub.should.have.been.calledWith(mockUser.email, sinon.match.string);
     });

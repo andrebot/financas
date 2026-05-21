@@ -13,7 +13,7 @@ import {
   register,
   getUser,
 } from '../managers/authenticationManager';
-import { handleError, isValidObjectId } from '../utils/responseHandlers';
+import { handleError, isValidSqlId } from '../utils/responseHandlers';
 import { REFRESH_TOKEN_EXPIRATION_COOKIE, TOKEN_HTTPS_ONLY, REFRESH_TOKEN_COOKIE_NAME } from '../config/auth';
 // import { API_PREFIX } from '../config/server';
 import type { RequestWithUser, UserPayload } from '../types';
@@ -37,7 +37,7 @@ function isDeleteActionValid(req: RequestWithUser, res: Response, userId: number
     return false;
   }
 
-  if (!userId || !isValidObjectId(userId)) {
+  if (!userId || !isValidSqlId(userId)) {
     handleError(new Error('Invalid id'), res, 400);
 
     return false;

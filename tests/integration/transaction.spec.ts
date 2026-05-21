@@ -121,7 +121,7 @@ describe('Transactions', () => {
         value: '50.00',
         userId: adminUser.id,
         goals: [{
-          goal: goal1.id,
+          goalId: goal1.id,
           percentage: '0.50',
         }],
       };

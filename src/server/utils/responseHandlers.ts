@@ -27,6 +27,6 @@ export function handleError(error: Error, res: Response, status = 500): Response
  * @param id - The value to validate.
  * @returns True if the value is a positive integer, false otherwise.
  */
-export function isValidObjectId(id: number): boolean {
+export function isValidSqlId(id: number): boolean {
   return Number.isInteger(id) && id > 0;
 }

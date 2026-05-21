@@ -18,14 +18,18 @@ const goalRepo = Repository<typeof goals, IGoal>(goals, 'Goals', logger);
  * @param transaction - The transaction whose linked goals should be updated.
  * @param shouldInvertValue - Whether to subtract instead of add the contribution.
  */
-async function updateGoalFromTransaction(transaction: ITransaction, shouldInvertValue: boolean = false): Promise<void> {
+async function updateGoalFromTransaction(
+  transaction: ITransaction,
+  shouldInvertValue: boolean = false,
+): Promise<void> {
   logger.info(`Updating goal from transaction: ${transaction.id}`);
 
   const transactionValue = Number(transaction.value);
+  const signedTransactionValue = shouldInvertValue ? -transactionValue : transactionValue;
 
   await getDb().update(goals)
     .set({
-      savedValue: sql`${goals.savedValue} ${shouldInvertValue ? '-' : '+'} ${transactionValue} * ${transactionToGoals.percentage}`,
+      savedValue: sql`${goals.savedValue} + (${signedTransactionValue} * ${transactionToGoals.percentage})`,
     })
     .from(transactionToGoals)
     .where(and(
