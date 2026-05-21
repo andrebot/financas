@@ -127,6 +127,30 @@ describe('Repository', () => {
         (error as Error).message.should.contain('Test error');
       }
     });
+
+    it('should pass through non-object values without date coercion', async () => {
+      const returningStub = sinon.stub().resolves([null]);
+      const valuesStub = sinon.stub().returns({ returning: returningStub });
+      dbHolder.db = { insert: sinon.stub().returns({ values: valuesStub }) };
+
+      const result = await repository.save(null as never);
+
+      valuesStub.should.have.been.calledOnceWithExactly(null);
+      should().not.exist(result);
+    });
+
+    it('should convert ISO date strings before inserting', async () => {
+      const returningStub = sinon.stub().resolves([mockCategoryRow]);
+      const valuesStub = sinon.stub().returns({ returning: returningStub });
+      const insertStub = sinon.stub().returns({ values: valuesStub });
+      const createdAt = '2024-01-15T10:30:00.000Z';
+      dbHolder.db = { insert: insertStub };
+
+      await repository.save({ name: 'test', createdAt } as never);
+
+      valuesStub.should.have.been.calledOnce;
+      valuesStub.firstCall.args[0].createdAt.should.deep.equal(new Date(createdAt));
+    });
   });
 
   describe('deleteById', () => {

@@ -5,7 +5,9 @@ import * as databaseConnection from '../../../../src/server/utils/databaseConnec
 import { users } from '../../../../src/server/resources/models/userModel';
 
 describe('User Repository', () => {
-  const dbHolder = databaseConnection as unknown as { db: { select: SinonStub } };
+  const dbHolder = databaseConnection as unknown as {
+    db: Partial<Record<'select' | 'update', SinonStub>>;
+  };
 
   let originalDb: unknown;
   let selectStub: SinonStub;
@@ -26,7 +28,7 @@ describe('User Repository', () => {
   });
 
   afterEach(() => {
-    dbHolder.db = originalDb as { select: SinonStub };
+    dbHolder.db = originalDb as typeof dbHolder.db;
   });
 
   it('should find a user by email when one exists', async () => {
@@ -62,5 +64,43 @@ describe('User Repository', () => {
 
     chai.expect(result).to.be.null;
     selectLimitStub.should.have.been.calledOnceWithExactly(1);
+  });
+
+  it('should update a password by user id and return the updated user', async () => {
+    const updatedUser = {
+      id: 1,
+      email: 'test@test.com',
+      firstName: 'Test',
+      lastName: 'User',
+      role: 'user' as const,
+      password: 'new-hashed-password',
+      createdAt: new Date(),
+      updatedAt: null,
+    };
+    const returningStub = sinon.stub().resolves([updatedUser]);
+    const whereStub = sinon.stub().returns({ returning: returningStub });
+    const setStub = sinon.stub().returns({ where: whereStub });
+    const updateStub = sinon.stub().returns({ set: setStub });
+    dbHolder.db = { update: updateStub };
+
+    const result = await userRepo.updatePasswordById(1, updatedUser.password);
+
+    updateStub.should.have.been.calledOnceWithExactly(users);
+    setStub.should.have.been.calledOnceWithExactly({ password: updatedUser.password });
+    whereStub.should.have.been.calledOnce;
+    returningStub.should.have.been.calledOnce;
+    chai.expect(result).to.deep.equal(updatedUser);
+  });
+
+  it('should return null when updating a password for a missing user', async () => {
+    const returningStub = sinon.stub().resolves([]);
+    const whereStub = sinon.stub().returns({ returning: returningStub });
+    const setStub = sinon.stub().returns({ where: whereStub });
+    dbHolder.db = { update: sinon.stub().returns({ set: setStub }) };
+
+    const result = await userRepo.updatePasswordById(999, 'new-hashed-password');
+
+    chai.expect(result).to.be.null;
+    returningStub.should.have.been.calledOnce;
   });
 });

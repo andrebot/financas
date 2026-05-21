@@ -192,16 +192,24 @@ describe('AuthenticationManager', function () {
       const password = 'Naru-chan88';
       const firstName = 'John';
       const lastName = 'Doe';
-  
-      UserRepo.save.throwsException('User already exists');
-  
+
+      UserRepo.findByEmail.resolves({
+        id: 1,
+        email,
+        firstName,
+        lastName,
+        role: 'user',
+      });
+
       try {
         await createUser(email, password, firstName, lastName);
         chai.assert.fail('Expected error was not thrown');
       } catch (error) {
         (error as Error).should.be.an('error');
-        (error as Error).message.should.contain('User already exists');
+        (error as Error).message.should.contain(`duplicate key: user email already exists: ${email}`);
       }
+
+      UserRepo.save.should.not.have.been.called;
     });
   });
 
