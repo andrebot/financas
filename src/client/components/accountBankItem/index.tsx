@@ -16,6 +16,7 @@ import { useDeleteBankAccountMutation, useUpdateBankAccountMutation } from '../.
 import ConfirmModal from '../confirmModal';
 import { useModal } from '../modal/modal';
 import AddBankAccountModal from '../../pages/bankAccounts/addBankAccountModal';
+import { detectCardBrand } from '../../utils/creditCard';
 
 /**
  * Account bank item component. This component displays a bank account and its credit cards.
@@ -170,11 +171,11 @@ export default function AccountBankItem({ bankAccount }: AccountBankItemProps): 
       </AccountBankInfo>
       <CreditCardsList>
         {(bankAccount.cards ?? []).map(({
-          flag, last4Digits, expirationDate, number,
+          expirationDate, number,
         }) => (
           <CreditCard
-            key={last4Digits}
-            flag={flag}
+            key={number.slice(-4)}
+            flag={detectCardBrand(number)}
             last4Digits={number.slice(-4)}
             expirationDate={expirationDate}
             number={number}

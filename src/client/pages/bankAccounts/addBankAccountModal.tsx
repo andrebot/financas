@@ -17,6 +17,7 @@ import { reducer, validateBankAccountForm } from './addBankAccountReducer';
 import CreditCardForm from './creditCardForm';
 import { useAuth } from '../../hooks/authContext';
 import { BankAccountActionType } from '../../enums';
+import { detectCardBrand } from '../../utils/creditCard';
 import { BankAccount, CreditCardProps } from '../../types';
 
 type AddBankAccountModalProps = {
@@ -48,7 +49,13 @@ export default function AddBankAccountModal({
 }: AddBankAccountModalProps) {
   const { t } = useTranslation();
   const { closeModal } = useModal();
-  const [creditCards, setCreditCards] = useState<CreditCardProps[]>(bankAccount?.cards || []);
+  const [creditCards, setCreditCards] = useState<CreditCardProps[]>(
+    bankAccount?.cards?.map((card) => ({
+      ...card,
+      flag: detectCardBrand(card.number),
+      last4Digits: card.number.slice(-4),
+    })) || [],
+  );
   const { user } = useAuth();
 
   const [state, dispatch] = useReducer(reducer, {

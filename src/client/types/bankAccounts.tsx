@@ -7,17 +7,17 @@ export type FlagIconProps = Omit<SvgIconProps, 'component' | 'viewBox'> & {
   flag: Flag;
 };
 
-export type CreditCardProps = {
-  flag: Flag;
-  last4Digits: string;
+export type CreditCard = {
   number: string;
   expirationDate: string;
+}
+
+export type CreditCardState = CreditCard & {
+  flag: Flag;
 };
 
-export type CreditCardState = {
-  number: string;
-  expirationDate: Date | undefined;
-  flag: string;
+export type CreditCardProps = CreditCardState & {
+  last4Digits: string;
 };
 
 export type AccountBankItemProps = {
@@ -29,7 +29,7 @@ export type BankAccount = {
   name: string;
   agency: string;
   accountNumber: string;
-  cards?: CreditCardProps[];
+  cards?: CreditCard[];
   currency: string;
   userId: string;
   initialBalance: number;
@@ -64,9 +64,12 @@ export type BankAccountAction = {
   type: BankAccountActionType.VALIDATE;
 }
 
-export type CreditCardFormState = CreditCardState & {
+export type CreditCardFormState = {
+  number: string;
+  expirationDate: Date | undefined;
   numberError: string;
   expirationDateError: string;
+  flag: Flag | '';
 };
 
 export type CreditCardFormAction =
