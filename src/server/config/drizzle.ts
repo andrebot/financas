@@ -1,5 +1,7 @@
 import exportConfig from './configWrap';
 
+/* eslint-disable import/prefer-default-export */
+
 interface DrizzleConfig {
   DB_URL: string;
 }
