@@ -4,6 +4,8 @@ import * as schema from '../resources/models/schema';
 import { createLogger } from './logger';
 import { DB_URL } from '../config/drizzle';
 
+/* eslint-disable import/no-mutable-exports */
+
 const logger = createLogger('DatabaseConnection');
 export let db: ReturnType<typeof drizzle>;
 let pool: Pool;

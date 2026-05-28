@@ -22,11 +22,11 @@ function coerceDates<T>(entity: T): T {
 
   const result: Record<string, unknown> = {};
 
-  for (const [key, value] of Object.entries(entity as object)) {
+  Object.entries(entity as object).forEach(([key, value]) => {
     result[key] = typeof value === 'string' && ISO_DATE_REGEX.test(value)
       ? new Date(value)
       : value;
-  }
+  });
 
   return result as T;
 }
@@ -43,7 +43,11 @@ function coerceDates<T>(entity: T): T {
  * @param clogger - Optional pre-created logger; a new one is created if omitted.
  * @returns An {@link IRepository} instance bound to the given table.
  */
-export default function Repository<T extends Table, K>(table: T, modelName: string, clogger?: Logger): IRepository<T, K> {
+export default function Repository<T extends Table, K>(
+  table: T,
+  modelName: string,
+  clogger?: Logger,
+): IRepository<T, K> {
   type InsertEntity = InferInsertModel<typeof table>;
 
   const logger = clogger || createLogger(`Repository:${modelName}`);
@@ -94,7 +98,10 @@ export default function Repository<T extends Table, K>(table: T, modelName: stri
   async function save(entity: K): Promise<K> {
     logger.info(`Saving ${modelName}`);
 
-    const rows = await getDb().insert(table).values(coerceDates(entity) as InsertEntity).returning();
+    const rows = await getDb()
+      .insert(table)
+      .values(coerceDates(entity) as InsertEntity)
+      .returning();
 
     return rows[0] as K;
   }
@@ -127,7 +134,7 @@ export default function Repository<T extends Table, K>(table: T, modelName: stri
   async function listAll(): Promise<K[]> {
     logger.info(`Listing all ${modelName}`);
 
-    return await getDb().select().from(table as never).where(
+    return getDb().select().from(table as never).where(
       and(
         getAutorizationDatabaseContext(table),
       ),
@@ -150,7 +157,8 @@ export default function Repository<T extends Table, K>(table: T, modelName: stri
         eq(table.id, id),
         getAutorizationDatabaseContext(table),
       ),
-    ).returning();
+    )
+      .returning();
 
     return (rows as unknown as K[])[0];
   }

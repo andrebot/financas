@@ -1,5 +1,5 @@
 import { and, eq } from 'drizzle-orm';
-import { db } from '../../utils/databaseConnection';
+import { getDb } from '../../utils/transaction';
 import Repository from './repository';
 import { categories } from '../models/categoryModel';
 import { createLogger } from '../../utils/logger';
@@ -19,7 +19,7 @@ const categoryRepo = Repository<typeof categories, ICategory>(categories, 'Categ
 async function findAllSubcategories(parentCategoryId: number): Promise<ICategory[]> {
   logger.info(`Finding all subcategories of parent category: ${parentCategoryId}`);
 
-  return await db.select().from(categories).where(
+  return getDb().select().from(categories).where(
     and(
       eq(categories.parentCategoryId, parentCategoryId),
       getAutorizationDatabaseContext(categories),
@@ -36,7 +36,7 @@ async function findAllSubcategories(parentCategoryId: number): Promise<ICategory
 async function deleteAllSubcategories(parentCategoryId: number): Promise<number | null> {
   logger.info(`Deleting all subcategories of parent category: ${parentCategoryId}`);
 
-  const deletedCount = await db.delete(categories).where(
+  const deletedCount = await getDb().delete(categories).where(
     and(
       eq(categories.parentCategoryId, parentCategoryId),
       getAutorizationDatabaseContext(categories),
@@ -49,7 +49,7 @@ async function deleteAllSubcategories(parentCategoryId: number): Promise<number 
 async function listCategoriesByBudgetId(budgetId: number): Promise<number[]> {
   logger.info(`Finding categories by budget id: ${budgetId}`);
 
-  const rows = await db
+  const rows = await getDb()
     .select({ categoryId: budgetToCategories.categoryId })
     .from(budgetToCategories)
     .innerJoin(budgets, eq(budgetToCategories.budgetId, budgets.id))

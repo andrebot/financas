@@ -73,7 +73,9 @@ export function AccountantController(
       checkVoidUser(req.user, 'Transaction', 'create');
       checkVoidPayload(req.body, 'Transaction', 'create');
 
-      const { goals, ...transactionPayload } = req.body as ITransaction & { goals: ITransactionGoalEntry[] };
+      const { goals, ...transactionPayload } = req.body as ITransaction & {
+        goals: ITransactionGoalEntry[];
+      };
       const content = await AccountantManager.createTransaction(transactionPayload, goals);
 
       logger.info('Transaction created');
@@ -102,8 +104,14 @@ export function AccountantController(
       checkVoidUser(req.user, 'Transaction', 'update');
       checkVoidPayload(req.body, 'Transaction', 'update');
 
-      const { goals, ...transactionPayload } = req.body as Partial<ITransaction> & { goals?: ITransactionGoalEntry[] };
-      const content = await AccountantManager.updateTransaction(Number(contentId), transactionPayload, goals);
+      const { goals, ...transactionPayload } = req.body as Partial<ITransaction> & {
+        goals?: ITransactionGoalEntry[];
+      };
+      const content = await AccountantManager.updateTransaction(
+        Number(contentId),
+        transactionPayload,
+        goals,
+      );
 
       logger.info('Transaction updated');
 

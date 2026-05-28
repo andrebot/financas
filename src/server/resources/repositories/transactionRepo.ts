@@ -32,7 +32,7 @@ async function findByCategoryWithDateRange(
   logger.info(`Start date: ${startDate}`);
   logger.info(`End date: ${endDate}`);
 
-  return await getDb()
+  return getDb()
     .select()
     .from(transactions)
     .where(and(
@@ -108,7 +108,7 @@ async function findByMonthAndYear(year: number, month: number): Promise<ITransac
   const startDate = new Date(year, month - 1, 1);
   const endDate = new Date(year, month, 0);
 
-  return await getDb().select().from(transactions).where(and(
+  return getDb().select().from(transactions).where(and(
     gte(transactions.date, startDate),
     lte(transactions.date, endDate),
   ));
@@ -124,26 +124,31 @@ async function findByMonthAndYear(year: number, month: number): Promise<ITransac
 async function deleteTransactionFromGoals(transactionId: number): Promise<number> {
   logger.info(`Deleting transaction from goals: ${transactionId}`);
 
-  const result = await getDb().delete(transactionToGoals).where(eq(transactionToGoals.transactionId, transactionId));
+  const result = await getDb()
+    .delete(transactionToGoals)
+    .where(eq(transactionToGoals.transactionId, transactionId));
 
   return result.rowCount || 0;
 }
 
 /**
  * Inserts junction rows linking a transaction to a list of goals with their percentages.
- * Existing rows for the same transaction are not affected — call deleteTransactionFromGoals first
- * if replacing the full set.
+ * Existing rows for the same transaction are not affected.
+ * Call deleteTransactionFromGoals first if replacing the full set.
  *
  * @param transactionId - The id of the transaction to link.
  * @param goals - The list of goal entries with goalId and percentage.
  */
-async function saveTransactionGoals(transactionId: number, goals: ITransactionGoalEntry[]): Promise<void> {
-  if (goals.length === 0) return;
+async function saveTransactionGoals(
+  transactionId: number,
+  goalEntries: ITransactionGoalEntry[],
+): Promise<void> {
+  if (goalEntries.length === 0) return;
 
-  logger.info(`Saving ${goals.length} goal(s) for transaction: ${transactionId}`);
+  logger.info(`Saving ${goalEntries.length} goal(s) for transaction: ${transactionId}`);
 
   await getDb().insert(transactionToGoals).values(
-    goals.map((entry) => ({
+    goalEntries.map((entry) => ({
       transactionId,
       goalId: entry.goalId,
       percentage: String(entry.percentage),

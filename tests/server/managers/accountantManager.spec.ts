@@ -34,6 +34,23 @@ const budgetRepoStub = {
   revertBudgetsByTransaction: sinon.stub(),
 };
 
+let transactionDepth = 0;
+
+/**
+ * Runs a callback while exposing whether repository calls are inside a transaction.
+ *
+ * @param fn - The callback to execute inside the fake transaction scope.
+ * @returns The callback result.
+ */
+async function withTransactionStub<T>(fn: () => Promise<T>): Promise<T> {
+  transactionDepth += 1;
+  try {
+    return await fn();
+  } finally {
+    transactionDepth -= 1;
+  }
+}
+
 const { AccountantManager: AccountantManagerFactory, default: accountantManager } = proxyquire(
   '../../../src/server/managers/accountantManager',
   {
@@ -41,7 +58,7 @@ const { AccountantManager: AccountantManagerFactory, default: accountantManager 
     '../resources/repositories/monthlyBalanceRepo': { default: monthlyBalanceRepoStub },
     '../resources/repositories/goalRepo': { default: goalRepoStub },
     '../resources/repositories/budgetRepo': { default: budgetRepoStub },
-    '../utils/transaction': { withTransaction: (fn: () => Promise<unknown>) => fn() },
+    '../utils/transaction': { withTransaction: withTransactionStub },
   },
 );
 
@@ -98,6 +115,7 @@ describe('AccountantManager', () => {
     goalRepoStub.updateGoalFromTransaction.reset();
     budgetRepoStub.updateBudgetsByNewTransaction.reset();
     budgetRepoStub.revertBudgetsByTransaction.reset();
+    transactionDepth = 0;
   });
 
   describe('getTransactionTypes', () => {
@@ -323,6 +341,19 @@ describe('AccountantManager', () => {
       budgetRepoStub.updateBudgetsByNewTransaction.should.have.been.calledOnce;
       transactionRepoStub.update.should.have.been.calledOnce;
       (result as ITransaction).should.have.property('name', 'Updated');
+    });
+
+    it('should update recalculated transaction content inside the same transaction', async () => {
+      monthlyBalanceRepoStub.findMonthlyBalance.resolves(mockMonthlyBalance);
+      transactionRepoStub.update.callsFake(async () => {
+        should().equal(transactionDepth, 1);
+
+        return { ...mockTransaction, value: '200.00' };
+      });
+
+      await accountantManager.updateTransaction(1, { value: '200.00' }, undefined);
+
+      transactionRepoStub.update.should.have.been.calledOnceWith(1, { value: '200.00' });
     });
 
     it('should replace goal associations when recalculating with goals provided', async () => {

@@ -42,7 +42,10 @@ async function findMonthlyBalance(
  * @param transaction - The transaction to apply or revert.
  * @param shouldInvertValue - Whether to subtract instead of add the transaction value.
  */
-async function updateMonthlyBalanceWithTransaction(transaction: ITransaction, shouldInvertValue: boolean = false): Promise<void> {
+async function updateMonthlyBalanceWithTransaction(
+  transaction: ITransaction,
+  shouldInvertValue: boolean = false,
+): Promise<void> {
   logger.info(`Updating monthly balance with transaction: ${transaction.id}`);
 
   const year = transaction.date.getFullYear();
@@ -52,8 +55,11 @@ async function updateMonthlyBalanceWithTransaction(transaction: ITransaction, sh
   await getDb().update(monthlyBalances)
     .set({
       closingBalance: sql`${monthlyBalances.closingBalance} ${sql.raw(op)} ${transaction.value}`,
-      totalIn: sql`${monthlyBalances.totalIn} ${sql.raw(op)} CASE WHEN ${transaction.value}::numeric > 0 THEN ${transaction.value}::numeric ELSE 0 END`,
-      totalOut: sql`${monthlyBalances.totalOut} ${sql.raw(op)} CASE WHEN ${transaction.value}::numeric < 0 THEN ABS(${transaction.value}::numeric) ELSE 0 END`,
+      totalIn: sql`${monthlyBalances.totalIn} ${sql.raw(op)}
+        CASE WHEN ${transaction.value}::numeric > 0 THEN ${transaction.value}::numeric ELSE 0 END`,
+      totalOut: sql`${monthlyBalances.totalOut} ${sql.raw(op)}
+        CASE WHEN ${transaction.value}::numeric < 0
+        THEN ABS(${transaction.value}::numeric) ELSE 0 END`,
     })
     .where(and(
       eq(monthlyBalances.accountId, transaction.accountId),

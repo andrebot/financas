@@ -276,29 +276,40 @@ async function updateTransaction(
     throw new Error(`Transaction with id ${id} not found. Cannot execute update action.`);
   }
 
-  const updatedContent = { ...transaction, ...payload };
-
   if (shouldTriggerRecalculation(payload)) {
     logger.info('Triggering recalculation');
 
-    await withTransaction(async () => {
+    return withTransaction(async () => {
       await deleteTransactionFromOtherModels(transaction, monthlyBalanceRepo, goalRepo, budgetRepo);
+      const updatedTransaction = await transactionRepo.update(id, payload);
 
       if (goals !== undefined) {
         await transactionRepo.deleteTransactionFromGoals(id);
         await transactionRepo.saveTransactionGoals(id, goals);
       }
 
-      await addTransactionToOtherModels(updatedContent, monthlyBalanceRepo, goalRepo, budgetRepo);
+      await addTransactionToOtherModels(
+        updatedTransaction,
+        monthlyBalanceRepo,
+        goalRepo,
+        budgetRepo,
+      );
+
+      return updatedTransaction;
     });
-  } else if (goals !== undefined) {
+  }
+
+  if (goals !== undefined) {
     logger.info('Updating goal associations only');
 
-    await withTransaction(async () => {
+    return withTransaction(async () => {
       await goalRepo.updateGoalFromTransaction(transaction, true);
+      const updatedTransaction = await transactionRepo.update(id, payload);
       await transactionRepo.deleteTransactionFromGoals(id);
       await transactionRepo.saveTransactionGoals(id, goals);
-      await goalRepo.updateGoalFromTransaction(updatedContent);
+      await goalRepo.updateGoalFromTransaction(updatedTransaction);
+
+      return updatedTransaction;
     });
   }
 
@@ -353,7 +364,7 @@ async function getTransaction(
 async function listTransactions(
   transactionRepo: ITransactionRepo,
 ): Promise<ITransaction[]> {
-  logger.info(`Listing transactions`);
+  logger.info('Listing transactions');
 
   return transactionRepo.listAll();
 }
@@ -365,7 +376,10 @@ export function AccountantManager(
   budgetRepo: IBudgetRepo,
 ) {
   return {
-    createTransaction: (content: ITransaction, goals: ITransactionGoalEntry[] = []) => createTransaction(
+    createTransaction: (
+      content: ITransaction,
+      goals: ITransactionGoalEntry[] = [],
+    ) => createTransaction(
       content,
       goals,
       transactionRepo,
