@@ -190,13 +190,24 @@ export type ICardSyncPayload = ICardPayload & {
   id?: number;
 };
 
+/** Card brands rendered by the client card components. */
+export type ICardBrand = 'amazon' | 'master' | 'visa' | 'amex' | 'diners' | 'discover' | 'maestro' | 'unknown';
+
+/** Card payload returned to the client when accounts are hydrated with their cards. */
+export type ICardClientPayload = ICardSyncPayload & {
+  /** Client-rendered card brand/flag. */
+  flag: ICardBrand;
+  /** Last four digits rendered by the client card component. */
+  last4Digits: string;
+};
+
 /** Domain entity representing a bank or financial account. */
 export interface IAccount extends InferSelectModel<typeof accounts> {}
 
 /** Account create/update payload that may include the UI-submitted full card list. */
 export type IAccountPayload = Partial<IAccount> & Content & {
   /** Full list of cards submitted by the account form. */
-  cards?: ICardSyncPayload[];
+  cards?: Array<ICardSyncPayload | ICardClientPayload>;
 };
 
 /** Domain entity representing an application user. */

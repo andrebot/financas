@@ -204,14 +204,33 @@ describe('ContentManager', () => {
       cardRepoStub.syncAccountCards.should.not.have.been.called;
     });
 
-    it('should list accounts', async () => {
+    it('should list accounts with cards formatted for the client payload', async () => {
+      const persistedCard = {
+        id: 9,
+        number: '4111111111111111',
+        expirationDate: '12/30',
+        accountId: mockAccount.id,
+        createdAt: new Date('2025-01-01'),
+        updatedAt: null,
+      };
       accountRepoStub.listAll.resolves([mockAccount]);
+      cardRepoStub.findByAccountId.resolves([persistedCard]);
 
       const result = await contentManager.accountActions.listContent();
 
       accountRepoStub.listAll.should.have.been.calledOnce;
+      cardRepoStub.findByAccountId.should.have.been.calledOnceWith(mockAccount.id);
       result.should.have.lengthOf(1);
-      result[0].should.deep.equal(mockAccount);
+      result[0].should.deep.equal({
+        ...mockAccount,
+        cards: [{
+          id: persistedCard.id,
+          number: persistedCard.number,
+          expirationDate: persistedCard.expirationDate,
+          flag: 'visa',
+          last4Digits: '1111',
+        }],
+      });
     });
 
     it('should get account by id', async () => {

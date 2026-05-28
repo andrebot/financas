@@ -21,6 +21,9 @@ import type {
   ITransactionRepo,
   IAccount,
   IAccountPayload,
+  ICard,
+  ICardBrand,
+  ICardClientPayload,
   ICardRepo,
 } from '../../types';
 import Repository from '../../resources/repositories/repository';
@@ -203,6 +206,63 @@ function splitAccountPayload(payload: IAccountPayload): {
   return { account, cards: submittedCards };
 }
 
+const CARD_BRAND_RULES: Array<{ brand: ICardBrand; pattern: RegExp }> = [
+  { brand: 'visa', pattern: /^4/ },
+  { brand: 'master', pattern: /^(5[1-5]|2[2-7])/ },
+  { brand: 'amex', pattern: /^3[47]/ },
+  { brand: 'discover', pattern: /^(6011|65|64[4-9]|622)/ },
+  { brand: 'diners', pattern: /^(30[0-5]|36|3[89])/ },
+  { brand: 'maestro', pattern: /^(50|5[6-9]|6)/ },
+];
+
+/**
+ * Detects the client card brand from a persisted card number.
+ *
+ * @param number - The persisted card number.
+ * @returns The card brand expected by the client card flag component.
+ */
+function detectCardBrand(number: string): ICardBrand {
+  const cleanedNumber = number.replace(/\D/g, '');
+  const matchingRule = CARD_BRAND_RULES.find((rule) => rule.pattern.test(cleanedNumber));
+
+  return matchingRule?.brand ?? 'unknown';
+}
+
+/**
+ * Converts a persisted card row to the card payload shape consumed by the client.
+ *
+ * @param card - The persisted card row.
+ * @returns The card payload with UI-derived fields included.
+ */
+function toClientCardPayload(card: ICard): ICardClientPayload {
+  return {
+    id: card.id,
+    number: card.number,
+    expirationDate: card.expirationDate,
+    flag: detectCardBrand(card.number),
+    last4Digits: card.number.slice(-4),
+  };
+}
+
+/**
+ * Hydrates one account with its cards using the client card payload shape.
+ *
+ * @param account - The account to hydrate.
+ * @param cardRepo - The card repository to use.
+ * @returns The account with cards included.
+ */
+async function hydrateAccountCards(
+  account: IAccount,
+  cardRepo: ICardRepo,
+): Promise<IAccountPayload> {
+  const accountCards = await cardRepo.findByAccountId(account.id);
+
+  return {
+    ...account,
+    cards: accountCards.map(toClientCardPayload),
+  };
+}
+
 /**
  * Creates account actions that coordinate account persistence with card list reconciliation.
  *
@@ -247,7 +307,11 @@ function createAccountActions(
       });
     },
     deleteContent: commonAccountActions.deleteContent,
-    listContent: commonAccountActions.listContent,
+    listContent: async (): Promise<IAccountPayload[]> => {
+      const accountsList = await commonAccountActions.listContent();
+
+      return Promise.all(accountsList.map((account) => hydrateAccountCards(account, cardRepo)));
+    },
     getContent: commonAccountActions.getContent,
   };
 }
