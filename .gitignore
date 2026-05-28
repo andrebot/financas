@@ -12,3 +12,6 @@ reports
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+.tmp
+.claude/settings.local.json
