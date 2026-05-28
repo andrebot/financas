@@ -17,7 +17,7 @@ function connectToDatabase(): void {
   try {
     logger.info(`Connecting to drizzle: ${DB_URL}`);
     pool = new Pool({ connectionString: DB_URL });
-    db = drizzle(pool, { schema, casing: 'snake_case', logger: true });
+    db = drizzle(pool, { schema, logger: true });
 
     logger.info('Connected to database');
   } catch (error) {

@@ -29,6 +29,7 @@ const blankState = {
   currency: '',
   accountNumber: '',
   agency: '',
+  initialBalance: 0,
   nameError: '',
   currencyError: '',
   accountNumberError: '',
@@ -104,8 +105,9 @@ export default function AddBankAccountModal({
       accountNumber: validatedState.accountNumber,
       agency: validatedState.agency,
       cards: creditCards,
+      initialBalance: validatedState.initialBalance,
       id: state?.id,
-      user: user!.id,
+      userId: user!.id,
     });
     closeModal();
   };

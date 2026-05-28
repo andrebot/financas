@@ -169,7 +169,7 @@ export default function AccountBankItem({ bankAccount }: AccountBankItemProps): 
         </div>
       </AccountBankInfo>
       <CreditCardsList>
-        {bankAccount.cards.map(({
+        {(bankAccount.cards ?? []).map(({
           flag, last4Digits, expirationDate, number,
         }) => (
           <CreditCard

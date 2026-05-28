@@ -29,9 +29,10 @@ export type BankAccount = {
   name: string;
   agency: string;
   accountNumber: string;
-  cards: CreditCardProps[];
+  cards?: CreditCardProps[];
   currency: string;
-  user: string;
+  userId: string;
+  initialBalance: number;
 };
 
 export type BankAccountState = {
@@ -44,6 +45,7 @@ export type BankAccountState = {
   accountNumberError: string;
   agencyError: string;
   id?: string;
+  initialBalance: number;
 };
 
 export type BankAccountAction = {

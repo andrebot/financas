@@ -49,7 +49,8 @@ describe('AccountBankItem', () => {
     agency: '0001',
     accountNumber: '123456',
     currency: 'BRL',
-    user: 'user-1',
+    userId: 'user-1',
+    initialBalance: 0,
     cards: [
       {
         flag: 'visa',
@@ -164,7 +165,7 @@ describe('AccountBankItem', () => {
           accountNumber: '123456',
           agency: '0001',
           id: 'account-1',
-          user: 'user-1',
+          userId: 'user-1',
           cards: bankAccount.cards,
         })
       );

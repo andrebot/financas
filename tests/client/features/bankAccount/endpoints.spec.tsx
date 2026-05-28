@@ -36,7 +36,8 @@ describe('bankAccount endpoints', () => {
         accountNumber: '123456',
         cards: [],
         currency: 'BRL',
-        user: 'user-1',
+        userId: 'user-1',
+        initialBalance: 0,
       };
 
       const result = createBankAccountMutation(bankAccount);
@@ -55,7 +56,8 @@ describe('bankAccount endpoints', () => {
         accountNumber: '123456',
         cards: [],
         currency: 'USD',
-        user: 'user-1',
+        userId: 'user-1',
+        initialBalance: 0,
       };
 
       const result = updateBankAccountMutation(bankAccount);
