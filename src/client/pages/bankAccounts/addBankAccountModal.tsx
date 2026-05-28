@@ -18,7 +18,7 @@ import CreditCardForm from './creditCardForm';
 import { useAuth } from '../../hooks/authContext';
 import { BankAccountActionType } from '../../enums';
 import { detectCardBrand } from '../../utils/creditCard';
-import { BankAccount, CreditCardProps } from '../../types';
+import { BankAccount, CreditCard, CreditCardProps } from '../../types';
 
 type AddBankAccountModalProps = {
   saveBankAccount: (bankAccount: BankAccount) => void;
@@ -36,6 +36,16 @@ const blankState = {
   accountNumberError: '',
   agencyError: '',
 };
+
+/**
+ * Removes UI-only card fields before saving a bank account.
+ *
+ * @param cards - Credit cards from the form state.
+ * @returns Credit cards in the raw API payload shape.
+ */
+function toRawCreditCards(cards: CreditCardProps[]): CreditCard[] {
+  return cards.map(({ number, expirationDate }) => ({ number, expirationDate }));
+}
 
 /**
  * Modal that handles the creation of a bank account.
@@ -111,7 +121,7 @@ export default function AddBankAccountModal({
       currency: validatedState.currency,
       accountNumber: validatedState.accountNumber,
       agency: validatedState.agency,
-      cards: creditCards,
+      cards: toRawCreditCards(creditCards),
       initialBalance: validatedState.initialBalance,
       id: state?.id,
       userId: user!.id,

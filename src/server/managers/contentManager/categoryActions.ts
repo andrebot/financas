@@ -67,8 +67,6 @@ export default function createCategoryActions(
     ...commonActions(categoryRepo, 'Category'),
     deleteContent: async (
       id: number,
-    ): Promise<ICategory | null> => {
-      return deleteCategory(id, categoryRepo, transactionRepo, logger);
-    },
+    ): Promise<ICategory | null> => deleteCategory(id, categoryRepo, transactionRepo, logger),
   };
 }

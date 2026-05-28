@@ -108,7 +108,6 @@ async function createAccount(
 
     return savedAccount;
   });
-  
 }
 
 /**
@@ -128,17 +127,16 @@ export default function createAccountActions(
 
   return {
     ...commonAccountActions,
-    createContent: async (payload: IAccountPayload): Promise<IAccount> => {
-      return createAccount(accountRepo, cardRepo, payload, logger);
-    },
+    createContent: async (payload: IAccountPayload): Promise<IAccount> => createAccount(
+      accountRepo,
+      cardRepo,
+      payload,
+      logger,
+    ),
     updateContent: async (
       id: number,
       payload: Partial<IAccountPayload>,
-    ): Promise<IAccount | null> => {
-      return updateAccount(accountRepo, cardRepo, id, payload, logger);
-    },
-    listContent: async (): Promise<IAccountPayload[]> => {
-      return listAccounts(accountRepo, logger);
-    },
+    ): Promise<IAccount | null> => updateAccount(accountRepo, cardRepo, id, payload, logger),
+    listContent: async (): Promise<IAccountPayload[]> => listAccounts(accountRepo, logger),
   };
 }

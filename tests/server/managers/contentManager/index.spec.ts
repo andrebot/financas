@@ -3,8 +3,8 @@ import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import {
   createContentManager,
-  calculateBudgetSpent,
 } from '../../../../src/server/managers/contentManager';
+import { calculateBudgetSpent } from '../../../../src/server/managers/contentManager/budgetActions';
 import {
   IBudget,
   ICategory,
@@ -208,7 +208,7 @@ describe('ContentManager', () => {
       cardRepoStub.syncAccountCards.should.not.have.been.called;
     });
 
-    it('should list accounts with cards formatted for the client payload', async () => {
+    it('should list accounts with raw persisted cards', async () => {
       const persistedCard = {
         id: 9,
         number: '4111111111111111',
@@ -230,8 +230,9 @@ describe('ContentManager', () => {
           id: persistedCard.id,
           number: persistedCard.number,
           expirationDate: persistedCard.expirationDate,
-          flag: 'visa',
-          last4Digits: '1111',
+          accountId: persistedCard.accountId,
+          createdAt: persistedCard.createdAt,
+          updatedAt: persistedCard.updatedAt,
         }],
       });
     });

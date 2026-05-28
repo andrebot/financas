@@ -1,7 +1,7 @@
 import { Logger } from 'winston';
 import commonActions from './commonActions';
 import { checkVoidInstance } from '../../utils/misc';
-import type{ 
+import type {
   ICommonActions,
   IGoalRepo,
   ITransactionRepo,
@@ -57,8 +57,11 @@ export default function createGoalActions(
 
   return {
     ...commonGoalActions,
-    deleteContent: async (id: number): Promise<IGoal | null> => {
-      return deleteGoal(id, goalRepo, transactionRepo, logger);
-    }
+    deleteContent: async (id: number): Promise<IGoal | null> => deleteGoal(
+      id,
+      goalRepo,
+      transactionRepo,
+      logger,
+    ),
   };
 }

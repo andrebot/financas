@@ -4,6 +4,7 @@ import { StyleCompProp, ConfirmModalProps } from './StyleCompProp';
 import {
   Flag,
   FlagIconProps,
+  CreditCard,
   CreditCardProps,
   AccountBankItemProps,
   BankAccount,
@@ -32,6 +33,7 @@ export {
   ConfirmModalProps,
   Flag,
   FlagIconProps,
+  CreditCard,
   CreditCardProps,
   AccountBankItemProps,
   CreditCardState,

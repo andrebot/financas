@@ -100,8 +100,12 @@ export default function createBudgetActions(
     ...commonBudgetActions,
     getContent: async (
       id: number,
-    ): Promise<IBudget | null> => {
-      return getBudgetWithSpent(id, budgetRepo, transactionRepo, categoryRepo, logger);
-    },
+    ): Promise<IBudget | null> => getBudgetWithSpent(
+      id,
+      budgetRepo,
+      transactionRepo,
+      categoryRepo,
+      logger,
+    ),
   };
 }

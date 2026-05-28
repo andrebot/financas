@@ -53,8 +53,6 @@ describe('AccountBankItem', () => {
     initialBalance: 0,
     cards: [
       {
-        flag: 'visa',
-        last4Digits: '1234',
         number: '4111111111111234',
         expirationDate: '01/25',
       },
@@ -111,8 +109,8 @@ describe('AccountBankItem', () => {
     const accountWithMultipleCards: BankAccount = {
       ...bankAccount,
       cards: [
-        { flag: 'visa', last4Digits: '1234', number: '4111111111111234', expirationDate: '01/25' },
-        { flag: 'master', last4Digits: '5678', number: '5500000000005678', expirationDate: '12/26' },
+        { number: '4111111111111234', expirationDate: '01/25' },
+        { number: '5500000000005678', expirationDate: '12/26' },
       ],
     };
 
