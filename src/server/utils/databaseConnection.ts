@@ -1,4 +1,4 @@
-import { drizzle } from 'drizzle-orm/node-postgres';
+import { drizzle, NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import * as schema from '../resources/models/schema';
 import { createLogger } from './logger';
@@ -7,7 +7,7 @@ import { DB_URL } from '../config/drizzle';
 /* eslint-disable import/no-mutable-exports */
 
 const logger = createLogger('DatabaseConnection');
-export let db: ReturnType<typeof drizzle>;
+export let db: NodePgDatabase<typeof schema>;
 let pool: Pool;
 
 /**

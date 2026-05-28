@@ -43,7 +43,10 @@ describe('ContentManager', () => {
     removeCategoriesFromTransactions: sinon.stub(),
     findByCategoryWithDateRange: sinon.stub().resolves([]),
   };
-  const accountRepoStub = createRepoStub();
+  const accountRepoStub = {
+    ...createRepoStub(),
+    listAllWithCards: sinon.stub(),
+  };
   const cardRepoStub = {
     ...createRepoStub(),
     findByAccountId: sinon.stub(),
@@ -142,6 +145,7 @@ describe('ContentManager', () => {
     accountRepoStub.deleteById.resetHistory();
     accountRepoStub.update.resetHistory();
     accountRepoStub.listAll.resetHistory();
+    accountRepoStub.listAllWithCards.resetHistory();
 
     cardRepoStub.save.resetHistory();
     cardRepoStub.findById.resetHistory();
@@ -213,13 +217,12 @@ describe('ContentManager', () => {
         createdAt: new Date('2025-01-01'),
         updatedAt: null,
       };
-      accountRepoStub.listAll.resolves([mockAccount]);
-      cardRepoStub.findByAccountId.resolves([persistedCard]);
+      accountRepoStub.listAllWithCards.resolves([{ ...mockAccount, cards: [persistedCard] }]);
 
       const result = await contentManager.accountActions.listContent();
 
-      accountRepoStub.listAll.should.have.been.calledOnce;
-      cardRepoStub.findByAccountId.should.have.been.calledOnceWith(mockAccount.id);
+      accountRepoStub.listAllWithCards.should.have.been.calledOnce;
+      cardRepoStub.findByAccountId.should.not.have.been.called;
       result.should.have.lengthOf(1);
       result[0].should.deep.equal({
         ...mockAccount,

@@ -204,6 +204,12 @@ export type ICardClientPayload = ICardSyncPayload & {
 /** Domain entity representing a bank or financial account. */
 export interface IAccount extends InferSelectModel<typeof accounts> {}
 
+/** Account row loaded with its related persisted cards. */
+export type IAccountWithCards = IAccount & {
+  /** Cards related to the account by Drizzle relations. */
+  cards: ICard[];
+};
+
 /** Account create/update payload that may include the UI-submitted full card list. */
 export type IAccountPayload = Partial<IAccount> & Content & {
   /** Full list of cards submitted by the account form. */
@@ -441,8 +447,15 @@ export interface IUserRepo extends IRepository<typeof users, IUser> {
   findByEmail(email: string): Promise<IUser | null>;
 }
 
-/** Repository contract for the accounts table using standard CRUD only. */
-export type IAccountRepo = IRepository<typeof accounts, IAccount>;
+/** Repository contract for the accounts table. */
+export interface IAccountRepo extends IRepository<typeof accounts, IAccount> {
+  /**
+   * Returns all visible accounts with their related cards loaded by Drizzle relations.
+   *
+   * @returns Accounts with persisted cards included.
+   */
+  listAllWithCards(): Promise<IAccountWithCards[]>;
+}
 
 /** Repository contract for account-owned payment cards. */
 export interface ICardRepo extends IRepository<typeof cards, ICard> {

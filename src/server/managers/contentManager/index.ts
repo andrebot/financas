@@ -5,6 +5,7 @@ import CategoryRepo from '../../resources/repositories/categoryRepo';
 import GoalRepo from '../../resources/repositories/goalRepo';
 import TransactionRepo from '../../resources/repositories/transactionRepo';
 import CardRepo from '../../resources/repositories/cardRepo';
+import AccountRepo from '../../resources/repositories/accountRepo';
 import { createLogger } from '../../utils/logger';
 import { checkVoidInstance } from '../../utils/misc';
 import { withTransaction } from '../../utils/transaction';
@@ -25,11 +26,8 @@ import type {
   ICardBrand,
   ICardClientPayload,
   ICardRepo,
+  IAccountWithCards,
 } from '../../types';
-import Repository from '../../resources/repositories/repository';
-import { accounts } from '../../resources/models/accountModel';
-
-const AccountRepo = Repository<typeof accounts, IAccount>(accounts, 'Account');
 
 /**
  * Creates the goal actions. Deleting a goal is different from the
@@ -245,21 +243,15 @@ function toClientCardPayload(card: ICard): ICardClientPayload {
 }
 
 /**
- * Hydrates one account with its cards using the client card payload shape.
+ * Maps one Drizzle-hydrated account to the client card payload shape.
  *
- * @param account - The account to hydrate.
- * @param cardRepo - The card repository to use.
- * @returns The account with cards included.
+ * @param account - The account loaded with its related cards.
+ * @returns The account with client-formatted cards included.
  */
-async function hydrateAccountCards(
-  account: IAccount,
-  cardRepo: ICardRepo,
-): Promise<IAccountPayload> {
-  const accountCards = await cardRepo.findByAccountId(account.id);
-
+function hydrateAccountCards(account: IAccountWithCards): IAccountPayload {
   return {
     ...account,
-    cards: accountCards.map(toClientCardPayload),
+    cards: account.cards.map(toClientCardPayload),
   };
 }
 
@@ -308,9 +300,9 @@ function createAccountActions(
     },
     deleteContent: commonAccountActions.deleteContent,
     listContent: async (): Promise<IAccountPayload[]> => {
-      const accountsList = await commonAccountActions.listContent();
+      const accountsList = await accountRepo.listAllWithCards();
 
-      return Promise.all(accountsList.map((account) => hydrateAccountCards(account, cardRepo)));
+      return accountsList.map(hydrateAccountCards);
     },
     getContent: commonAccountActions.getContent,
   };
