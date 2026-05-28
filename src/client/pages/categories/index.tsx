@@ -119,7 +119,11 @@ export default function Categories(): React.JSX.Element {
    * @param parentCategoryId - The id of the parent category
    * @param subCategoryName - The name of the sub-category
    */
-  const handleAddSubCategory = async (parentCategoryId: string, parentCategoryName: string, subCategoryName: string) => {
+  const handleAddSubCategory = async (
+    parentCategoryId: string,
+    parentCategoryName: string,
+    subCategoryName: string,
+  ) => {
     try {
       await createCategory({
         name: subCategoryName,

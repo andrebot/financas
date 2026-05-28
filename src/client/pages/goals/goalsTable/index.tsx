@@ -115,12 +115,10 @@ export default function GoalsTable({
     return 'primary';
   };
 
-  const formatValueToCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: t('currencyFormat'),
-    }).format(value);
-  };
+  const formatValueToCurrency = (value: number) => new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: t('currencyFormat'),
+  }).format(value);
 
   const ActionIcons = {
     [GoalsTableActionType.EDIT]: <EditIcon />,

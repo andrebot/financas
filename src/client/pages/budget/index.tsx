@@ -3,10 +3,9 @@ import { useTranslation } from 'react-i18next';
 import Typography from '@mui/material/Typography';
 import { useListCategoriesQuery } from '../../features/category';
 import BudgetForm from './budgetForm';
-import { 
+import {
   BudgetMain,
 } from './styledComponents';
-
 
 export default function Budget(): React.JSX.Element {
   const { t } = useTranslation();
@@ -19,4 +18,3 @@ export default function Budget(): React.JSX.Element {
     </BudgetMain>
   );
 }
-

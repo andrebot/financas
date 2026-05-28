@@ -10,7 +10,7 @@ export type Budget = {
   categories: string[];
   user?: string;
 };
-  
+
 export type BudgetFormState = {
   id?: string;
   name: string;

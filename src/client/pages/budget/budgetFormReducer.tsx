@@ -66,7 +66,6 @@ function setValue(
   return nextState;
 }
 
-
 /**
  * Validates and sets the start date. Must not be empty
  *
@@ -99,7 +98,7 @@ function setEndDate(
   payload: Date | undefined | null,
 ): BudgetFormState {
   const nextState: BudgetFormState = { ...state, endDate: payload, endDateError: '' };
-  const startDate = state.startDate;
+  const { startDate } = state;
 
   if (payload === undefined || payload === null) {
     nextState.endDateError = 'endDateRequired';
@@ -124,7 +123,7 @@ function setType(
   payload: BUDGET_TYPES,
 ): BudgetFormState {
   const nextState: BudgetFormState = { ...state, type: payload, typeError: '' };
-  
+
   if (payload === undefined || payload === null) {
     nextState.typeError = 'typeRequired';
   }
@@ -147,7 +146,7 @@ function editBudget(
   state: BudgetFormState,
   payload: Budget,
 ): BudgetFormState {
-  return { 
+  return {
     ...state,
     ...payload,
     nameError: '',
@@ -166,7 +165,10 @@ function editBudget(
  * @param action - The action to perform
  * @returns The new state
  */
-export const budgetFormReducer = (state: BudgetFormState, action: BudgetFormAction): BudgetFormState => {
+export const budgetFormReducer = (
+  state: BudgetFormState,
+  action: BudgetFormAction,
+): BudgetFormState => {
   switch (action.type) {
     case BudgetFormActionType.SET_NAME:
       return setName(state, action.payload);

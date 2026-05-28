@@ -11,6 +11,8 @@ import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import { Theme, useTheme } from '@mui/material/styles';
 import { SelectChangeEvent } from '@mui/material/Select';
+import dayjs from 'dayjs';
+import { PickerValue } from '@mui/x-date-pickers/internals/models';
 import {
   BudgetFormHolder,
   BudgetRowInput,
@@ -26,8 +28,6 @@ import { budgetFormReducer, initialBudgetFormState } from './budgetFormReducer';
 
 import { BUDGET_TYPES, BudgetFormActionType } from '../../enums';
 import { Category } from '../../types/categories';
-import dayjs from 'dayjs';
-import { PickerValue } from '@mui/x-date-pickers/internals/models';
 
 const MenuProps = {
   PaperProps: {
@@ -53,7 +53,10 @@ export default function BudgetForm({ categories }: { categories: Category[] }): 
   const { t } = useTranslation();
   const theme = useTheme();
   const { user } = useAuth();
-  const [budgetFormState, budgetFormDispatch] = useReducer(budgetFormReducer, initialBudgetFormState);
+  const [budgetFormState, budgetFormDispatch] = useReducer(
+    budgetFormReducer,
+    initialBudgetFormState,
+  );
   const [createBudget] = useCreateBudgetMutation();
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
@@ -62,13 +65,11 @@ export default function BudgetForm({ categories }: { categories: Category[] }): 
     [categories],
   );
 
-  const getStyles = (name: string, optionValue: string[], theme: Theme) => {
-    return {
-      fontWeight: optionValue.includes(name)
-        ? theme.typography.fontWeightMedium
-        : theme.typography.fontWeightRegular,
-    }
-  };
+  const getStyles = (name: string, optionValue: string[], muiTheme: Theme) => ({
+    fontWeight: optionValue.includes(name)
+      ? muiTheme.typography.fontWeightMedium
+      : muiTheme.typography.fontWeightRegular,
+  });
 
   const handleCategoryChange = (event: SelectChangeEvent<unknown>) => {
     const {
@@ -83,7 +84,10 @@ export default function BudgetForm({ categories }: { categories: Category[] }): 
   };
 
   const handleValueChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    budgetFormDispatch({ type: BudgetFormActionType.SET_VALUE, payload: Number(event.target.value) });
+    budgetFormDispatch({
+      type: BudgetFormActionType.SET_VALUE,
+      payload: Number(event.target.value),
+    });
   };
 
   const handleStartDateChange = (event: PickerValue) => {
@@ -110,7 +114,7 @@ export default function BudgetForm({ categories }: { categories: Category[] }): 
         || budgetFormState.typeError
         || budgetFormState.startDateError
         || budgetFormState.endDateError
-      ) {
+    ) {
       enqueueSnackbar(t('fixErrorsBeforeSaving'), { variant: 'error' });
       return;
     }
@@ -196,7 +200,8 @@ export default function BudgetForm({ categories }: { categories: Category[] }): 
         >
           {formattedCategories.map((category) => (
             <MenuItem
-              key={category} value={category}
+              key={category}
+              value={category}
               style={getStyles(category, selectedCategories, theme)}
             >
               {category}
