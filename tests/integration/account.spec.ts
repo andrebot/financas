@@ -1,7 +1,7 @@
 import request from 'supertest';
 import server from '../../src/server/server';
 import {
-  account1, account2, account3, adminUser, otherUser, userToDelete,
+  account1, account2, account3, adminUser, otherUser, userToDelete, findCardsByAccountId,
 } from './connectDB';
 import { createAccessToken } from '../../src/server/managers/authenticationManager';
 
@@ -128,6 +128,34 @@ describe('Account', () => {
       response.body.should.have.property('currency', newAccount.currency);
     });
 
+    it('should create cards submitted with the account full-list payload', async () => {
+      const newAccount = {
+        name: 'Card Account',
+        agency: '1234',
+        accountNumber: '8888',
+        currency: 'BRL',
+        initialBalance: 0,
+        userId: adminUser.id,
+        cards: [
+          { number: '4111111111111111', expirationDate: '12/30' },
+          { number: '5555555555554444', expirationDate: '01/31' },
+        ],
+      };
+
+      const response = await request(server)
+        .post('/api/v1/account')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(newAccount);
+      const persistedCards = await findCardsByAccountId(response.body.id);
+
+      response.status.should.be.eq(200);
+      persistedCards.should.have.lengthOf(2);
+      persistedCards.map((card) => card.number).should.have.members([
+        '4111111111111111',
+        '5555555555554444',
+      ]);
+    });
+
     it('should return 401 when the user is not authenticated', async () => {
       const response = await request(server)
         .post('/api/v1/account')
@@ -157,6 +185,45 @@ describe('Account', () => {
       response.body.should.have.property('agency', updatedAccount.agency);
       response.body.should.have.property('accountNumber', updatedAccount.accountNumber);
       response.body.should.have.property('currency', updatedAccount.currency);
+    });
+
+    it('should sync account cards from a submitted full list', async () => {
+      const createResponse = await request(server)
+        .post('/api/v1/account')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          name: 'Sync Card Account',
+          agency: '1234',
+          accountNumber: '9999',
+          currency: 'BRL',
+          initialBalance: 0,
+          userId: adminUser.id,
+          cards: [
+            { number: '4111111111111111', expirationDate: '12/30' },
+            { number: '5555555555554444', expirationDate: '01/31' },
+          ],
+        });
+      const [cardToKeep] = await findCardsByAccountId(createResponse.body.id);
+
+      const updateResponse = await request(server)
+        .put(`/api/v1/account/${createResponse.body.id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          name: 'Synced Card Account',
+          cards: [
+            { id: cardToKeep.id, number: '4000000000000002', expirationDate: '02/32' },
+            { number: '378282246310005', expirationDate: '03/33' },
+          ],
+        });
+      const persistedCards = await findCardsByAccountId(createResponse.body.id);
+
+      updateResponse.status.should.be.eq(200);
+      persistedCards.should.have.lengthOf(2);
+      persistedCards.map((card) => card.id).should.include(cardToKeep.id);
+      persistedCards.map((card) => card.number).should.have.members([
+        '4000000000000002',
+        '378282246310005',
+      ]);
     });
 
     it('should return 401 when the user is not authenticated', async () => {

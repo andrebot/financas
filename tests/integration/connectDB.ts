@@ -3,6 +3,7 @@ import { drizzle } from 'drizzle-orm/pglite';
 import { migrate } from 'drizzle-orm/pglite/migrator';
 import bcrypt from 'bcrypt';
 import path from 'path';
+import { eq } from 'drizzle-orm';
 import * as databaseConnection from '../../src/server/utils/databaseConnection';
 import * as schema from '../../src/server/resources/models/schema';
 const MIGRATIONS_PATH = path.resolve(__dirname, '../../src/server/migrations/drizzle');
@@ -120,6 +121,19 @@ export const createAccount = async (
   }).returning();
   account.id = saved.id;
 };
+
+/**
+ * Finds all cards persisted for an account fixture or API-created account.
+ *
+ * @param accountId - The account id to load cards for.
+ * @returns Cards belonging to the account.
+ */
+export const findCardsByAccountId = async (
+  accountId: number,
+): Promise<Array<typeof schema.cards.$inferSelect>> => db
+  .select()
+  .from(schema.cards)
+  .where(eq(schema.cards.accountId, accountId));
 
 /**
  * Seeds a category for the given userId and stores its generated id on the fixture.

@@ -11,6 +11,7 @@ import {
   IGoal,
   IAccount,
 } from '../../../../src/server/types';
+import * as databaseConnection from '../../../../src/server/utils/databaseConnection';
 
 chai.use(sinonChai);
 chai.should();
@@ -25,6 +26,10 @@ const createRepoStub = () => ({
 });
 
 describe('ContentManager', () => {
+  const dbHolder = databaseConnection as unknown as {
+    db: { transaction: sinon.SinonStub };
+  };
+  let originalDb: unknown;
   const budgetRepoStub = createRepoStub();
   const categoryRepoStub = {
     ...createRepoStub(),
@@ -39,6 +44,11 @@ describe('ContentManager', () => {
     findByCategoryWithDateRange: sinon.stub().resolves([]),
   };
   const accountRepoStub = createRepoStub();
+  const cardRepoStub = {
+    ...createRepoStub(),
+    findByAccountId: sinon.stub(),
+    syncAccountCards: sinon.stub(),
+  };
 
   let contentManager: ReturnType<typeof createContentManager>;
 
@@ -88,7 +98,19 @@ describe('ContentManager', () => {
     updatedAt: null,
   } as IAccount;
 
+  before(() => {
+    originalDb = dbHolder.db;
+  });
+
+  after(() => {
+    dbHolder.db = originalDb as typeof dbHolder.db;
+  });
+
   beforeEach(() => {
+    dbHolder.db = {
+      transaction: sinon.stub().callsFake(async (fn) => fn({})),
+    };
+
     budgetRepoStub.save.resetHistory();
     budgetRepoStub.findById.resetHistory();
     budgetRepoStub.deleteById.resetHistory();
@@ -121,24 +143,65 @@ describe('ContentManager', () => {
     accountRepoStub.update.resetHistory();
     accountRepoStub.listAll.resetHistory();
 
+    cardRepoStub.save.resetHistory();
+    cardRepoStub.findById.resetHistory();
+    cardRepoStub.deleteById.resetHistory();
+    cardRepoStub.update.resetHistory();
+    cardRepoStub.listAll.resetHistory();
+    cardRepoStub.findByAccountId.resetHistory();
+    cardRepoStub.syncAccountCards.resetHistory();
+
     contentManager = createContentManager(
       budgetRepoStub as any,
       categoryRepoStub as any,
       goalRepoStub as any,
       transactionRepoStub as any,
       accountRepoStub as any,
+      cardRepoStub as any,
     );
   });
 
   describe('accountActions', () => {
     it('should create account', async () => {
       const { id: _id, ...content } = mockAccount;
+      const submittedCards = [{ number: '4111111111111111', expirationDate: '12/30' }];
       accountRepoStub.save.resolves({ ...content, id: 1 });
+      cardRepoStub.syncAccountCards.resolves([{ ...submittedCards[0], id: 9, accountId: 1 }]);
 
-      const result = await contentManager.accountActions.createContent(content as IAccount);
+      const result = await contentManager.accountActions.createContent({
+        ...content,
+        cards: submittedCards,
+      });
 
       accountRepoStub.save.should.have.been.calledOnceWith(content);
+      cardRepoStub.syncAccountCards.should.have.been.calledOnceWith(1, submittedCards);
       result.should.have.property('id', 1);
+    });
+
+    it('should update account cards when a full card list is provided', async () => {
+      const submittedCards = [{ id: 9, number: '5555555555554444', expirationDate: '01/31' }];
+      const updatedAccount = { ...mockAccount, name: 'Updated Checking' };
+      accountRepoStub.update.resolves(updatedAccount);
+      cardRepoStub.syncAccountCards.resolves(submittedCards.map((card) => ({ ...card, accountId: 1 })));
+
+      const result = await contentManager.accountActions.updateContent(1, {
+        name: updatedAccount.name,
+        cards: submittedCards,
+      });
+
+      accountRepoStub.update.should.have.been.calledOnceWith(1, { name: updatedAccount.name });
+      cardRepoStub.syncAccountCards.should.have.been.calledOnceWith(1, submittedCards);
+      result!.should.deep.equal(updatedAccount);
+    });
+
+    it('should not sync account cards when cards are omitted from an update', async () => {
+      const updatedAccount = { ...mockAccount, name: 'Updated Checking' };
+      accountRepoStub.update.resolves(updatedAccount);
+
+      await contentManager.accountActions.updateContent(1, { name: updatedAccount.name });
+
+      accountRepoStub.update.should.have.been.calledOnceWith(1, { name: updatedAccount.name });
+      cardRepoStub.syncAccountCards.should.not.have.been.called;
     });
 
     it('should list accounts', async () => {
@@ -312,6 +375,7 @@ describe('ContentManager', () => {
         goalRepoStub as any,
         transactionRepoStub as any,
         accountRepoStub as any,
+        cardRepoStub as any,
       );
 
       chai.expect(manager).to.have.property('budgetActions');

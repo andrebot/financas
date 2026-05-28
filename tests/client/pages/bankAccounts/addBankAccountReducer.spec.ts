@@ -15,6 +15,7 @@ const createState = (overrides: Partial<BankAccountState> = {}): BankAccountStat
   accountNumberError: '',
   agencyError: '',
   ...overrides,
+  initialBalance: overrides.initialBalance ?? 0,
 });
 
 const reduce = (state: BankAccountState, type: BankAccountActionType, payload: string): BankAccountState =>

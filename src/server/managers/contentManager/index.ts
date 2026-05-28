@@ -4,8 +4,10 @@ import BudgetRepo from '../../resources/repositories/budgetRepo';
 import CategoryRepo from '../../resources/repositories/categoryRepo';
 import GoalRepo from '../../resources/repositories/goalRepo';
 import TransactionRepo from '../../resources/repositories/transactionRepo';
+import CardRepo from '../../resources/repositories/cardRepo';
 import { createLogger } from '../../utils/logger';
 import { checkVoidInstance } from '../../utils/misc';
+import { withTransaction } from '../../utils/transaction';
 import type {
   IAccountRepo,
   ICategoryRepo,
@@ -18,6 +20,8 @@ import type {
   IGoalRepo,
   ITransactionRepo,
   IAccount,
+  IAccountPayload,
+  ICardRepo,
 } from '../../types';
 import Repository from '../../resources/repositories/repository';
 import { accounts } from '../../resources/models/accountModel';
@@ -185,6 +189,70 @@ function createBudgetActions(
 }
 
 /**
+ * Splits the account table fields from the optional full card list submitted by the UI.
+ *
+ * @param payload - The account payload received by the account actions.
+ * @returns Account fields and the submitted card list as separate values.
+ */
+function splitAccountPayload(payload: IAccountPayload): {
+  account: Partial<IAccount>;
+  cards: IAccountPayload['cards'];
+} {
+  const { cards: submittedCards, ...account } = payload;
+
+  return { account, cards: submittedCards };
+}
+
+/**
+ * Creates account actions that coordinate account persistence with card list reconciliation.
+ *
+ * @param accountRepo - The account repository to use.
+ * @param cardRepo - The card repository to use.
+ * @returns Account actions compatible with the common account controller.
+ */
+function createAccountActions(
+  accountRepo: IAccountRepo,
+  cardRepo: ICardRepo,
+): ICommonActions<IAccountPayload> {
+  const commonAccountActions = commonActions(accountRepo, 'Account');
+
+  return {
+    createContent: async (payload: IAccountPayload): Promise<IAccount> => {
+      const { account, cards: submittedCards } = splitAccountPayload(payload);
+
+      return withTransaction(async () => {
+        const savedAccount = await commonAccountActions.createContent(account as IAccount);
+
+        if (submittedCards !== undefined) {
+          await cardRepo.syncAccountCards(savedAccount.id, submittedCards);
+        }
+
+        return savedAccount;
+      });
+    },
+    updateContent: async (
+      id: number,
+      payload: Partial<IAccountPayload>,
+    ): Promise<IAccount | null> => {
+      const { account, cards: submittedCards } = splitAccountPayload(payload as IAccountPayload);
+
+      return withTransaction(async () => {
+        const updatedAccount = await commonAccountActions.updateContent(id, account);
+
+        if (updatedAccount && submittedCards !== undefined) {
+          await cardRepo.syncAccountCards(id, submittedCards);
+        }
+
+        return updatedAccount;
+      });
+    },
+    deleteContent: commonAccountActions.deleteContent,
+    listContent: commonAccountActions.listContent,
+    getContent: commonAccountActions.getContent,
+  };
+}
+
+/**
  * Creates the content manager.
  *
  * @param budgetRepo - The budget repository to use.
@@ -192,6 +260,7 @@ function createBudgetActions(
  * @param goalRepo - The goal repository to use.
  * @param transactionRepo - The transaction repository to use.
  * @param accountRepo - The account repository to use.
+ * @param cardRepo - The card repository to use.
  * @returns The content manager.
  */
 export function createContentManager(
@@ -200,12 +269,13 @@ export function createContentManager(
   goalRepo: IGoalRepo,
   transactionRepo: ITransactionRepo,
   accountRepo: IAccountRepo,
+  cardRepo: ICardRepo,
 ): ContentManagerActions {
   const logger = createLogger('ContentManager');
   const budgetActions = createBudgetActions(budgetRepo, transactionRepo, categoryRepo, logger);
   const categoryActions = createCategoryActions(categoryRepo, transactionRepo, logger);
   const goalActions = createGoalActions(goalRepo, transactionRepo, logger);
-  const accountActions = commonActions(accountRepo, 'Account');
+  const accountActions = createAccountActions(accountRepo, cardRepo);
 
   return {
     budgetActions,
@@ -221,4 +291,5 @@ export default createContentManager(
   GoalRepo,
   TransactionRepo,
   AccountRepo,
+  CardRepo,
 );

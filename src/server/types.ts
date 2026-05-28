@@ -12,7 +12,7 @@ import { monthlyBalances } from './resources/models/monthlyBalanceModel';
 import { users } from './resources/models/userModel';
 import { accounts, cards } from './resources/models/accountModel';
 
-/* eslint-disable no-unused-vars */
+/* eslint-disable max-len, no-shadow, no-unused-vars, @typescript-eslint/no-unused-vars */
 
 /** Base shape for any domain entity that is owned by a user. */
 export type Content = { userId: number | undefined };
@@ -181,8 +181,23 @@ export interface IGoalItem {
 /** Domain entity representing a payment card. */
 export interface ICard extends InferSelectModel<typeof cards> {}
 
+/** Card fields accepted from account create/update forms. */
+export type ICardPayload = Pick<ICard, 'number' | 'expirationDate'>;
+
+/** Card payload used when reconciling a submitted full account card list. */
+export type ICardSyncPayload = ICardPayload & {
+  /** Existing card id. Omitted for newly added cards. */
+  id?: number;
+};
+
 /** Domain entity representing a bank or financial account. */
 export interface IAccount extends InferSelectModel<typeof accounts> {}
+
+/** Account create/update payload that may include the UI-submitted full card list. */
+export type IAccountPayload = Partial<IAccount> & Content & {
+  /** Full list of cards submitted by the account form. */
+  cards?: ICardSyncPayload[];
+};
 
 /** Domain entity representing an application user. */
 export interface IUser extends InferSelectModel<typeof users> {}
@@ -418,6 +433,25 @@ export interface IUserRepo extends IRepository<typeof users, IUser> {
 /** Repository contract for the accounts table using standard CRUD only. */
 export type IAccountRepo = IRepository<typeof accounts, IAccount>;
 
+/** Repository contract for account-owned payment cards. */
+export interface ICardRepo extends IRepository<typeof cards, ICard> {
+  /**
+   * Finds all cards that belong to the given account.
+   *
+   * @param accountId - The owner account id.
+   * @returns Cards belonging to the account.
+   */
+  findByAccountId(accountId: number): Promise<ICard[]>;
+  /**
+   * Reconciles the persisted cards for an account with a submitted full list.
+   *
+   * @param accountId - The owner account id.
+   * @param submittedCards - The full card list submitted by the UI.
+   * @returns The reconciled persisted cards.
+   */
+  syncAccountCards(accountId: number, submittedCards: ICardSyncPayload[]): Promise<ICard[]>;
+}
+
 /** Callback invoked when a controller catches an unhandled error. */
 export type ErrorHandler = (error: Error) => void;
 
@@ -575,7 +609,7 @@ export type ContentManagerActions = {
   /** CRUD actions for goals. */
   goalActions: ICommonActions<IGoal>;
   /** CRUD actions for accounts. */
-  accountActions: ICommonActions<IAccount>;
+  accountActions: ICommonActions<IAccountPayload>;
 };
 
 /* eslint-enable no-unused-vars */
