@@ -236,6 +236,19 @@ export default function Goals(): React.JSX.Element {
   };
 
   /**
+   * Checks whether the goal form has validation errors or missing required values.
+   *
+   * @returns True when the form cannot be submitted.
+   */
+  const hasGoalFormErrors = (): boolean => Boolean(
+    goalState.dueDateError
+    || goalState.valueError
+    || goalState.nameError
+    || !goalState.name?.trim()
+    || !goalState.value,
+  );
+
+  /**
    * Handles the saving of the goal in the goal form.
    * Since we create and update the goal in the same form,
    * we need to check if the goal is being created or updated
@@ -247,7 +260,7 @@ export default function Goals(): React.JSX.Element {
    * @returns The new state
    */
   const handleSaveGoal = async () => {
-    if (goalState.dueDateError || goalState.valueError || goalState.nameError) {
+    if (hasGoalFormErrors()) {
       enqueueSnackbar(t('fixErrorsBeforeSaving'), { variant: 'error' });
       return;
     }
@@ -261,7 +274,7 @@ export default function Goals(): React.JSX.Element {
         value: goalState.value,
         dueDate: goalState.dueDate!,
         archived: false,
-        user: user!.id,
+        userId: Number(user!.id),
         savedValue: 0,
         progress: 0,
       }).unwrap();

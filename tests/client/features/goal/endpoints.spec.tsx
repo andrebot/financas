@@ -34,7 +34,7 @@ describe('goal endpoints', () => {
         name: 'My goal',
         value: 10000,
         dueDate: new Date('2026-12-31'),
-        user: 'user-1',
+        userId: 1,
         archived: false,
         savedValue: 0,
         progress: 0,
@@ -50,11 +50,11 @@ describe('goal endpoints', () => {
 
     it('should correctly prepare the update goal mutation request', () => {
       const goal: Goal = {
-        id: 'goal-1',
+        id: 1,
         name: 'Updated goal',
         value: 15000,
         dueDate: new Date('2026-12-31'),
-        user: 'user-1',
+        userId: 1,
         archived: false,
         savedValue: 5000,
         progress: 33.33,
@@ -63,24 +63,24 @@ describe('goal endpoints', () => {
       const result = updateGoalMutation(goal);
 
       expect(result).toBeDefined();
-      expect(result.url).toBe('/goal/goal-1');
+      expect(result.url).toBe('/goal/1');
       expect(result.method).toBe('PUT');
       expect(result.body).toEqual(goal);
     });
 
     it('should correctly prepare the delete goal mutation request', () => {
-      const result = deleteGoalMutation('goal-1');
+      const result = deleteGoalMutation(1);
 
       expect(result).toBeDefined();
-      expect(result.url).toBe('/goal/goal-1');
+      expect(result.url).toBe('/goal/1');
       expect(result.method).toBe('DELETE');
     });
 
     it('should correctly prepare the get goal query request', () => {
-      const result = getGoalQuery('goal-1');
+      const result = getGoalQuery(1);
 
       expect(result).toBeDefined();
-      expect(result.url).toBe('/goal/goal-1');
+      expect(result.url).toBe('/goal/1');
       expect(result.method).toBe('GET');
     });
   });

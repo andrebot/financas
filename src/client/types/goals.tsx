@@ -1,18 +1,18 @@
 import { GoalActionType, GoalsTableActionType } from '../enums';
 
 export type Goal = {
-  id?: string;
+  id?: number;
   name: string;
   value: number;
   dueDate: Date;
-  user: string;
+  userId: number;
   archived: boolean;
   savedValue: number;
   progress: number;
 }
 
 export type GoalState = {
-  id?: string;
+  id?: number;
   name: string | undefined | null;
   value: number;
   dueDate: Date | undefined | null;
@@ -23,7 +23,7 @@ export type GoalState = {
 
 export type GoalsTableProps = {
   goals: Goal[];
-  activeGoalId: string | undefined | null;
+  activeGoalId: number | undefined | null;
   availableActions: GoalsTableActionType[];
   onArchiveGoal: (goal: Goal) => void;
   onUnarchiveGoal: (goal: Goal) => void;

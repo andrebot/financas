@@ -18,12 +18,12 @@ export const updateGoalMutation = (body: Goal) => ({
   body,
 });
 
-export const deleteGoalMutation = (id: string) => ({
+export const deleteGoalMutation = (id: number) => ({
   url: `/goal/${id}`,
   method: 'DELETE',
 });
 
-export const getGoalQuery = (id: string) => ({
+export const getGoalQuery = (id: number) => ({
   url: `/goal/${id}`,
   method: 'GET',
 });
@@ -42,11 +42,11 @@ export const endpoints = (builder: ApiBuilder) => ({
     query: updateGoalMutation,
     invalidatesTags: [{ type: 'Goal', id: 'LIST' }],
   }),
-  deleteGoal: builder.mutation<Goal, string>({
+  deleteGoal: builder.mutation<Goal, number>({
     query: deleteGoalMutation,
     invalidatesTags: [{ type: 'Goal', id: 'LIST' }],
   }),
-  getGoal: builder.query<Goal, string>({
+  getGoal: builder.query<Goal, number>({
     query: getGoalQuery,
   }),
 });
