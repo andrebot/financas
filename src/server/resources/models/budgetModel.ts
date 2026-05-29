@@ -28,7 +28,7 @@ export const budgets = pgTable('budgets', {
 
 export const budgetUsage = pgTable('budgetUsage', {
   budgetId: integer().notNull().references(() => budgets.id),
-  transactionId: integer().notNull().references(() => transactions.id),
+  transactionId: integer().notNull().references(() => transactions.id, { onDelete: 'cascade' }),
   date: timestamp().notNull(),
   valueUsed: numeric({ precision: 14, scale: 2 }).notNull(),
   ...timestampColumns,

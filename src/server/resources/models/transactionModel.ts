@@ -47,7 +47,7 @@ export const transactions = pgTable('transactions', {
   id: serial().primaryKey(),
   name: text().notNull(),
   categoryId: integer().references(() => categories.id),
-  accountId: integer().notNull().references(() => accounts.id),
+  accountId: integer().notNull().references(() => accounts.id, { onDelete: 'cascade' }),
   type: transactionTypes().notNull(),
   date: timestamp().notNull(),
   value: numeric({ precision: 14, scale: 2 }).notNull(),
@@ -57,7 +57,7 @@ export const transactions = pgTable('transactions', {
 });
 
 export const transactionToGoals = pgTable('transactionToGoals', {
-  transactionId: integer().notNull().references(() => transactions.id),
+  transactionId: integer().notNull().references(() => transactions.id, { onDelete: 'cascade' }),
   goalId: integer().notNull().references(() => goals.id),
   percentage: numeric({ precision: 14, scale: 2 }).notNull(),
   ...timestampColumns,

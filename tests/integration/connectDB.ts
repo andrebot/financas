@@ -136,6 +136,32 @@ export const findCardsByAccountId = async (
   .where(eq(schema.cards.accountId, accountId));
 
 /**
+ * Finds all transactions persisted for an account.
+ *
+ * @param accountId - The account id to load transactions for.
+ * @returns Transactions belonging to the account.
+ */
+export const findTransactionsByAccountId = async (
+  accountId: number,
+): Promise<Array<typeof schema.transactions.$inferSelect>> => db
+  .select()
+  .from(schema.transactions)
+  .where(eq(schema.transactions.accountId, accountId));
+
+/**
+ * Finds all monthly balances persisted for an account.
+ *
+ * @param accountId - The account id to load monthly balances for.
+ * @returns Monthly balances belonging to the account.
+ */
+export const findMonthlyBalancesByAccountId = async (
+  accountId: number,
+): Promise<Array<typeof schema.monthlyBalances.$inferSelect>> => db
+  .select()
+  .from(schema.monthlyBalances)
+  .where(eq(schema.monthlyBalances.accountId, accountId));
+
+/**
  * Seeds a category for the given userId and stores its generated id on the fixture.
  *
  * @param category - The category fixture to seed.

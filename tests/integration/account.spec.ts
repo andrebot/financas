@@ -1,7 +1,15 @@
 import request from 'supertest';
 import server from '../../src/server/server';
 import {
-  account1, account2, account3, adminUser, otherUser, userToDelete, findCardsByAccountId,
+  account1,
+  account2,
+  account3,
+  adminUser,
+  otherUser,
+  userToDelete,
+  findCardsByAccountId,
+  findTransactionsByAccountId,
+  findMonthlyBalancesByAccountId,
 } from './connectDB';
 import { createAccessToken } from '../../src/server/managers/authenticationManager';
 
@@ -337,6 +345,50 @@ describe('Account', () => {
       response.status.should.be.eq(200);
       response.body.should.be.an('object');
       response.body.should.have.property('name', 'Delete Me Own');
+    });
+
+    it('should cascade delete account cards, transactions, and monthly balances', async () => {
+      const accountWithRelations = {
+        name: 'Delete Me With Relations',
+        agency: '9993',
+        accountNumber: '999333',
+        currency: 'BRL',
+        initialBalance: 0,
+        userId: adminUser.id,
+        cards: [
+          { number: '4111111111111111', expirationDate: '12/30' },
+        ],
+      };
+      const createAccountResponse = await request(server)
+        .post('/api/v1/account')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(accountWithRelations);
+      const transactionPayload = {
+        name: 'Cascade Delete Transaction',
+        accountId: createAccountResponse.body.id,
+        type: 'deposit',
+        date: new Date(),
+        value: '100.00',
+        userId: adminUser.id,
+      };
+
+      await request(server)
+        .post('/api/v1/accountant')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(transactionPayload);
+
+      const response = await request(server)
+        .delete(`/api/v1/account/${createAccountResponse.body.id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+      const persistedCards = await findCardsByAccountId(createAccountResponse.body.id);
+      const persistedTransactions = await findTransactionsByAccountId(createAccountResponse.body.id);
+      const persistedMonthlyBalances = await findMonthlyBalancesByAccountId(createAccountResponse.body.id);
+
+      response.status.should.be.eq(200);
+      response.body.should.have.property('name', accountWithRelations.name);
+      persistedCards.should.have.lengthOf(0);
+      persistedTransactions.should.have.lengthOf(0);
+      persistedMonthlyBalances.should.have.lengthOf(0);
     });
 
     it('should return 401 when the user is not authenticated', async () => {

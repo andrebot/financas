@@ -13,7 +13,7 @@ export const cards = pgTable('cards', {
   id: serial('id').primaryKey(),
   number: text('number').notNull(),
   expirationDate: text('expirationDate').notNull(),
-  accountId: integer('accountId').notNull().references(() => accounts.id),
+  accountId: integer('accountId').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
   ...timestampColumns,
 });
 

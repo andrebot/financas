@@ -7,7 +7,7 @@ import { timestampColumns } from './columHelpers';
 
 export const monthlyBalances = pgTable('monthlyBalances', {
   id: serial('id').primaryKey(),
-  accountId: integer('accountId').notNull().references(() => accounts.id),
+  accountId: integer('accountId').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
   year: integer('year').notNull(),
   month: integer('month').notNull(),
   openingBalance: numeric({ precision: 14, scale: 2 }).notNull(),
