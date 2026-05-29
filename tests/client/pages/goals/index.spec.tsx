@@ -123,6 +123,29 @@ describe('Goals page', () => {
     expect(screen.getByText(i18nEn.translation.goalsListEmpty)).toBeInTheDocument();
   });
 
+  it('should render empty state when a refetch returns no goals', async () => {
+    let goalsData: Goal[] = [createMockGoal()];
+    (useListGoalsQuery as jest.Mock).mockImplementation(() => ({ data: goalsData }));
+
+    const { rerender } = setup();
+
+    expect(screen.getByText('Save for trip')).toBeInTheDocument();
+
+    goalsData = [];
+    rerender(
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <I18nextProvider i18n={i18n}>
+          <Goals />
+        </I18nextProvider>
+      </LocalizationProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(i18nEn.translation.goalsListEmpty)).toBeInTheDocument();
+      expect(screen.queryByText('Save for trip')).not.toBeInTheDocument();
+    });
+  });
+
   it('should use default empty array when useListGoalsQuery returns no data', () => {
     (useListGoalsQuery as jest.Mock).mockReturnValue({});
 
