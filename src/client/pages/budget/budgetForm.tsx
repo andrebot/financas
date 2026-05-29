@@ -38,12 +38,27 @@ const MenuProps = {
   },
 };
 
+/**
+ * Formats child categories with their parent category names for display.
+ *
+ * @param categories - Categories returned by the API.
+ * @returns Display labels in the format "Parent - Child".
+ */
 function formatCategories(categories: Category[]): string[] {
+  const categoryNamesById = new Map(
+    categories.map((category) => [category.id, category.name]),
+  );
+
   return categories
     .reduce((acc, category) => {
-      if (category.parentCategory) {
-        acc.push(`${category.parentCategory.name} - ${category.name}`);
+      const parentName = category.parentCategoryId
+        ? categoryNamesById.get(category.parentCategoryId)
+        : undefined;
+
+      if (parentName) {
+        acc.push(`${parentName} - ${category.name}`);
       }
+
       return acc;
     }, [] as string[])
     .sort();

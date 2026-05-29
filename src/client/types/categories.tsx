@@ -1,11 +1,8 @@
 export type Category = {
-  id?: string;
+  id?: number;
   name: string;
-  user: string;
-  parentCategory?: {
-    details: string;
-    name: string;
-  };
+  userId: number;
+  parentCategoryId?: number | null;
 };
 
 export type FormattedCategory = Category & {

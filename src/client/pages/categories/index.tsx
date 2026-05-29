@@ -80,8 +80,8 @@ export default function Categories(): React.JSX.Element {
     const newFormattedCategories: FormattedCategory[] = [];
 
     categories.forEach((category) => {
-      if (category.parentCategory) {
-        newFormattedCategories.find((c) => c.id === category.parentCategory?.details)?.children
+      if (category.parentCategoryId) {
+        newFormattedCategories.find((c) => c.id === category.parentCategoryId)?.children
           .push(category);
       } else {
         newFormattedCategories.push({
@@ -99,7 +99,7 @@ export default function Categories(): React.JSX.Element {
    *
    * @param subCategoryId - The id of the sub-category to delete
    */
-  const handleDeleteSubCategory = async (subCategoryId: string) => {
+  const handleDeleteSubCategory = async (subCategoryId: number) => {
     try {
       await deleteCategory(subCategoryId).unwrap();
 
@@ -120,18 +120,14 @@ export default function Categories(): React.JSX.Element {
    * @param subCategoryName - The name of the sub-category
    */
   const handleAddSubCategory = async (
-    parentCategoryId: string,
-    parentCategoryName: string,
+    parentCategoryId: number,
     subCategoryName: string,
   ) => {
     try {
       await createCategory({
         name: subCategoryName,
-        user: user!.id,
-        parentCategory: {
-          details: parentCategoryId,
-          name: parentCategoryName,
-        },
+        userId: Number(user!.id),
+        parentCategoryId,
       }).unwrap();
 
       enqueueSnackbar(t('subCategoryCreated'), { variant: 'success' });
@@ -147,7 +143,7 @@ export default function Categories(): React.JSX.Element {
    *
    * @param categoryId - The id of the category to delete
    */
-  const handleDeleteCategoryConfirmation = async (categoryId: string) => {
+  const handleDeleteCategoryConfirmation = async (categoryId: number) => {
     try {
       await deleteCategory(categoryId).unwrap();
 
@@ -164,7 +160,7 @@ export default function Categories(): React.JSX.Element {
    *
    * @param categoryId - The id of the category to delete
    */
-  const handleDeleteCategory = (categoryId: string) => {
+  const handleDeleteCategory = (categoryId: number) => {
     showModal(
       <ConfirmDeleteCategoryModal
         title={t('deleteCategoryModalTitle')}
@@ -185,7 +181,7 @@ export default function Categories(): React.JSX.Element {
     try {
       await createCategory({
         name: categoryName,
-        user: user!.id,
+        userId: Number(user!.id),
       }).unwrap();
 
       enqueueSnackbar(t('categoryCreated'), { variant: 'success' });
@@ -215,8 +211,8 @@ export default function Categories(): React.JSX.Element {
       await updateCategory({
         id: category.id!,
         name: newName,
-        user: category.user,
-        parentCategory: category.parentCategory,
+        userId: category.userId,
+        parentCategoryId: category.parentCategoryId,
       }).unwrap();
 
       enqueueSnackbar(t('categoryUpdated'), { variant: 'success' });
@@ -280,7 +276,6 @@ export default function Categories(): React.JSX.Element {
               <SubCategoryForm
                 onAddSubCategory={(subCategoryName) => handleAddSubCategory(
                   category.id!,
-                  category.name,
                   subCategoryName,
                 )}
                 data-testid="subCategoryForm"

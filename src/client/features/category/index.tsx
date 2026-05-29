@@ -18,12 +18,12 @@ export const updateCategoryMutation = (body: Category) => ({
   body,
 });
 
-export const deleteCategoryMutation = (id: string) => ({
+export const deleteCategoryMutation = (id: number) => ({
   url: `/category/${id}`,
   method: 'DELETE',
 });
 
-export const getCategoryQuery = (id: string) => ({
+export const getCategoryQuery = (id: number) => ({
   url: `/category/${id}`,
   method: 'GET',
 });
@@ -42,11 +42,11 @@ export const endpoints = (builder: ApiBuilder) => ({
     query: updateCategoryMutation,
     invalidatesTags: [{ type: 'Category', id: 'LIST' }],
   }),
-  deleteCategory: builder.mutation<Category, string>({
+  deleteCategory: builder.mutation<Category, number>({
     query: deleteCategoryMutation,
     invalidatesTags: [{ type: 'Category', id: 'LIST' }],
   }),
-  getCategory: builder.query<Category, string>({
+  getCategory: builder.query<Category, number>({
     query: getCategoryQuery,
   }),
 });
