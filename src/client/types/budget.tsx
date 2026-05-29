@@ -1,18 +1,18 @@
 import { BUDGET_TYPES, BudgetFormActionType } from '../enums';
 
 export type Budget = {
-  id?: string;
+  id?: number;
   name: string;
   value: number;
   type: BUDGET_TYPES;
   startDate: Date;
   endDate: Date;
   categories: string[];
-  user?: string;
+  userId: number;
 };
 
 export type BudgetFormState = {
-  id?: string;
+  id?: number;
   name: string;
   value: number;
   categories: string[];

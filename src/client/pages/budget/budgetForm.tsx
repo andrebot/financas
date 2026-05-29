@@ -142,7 +142,7 @@ export default function BudgetForm({ categories }: { categories: Category[] }): 
         type: budgetFormState.type,
         startDate: budgetFormState.startDate!,
         endDate: budgetFormState.endDate!,
-        user: user?.id,
+        userId: Number(user!.id),
       }).unwrap();
 
       budgetFormDispatch({ type: BudgetFormActionType.RESET });

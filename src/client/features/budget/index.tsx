@@ -18,12 +18,12 @@ export const updateBudgetMutation = (body: Budget) => ({
   body,
 });
 
-export const deleteBudgetMutation = (id: string) => ({
+export const deleteBudgetMutation = (id: number) => ({
   url: `/budget/${id}`,
   method: 'DELETE',
 });
 
-export const getBudgetQuery = (id: string) => ({
+export const getBudgetQuery = (id: number) => ({
   url: `/budget/${id}`,
   method: 'GET',
 });
@@ -42,11 +42,11 @@ export const endpoints = (builder: ApiBuilder) => ({
     query: updateBudgetMutation,
     invalidatesTags: [{ type: 'Budget', id: 'LIST' }],
   }),
-  deleteBudget: builder.mutation<Budget, string>({
+  deleteBudget: builder.mutation<Budget, number>({
     query: deleteBudgetMutation,
     invalidatesTags: [{ type: 'Budget', id: 'LIST' }],
   }),
-  getBudget: builder.query<Budget, string>({
+  getBudget: builder.query<Budget, number>({
     query: getBudgetQuery,
   }),
 });
