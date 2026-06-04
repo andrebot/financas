@@ -128,7 +128,7 @@ describe('ContentManager', () => {
     budgetRepoExtendedStub.listBudgetsWithCategories.resetHistory();
 
     categoryRepoStub.save.resetHistory();
-    categoryRepoStub.findById.resetHistory();
+    categoryRepoStub.findById.reset();
     categoryRepoStub.deleteById.resetHistory();
     categoryRepoStub.update.resetHistory();
     categoryRepoStub.listAll.resetHistory();
@@ -299,6 +299,53 @@ describe('ContentManager', () => {
       budgetRepoStub.save.should.have.been.calledOnce;
       budgetRepoExtendedStub.saveBudgetCategories.should.have.been.calledOnceWith(1, []);
       result.should.have.property('id', 1);
+    });
+
+    it('should create budget after validating submitted category ids', async () => {
+      const { id: _id, spent: _spent, ...content } = mockBudget;
+      const categoryIds = [1, 2];
+      const submittedBudget = { ...content, categoryIds } as IBudget;
+      budgetRepoStub.save.resolves({ ...content, id: 1 });
+      categoryRepoStub.findById.onFirstCall().resolves(mockCategory);
+      categoryRepoStub.findById.onSecondCall().resolves({ ...mockCategory, id: 2 });
+      budgetRepoExtendedStub.saveBudgetCategories.resolves();
+
+      const result = await contentManager.budgetActions.createContent(submittedBudget);
+
+      categoryRepoStub.findById.should.have.been.calledWith(1);
+      categoryRepoStub.findById.should.have.been.calledWith(2);
+      budgetRepoExtendedStub.saveBudgetCategories.should.have.been.calledOnceWith(1, categoryIds);
+      result.should.deep.include({ id: 1, categoryIds });
+    });
+
+    it('should reject budget creation when a submitted category id is invalid', async () => {
+      const { id: _id, spent: _spent, ...content } = mockBudget;
+      categoryRepoStub.findById.onFirstCall().resolves(mockCategory);
+      categoryRepoStub.findById.onSecondCall().resolves(null);
+
+      try {
+        await contentManager.budgetActions.createContent({
+          ...content,
+          categoryIds: [1, 999],
+        } as IBudget);
+        chai.expect.fail('Should have thrown');
+      } catch (error) {
+        (error as Error).message.should.equal('Budget contains invalid categories');
+      }
+
+      budgetRepoStub.save.should.not.have.been.called;
+      budgetRepoExtendedStub.saveBudgetCategories.should.not.have.been.called;
+    });
+
+    it('should list budgets with hydrated categories', async () => {
+      const budgets = [{ ...mockBudget, categories: [mockCategory] }];
+      budgetRepoExtendedStub.listBudgetsWithCategories.resolves(budgets);
+
+      const result = await contentManager.budgetActions.listContent();
+
+      budgetRepoExtendedStub.listBudgetsWithCategories.should.have.been.calledOnce;
+      budgetRepoStub.listAll.should.not.have.been.called;
+      result.should.deep.equal(budgets);
     });
 
     it('should throw when calculateBudgetSpent is called with null budget', async () => {

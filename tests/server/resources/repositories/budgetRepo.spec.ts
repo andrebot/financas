@@ -3,7 +3,7 @@ import sinonChai from 'sinon-chai';
 import chai from 'chai';
 import budgetRepo from '../../../../src/server/resources/repositories/budgetRepo';
 import * as databaseConnection from '../../../../src/server/utils/databaseConnection';
-import { budgetUsage } from '../../../../src/server/resources/models/budgetModel';
+import { budgetToCategories, budgetUsage } from '../../../../src/server/resources/models/budgetModel';
 import { requestContext } from '../../../../src/server/utils/authorization';
 import type { ITransaction } from '../../../../src/server/types';
 
@@ -13,6 +13,11 @@ type DrizzleDbStub = {
   insert: SinonStub;
   select: SinonStub;
   delete: SinonStub;
+  query?: {
+    budgets: {
+      findMany: SinonStub;
+    };
+  };
 };
 
 describe('Budget Repository', () => {
@@ -21,6 +26,7 @@ describe('Budget Repository', () => {
   let originalDb: unknown;
   let insertStub: SinonStub;
   let insertSelectStub: SinonStub;
+  let insertValuesStub: SinonStub;
   let onConflictDoNothingStub: SinonStub;
   let selectStub: SinonStub;
   let selectFromStub: SinonStub;
@@ -28,6 +34,7 @@ describe('Budget Repository', () => {
   let selectWhereStub: SinonStub;
   let deleteStub: SinonStub;
   let deleteWhereStub: SinonStub;
+  let findManyStub: SinonStub;
 
   before(() => {
     originalDb = dbHolder.db;
@@ -36,7 +43,11 @@ describe('Budget Repository', () => {
   beforeEach(() => {
     onConflictDoNothingStub = sinon.stub().resolves();
     insertSelectStub = sinon.stub().returns({ onConflictDoNothing: onConflictDoNothingStub });
-    insertStub = sinon.stub().returns({ select: insertSelectStub });
+    insertValuesStub = sinon.stub().returns({ onConflictDoNothing: onConflictDoNothingStub });
+    insertStub = sinon.stub().returns({
+      select: insertSelectStub,
+      values: insertValuesStub,
+    });
 
     selectWhereStub = sinon.stub().returns({ kind: 'select-query' });
     innerJoinStub = sinon.stub().returns({ where: selectWhereStub });
@@ -45,11 +56,17 @@ describe('Budget Repository', () => {
 
     deleteWhereStub = sinon.stub().resolves();
     deleteStub = sinon.stub().returns({ where: deleteWhereStub });
+    findManyStub = sinon.stub();
 
     dbHolder.db = {
       insert: insertStub,
       select: selectStub,
       delete: deleteStub,
+      query: {
+        budgets: {
+          findMany: findManyStub,
+        },
+      },
     };
   });
 
@@ -116,6 +133,75 @@ describe('Budget Repository', () => {
       deleteStub.should.have.been.calledOnceWithExactly(budgetUsage);
       deleteWhereStub.should.have.been.calledOnce;
       chai.assert.exists(deleteWhereStub.firstCall.args[0]);
+    });
+  });
+
+  describe('saveBudgetCategories', () => {
+    it('should skip inserts when no category ids are submitted', async () => {
+      await budgetRepo.saveBudgetCategories(5, []);
+
+      insertStub.should.not.have.been.called;
+      insertValuesStub.should.not.have.been.called;
+      onConflictDoNothingStub.should.not.have.been.called;
+    });
+
+    it('should insert budget category links and ignore conflicts', async () => {
+      await budgetRepo.saveBudgetCategories(5, [10, 11]);
+
+      insertStub.should.have.been.calledOnceWithExactly(budgetToCategories);
+      insertValuesStub.should.have.been.calledOnceWithExactly([
+        { budgetId: 5, categoryId: 10 },
+        { budgetId: 5, categoryId: 11 },
+      ]);
+      onConflictDoNothingStub.should.have.been.calledOnce;
+    });
+  });
+
+  describe('listBudgetsWithCategories', () => {
+    it('should list budgets with category junction rows flattened', async () => {
+      const persistedCategory = {
+        id: 10,
+        name: 'Food',
+        userId: 1,
+        parentCategoryId: null,
+        createdAt: new Date('2026-01-01'),
+        updatedAt: null,
+      };
+      const persistedBudget = {
+        id: 5,
+        name: 'Groceries',
+        value: '500.00',
+        type: 'monthly',
+        startDate: new Date('2026-01-01'),
+        endDate: new Date('2026-01-31'),
+        userId: 1,
+        createdAt: new Date('2026-01-01'),
+        updatedAt: null,
+      };
+      findManyStub.resolves([{
+        ...persistedBudget,
+        categories: [{ category: persistedCategory }],
+      }]);
+
+      const result = await requestContext.run({ userId: 1, isAdmin: false }, async () => (
+        budgetRepo.listBudgetsWithCategories()
+      ));
+
+      findManyStub.should.have.been.calledOnce;
+      findManyStub.firstCall.args[0].should.deep.include({
+        with: {
+          categories: {
+            with: {
+              category: true,
+            },
+          },
+        },
+      });
+      chai.assert.exists(findManyStub.firstCall.args[0].where);
+      result.should.deep.equal([{
+        ...persistedBudget,
+        categories: [persistedCategory],
+      }]);
     });
   });
 });

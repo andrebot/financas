@@ -1,7 +1,12 @@
 import request from 'supertest';
 import server from '../../src/server/server';
 import {
-  budget1, budget3, adminUser, userToDelete, otherUser,
+  budget1,
+  budget3,
+  adminUser,
+  userToDelete,
+  otherUser,
+  category1,
 } from './connectDB';
 import { createAccessToken } from '../../src/server/managers/authenticationManager';
 
@@ -29,6 +34,23 @@ describe('Budget', () => {
       response.status.should.be.eq(200);
       response.body.should.be.an('array');
       response.body.should.have.lengthOf(3);
+    });
+
+    it('should return budgets with hydrated categories', async () => {
+      const response = await request(server)
+        .get(resourceUrl)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      const firstBudget = response.body.find((budget: typeof budget1) => budget.id === budget1.id);
+      const otherBudget = response.body.find((budget: typeof budget3) => budget.id === budget3.id);
+
+      response.status.should.be.eq(200);
+      firstBudget.should.have.property('categories').that.is.an('array').with.lengthOf(1);
+      firstBudget.categories[0].should.deep.include({
+        id: category1.id,
+        name: category1.name,
+      });
+      otherBudget.should.have.property('categories').that.is.an('array').with.lengthOf(0);
     });
 
     it('should return nothing when user has no budgets', async () => {
@@ -111,6 +133,68 @@ describe('Budget', () => {
       response.body.should.have.property('type', newBudget.type);
       response.body.should.have.property('startDate');
       response.body.should.have.property('endDate');
+    });
+
+    it('should create a budget and persist its category links', async () => {
+      const newBudget = {
+        name: 'New Category Budget',
+        value: '250.00',
+        type: 'monthly',
+        startDate: new Date(),
+        endDate: new Date(),
+        userId: adminUser.id,
+        categoryIds: [category1.id],
+      };
+
+      const createResponse = await request(server)
+        .post(resourceUrl)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(newBudget);
+
+      const listResponse = await request(server)
+        .get(resourceUrl)
+        .set('Authorization', `Bearer ${accessToken}`);
+      const createdBudget = listResponse.body.find(
+        (budget: typeof budget1) => budget.id === createResponse.body.id,
+      );
+
+      createResponse.status.should.be.eq(200);
+      createResponse.body.should.deep.include({
+        name: newBudget.name,
+        categoryIds: newBudget.categoryIds,
+      });
+      createdBudget.should.have.property('categories').that.is.an('array').with.lengthOf(1);
+      createdBudget.categories[0].should.deep.include({
+        id: category1.id,
+        name: category1.name,
+      });
+    });
+
+    it('should reject budget creation when category ids are not visible to the user', async () => {
+      const token = createAccessToken(
+        userToDelete.email,
+        'user',
+        userToDelete.firstName,
+        userToDelete.lastName,
+        userToDelete.id,
+      );
+      const newBudget = {
+        name: 'Invalid Category Budget',
+        value: '200.00',
+        type: 'monthly',
+        startDate: new Date(),
+        endDate: new Date(),
+        userId: userToDelete.id,
+        categoryIds: [category1.id],
+      };
+
+      const response = await request(server)
+        .post(resourceUrl)
+        .set('Authorization', `Bearer ${token}`)
+        .send(newBudget);
+
+      response.status.should.be.eq(500);
+      response.body.should.have.property('error', 'Budget contains invalid categories');
     });
 
     it('should return 500 if budget has a wrong type value', async () => {
