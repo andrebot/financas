@@ -44,6 +44,8 @@ export default function BudgetPage(): React.JSX.Element {
       enqueueSnackbar(t('budgetDeletedSuccessfully'), { variant: 'success' });
     } catch {
       enqueueSnackbar(t('budgetDeletedError'), { variant: 'error' });
+    } finally {
+      closeModal();
     }
   };
 
