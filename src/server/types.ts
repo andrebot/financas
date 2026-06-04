@@ -232,7 +232,10 @@ export interface ICategory extends InferSelectModel<typeof categories> { }
 export interface IBudget extends InferSelectModel<typeof budgets> {
   /** Total amount spent against this budget in the relevant period. */
   spent?: number;
+  /** Category rows hydrated for list/detail responses. */
   categories?: ICategory[];
+  /** Category ids submitted by create/update requests. */
+  categoryIds?: number[];
 }
 
 /** Domain entity representing a monthly balance snapshot for an account. */
@@ -416,6 +419,13 @@ export interface IBudgetRepo extends IRepository<typeof budgets, IBudget> {
    * @param transaction - The transaction whose usage entry should be deleted.
    */
   revertBudgetsByTransaction(transaction: ITransaction): Promise<void>;
+  /**
+   * Creates budget/category junction rows for a persisted budget.
+   *
+   * @param budgetId - The persisted budget id.
+   * @param categoryIds - Category ids linked to the budget.
+   */
+  saveBudgetCategories(budgetId: number, categoryIds: number[]): Promise<void>;
   listBudgetsWithCategories(): Promise<IBudget[]>;
 }
 

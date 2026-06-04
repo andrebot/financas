@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useReducer } from 'react';
+import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { enqueueSnackbar } from 'notistack';
 import TextField from '@mui/material/TextField';
@@ -28,6 +28,11 @@ import { BUDGET_TYPES, BudgetFormActionType } from '../../enums';
 import { Category } from '../../types/categories';
 import type { BudgetFormState, BudgetFormAction } from '../../types';
 
+type FormattedBudgetCategory = {
+  id: number;
+  label: string;
+};
+
 const MenuProps = {
   PaperProps: {
     style: {
@@ -41,9 +46,9 @@ const MenuProps = {
  * Formats child categories with their parent category names for display.
  *
  * @param categories - Categories returned by the API.
- * @returns Display labels in the format "Parent - Child".
+ * @returns Category ids and display labels in the format "Parent - Child".
  */
-function formatCategories(categories: Category[]): string[] {
+function formatCategories(categories: Category[]): FormattedBudgetCategory[] {
   const categoryNamesById = new Map(
     categories.map((category) => [category.id, category.name]),
   );
@@ -54,19 +59,46 @@ function formatCategories(categories: Category[]): string[] {
         ? categoryNamesById.get(category.parentCategoryId)
         : undefined;
 
-      if (parentName) {
-        acc.push(`${parentName} - ${category.name}`);
+      if (parentName && category.id !== undefined) {
+        acc.push({ id: category.id, label: `${parentName} - ${category.name}` });
       }
 
       return acc;
-    }, [] as string[])
-    .sort();
+    }, [] as FormattedBudgetCategory[])
+    .sort((a, b) => a.label.localeCompare(b.label));
+}
+
+/**
+ * Converts a MUI multi-select value to numeric category ids.
+ *
+ * @param value - Raw value from the select change event.
+ * @returns Numeric category ids selected by the user.
+ */
+function toCategoryIds(value: unknown): number[] {
+  const values = typeof value === 'string' ? value.split(',') : value as Array<number | string>;
+
+  return values.map((categoryId) => Number(categoryId));
+}
+
+/**
+ * Finds the display label for a selected category id.
+ *
+ * @param categoryId - Selected category id.
+ * @param formattedCategories - Category display options.
+ * @returns The display label or the id if the option is no longer loaded.
+ */
+function getCategoryLabel(
+  categoryId: number,
+  formattedCategories: FormattedBudgetCategory[],
+): string {
+  return formattedCategories.find((category) => category.id === categoryId)?.label
+    ?? String(categoryId);
 }
 
 export default function BudgetForm({
   categories,
   budgetFormState,
-  budgetFormDispatch
+  budgetFormDispatch,
 }: {
   categories: Category[],
   budgetFormState: BudgetFormState,
@@ -77,15 +109,14 @@ export default function BudgetForm({
   const { user } = useAuth();
   const [createBudget] = useCreateBudgetMutation();
   const [updateBudget] = useUpdateBudgetMutation();
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   const formattedCategories = useMemo(
     () => formatCategories(categories),
     [categories],
   );
 
-  const getStyles = (name: string, optionValue: string[], muiTheme: Theme) => ({
-    fontWeight: optionValue.includes(name)
+  const getStyles = (categoryId: number, optionValue: number[], muiTheme: Theme) => ({
+    fontWeight: optionValue.includes(categoryId)
       ? muiTheme.typography.fontWeightMedium
       : muiTheme.typography.fontWeightRegular,
   });
@@ -95,7 +126,10 @@ export default function BudgetForm({
       target: { value },
     } = event;
 
-    setSelectedCategories(typeof value === 'string' ? value.split(',') : value as string[]);
+    budgetFormDispatch({
+      type: BudgetFormActionType.SET_CATEGORY_IDS,
+      payload: toCategoryIds(value),
+    });
   };
 
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -145,7 +179,7 @@ export default function BudgetForm({
         id: budgetFormState.id,
         name: budgetFormState.name,
         value: budgetFormState.value,
-        categories: selectedCategories,
+        categoryIds: budgetFormState.categoryIds,
         type: budgetFormState.type,
         startDate: budgetFormState.startDate!,
         endDate: budgetFormState.endDate!,
@@ -207,14 +241,14 @@ export default function BudgetForm({
         <CategorySelect
           label={t('budgetCategories')}
           labelId="budget-categories-label"
-          value={selectedCategories}
+          value={budgetFormState.categoryIds}
           onChange={handleCategoryChange}
           multiple
           input={<OutlinedInput id="budget-categories-chip" label="Chip" />}
           renderValue={(selected) => (
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-              {(selected as string[]).map((value: string) => (
-                <Chip key={value} label={value} />
+              {(selected as number[]).map((value: number) => (
+                <Chip key={value} label={getCategoryLabel(value, formattedCategories)} />
               ))}
             </Box>
           )}
@@ -222,11 +256,11 @@ export default function BudgetForm({
         >
           {formattedCategories.map((category) => (
             <MenuItem
-              key={category}
-              value={category}
-              style={getStyles(category, selectedCategories, theme)}
+              key={category.id}
+              value={category.id}
+              style={getStyles(category.id, budgetFormState.categoryIds, theme)}
             >
-              {category}
+              {category.label}
             </MenuItem>
           ))}
         </CategorySelect>

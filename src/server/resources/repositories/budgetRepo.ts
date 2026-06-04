@@ -61,6 +61,30 @@ async function revertBudgetsByTransaction(transaction: ITransaction): Promise<vo
     .where(eq(budgetUsage.transactionId, transaction.id!));
 }
 
+/**
+ * Saves the category links for a budget.
+ *
+ * @param budgetId - The budget receiving category links.
+ * @param categoryIds - Category ids linked to the budget.
+ */
+async function saveBudgetCategories(budgetId: number, categoryIds: number[]): Promise<void> {
+  logger.info(`Saving categories for budget: ${budgetId}`);
+
+  if (categoryIds.length === 0) {
+    return;
+  }
+
+  await getDb()
+    .insert(budgetToCategories)
+    .values(categoryIds.map((categoryId) => ({ budgetId, categoryId })))
+    .onConflictDoNothing();
+}
+
+/**
+ * Lists budgets with their linked category rows hydrated.
+ *
+ * @returns Budgets visible in the authorization context with categories attached.
+ */
 async function listBudgetsWithCategories(): Promise<IBudget[]> {
   logger.info('Listing budgets with categories');
 
@@ -85,5 +109,6 @@ export default {
   ...budgetRepo,
   updateBudgetsByNewTransaction,
   revertBudgetsByTransaction,
+  saveBudgetCategories,
   listBudgetsWithCategories,
 };

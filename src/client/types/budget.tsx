@@ -1,4 +1,5 @@
 import { BUDGET_TYPES, BudgetFormActionType } from '../enums';
+import { Category } from './categories';
 
 export type Budget = {
   id?: number;
@@ -7,7 +8,8 @@ export type Budget = {
   type: BUDGET_TYPES;
   startDate: Date;
   endDate: Date;
-  categories: string[];
+  categories?: Category[];
+  categoryIds?: number[];
   userId: number;
 };
 
@@ -15,7 +17,7 @@ export type BudgetFormState = {
   id?: number;
   name: string;
   value: number;
-  categories: string[];
+  categoryIds: number[];
   type: BUDGET_TYPES;
   startDate: Date | undefined | null;
   endDate: Date | undefined | null;
@@ -42,6 +44,9 @@ export type BudgetFormAction = {
 } | {
   type: BudgetFormActionType.SET_TYPE;
   payload: BUDGET_TYPES;
+} | {
+  type: BudgetFormActionType.SET_CATEGORY_IDS;
+  payload: number[];
 } | {
   type: BudgetFormActionType.EDIT;
   payload: Budget;

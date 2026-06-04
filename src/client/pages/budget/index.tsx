@@ -42,7 +42,7 @@ export default function BudgetPage(): React.JSX.Element {
     try {
       await deleteBudget(id).unwrap();
       enqueueSnackbar(t('budgetDeletedSuccessfully'), { variant: 'success' });
-    } catch (error) {
+    } catch {
       enqueueSnackbar(t('budgetDeletedError'), { variant: 'error' });
     }
   };
@@ -54,14 +54,18 @@ export default function BudgetPage(): React.JSX.Element {
         confirmationText={t('deleteBudgetMessage')}
         onConfirm={() => submitDeleteBudget(id)}
         onCancel={() => closeModal()}
-      />
+      />,
     );
   };
 
   return (
     <BudgetMain>
       <Typography variant="h1">{t('budget')}</Typography>
-      <BudgetForm categories={categories} budgetFormState={budgetFormState} budgetFormDispatch={budgetFormDispatch} />
+      <BudgetForm
+        categories={categories}
+        budgetFormState={budgetFormState}
+        budgetFormDispatch={budgetFormDispatch}
+      />
       <BudgetTableWrapper elevation={3}>
         {budgets.length > 0 ? (
           <Table>

@@ -6,7 +6,7 @@ import type { BudgetFormState, BudgetFormAction, Budget } from '../../types';
 export const initialBudgetFormState: BudgetFormState = {
   name: '',
   value: 0,
-  categories: [],
+  categoryIds: [],
   type: BUDGET_TYPES.ANNUALY,
   startDate: new Date(),
   endDate: new Date(),
@@ -136,6 +136,23 @@ function setType(
 }
 
 /**
+ * Validates and sets the selected category ids.
+ *
+ * @param state - The current state
+ * @param payload - The selected category ids
+ * @returns The new state
+ */
+function setCategoryIds(state: BudgetFormState, payload: number[]): BudgetFormState {
+  const nextState: BudgetFormState = { ...state, categoryIds: payload, categoriesError: '' };
+
+  if (payload.length === 0) {
+    nextState.categoriesError = 'budgetCategoriesRequired';
+  }
+
+  return nextState;
+}
+
+/**
  * Updates the state so the user can edit the budget
  *
  * @param state - The current state
@@ -146,9 +163,14 @@ function editBudget(
   state: BudgetFormState,
   payload: Budget,
 ): BudgetFormState {
+  const categoryIds = payload.categoryIds
+    ?? payload.categories?.map((category) => category.id).filter((id) => id !== undefined)
+    ?? [];
+
   return {
     ...state,
     ...payload,
+    categoryIds,
     nameError: '',
     valueError: '',
     categoriesError: '',
@@ -180,6 +202,8 @@ export const budgetFormReducer = (
       return setEndDate(state, action.payload);
     case BudgetFormActionType.SET_TYPE:
       return setType(state, action.payload);
+    case BudgetFormActionType.SET_CATEGORY_IDS:
+      return setCategoryIds(state, action.payload);
     case BudgetFormActionType.EDIT:
       return editBudget(state, action.payload);
     case BudgetFormActionType.RESET:

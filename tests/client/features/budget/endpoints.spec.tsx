@@ -92,12 +92,11 @@ describe('budget endpoints', () => {
 
       expect(builtEndpoints).toBeDefined();
       expect(builtEndpoints.listBudgets).toBeDefined();
-      expect(builtEndpoints.listBudgetCategories).toBeDefined();
       expect(builtEndpoints.createBudget).toBeDefined();
       expect(builtEndpoints.updateBudget).toBeDefined();
       expect(builtEndpoints.deleteBudget).toBeDefined();
       expect(builtEndpoints.getBudget).toBeDefined();
-      expect(mockBuilder.query).toHaveBeenCalledTimes(3);
+      expect(mockBuilder.query).toHaveBeenCalledTimes(2);
       expect(mockBuilder.mutation).toHaveBeenCalledTimes(3);
     });
   });

@@ -1,13 +1,8 @@
 import baseApi from '../apiSlice';
-import type { ApiBuilder, Budget, Category } from '../../types';
+import type { ApiBuilder, Budget } from '../../types';
 
 export const listBudgetQuery = () => ({
   url: '/budget',
-  method: 'GET',
-});
-
-export const listBudgetCategoriesQuery = (budgetId: number) => ({
-  url: `/budget/${budgetId}/categories`,
   method: 'GET',
 });
 
@@ -37,10 +32,6 @@ export const getBudgetQuery = (id: number) => ({
 export const endpoints = (builder: ApiBuilder) => ({
   listBudgets: builder.query<Budget[], void>({
     query: listBudgetQuery,
-    providesTags: [{ type: 'Budget', id: 'LIST' }],
-  }),
-  listBudgetCategories: builder.query<Category[], number>({
-    query: listBudgetCategoriesQuery,
     providesTags: [{ type: 'Budget', id: 'LIST' }],
   }),
   createBudget: builder.mutation<Budget, Budget>({

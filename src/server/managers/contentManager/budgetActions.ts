@@ -1,5 +1,6 @@
 import { Logger } from 'winston';
 import commonActions from './commonActions';
+import { withTransaction } from '../../utils/transaction';
 import type {
   IBudget,
   ITransactionRepo,
@@ -79,13 +80,76 @@ export async function getBudgetWithSpent(
   return { ...budget, spent };
 }
 
+/**
+ * Verifies that every submitted category id belongs to a visible category.
+ *
+ * @param categoryIds - Category ids submitted by the client.
+ * @param categoryRepo - The category repository to validate against.
+ */
+async function validateBudgetCategoryIds(
+  categoryIds: number[],
+  categoryRepo: ICategoryRepo,
+): Promise<void> {
+  const categories = await Promise.all(
+    categoryIds.map((categoryId) => categoryRepo.findById(categoryId)),
+  );
+
+  if (categories.some((category) => !category)) {
+    throw new Error('Budget contains invalid categories');
+  }
+}
+
+/**
+ * Creates a budget and links it to the submitted category ids in one transaction.
+ *
+ * @param payload - Budget payload submitted by the client.
+ * @param budgetRepo - The budget repository to use.
+ * @param categoryRepo - The category repository to validate categories with.
+ * @param logger - The logger to use.
+ * @returns The created budget with its submitted category ids attached.
+ */
+export async function createBudgetWithCategories(
+  payload: IBudget,
+  budgetRepo: IBudgetRepo,
+  categoryRepo: ICategoryRepo,
+  logger: Logger,
+): Promise<IBudget> {
+  const { categoryIds = [] } = payload;
+  const budgetPayload = {
+    name: payload.name,
+    value: payload.value,
+    type: payload.type,
+    startDate: payload.startDate,
+    endDate: payload.endDate,
+    userId: payload.userId,
+  };
+
+  logger.info(`Creating budget with ${categoryIds.length} categories`);
+  await validateBudgetCategoryIds(categoryIds, categoryRepo);
+
+  return withTransaction(async () => {
+    const budget = await budgetRepo.save(budgetPayload);
+
+    await budgetRepo.saveBudgetCategories(budget.id, categoryIds);
+
+    return { ...budget, categoryIds };
+  });
+}
+
+/**
+ * Lists all budgets with their linked categories.
+ *
+ * @param budgetRepo - The budget repository to use.
+ * @param logger - The logger to use.
+ * @returns Budgets with hydrated categories.
+ */
 export async function listBudgetWithCategories(
   budgetRepo: IBudgetRepo,
   logger: Logger,
 ): Promise<IBudget[]> {
   logger.info('Listing budgets');
 
-  return await budgetRepo.listBudgetsWithCategories();
+  return budgetRepo.listBudgetsWithCategories();
 }
 
 /**
@@ -107,6 +171,12 @@ export default function createBudgetActions(
 
   return {
     ...commonBudgetActions,
+    createContent: async (payload: IBudget): Promise<IBudget> => createBudgetWithCategories(
+      payload,
+      budgetRepo,
+      categoryRepo,
+      logger,
+    ),
     getContent: async (
       id: number,
     ): Promise<IBudget | null> => getBudgetWithSpent(
