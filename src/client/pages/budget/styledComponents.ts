@@ -5,6 +5,7 @@ import { RowInput } from '../../components/formStyledComponents';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import Button from '@mui/material/Button';
 import FormControl from '@mui/material/FormControl';
+import Paper from '@mui/material/Paper';
 
 export const BudgetMain = styled('div')(({ theme }: StyleCompProp) => ({
   display: 'flex',
@@ -71,3 +72,18 @@ export const CategoryFormControl = styled(FormControl)(({ theme }: StyleCompProp
     maxWidth: '800px',
   },
 }));
+
+export const BudgetTableWrapper = styled(Paper)(() => ({
+  padding: '20px',
+  width: '100%',
+}));
+
+export const NoBudgetMessage = styled('div')(({ theme }: StyleCompProp) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '20px',
+  padding: '20px',
+}));
+

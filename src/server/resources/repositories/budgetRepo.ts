@@ -61,8 +61,29 @@ async function revertBudgetsByTransaction(transaction: ITransaction): Promise<vo
     .where(eq(budgetUsage.transactionId, transaction.id!));
 }
 
+async function listBudgetsWithCategories(): Promise<IBudget[]> {
+  logger.info('Listing budgets with categories');
+
+  const rows = await getDb().query.budgets.findMany({
+    with: {
+      categories: {
+        with: {
+          category: true,
+        },
+      },
+    },
+    where: getAutorizationDatabaseContext(budgets),
+  });
+
+  return rows.map((row) => ({
+    ...row,
+    categories: row.categories.map((c) => c.category),
+  }));
+}
+
 export default {
   ...budgetRepo,
   updateBudgetsByNewTransaction,
   revertBudgetsByTransaction,
+  listBudgetsWithCategories,
 };

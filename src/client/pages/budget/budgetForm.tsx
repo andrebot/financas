@@ -22,12 +22,11 @@ import {
   CategorySelect,
   SaveBudgetButton,
 } from './styledComponents';
-import { useCreateBudgetMutation } from '../../features/budget';
+import { useCreateBudgetMutation, useUpdateBudgetMutation } from '../../features/budget';
 import { useAuth } from '../../hooks/authContext';
-import { budgetFormReducer, initialBudgetFormState } from './budgetFormReducer';
-
 import { BUDGET_TYPES, BudgetFormActionType } from '../../enums';
 import { Category } from '../../types/categories';
+import type { BudgetFormState, BudgetFormAction } from '../../types';
 
 const MenuProps = {
   PaperProps: {
@@ -64,15 +63,20 @@ function formatCategories(categories: Category[]): string[] {
     .sort();
 }
 
-export default function BudgetForm({ categories }: { categories: Category[] }): React.JSX.Element {
+export default function BudgetForm({
+  categories,
+  budgetFormState,
+  budgetFormDispatch
+}: {
+  categories: Category[],
+  budgetFormState: BudgetFormState,
+  budgetFormDispatch: React.Dispatch<BudgetFormAction>
+}): React.JSX.Element {
   const { t } = useTranslation();
   const theme = useTheme();
   const { user } = useAuth();
-  const [budgetFormState, budgetFormDispatch] = useReducer(
-    budgetFormReducer,
-    initialBudgetFormState,
-  );
   const [createBudget] = useCreateBudgetMutation();
+  const [updateBudget] = useUpdateBudgetMutation();
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   const formattedCategories = useMemo(
@@ -124,18 +128,21 @@ export default function BudgetForm({ categories }: { categories: Category[] }): 
 
   const handleSaveBudget = async () => {
     if (budgetFormState.nameError
-        || budgetFormState.valueError
-        || budgetFormState.categoriesError
-        || budgetFormState.typeError
-        || budgetFormState.startDateError
-        || budgetFormState.endDateError
+      || budgetFormState.valueError
+      || budgetFormState.categoriesError
+      || budgetFormState.typeError
+      || budgetFormState.startDateError
+      || budgetFormState.endDateError
     ) {
       enqueueSnackbar(t('fixErrorsBeforeSaving'), { variant: 'error' });
       return;
     }
 
+    const action = budgetFormState.id ? updateBudget : createBudget;
+
     try {
-      await createBudget({
+      await action({
+        id: budgetFormState.id,
         name: budgetFormState.name,
         value: budgetFormState.value,
         categories: selectedCategories,

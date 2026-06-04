@@ -8,7 +8,9 @@ import i18n from '../../../../src/client/i18n';
 import i18nEn from '../../../../src/client/i18n/en';
 import BudgetForm from '../../../../src/client/pages/budget/budgetForm';
 import { useAuth } from '../../../../src/client/hooks/authContext';
-import { useCreateBudgetMutation } from '../../../../src/client/features/budget';
+import { useCreateBudgetMutation, useUpdateBudgetMutation } from '../../../../src/client/features/budget';
+import { budgetFormReducer, initialBudgetFormState } from '../../../../src/client/pages/budget/budgetFormReducer';
+
 
 jest.mock('notistack', () => ({
   enqueueSnackbar: jest.fn(),
@@ -20,6 +22,7 @@ jest.mock('../../../../src/client/hooks/authContext', () => ({
 
 jest.mock('../../../../src/client/features/budget', () => ({
   useCreateBudgetMutation: jest.fn(),
+  useUpdateBudgetMutation: jest.fn(),
 }));
 
 describe('BudgetForm', () => {
@@ -39,12 +42,30 @@ describe('BudgetForm', () => {
       mockCreateBudget,
       { isError: false, isSuccess: false },
     ]);
+    (useUpdateBudgetMutation as jest.Mock).mockReturnValue([
+      jest.fn(),
+      { isError: false, isSuccess: false },
+    ]);
   });
+
+  const TestWrapper = () => {
+    const [budgetFormState, budgetFormDispatch] = React.useReducer(
+      budgetFormReducer,
+      initialBudgetFormState,
+    );
+    return (
+      <BudgetForm
+        categories={[]}
+        budgetFormState={budgetFormState}
+        budgetFormDispatch={budgetFormDispatch}
+      />
+    );
+  };
 
   const budgetFormJSX = (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <I18nextProvider i18n={i18n}>
-        <BudgetForm categories={[]} />
+        <TestWrapper />
       </I18nextProvider>
     </LocalizationProvider>
   );

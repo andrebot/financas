@@ -179,7 +179,7 @@ export interface IGoalItem {
 }
 
 /** Domain entity representing a payment card. */
-export interface ICard extends InferSelectModel<typeof cards> {}
+export interface ICard extends InferSelectModel<typeof cards> { }
 
 /** Card fields accepted from account create/update forms. */
 export type ICardPayload = Pick<ICard, 'number' | 'expirationDate'>;
@@ -202,7 +202,7 @@ export type ICardClientPayload = ICardSyncPayload & {
 };
 
 /** Domain entity representing a bank or financial account. */
-export interface IAccount extends InferSelectModel<typeof accounts> {}
+export interface IAccount extends InferSelectModel<typeof accounts> { }
 
 /** Account row loaded with its related persisted cards. */
 export type IAccountWithCards = IAccount & {
@@ -217,25 +217,26 @@ export type IAccountPayload = Partial<IAccount> & Content & {
 };
 
 /** Domain entity representing an application user. */
-export interface IUser extends InferSelectModel<typeof users> {}
+export interface IUser extends InferSelectModel<typeof users> { }
 
 /** Domain entity representing a financial transaction. */
-export interface ITransaction extends InferSelectModel<typeof transactions> {}
+export interface ITransaction extends InferSelectModel<typeof transactions> { }
 
 /** Domain entity representing a savings goal. */
-export interface IGoal extends InferSelectModel<typeof goals> {}
+export interface IGoal extends InferSelectModel<typeof goals> { }
 
 /** Domain entity representing a spending category. */
-export interface ICategory extends InferSelectModel<typeof categories> {}
+export interface ICategory extends InferSelectModel<typeof categories> { }
 
 /** Domain entity representing a budget with its computed total spent amount. */
 export interface IBudget extends InferSelectModel<typeof budgets> {
   /** Total amount spent against this budget in the relevant period. */
-  spent: number;
+  spent?: number;
+  categories?: ICategory[];
 }
 
 /** Domain entity representing a monthly balance snapshot for an account. */
-export interface IMonthlyBalance extends InferSelectModel<typeof monthlyBalances> {}
+export interface IMonthlyBalance extends InferSelectModel<typeof monthlyBalances> { }
 
 /** Payload used to bulk-update a goal's saved value by a fixed amount. */
 export type BulkGoalsUpdate = {
@@ -415,6 +416,7 @@ export interface IBudgetRepo extends IRepository<typeof budgets, IBudget> {
    * @param transaction - The transaction whose usage entry should be deleted.
    */
   revertBudgetsByTransaction(transaction: ITransaction): Promise<void>;
+  listBudgetsWithCategories(): Promise<IBudget[]>;
 }
 
 /** Repository contract for the monthlyBalances table, extending base CRUD with balance management. */

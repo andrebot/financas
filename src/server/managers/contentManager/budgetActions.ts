@@ -79,6 +79,15 @@ export async function getBudgetWithSpent(
   return { ...budget, spent };
 }
 
+export async function listBudgetWithCategories(
+  budgetRepo: IBudgetRepo,
+  logger: Logger,
+): Promise<IBudget[]> {
+  logger.info('Listing budgets');
+
+  return await budgetRepo.listBudgetsWithCategories();
+}
+
 /**
  * Creates the budget actions. Gets the spent value of a budget is different from the
  * standard get.
@@ -105,6 +114,10 @@ export default function createBudgetActions(
       budgetRepo,
       transactionRepo,
       categoryRepo,
+      logger,
+    ),
+    listContent: async (): Promise<IBudget[]> => listBudgetWithCategories(
+      budgetRepo,
       logger,
     ),
   };
