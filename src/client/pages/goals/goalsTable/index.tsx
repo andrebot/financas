@@ -115,6 +115,12 @@ export default function GoalsTable({
     return 'primary';
   };
 
+  /**
+   * Formats a numeric goal value using the configured currency.
+   *
+   * @param value - The goal value to format.
+   * @returns The formatted currency string.
+   */
   const formatValueToCurrency = (value: number) => new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: t('currencyFormat'),

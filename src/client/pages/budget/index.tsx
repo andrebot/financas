@@ -25,6 +25,11 @@ import { useDeleteBudgetMutation, useListBudgetsQuery } from '../../features/bud
 import { useModal } from '../../components/modal/modal';
 import { Budget } from '../../types';
 
+/**
+ * Displays the budget page with the budget form and budget table actions.
+ *
+ * @returns The budget page component.
+ */
 export default function BudgetPage(): React.JSX.Element {
   const { t } = useTranslation();
   const { showModal, closeModal } = useModal();

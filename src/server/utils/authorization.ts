@@ -17,10 +17,24 @@ import { createLogger } from './logger';
 const logger = createLogger('AuthorizationUtils');
 export const requestContext = new AsyncLocalStorage<RequestContext>();
 
+/**
+ * Checks whether a Drizzle table participates in tenant-scoped authorization.
+ *
+ * @param table - The table metadata to inspect.
+ * @returns True when the table exposes a userId column.
+ */
 function tableHasTenantUserId(table: Table): table is TableWithUserId {
   return table.userId !== undefined;
 }
 
+/**
+ * Builds the tenant authorization filter for the current request context.
+ *
+ * @throws {Error} When no authorization context is available.
+ *
+ * @param table - The table to scope by userId when applicable.
+ * @returns A Drizzle SQL filter for non-admin users, or undefined when no filter is needed.
+ */
 export function getAutorizationDatabaseContext(table: Table): SQL | undefined {
   const context = requestContext.getStore();
 

@@ -95,6 +95,14 @@ function getCategoryLabel(
     ?? String(categoryId);
 }
 
+/**
+ * Budget form used for both budget creation and update flows.
+ *
+ * @param categories - Categories available for budget category selection.
+ * @param budgetFormState - The current reducer-backed form state.
+ * @param budgetFormDispatch - Dispatch function used to update the form state.
+ * @returns The budget form component.
+ */
 export default function BudgetForm({
   categories,
   budgetFormState,
@@ -115,12 +123,25 @@ export default function BudgetForm({
     [categories],
   );
 
+  /**
+   * Gets the font weight for a category menu option based on selection state.
+   *
+   * @param categoryId - The category option id.
+   * @param optionValue - The selected category ids.
+   * @param muiTheme - The active MUI theme.
+   * @returns The inline style for the option.
+   */
   const getStyles = (categoryId: number, optionValue: number[], muiTheme: Theme) => ({
     fontWeight: optionValue.includes(categoryId)
       ? muiTheme.typography.fontWeightMedium
       : muiTheme.typography.fontWeightRegular,
   });
 
+  /**
+   * Handles category multi-select changes and stores numeric category ids.
+   *
+   * @param event - The category select change event.
+   */
   const handleCategoryChange = (event: SelectChangeEvent<unknown>) => {
     const {
       target: { value },
@@ -132,10 +153,20 @@ export default function BudgetForm({
     });
   };
 
+  /**
+   * Handles budget name input changes.
+   *
+   * @param event - The name input change event.
+   */
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     budgetFormDispatch({ type: BudgetFormActionType.SET_NAME, payload: event.target.value });
   };
 
+  /**
+   * Handles budget value input changes.
+   *
+   * @param event - The value input change event.
+   */
   const handleValueChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     budgetFormDispatch({
       type: BudgetFormActionType.SET_VALUE,
@@ -143,14 +174,29 @@ export default function BudgetForm({
     });
   };
 
+  /**
+   * Handles budget start date picker changes.
+   *
+   * @param event - The selected start date value.
+   */
   const handleStartDateChange = (event: PickerValue) => {
     budgetFormDispatch({ type: BudgetFormActionType.SET_START_DATE, payload: event?.toDate() });
   };
 
+  /**
+   * Handles budget end date picker changes.
+   *
+   * @param event - The selected end date value.
+   */
   const handleEndDateChange = (event: PickerValue) => {
     budgetFormDispatch({ type: BudgetFormActionType.SET_END_DATE, payload: event?.toDate() });
   };
 
+  /**
+   * Handles budget type select changes.
+   *
+   * @param event - The type select change event.
+   */
   const handleTypeChange = (event: SelectChangeEvent<unknown>) => {
     const {
       target: { value },
@@ -160,6 +206,9 @@ export default function BudgetForm({
     budgetFormDispatch({ type: BudgetFormActionType.SET_TYPE, payload: type });
   };
 
+  /**
+   * Validates and submits the budget form using create or update mutation.
+   */
   const handleSaveBudget = async () => {
     if (budgetFormState.nameError
       || budgetFormState.valueError

@@ -69,6 +69,11 @@ export default function AccountBankItem({ bankAccount }: AccountBankItemProps): 
     closeModal();
   };
 
+  /**
+   * Updates a bank account from the edit modal and closes the modal afterward.
+   *
+   * @param newBankAccount - The updated bank account payload.
+   */
   const handleUpdateBankAccount = async (newBankAccount: BankAccount) => {
     await updateBankAccount(newBankAccount);
     closeModal();

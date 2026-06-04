@@ -12,7 +12,9 @@ const server = app.listen(PORT, async () => {
   db.connectToDatabase();
 });
 
-// Cleanly disposing and closing the server
+/**
+ * Gracefully disconnects the database, closes the HTTP server and exits the process.
+ */
 const dispose = async () => {
   await db.disconnectFromDatabase();
   await server.close();

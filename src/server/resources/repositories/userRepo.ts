@@ -8,6 +8,12 @@ import type { IUser } from '../../types';
 const logger = createLogger('Repository:User');
 const userRepo = Repository<typeof users, IUser>(users, 'User', logger);
 
+/**
+ * Finds a user by their unique email address.
+ *
+ * @param email - The email to search for.
+ * @returns The matching user, or null when no user exists.
+ */
 async function findByEmail(email: string): Promise<IUser | null> {
   logger.info(`Finding user by email: ${email}`);
 

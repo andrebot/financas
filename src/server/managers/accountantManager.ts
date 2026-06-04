@@ -369,6 +369,15 @@ async function listTransactions(
   return transactionRepo.listAll();
 }
 
+/**
+ * Creates an accountant manager using the provided repositories.
+ *
+ * @param transactionRepo - Repository for transaction persistence.
+ * @param monthlyBalanceRepo - Repository for monthly balance updates.
+ * @param goalRepo - Repository for goal aggregate updates.
+ * @param budgetRepo - Repository for budget usage updates.
+ * @returns Transaction orchestration actions with accounting side effects.
+ */
 export function AccountantManager(
   transactionRepo: ITransactionRepo,
   monthlyBalanceRepo: IMonthlyBalanceRepo,

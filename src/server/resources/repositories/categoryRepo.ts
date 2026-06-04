@@ -46,6 +46,12 @@ async function deleteAllSubcategories(parentCategoryId: number): Promise<number 
   return deletedCount.rowCount;
 }
 
+/**
+ * Lists category ids linked to a budget within the current authorization context.
+ *
+ * @param budgetId - The budget id whose category links should be loaded.
+ * @returns The linked category ids visible to the current user.
+ */
 async function listCategoriesByBudgetId(budgetId: number): Promise<number[]> {
   logger.info(`Finding categories by budget id: ${budgetId}`);
 

@@ -31,6 +31,11 @@ describe('ContentManager', () => {
   };
   let originalDb: unknown;
   const budgetRepoStub = createRepoStub();
+  const budgetRepoExtendedStub = {
+    ...budgetRepoStub,
+    saveBudgetCategories: sinon.stub(),
+    listBudgetsWithCategories: sinon.stub(),
+  };
   const categoryRepoStub = {
     ...createRepoStub(),
     findAllSubcategories: sinon.stub(),
@@ -119,6 +124,8 @@ describe('ContentManager', () => {
     budgetRepoStub.deleteById.resetHistory();
     budgetRepoStub.update.resetHistory();
     budgetRepoStub.listAll.resetHistory();
+    budgetRepoExtendedStub.saveBudgetCategories.resetHistory();
+    budgetRepoExtendedStub.listBudgetsWithCategories.resetHistory();
 
     categoryRepoStub.save.resetHistory();
     categoryRepoStub.findById.resetHistory();
@@ -156,7 +163,7 @@ describe('ContentManager', () => {
     cardRepoStub.syncAccountCards.resetHistory();
 
     contentManager = createContentManager(
-      budgetRepoStub as any,
+      budgetRepoExtendedStub as any,
       categoryRepoStub as any,
       goalRepoStub as any,
       transactionRepoStub as any,
@@ -285,10 +292,12 @@ describe('ContentManager', () => {
     it('should create budget', async () => {
       const { id: _id, spent: _spent, ...content } = mockBudget;
       budgetRepoStub.save.resolves({ ...content, id: 1 });
+      budgetRepoExtendedStub.saveBudgetCategories.resolves();
 
       const result = await contentManager.budgetActions.createContent(content as IBudget);
 
       budgetRepoStub.save.should.have.been.calledOnce;
+      budgetRepoExtendedStub.saveBudgetCategories.should.have.been.calledOnceWith(1, []);
       result.should.have.property('id', 1);
     });
 
