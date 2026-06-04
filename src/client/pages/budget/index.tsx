@@ -26,6 +26,16 @@ import { useModal } from '../../components/modal/modal';
 import { Budget } from '../../types';
 
 /**
+ * Formats a budget's hydrated category names for table display.
+ *
+ * @param budget - Budget returned by the API.
+ * @returns A comma-separated category name list.
+ */
+function formatBudgetCategories(budget: Budget): string {
+  return budget.categories?.map((category) => category.name).join(', ') ?? '';
+}
+
+/**
  * Displays the budget page with the budget form and budget table actions.
  *
  * @returns The budget page component.
@@ -105,6 +115,7 @@ export default function BudgetPage(): React.JSX.Element {
                 <TableCell>{t('name')}</TableCell>
                 <TableCell>{t('type')}</TableCell>
                 <TableCell>{t('value')}</TableCell>
+                <TableCell>{t('budgetCategories')}</TableCell>
                 <TableCell>{t('actions')}</TableCell>
               </TableRow>
             </TableHead>
@@ -114,6 +125,7 @@ export default function BudgetPage(): React.JSX.Element {
                   <TableCell>{budget.name}</TableCell>
                   <TableCell>{budget.type}</TableCell>
                   <TableCell>{budget.value}</TableCell>
+                  <TableCell>{formatBudgetCategories(budget)}</TableCell>
                   <TableCell>
                     {budgetFormState.id ? (
                       <Tooltip title={t('deselect')}>

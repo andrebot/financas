@@ -12,7 +12,7 @@ export const initialBudgetFormState: BudgetFormState = {
   endDate: new Date(),
   nameError: '',
   valueError: '',
-  categoriesError: '',
+  categoriesError: 'budgetCategoriesRequired',
   typeError: '',
   startDateError: '',
   endDateError: '',
@@ -33,7 +33,7 @@ function setName(state: BudgetFormState, payload: string): BudgetFormState {
     nextState.nameError = 'nameRequired';
   }
 
-  if (!regExpNameWithNumbers.test(payload)) {
+  if (payload && !regExpNameWithNumbers.test(payload)) {
     nextState.nameError = 'nameInvalid';
   }
 
@@ -153,6 +153,48 @@ function setCategoryIds(state: BudgetFormState, payload: number[]): BudgetFormSt
 }
 
 /**
+ * Validates all budget form fields before a create or update submission.
+ *
+ * @param state - The current form state
+ * @returns The form state with all validation errors populated
+ */
+export function validateBudgetFormState(state: BudgetFormState): BudgetFormState {
+  return setCategoryIds(
+    setType(
+      setEndDate(
+        setStartDate(
+          setValue(
+            setName(state, state.name),
+            state.value,
+          ),
+          state.startDate,
+        ),
+        state.endDate,
+      ),
+      state.type,
+    ),
+    state.categoryIds,
+  );
+}
+
+/**
+ * Checks whether the budget form state has blocking validation errors.
+ *
+ * @param state - The current form state
+ * @returns True when the budget form cannot be submitted
+ */
+export function hasBudgetFormErrors(state: BudgetFormState): boolean {
+  return Boolean(
+    state.nameError
+    || state.valueError
+    || state.categoriesError
+    || state.typeError
+    || state.startDateError
+    || state.endDateError,
+  );
+}
+
+/**
  * Updates the state so the user can edit the budget
  *
  * @param state - The current state
@@ -166,6 +208,7 @@ function editBudget(
   const categoryIds = payload.categoryIds
     ?? payload.categories?.map((category) => category.id).filter((id) => id !== undefined)
     ?? [];
+  const categoriesError = categoryIds.length === 0 ? 'budgetCategoriesRequired' : '';
 
   return {
     ...state,
@@ -173,7 +216,7 @@ function editBudget(
     categoryIds,
     nameError: '',
     valueError: '',
-    categoriesError: '',
+    categoriesError,
     typeError: '',
     startDateError: '',
     endDateError: '',
@@ -204,6 +247,8 @@ export const budgetFormReducer = (
       return setType(state, action.payload);
     case BudgetFormActionType.SET_CATEGORY_IDS:
       return setCategoryIds(state, action.payload);
+    case BudgetFormActionType.VALIDATE:
+      return validateBudgetFormState(state);
     case BudgetFormActionType.EDIT:
       return editBudget(state, action.payload);
     case BudgetFormActionType.RESET:

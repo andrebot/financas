@@ -157,6 +157,16 @@ describe('Budget Repository', () => {
     });
   });
 
+  describe('deleteBudgetCategories', () => {
+    it('should delete category links for the given budget', async () => {
+      await budgetRepo.deleteBudgetCategories(5);
+
+      deleteStub.should.have.been.calledOnceWithExactly(budgetToCategories);
+      deleteWhereStub.should.have.been.calledOnce;
+      chai.assert.exists(deleteWhereStub.firstCall.args[0]);
+    });
+  });
+
   describe('listBudgetsWithCategories', () => {
     it('should list budgets with category junction rows flattened', async () => {
       const persistedCategory = {

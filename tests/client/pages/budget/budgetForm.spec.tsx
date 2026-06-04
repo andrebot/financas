@@ -48,29 +48,34 @@ describe('BudgetForm', () => {
     ]);
   });
 
-  const TestWrapper = () => {
-    const [budgetFormState, budgetFormDispatch] = React.useReducer(
-      budgetFormReducer,
-      initialBudgetFormState,
-    );
-    return (
-      <BudgetForm
-        categories={[]}
-        budgetFormState={budgetFormState}
-        budgetFormDispatch={budgetFormDispatch}
-      />
+  /**
+   * Renders the budget form with reducer-backed state for interaction tests.
+   *
+   * @param initialStateOverride - Initial reducer state fields to override.
+   */
+  const setup = (initialStateOverride = {}) => {
+    const TestWrapper = () => {
+      const [budgetFormState, budgetFormDispatch] = React.useReducer(
+        budgetFormReducer,
+        { ...initialBudgetFormState, ...initialStateOverride },
+      );
+      return (
+        <BudgetForm
+          categories={[]}
+          budgetFormState={budgetFormState}
+          budgetFormDispatch={budgetFormDispatch}
+        />
+      );
+    };
+
+    return render(
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <I18nextProvider i18n={i18n}>
+          <TestWrapper />
+        </I18nextProvider>
+      </LocalizationProvider>,
     );
   };
-
-  const budgetFormJSX = (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <I18nextProvider i18n={i18n}>
-        <TestWrapper />
-      </I18nextProvider>
-    </LocalizationProvider>
-  );
-
-  const setup = () => render(budgetFormJSX);
 
   /**
    * Fills the fields required by the budget save handler before submit.
@@ -84,10 +89,21 @@ describe('BudgetForm', () => {
     });
   };
 
+  it('should not save a budget without a category', async () => {
+    setup();
+    fillRequiredBudgetFields();
+
+    fireEvent.click(screen.getByRole('button', { name: i18nEn.translation.saveBudget }));
+
+    await waitFor(() => {
+      expect(mockCreateBudget).not.toHaveBeenCalled();
+    });
+  });
+
   it('should send userId when saving a budget', async () => {
     mockCreateBudget.mockReturnValue({ unwrap: () => Promise.resolve({ id: 1 }) });
 
-    setup();
+    setup({ categoryIds: [1], categoriesError: '' });
     fillRequiredBudgetFields();
 
     fireEvent.click(screen.getByRole('button', { name: i18nEn.translation.saveBudget }));
@@ -95,11 +111,57 @@ describe('BudgetForm', () => {
     await waitFor(() => {
       expect(mockCreateBudget).toHaveBeenCalledWith(
         expect.objectContaining({
+          categoryIds: [1],
           name: 'Monthly groceries',
           value: 1000,
           userId: Number(mockUser.id),
         }),
       );
+    });
+  });
+
+  it('should show required validation messages when submitting empty fields', async () => {
+    setup();
+
+    fireEvent.click(screen.getByRole('button', { name: i18nEn.translation.saveBudget }));
+
+    await waitFor(() => {
+      expect(screen.getByText(i18nEn.translation.nameRequired)).toBeInTheDocument();
+      expect(screen.getByText(i18nEn.translation.valueRequired)).toBeInTheDocument();
+      expect(screen.getByText(i18nEn.translation.budgetCategoriesRequired)).toBeInTheDocument();
+      expect(mockCreateBudget).not.toHaveBeenCalled();
+    });
+  });
+
+  it('should not save a budget with a negative value', async () => {
+    setup({ categoryIds: [1], categoriesError: '' });
+    fillRequiredBudgetFields();
+    fireEvent.change(screen.getByLabelText(i18nEn.translation.budgetValue), {
+      target: { value: '-100' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: i18nEn.translation.saveBudget }));
+
+    await waitFor(() => {
+      expect(screen.getByText(i18nEn.translation.valueMustBeGreaterThanZero)).toBeInTheDocument();
+      expect(mockCreateBudget).not.toHaveBeenCalled();
+    });
+  });
+
+  it('should not save a budget with an end date before the start date', async () => {
+    setup({
+      categoryIds: [1],
+      categoriesError: '',
+      startDate: new Date('2026-12-01T00:00:00.000Z'),
+      endDate: new Date('2026-01-01T00:00:00.000Z'),
+    });
+    fillRequiredBudgetFields();
+
+    fireEvent.click(screen.getByRole('button', { name: i18nEn.translation.saveBudget }));
+
+    await waitFor(() => {
+      expect(screen.getByText(i18nEn.translation.endDateMustBeAfterStartDate)).toBeInTheDocument();
+      expect(mockCreateBudget).not.toHaveBeenCalled();
     });
   });
 });

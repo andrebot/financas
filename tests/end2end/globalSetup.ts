@@ -4,6 +4,7 @@ import { changeEmailUser, changePasswordUser } from './settingsPageUtils';
 import { bankAccountsUsers } from './bankAccountsPageUtils';
 import { categoryUsers } from './categoriesPageUtils';
 import { goalsUsers } from './goalsPageUtils';
+import { budgetUsers } from './budgetPageUtils';
 import { createEndToEndPool, insertEndToEndUsers } from './databaseUtils';
 
 dotenv.config();
@@ -21,6 +22,7 @@ export default async function globalSetup(): Promise<void> {
     ...Object.values(bankAccountsUsers),
     ...Object.values(categoryUsers),
     ...Object.values(goalsUsers),
+    ...Object.values(budgetUsers),
   ];
 
   try {

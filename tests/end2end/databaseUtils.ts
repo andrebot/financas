@@ -54,6 +54,21 @@ export async function insertEndToEndUsers(
  */
 export async function deleteEndToEndUserData(pool: Pool): Promise<void> {
   await pool.query(
+    `DELETE FROM "budgetToCategories"
+     WHERE "budgetId" IN (
+       SELECT budgets.id FROM budgets
+       INNER JOIN users ON budgets."userId" = users.id
+       WHERE users.email ~ $1
+     )`,
+    [DELETE_USER_EMAIL_REGEX],
+  );
+  await pool.query(
+    `DELETE FROM budgets
+     USING users
+     WHERE budgets."userId" = users.id AND users.email ~ $1`,
+    [DELETE_USER_EMAIL_REGEX],
+  );
+  await pool.query(
     `DELETE FROM cards
      WHERE "accountId" IN (
        SELECT accounts.id FROM accounts

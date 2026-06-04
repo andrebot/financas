@@ -426,6 +426,12 @@ export interface IBudgetRepo extends IRepository<typeof budgets, IBudget> {
    * @param categoryIds - Category ids linked to the budget.
    */
   saveBudgetCategories(budgetId: number, categoryIds: number[]): Promise<void>;
+  /**
+   * Deletes budget/category junction rows for a persisted budget.
+   *
+   * @param budgetId - The persisted budget id.
+   */
+  deleteBudgetCategories(budgetId: number): Promise<void>;
   listBudgetsWithCategories(): Promise<IBudget[]>;
 }
 

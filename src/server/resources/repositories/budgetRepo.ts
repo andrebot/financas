@@ -81,6 +81,19 @@ async function saveBudgetCategories(budgetId: number, categoryIds: number[]): Pr
 }
 
 /**
+ * Deletes the category links for a budget.
+ *
+ * @param budgetId - The budget whose category links should be deleted.
+ */
+async function deleteBudgetCategories(budgetId: number): Promise<void> {
+  logger.info(`Deleting categories for budget: ${budgetId}`);
+
+  await getDb()
+    .delete(budgetToCategories)
+    .where(eq(budgetToCategories.budgetId, budgetId));
+}
+
+/**
  * Lists budgets with their linked category rows hydrated.
  *
  * @returns Budgets visible in the authorization context with categories attached.
@@ -110,5 +123,6 @@ export default {
   updateBudgetsByNewTransaction,
   revertBudgetsByTransaction,
   saveBudgetCategories,
+  deleteBudgetCategories,
   listBudgetsWithCategories,
 };

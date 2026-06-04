@@ -81,6 +81,32 @@ export async function getBudgetWithSpent(
 }
 
 /**
+ * Requires budget category ids to include at least one selected category.
+ *
+ * @param categoryIds - Category ids submitted by the client.
+ */
+function requireBudgetCategoryIds(categoryIds: number[]): void {
+  if (categoryIds.length === 0) {
+    throw new Error('Budget requires at least one category');
+  }
+}
+
+/**
+ * Removes category-only fields before persisting the budget row.
+ *
+ * @param payload - Budget update payload submitted by the client.
+ * @returns Budget fields that belong to the budgets table.
+ */
+function toBudgetUpdatePayload(payload: Partial<IBudget>): Partial<IBudget> {
+  const budgetPayload = { ...payload };
+  delete budgetPayload.categoryIds;
+  delete budgetPayload.categories;
+  delete budgetPayload.spent;
+
+  return budgetPayload;
+}
+
+/**
  * Verifies that every submitted category id belongs to a visible category.
  *
  * @param categoryIds - Category ids submitted by the client.
@@ -125,6 +151,7 @@ export async function createBudgetWithCategories(
   };
 
   logger.info(`Creating budget with ${categoryIds.length} categories`);
+  requireBudgetCategoryIds(categoryIds);
   await validateBudgetCategoryIds(categoryIds, categoryRepo);
 
   return withTransaction(async () => {
@@ -153,6 +180,61 @@ export async function listBudgetWithCategories(
 }
 
 /**
+ * Updates a budget without allowing updates that would clear all categories.
+ *
+ * @param id - The id of the budget to update.
+ * @param payload - Budget fields submitted by the client.
+ * @param budgetRepo - The budget repository to use.
+ * @param categoryRepo - The category repository to validate categories with.
+ * @param logger - The logger to use.
+ * @returns The updated budget, or the unchanged budget when category ids are empty.
+ */
+export async function updateBudgetWithCategories(
+  id: number,
+  payload: Partial<IBudget>,
+  budgetRepo: IBudgetRepo,
+  categoryRepo: ICategoryRepo,
+  logger: Logger,
+): Promise<IBudget | null> {
+  const { categoryIds } = payload;
+
+  if (categoryIds?.length === 0) {
+    logger.info(`Skipping budget update for ${id} because categories cannot be empty`);
+    return budgetRepo.findById(id);
+  }
+
+  if (categoryIds) {
+    await validateBudgetCategoryIds(categoryIds, categoryRepo);
+  }
+
+  const updatedBudget = await budgetRepo.update(id, toBudgetUpdatePayload(payload));
+
+  if (updatedBudget && categoryIds) {
+    await budgetRepo.saveBudgetCategories(id, categoryIds);
+    return { ...updatedBudget, categoryIds };
+  }
+
+  return updatedBudget;
+}
+
+/**
+ * Deletes budget category links before deleting the budget row.
+ *
+ * @param id - The id of the budget to delete.
+ * @param budgetRepo - The budget repository to use.
+ * @returns The deleted budget, or null when no budget is visible.
+ */
+export async function deleteBudgetWithCategories(
+  id: number,
+  budgetRepo: IBudgetRepo,
+): Promise<IBudget | null> {
+  return withTransaction(async () => {
+    await budgetRepo.deleteBudgetCategories(id);
+    return budgetRepo.deleteById(id);
+  });
+}
+
+/**
  * Creates the budget actions. Gets the spent value of a budget is different from the
  * standard get.
  *
@@ -176,6 +258,20 @@ export default function createBudgetActions(
       budgetRepo,
       categoryRepo,
       logger,
+    ),
+    updateContent: async (
+      id: number,
+      payload: Partial<IBudget>,
+    ): Promise<IBudget | null> => updateBudgetWithCategories(
+      id,
+      payload,
+      budgetRepo,
+      categoryRepo,
+      logger,
+    ),
+    deleteContent: async (id: number): Promise<IBudget | null> => deleteBudgetWithCategories(
+      id,
+      budgetRepo,
     ),
     getContent: async (
       id: number,

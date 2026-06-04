@@ -43,6 +43,7 @@ export enum BudgetFormActionType {
   SET_END_DATE = 'SET_END_DATE',
   SET_TYPE = 'SET_TYPE',
   SET_CATEGORY_IDS = 'SET_CATEGORY_IDS',
+  VALIDATE = 'VALIDATE',
   EDIT = 'EDIT',
   RESET = 'RESET',
 }

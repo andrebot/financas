@@ -9,6 +9,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
+import FormHelperText from '@mui/material/FormHelperText';
 import { Theme, useTheme } from '@mui/material/styles';
 import { SelectChangeEvent } from '@mui/material/Select';
 import dayjs from 'dayjs';
@@ -27,6 +28,7 @@ import { useAuth } from '../../hooks/authContext';
 import { BUDGET_TYPES, BudgetFormActionType } from '../../enums';
 import { Category } from '../../types/categories';
 import type { BudgetFormState, BudgetFormAction } from '../../types';
+import { hasBudgetFormErrors, validateBudgetFormState } from './budgetFormReducer';
 
 type FormattedBudgetCategory = {
   id: number;
@@ -210,13 +212,10 @@ export default function BudgetForm({
    * Validates and submits the budget form using create or update mutation.
    */
   const handleSaveBudget = async () => {
-    if (budgetFormState.nameError
-      || budgetFormState.valueError
-      || budgetFormState.categoriesError
-      || budgetFormState.typeError
-      || budgetFormState.startDateError
-      || budgetFormState.endDateError
-    ) {
+    const validatedState = validateBudgetFormState(budgetFormState);
+    budgetFormDispatch({ type: BudgetFormActionType.VALIDATE });
+
+    if (hasBudgetFormErrors(validatedState)) {
       enqueueSnackbar(t('fixErrorsBeforeSaving'), { variant: 'error' });
       return;
     }
@@ -245,8 +244,14 @@ export default function BudgetForm({
   return (
     <BudgetFormHolder>
       <BudgetRowInput>
-        <TextField label={t('budgetName')} value={budgetFormState.name} onChange={handleNameChange} />
-        <FormControl>
+        <TextField
+          label={t('budgetName')}
+          value={budgetFormState.name}
+          onChange={handleNameChange}
+          error={!!budgetFormState.nameError}
+          helperText={budgetFormState.nameError ? t(budgetFormState.nameError) : ''}
+        />
+        <FormControl error={!!budgetFormState.typeError}>
           <InputLabel id="budget-type-label">{t('type')}</InputLabel>
           <BudgetTypeSelect
             label={t('type')}
@@ -258,6 +263,9 @@ export default function BudgetForm({
               <MenuItem key={type} value={type}>{type}</MenuItem>
             ))}
           </BudgetTypeSelect>
+          {budgetFormState.typeError && (
+            <FormHelperText>{t(budgetFormState.typeError)}</FormHelperText>
+          )}
         </FormControl>
         <DatePickerSelect
           label={t('start')}
@@ -265,6 +273,12 @@ export default function BudgetForm({
           format="MM/YY"
           value={budgetFormState.startDate ? dayjs(budgetFormState.startDate) : null}
           onChange={handleStartDateChange}
+          slotProps={{
+            textField: {
+              error: !!budgetFormState.startDateError,
+              helperText: budgetFormState.startDateError ? t(budgetFormState.startDateError) : '',
+            },
+          }}
         />
         <DatePickerSelect
           label={t('end')}
@@ -272,11 +286,19 @@ export default function BudgetForm({
           format="MM/YY"
           value={budgetFormState.endDate ? dayjs(budgetFormState.endDate) : null}
           onChange={handleEndDateChange}
+          slotProps={{
+            textField: {
+              error: !!budgetFormState.endDateError,
+              helperText: budgetFormState.endDateError ? t(budgetFormState.endDateError) : '',
+            },
+          }}
         />
         <TextField
           label={t('budgetValue')}
           value={budgetFormState.value}
           onChange={handleValueChange}
+          error={!!budgetFormState.valueError}
+          helperText={budgetFormState.valueError ? t(budgetFormState.valueError) : ''}
           slotProps={{
             input: {
               inputMode: 'decimal',
@@ -285,7 +307,7 @@ export default function BudgetForm({
           }}
         />
       </BudgetRowInput>
-      <CategoryFormControl>
+      <CategoryFormControl error={!!budgetFormState.categoriesError}>
         <InputLabel id="budget-categories-label">{t('budgetCategories')}</InputLabel>
         <CategorySelect
           label={t('budgetCategories')}
@@ -313,6 +335,9 @@ export default function BudgetForm({
             </MenuItem>
           ))}
         </CategorySelect>
+        {budgetFormState.categoriesError && (
+          <FormHelperText>{t(budgetFormState.categoriesError)}</FormHelperText>
+        )}
       </CategoryFormControl>
       <SaveBudgetButton
         variant="contained"

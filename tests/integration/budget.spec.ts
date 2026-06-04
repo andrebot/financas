@@ -7,6 +7,7 @@ import {
   userToDelete,
   otherUser,
   category1,
+  category3,
 } from './connectDB';
 import { createAccessToken } from '../../src/server/managers/authenticationManager';
 
@@ -120,6 +121,7 @@ describe('Budget', () => {
         startDate: new Date(),
         endDate: new Date(),
         userId: adminUser.id,
+        categoryIds: [category1.id],
       };
 
       const response = await request(server)
@@ -133,6 +135,25 @@ describe('Budget', () => {
       response.body.should.have.property('type', newBudget.type);
       response.body.should.have.property('startDate');
       response.body.should.have.property('endDate');
+    });
+
+    it('should reject budget creation without category ids', async () => {
+      const newBudget = {
+        name: 'New Budget Without Categories',
+        value: '200.00',
+        type: 'monthly',
+        startDate: new Date(),
+        endDate: new Date(),
+        userId: adminUser.id,
+      };
+
+      const response = await request(server)
+        .post(resourceUrl)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(newBudget);
+
+      response.status.should.be.eq(500);
+      response.body.should.have.property('error', 'Budget requires at least one category');
     });
 
     it('should create a budget and persist its category links', async () => {
@@ -248,6 +269,18 @@ describe('Budget', () => {
       response.body.should.have.property('endDate');
     });
 
+    it('should skip budget update when category ids are empty', async () => {
+      const response = await request(server)
+        .put(`${resourceUrl}/${budget1.id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ name: 'Skipped Empty Category Update', categoryIds: [] });
+
+      response.status.should.be.eq(200);
+      response.body.should.be.an('object');
+      response.body.should.have.property('id', budget1.id);
+      response.body.should.not.have.property('name', 'Skipped Empty Category Update');
+    });
+
     it('should return 500 if budget has a wrong type value', async () => {
       const updatedBudget = {
         name: 'Updated Budget',
@@ -344,6 +377,7 @@ describe('Budget', () => {
           startDate: new Date(),
           endDate: new Date(),
           userId: adminUser.id,
+          categoryIds: [category1.id],
         });
       ownDeleteId = ownRes.body.id;
 
@@ -357,6 +391,7 @@ describe('Budget', () => {
           startDate: new Date(),
           endDate: new Date(),
           userId: otherUser.id,
+          categoryIds: [category3.id],
         });
       otherDeleteId = otherRes.body.id;
     });

@@ -48,6 +48,8 @@ export type BudgetFormAction = {
   type: BudgetFormActionType.SET_CATEGORY_IDS;
   payload: number[];
 } | {
+  type: BudgetFormActionType.VALIDATE;
+} | {
   type: BudgetFormActionType.EDIT;
   payload: Budget;
 } | {

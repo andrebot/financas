@@ -34,6 +34,7 @@ describe('ContentManager', () => {
   const budgetRepoExtendedStub = {
     ...budgetRepoStub,
     saveBudgetCategories: sinon.stub(),
+    deleteBudgetCategories: sinon.stub(),
     listBudgetsWithCategories: sinon.stub(),
   };
   const categoryRepoStub = {
@@ -125,6 +126,7 @@ describe('ContentManager', () => {
     budgetRepoStub.update.resetHistory();
     budgetRepoStub.listAll.resetHistory();
     budgetRepoExtendedStub.saveBudgetCategories.resetHistory();
+    budgetRepoExtendedStub.deleteBudgetCategories.resetHistory();
     budgetRepoExtendedStub.listBudgetsWithCategories.resetHistory();
 
     categoryRepoStub.save.resetHistory();
@@ -289,16 +291,18 @@ describe('ContentManager', () => {
       chai.expect(result).to.be.null;
     });
 
-    it('should create budget', async () => {
+    it('should reject budget creation without category ids', async () => {
       const { id: _id, spent: _spent, ...content } = mockBudget;
-      budgetRepoStub.save.resolves({ ...content, id: 1 });
-      budgetRepoExtendedStub.saveBudgetCategories.resolves();
 
-      const result = await contentManager.budgetActions.createContent(content as IBudget);
+      try {
+        await contentManager.budgetActions.createContent(content as IBudget);
+        chai.expect.fail('Should have thrown');
+      } catch (error) {
+        (error as Error).message.should.equal('Budget requires at least one category');
+      }
 
-      budgetRepoStub.save.should.have.been.calledOnce;
-      budgetRepoExtendedStub.saveBudgetCategories.should.have.been.calledOnceWith(1, []);
-      result.should.have.property('id', 1);
+      budgetRepoStub.save.should.not.have.been.called;
+      budgetRepoExtendedStub.saveBudgetCategories.should.not.have.been.called;
     });
 
     it('should create budget after validating submitted category ids', async () => {
@@ -337,6 +341,66 @@ describe('ContentManager', () => {
       budgetRepoExtendedStub.saveBudgetCategories.should.not.have.been.called;
     });
 
+    it('should skip budget update when category ids are empty', async () => {
+      const updatePayload = { name: 'Updated Budget', categoryIds: [] } as Partial<IBudget>;
+      budgetRepoStub.findById.resolves(mockBudget);
+
+      const result = await contentManager.budgetActions.updateContent(1, updatePayload);
+
+      budgetRepoStub.findById.should.have.been.calledOnceWith(1);
+      budgetRepoStub.update.should.not.have.been.called;
+      chai.expect(result).to.not.be.null;
+      result!.should.deep.equal(mockBudget);
+    });
+
+    it('should update budget fields and save non-empty category ids', async () => {
+      const updatePayload = {
+        name: 'Updated Budget',
+        categoryIds: [1],
+        categories: [mockCategory],
+        spent: 25,
+      } as Partial<IBudget>;
+      const updatedBudget = { ...mockBudget, name: updatePayload.name! };
+      categoryRepoStub.findById.resolves(mockCategory);
+      budgetRepoStub.update.resolves(updatedBudget);
+      budgetRepoExtendedStub.saveBudgetCategories.resolves();
+
+      const result = await contentManager.budgetActions.updateContent(1, updatePayload);
+
+      categoryRepoStub.findById.should.have.been.calledOnceWith(1);
+      budgetRepoStub.update.should.have.been.calledOnceWith(1, { name: updatePayload.name });
+      budgetRepoExtendedStub.saveBudgetCategories.should.have.been.calledOnceWith(1, [1]);
+      chai.expect(result).to.not.be.null;
+      result!.should.deep.equal({ ...updatedBudget, categoryIds: [1] });
+    });
+
+    it('should update budget fields without changing categories when category ids are omitted', async () => {
+      const updatePayload = { name: 'Updated Budget' } as Partial<IBudget>;
+      const updatedBudget = { ...mockBudget, name: updatePayload.name! };
+      budgetRepoStub.update.resolves(updatedBudget);
+
+      const result = await contentManager.budgetActions.updateContent(1, updatePayload);
+
+      categoryRepoStub.findById.should.not.have.been.called;
+      budgetRepoStub.update.should.have.been.calledOnceWith(1, updatePayload);
+      budgetRepoExtendedStub.saveBudgetCategories.should.not.have.been.called;
+      chai.expect(result).to.not.be.null;
+      result!.should.deep.equal(updatedBudget);
+    });
+
+    it('should not save category links when a category update finds no budget', async () => {
+      const updatePayload = { categoryIds: [1] } as Partial<IBudget>;
+      categoryRepoStub.findById.resolves(mockCategory);
+      budgetRepoStub.update.resolves(null);
+
+      const result = await contentManager.budgetActions.updateContent(1, updatePayload);
+
+      categoryRepoStub.findById.should.have.been.calledOnceWith(1);
+      budgetRepoStub.update.should.have.been.calledOnceWith(1, {});
+      budgetRepoExtendedStub.saveBudgetCategories.should.not.have.been.called;
+      chai.expect(result).to.be.null;
+    });
+
     it('should list budgets with hydrated categories', async () => {
       const budgets = [{ ...mockBudget, categories: [mockCategory] }];
       budgetRepoExtendedStub.listBudgetsWithCategories.resolves(budgets);
@@ -346,6 +410,18 @@ describe('ContentManager', () => {
       budgetRepoExtendedStub.listBudgetsWithCategories.should.have.been.calledOnce;
       budgetRepoStub.listAll.should.not.have.been.called;
       result.should.deep.equal(budgets);
+    });
+
+    it('should delete budget category links before deleting a budget', async () => {
+      budgetRepoExtendedStub.deleteBudgetCategories.resolves();
+      budgetRepoStub.deleteById.resolves(mockBudget);
+
+      const result = await contentManager.budgetActions.deleteContent(1);
+
+      budgetRepoExtendedStub.deleteBudgetCategories.should.have.been.calledOnceWith(1);
+      budgetRepoStub.deleteById.should.have.been.calledOnceWith(1);
+      chai.expect(result).to.not.be.null;
+      result!.should.deep.equal(mockBudget);
     });
 
     it('should throw when calculateBudgetSpent is called with null budget', async () => {
