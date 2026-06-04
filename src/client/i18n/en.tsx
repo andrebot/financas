@@ -65,6 +65,7 @@ export default {
     expires: 'Expires',
     actionMenu: 'Action Menu',
     edit: 'Edit',
+    deselect: 'Deselect',
     bankAccountNumber: 'Account',
     bankAgencyNumber: 'Routing',
     addBankAccount: 'Add Bank Account',

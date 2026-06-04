@@ -8,7 +8,9 @@ import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import DeselectIcon from '@mui/icons-material/Close';
 import { IconButton, TableBody } from '@mui/material';
+import Tooltip from '@mui/material/Tooltip';
 import ConfirmModal from '../../components/confirmModal';
 import { useListCategoriesQuery } from '../../features/category';
 import BudgetForm from './budgetForm';
@@ -34,10 +36,27 @@ export default function BudgetPage(): React.JSX.Element {
     initialBudgetFormState,
   );
 
+  /**
+   * Populates the budget form with the selected budget data.
+   *
+   * @param budget - The budget selected for editing.
+   */
   const handleEdit = (budget: Budget) => {
     budgetFormDispatch({ type: BudgetFormActionType.EDIT, payload: budget });
   };
 
+  /**
+   * Clears the current budget form selection and returns it to create mode.
+   */
+  const handleDeselectBudget = () => {
+    budgetFormDispatch({ type: BudgetFormActionType.RESET });
+  };
+
+  /**
+   * Deletes a budget through the API and shows the result feedback.
+   *
+   * @param id - The id of the budget to delete.
+   */
   const submitDeleteBudget = async (id: number) => {
     try {
       await deleteBudget(id).unwrap();
@@ -49,6 +68,11 @@ export default function BudgetPage(): React.JSX.Element {
     }
   };
 
+  /**
+   * Opens the confirmation modal before deleting a budget.
+   *
+   * @param id - The id of the budget to delete.
+   */
   const handleDeleteBudget = (id: number) => {
     showModal(
       <ConfirmModal
@@ -81,14 +105,24 @@ export default function BudgetPage(): React.JSX.Element {
             </TableHead>
             <TableBody>
               {budgets.map((budget) => (
-                <TableRow key={budget.id}>
+                <TableRow key={budget.id} selected={budgetFormState.id === budget.id}>
                   <TableCell>{budget.name}</TableCell>
                   <TableCell>{budget.type}</TableCell>
                   <TableCell>{budget.value}</TableCell>
                   <TableCell>
-                    <IconButton aria-label={t('edit')} onClick={() => handleEdit(budget)}>
-                      <EditIcon />
-                    </IconButton>
+                    {budgetFormState.id ? (
+                      <Tooltip title={t('deselect')}>
+                        <IconButton aria-label={t('deselect')} onClick={handleDeselectBudget}>
+                          <DeselectIcon />
+                        </IconButton>
+                      </Tooltip>
+                    ) : (
+                      <Tooltip title={t('edit')}>
+                        <IconButton aria-label={t('edit')} onClick={() => handleEdit(budget)}>
+                          <EditIcon />
+                        </IconButton>
+                      </Tooltip>
+                    )}
                     <IconButton aria-label={t('delete')} onClick={() => handleDeleteBudget(budget.id!)}>
                       <DeleteIcon color="error" />
                     </IconButton>

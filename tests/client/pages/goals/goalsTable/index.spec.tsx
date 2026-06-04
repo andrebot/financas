@@ -175,7 +175,7 @@ describe('GoalsTable', () => {
       ],
     });
 
-    fireEvent.click(screen.getByRole('button', { name: 'deselect' }));
+    fireEvent.click(screen.getByRole('button', { name: i18nEn.translation.deselect }));
 
     expect(onDeselectGoal).toHaveBeenCalledTimes(1);
   });
@@ -193,7 +193,7 @@ describe('GoalsTable', () => {
     });
 
     expect(screen.queryByRole('button', { name: i18nEn.translation.edit })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'deselect' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: i18nEn.translation.deselect })).toBeInTheDocument();
   });
 
   it('should hide Deselect button when activeGoalId is not set', () => {
@@ -208,7 +208,7 @@ describe('GoalsTable', () => {
     });
 
     expect(screen.getByRole('button', { name: i18nEn.translation.edit })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'deselect' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: i18nEn.translation.deselect })).not.toBeInTheDocument();
   });
 
   it('should sort by value when Value column header is clicked', () => {

@@ -65,6 +65,7 @@ export default {
     expires: 'Expira',
     actionMenu: 'Ações da conta bancária',
     edit: 'Editar',
+    deselect: 'Desmarcar',
     bankAccountNumber: 'Conta',
     bankAgencyNumber: 'Agência',
     addBankAccount: 'Adicionar Conta Bancária',

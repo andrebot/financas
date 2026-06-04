@@ -536,7 +536,7 @@ describe('Goals page', () => {
 
     expect((screen.getByLabelText(i18nEn.translation.goalName) as HTMLInputElement).value).toBe('Save for trip');
 
-    fireEvent.click(screen.getByRole('button', { name: 'deselect' }));
+    fireEvent.click(screen.getByRole('button', { name: i18nEn.translation.deselect }));
 
     expect((screen.getByLabelText(i18nEn.translation.goalName) as HTMLInputElement).value).toBe('');
     expect((screen.getByLabelText(i18nEn.translation.goalValue) as HTMLInputElement).value).toBe('0');
