@@ -10,6 +10,7 @@ import i18nEn from '../../../../src/client/i18n/en';
 import BudgetForm, { formatCategories, toCategoryIds } from '../../../../src/client/pages/budget/budgetForm';
 import { useAuth } from '../../../../src/client/hooks/authContext';
 import { useCreateBudgetMutation, useUpdateBudgetMutation } from '../../../../src/client/features/budget';
+import { useListCategoriesQuery } from '../../../../src/client/features/category';
 import { budgetFormReducer, initialBudgetFormState } from '../../../../src/client/pages/budget/budgetFormReducer';
 import { BUDGET_TYPES, BudgetFormActionType } from '../../../../src/client/enums';
 import type { Category } from '../../../../src/client/types/categories';
@@ -21,6 +22,10 @@ jest.mock('notistack', () => ({
 
 jest.mock('../../../../src/client/hooks/authContext', () => ({
   useAuth: jest.fn(),
+}));
+
+jest.mock('../../../../src/client/features/category', () => ({
+  useListCategoriesQuery: jest.fn(),
 }));
 
 jest.mock('../../../../src/client/features/budget', () => ({
@@ -68,6 +73,7 @@ describe('BudgetForm', () => {
       mockUpdateBudget,
       { isError: false, isSuccess: false },
     ]);
+    (useListCategoriesQuery as jest.Mock).mockReturnValue({ data: [] });
   });
 
   /**
@@ -76,6 +82,7 @@ describe('BudgetForm', () => {
    * @param initialStateOverride - Initial reducer state fields to override.
    */
   const setup = (initialStateOverride = {}, categories: Category[] = []) => {
+    (useListCategoriesQuery as jest.Mock).mockReturnValue({ data: categories });
     const TestWrapper = () => {
       const [budgetFormState, budgetFormDispatch] = React.useReducer(
         budgetFormReducer,
@@ -83,7 +90,6 @@ describe('BudgetForm', () => {
       );
       return (
         <BudgetForm
-          categories={categories}
           budgetFormState={budgetFormState}
           budgetFormDispatch={budgetFormDispatch}
         />
