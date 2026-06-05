@@ -10,7 +10,7 @@ This APP is made to help you manage your finances and invest, by providing power
 2. ~~Build Account CRUD page~~
 3. ~~Build Category page~~
 4. ~~Build Goals page~~
-5. Build Budget page
+5. ~~Build Budget page~~
 6. Build transactions page
 7. Build Investments page
 8. Build dashboard page
@@ -26,7 +26,7 @@ This APP is made to help you manage your finances and invest, by providing power
 4. ~~Add e2e to CI/CD~~
 
 ## Technical Debts
-1. Switch mongo to a SQL database
+1. ~~Switch mongo to a SQL database~~
 2. ~~Remove Query translation from Repository~~
 3. ~~Remove Empty files to improve readability~~
 4. Revise all try-catch for better error handling
@@ -109,7 +109,7 @@ The transition touched the persistence layer, the domain managers that orchestra
   - `tests/server/routes/**`
   - `tests/server/utils/**`
 
-The old implementation did not have a clean enough separation of concerns. Some persistence concerns leaked upward, some domain rules spilled into places that should only coordinate requests or data access, and class inheritance made it harder to see which layer owned which behaviour. The migration exposed that pain because relational data needs clear ownership: repositories should know how to query, managers should know how to coordinate domain rules, controllers should translate HTTP concerns, and routes should only wire the system.
+The old implementation did not have a clean enough separation of concerns. Some persistence concerns leaked upward, and some domain rules spilled into places that should only coordinate requests or data access. The migration exposed that pain because relational data needs clear ownership: repositories should know how to query, managers should know how to coordinate domain rules, controllers should translate HTTP concerns, and routes should only wire the system.
 
 The new organization moved the code closer to a functional style. Managers and controllers are now built through composition rather than inheritance: factories receive explicit dependencies and return plain objects with actions. Shared CRUD behaviour lives in reusable functions, while domain-specific cases override only the methods that need special handling. This made the system more heterogeneous in the right way: each module can be shaped around its real responsibility, instead of being forced into a class hierarchy.
 
