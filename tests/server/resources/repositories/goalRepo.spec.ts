@@ -1,42 +1,91 @@
-import sinon from 'sinon';
-import { Types } from 'mongoose';
-import { GoalRepo } from '../../../../src/server/resources/repositories/goalRepo';
+import chai from 'chai';
+import sinon, { SinonStub } from 'sinon';
+import sinonChai from 'sinon-chai';
+import goalRepo from '../../../../src/server/resources/repositories/goalRepo';
+import * as databaseConnection from '../../../../src/server/utils/databaseConnection';
+import { goals } from '../../../../src/server/resources/models/goalModel';
+import { transactionToGoals } from '../../../../src/server/resources/models/transactionModel';
+import type { ITransaction } from '../../../../src/server/types';
+import { requestContext } from '../../../../src/server/utils/authorization';
+
+const runWithContext = (fn: () => Promise<unknown>) =>
+  requestContext.run({ userId: 1, isAdmin: true }, fn);
+
+chai.use(sinonChai);
+chai.should();
 
 describe('Goal Repository', () => {
-  let goalRepo: GoalRepo;
-  let goalModel = {
-    collection: {
-      bulkWrite: sinon.stub(),
-    },
-  };
+  const dbHolder = databaseConnection as unknown as { db: { update: SinonStub } };
+
+  let originalDb: unknown;
+  let updateStub: SinonStub;
+  let setStub: SinonStub;
+  let fromStub: SinonStub;
+  let whereStub: SinonStub;
+
+  before(() => {
+    originalDb = dbHolder.db;
+  });
 
   beforeEach(() => {
-    goalModel.collection.bulkWrite.reset();
-    goalRepo = new GoalRepo(goalModel as any);
+    whereStub = sinon.stub().resolves();
+    fromStub = sinon.stub().returns({ where: whereStub });
+    setStub = sinon.stub().returns({ from: fromStub });
+    updateStub = sinon.stub().returns({ set: setStub });
+    dbHolder.db = { update: updateStub };
   });
 
-  it('should update the goals by a bulk goals update', async () => {
-    const goalIds = [new Types.ObjectId().toString(), new Types.ObjectId().toString(), new Types.ObjectId().toString()];
-
-    goalModel.collection.bulkWrite.resolves();
-    await goalRepo.incrementGoalsInBulk([
-      { goalId: goalIds[0], amount: 100 },
-      { goalId: goalIds[1], amount: 200 },
-      { goalId: goalIds[2], amount: 300 },
-    ]);
-
-    goalModel.collection.bulkWrite.should.have.been.calledOnce;
-    goalModel.collection.bulkWrite.should.have.been.calledWith([
-      { updateOne: { filter: { _id: new Types.ObjectId(goalIds[0]) }, update: { $inc: { amount: 100 } }, upsert: true } },
-      { updateOne: { filter: { _id: new Types.ObjectId(goalIds[1]) }, update: { $inc: { amount: 200 } }, upsert: true } },
-      { updateOne: { filter: { _id: new Types.ObjectId(goalIds[2]) }, update: { $inc: { amount: 300 } }, upsert: true } },
-    ]);
+  afterEach(() => {
+    dbHolder.db = originalDb as { update: SinonStub };
   });
 
-  it('should not call bulkWrite if no goals are provided', async () => {
-    await goalRepo.incrementGoalsInBulk([]);
+  function buildTransaction(overrides: Partial<ITransaction> = {}): ITransaction {
+    return {
+      id: 1,
+      name: 'Test Transaction',
+      categoryId: null,
+      accountId: 3,
+      type: 'transferIn',
+      date: new Date(2024, 0, 15),
+      value: '100.00',
+      userId: 1,
+      investmentType: null,
+      createdAt: new Date(),
+      updatedAt: null,
+      ...overrides,
+    } as ITransaction;
+  }
 
-    goalModel.collection.bulkWrite.should.not.have.been.called;
+  describe('updateGoalFromTransaction', () => {
+    it('should call update on the goals table with the correct chain', async () => {
+      const transaction = buildTransaction();
+
+      await runWithContext(() => goalRepo.updateGoalFromTransaction(transaction));
+
+      updateStub.should.have.been.calledOnceWithExactly(goals);
+      setStub.should.have.been.calledOnce;
+      setStub.firstCall.args[0].should.have.keys('savedValue');
+      fromStub.should.have.been.calledOnceWithExactly(transactionToGoals);
+      whereStub.should.have.been.calledOnce;
+      chai.assert.exists(whereStub.firstCall.args[0]);
+    });
+
+    it('should call update when shouldInvertValue is true', async () => {
+      const transaction = buildTransaction({ value: '200.00' });
+
+      await runWithContext(() => goalRepo.updateGoalFromTransaction(transaction, true));
+
+      updateStub.should.have.been.calledOnceWithExactly(goals);
+      setStub.should.have.been.calledOnce;
+      whereStub.should.have.been.calledOnce;
+    });
+
+    it('should call update when shouldInvertValue defaults to false', async () => {
+      const transaction = buildTransaction();
+
+      await runWithContext(() => goalRepo.updateGoalFromTransaction(transaction));
+
+      updateStub.should.have.been.calledOnce;
+    });
   });
 });
-

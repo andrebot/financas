@@ -1,20 +1,24 @@
-import { Schema, model } from 'mongoose';
-import type { IGoalDocument } from '../../types';
-import { transformMongooseObject } from '../../utils/misc';
+import {
+  pgTable, serial, text, integer, timestamp, boolean, AnyPgColumn, numeric,
+} from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
+import { users } from './userModel';
+import { timestampColumns } from './columHelpers';
 
-const GoalSchema = new Schema<IGoalDocument>({
-  name: { type: String, required: true },
-  value: { type: Number, required: true },
-  dueDate: { type: Date, required: true },
-  archived: { type: Boolean, default: false },
-  user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-}, {
-  toObject: {
-    transform: transformMongooseObject,
-  },
-  toJSON: {
-    transform: transformMongooseObject,
-  },
+export const goals = pgTable('goals', {
+  id: serial().primaryKey(),
+  name: text().notNull(),
+  value: integer().notNull(),
+  savedValue: numeric({ precision: 14, scale: 2 }).notNull(),
+  dueDate: timestamp().notNull(),
+  archived: boolean().default(false),
+  userId: integer().notNull().references((): AnyPgColumn => users.id),
+  ...timestampColumns,
 });
 
-export default model<IGoalDocument>('Goal', GoalSchema);
+export const goalRelations = relations(goals, ({ one }) => ({
+  user: one(users, {
+    fields: [goals.userId],
+    references: [users.id],
+  }),
+}));

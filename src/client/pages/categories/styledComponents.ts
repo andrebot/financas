@@ -10,7 +10,8 @@ export const CategoriesMain = styled('div')(() => ({
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
-  gap: '20px'
+  gap: '20px',
+  overflow: 'auto',
 }));
 
 export const CategoryList = styled('div')(() => ({

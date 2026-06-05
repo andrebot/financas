@@ -9,10 +9,12 @@ const BootstrapLogger = createLogger('ServerBootstrap');
 const server = app.listen(PORT, async () => {
   BootstrapLogger.info(`Server listening on port ${PORT}...`);
 
-  await db.connectToDatabase();
+  db.connectToDatabase();
 });
 
-// Cleanly disposing and closing the server
+/**
+ * Gracefully disconnects the database, closes the HTTP server and exits the process.
+ */
 const dispose = async () => {
   await db.disconnectFromDatabase();
   await server.close();

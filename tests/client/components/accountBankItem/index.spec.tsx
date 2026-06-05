@@ -49,11 +49,10 @@ describe('AccountBankItem', () => {
     agency: '0001',
     accountNumber: '123456',
     currency: 'BRL',
-    user: 'user-1',
+    userId: 'user-1',
+    initialBalance: 0,
     cards: [
       {
-        flag: 'visa',
-        last4Digits: '1234',
         number: '4111111111111234',
         expirationDate: '01/25',
       },
@@ -110,8 +109,8 @@ describe('AccountBankItem', () => {
     const accountWithMultipleCards: BankAccount = {
       ...bankAccount,
       cards: [
-        { flag: 'visa', last4Digits: '1234', number: '4111111111111234', expirationDate: '01/25' },
-        { flag: 'master', last4Digits: '5678', number: '5500000000005678', expirationDate: '12/26' },
+        { number: '4111111111111234', expirationDate: '01/25' },
+        { number: '5500000000005678', expirationDate: '12/26' },
       ],
     };
 
@@ -121,6 +120,12 @@ describe('AccountBankItem', () => {
     expect(creditCards).toHaveLength(2);
     expect(creditCards[0]).toHaveTextContent('1234');
     expect(creditCards[1]).toHaveTextContent('5678');
+  });
+
+  it('should render no credit cards when the account has no cards', () => {
+    renderAccountBankItem({ ...bankAccount, cards: undefined });
+
+    expect(screen.queryAllByTestId('credit-card')).toHaveLength(0);
   });
 
   it('should render action menu button', () => {
@@ -164,7 +169,7 @@ describe('AccountBankItem', () => {
           accountNumber: '123456',
           agency: '0001',
           id: 'account-1',
-          user: 'user-1',
+          userId: 'user-1',
           cards: bankAccount.cards,
         })
       );
@@ -302,19 +307,6 @@ describe('AccountBankItem', () => {
       await waitFor(() => {
         expect(mockDeleteBankAccount).toHaveBeenCalledWith('custom-account-123');
       });
-    });
-  });
-
-  it('should show success snackbar when delete succeeds', async () => {
-    (useDeleteBankAccountMutation as jest.Mock).mockReturnValue([
-      mockDeleteBankAccount,
-      { isError: false, isSuccess: true },
-    ]);
-
-    renderAccountBankItem();
-
-    await waitFor(() => {
-      expect(enqueueSnackbar).toHaveBeenCalledWith(i18nEn.translation.bankAccountDeleted, { variant: 'success' });
     });
   });
 

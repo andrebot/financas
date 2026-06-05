@@ -10,7 +10,7 @@ This APP is made to help you manage your finances and invest, by providing power
 2. ~~Build Account CRUD page~~
 3. ~~Build Category page~~
 4. ~~Build Goals page~~
-5. Build Budget page
+5. ~~Build Budget page~~
 6. Build transactions page
 7. Build Investments page
 8. Build dashboard page
@@ -26,7 +26,7 @@ This APP is made to help you manage your finances and invest, by providing power
 4. ~~Add e2e to CI/CD~~
 
 ## Technical Debts
-1. Switch mongo to a SQL database
+1. ~~Switch mongo to a SQL database~~
 2. ~~Remove Query translation from Repository~~
 3. ~~Remove Empty files to improve readability~~
 4. Revise all try-catch for better error handling
@@ -35,6 +35,98 @@ This APP is made to help you manage your finances and invest, by providing power
 7. i18n on backend based on user settings
 
 # Technical Considerations
+## Switching from Mongo to Postgre
+
+### Motivation
+
+Using a non-SQL database for a finance application was making the domain harder to model and harder to evolve. The app is highly relational by nature: users own accounts, accounts have cards and transactions, transactions affect categories, budgets, goals, monthly balances, and several derived accounting views. Keeping those relationships in Mongo pushed too much coordination into application code, made consistency harder to reason about, and made simple financial invariants feel more complex than they needed to be.
+
+Moving to PostgreSQL gives the project the structure it needs: explicit tables, foreign keys, transactions, relational queries, and a schema that mirrors the domain more naturally. It also makes future work easier to coordinate because the data model now describes the relationships directly instead of relying on scattered application-level assumptions.
+
+---
+
+### Changes Done
+
+The transition touched the persistence layer, the domain managers that orchestrate writes, and the tests that prove the new relational behaviour works. The main files and folders involved were:
+
+- **Database and infrastructure**
+  - `docker/docker-compose.yml`
+  - `docker/dockerfile`
+  - `drizzle.config.ts`
+  - `package.json`
+  - `package-lock.json`
+  - `src/server/config/drizzle.ts`
+  - `src/server/config/mongo.ts`
+  - `src/server/utils/databaseConnection.ts`
+  - `src/server/migrations/drizzle/**`
+
+- **Models and schema**
+  - `src/server/resources/models/accountModel.ts`
+  - `src/server/resources/models/budgetModel.ts`
+  - `src/server/resources/models/categoryModel.ts`
+  - `src/server/resources/models/columHelpers.ts`
+  - `src/server/resources/models/goalModel.ts`
+  - `src/server/resources/models/monthlyBalanceModel.ts`
+  - `src/server/resources/models/schema.ts`
+  - `src/server/resources/models/transactionModel.ts`
+  - `src/server/resources/models/userModel.ts`
+
+- **Repositories and transaction helpers**
+  - `src/server/resources/repositories/IRepository.ts`
+  - `src/server/resources/repositories/repository.ts`
+  - `src/server/resources/repositories/budgetRepo.ts`
+  - `src/server/resources/repositories/categoryRepo.ts`
+  - `src/server/resources/repositories/goalRepo.ts`
+  - `src/server/resources/repositories/monthlyBalanceRepo.ts`
+  - `src/server/resources/repositories/transactionRepo.ts`
+  - `src/server/resources/repositories/userRepo.ts`
+  - `src/server/utils/transaction.ts`
+  - `src/server/utils/authorization.ts`
+
+- **Managers, controllers, routes, and shared types**
+  - `src/server/managers/accountantManager.ts`
+  - `src/server/managers/authenticationManager.ts`
+  - `src/server/managers/contentManager/commonActions.ts`
+  - `src/server/managers/contentManager/index.ts`
+  - `src/server/controllers/accountantController.ts`
+  - `src/server/controllers/authorization.ts`
+  - `src/server/controllers/commonController.ts`
+  - `src/server/controllers/transactionController.ts`
+  - `src/server/routes/accountant.ts`
+  - `src/server/routes/index.ts`
+  - `src/server/routes/transaction.ts`
+  - `src/server/types.ts`
+
+- **Test setup and coverage**
+  - `tests/end2end/databaseUtils.ts`
+  - `tests/end2end/globalSetup.ts`
+  - `tests/end2end/globalTeardown.ts`
+  - `tests/integration/transaction.spec.ts`
+  - `tests/server/controllers/**`
+  - `tests/server/managers/**`
+  - `tests/server/resources/models/**`
+  - `tests/server/resources/repositories/**`
+  - `tests/server/routes/**`
+  - `tests/server/utils/**`
+
+The old implementation did not have a clean enough separation of concerns. Some persistence concerns leaked upward, and some domain rules spilled into places that should only coordinate requests or data access. The migration exposed that pain because relational data needs clear ownership: repositories should know how to query, managers should know how to coordinate domain rules, controllers should translate HTTP concerns, and routes should only wire the system.
+
+The new organization moved the code closer to a functional style. Managers and controllers are now built through composition rather than inheritance: factories receive explicit dependencies and return plain objects with actions. Shared CRUD behaviour lives in reusable functions, while domain-specific cases override only the methods that need special handling. This made the system more heterogeneous in the right way: each module can be shaped around its real responsibility, instead of being forced into a class hierarchy.
+
+A good example is the Content Manager. It grew because the app gained richer content behaviour, but the architecture made that growth easier and mostly painless. Content-specific changes could be integrated inside the manager and its composed actions without forcing unrelated layers to change. That showed the benefit of the design: when the boundary is clear, adding relational rules or entity-specific behaviour does not require spreading changes across the whole backend.
+
+---
+
+### Conclusion
+
+The move from Mongo to PostgreSQL made the database model more coherent with the financial domain. The highly relational data is now handled by a relational database, with clearer schema boundaries, better transaction support, and more explicit relationships between accounts, transactions, categories, budgets, goals, and balances.
+
+The migration also improved the code structure. Fixing the domain spill, moving away from class inheritance, and leaning into functional composition made the system more readable and organized. The current architecture made the transition more controlled because the layers now have clearer responsibilities. The hardest parts of the transition were not only caused by changing databases; they came from having modeled relational financial data in a non-SQL database and from earlier boundaries that allowed concerns to leak between layers.
+
+With the new code, a future database transition would be more organized because persistence, domain orchestration, and HTTP wiring are better separated. Moving back to a non-SQL database would still be hard, because this domain is naturally relational, but the current architecture would make that work easier to reason about than before.
+
+---
+
 ## Managers and Controller Refactor
 
 ### Motivation

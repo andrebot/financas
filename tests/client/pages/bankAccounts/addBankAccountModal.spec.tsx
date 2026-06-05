@@ -69,7 +69,7 @@ describe('AddBankAccountModal', () => {
         currency: 'BRL',
         accountNumber: '123456',
         agency: '9876',
-        user: mockUser.id,
+        userId: mockUser.id,
       })
     );
     expect(mockCloseModal).toHaveBeenCalled();

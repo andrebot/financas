@@ -7,6 +7,7 @@ import {
   TRANSACTION_TYPES,
   INVESTMENT_TYPES,
   RequestWithUser,
+  ITransactionGoalEntry,
 } from '../../../src/server/types';
 
 chai.use(sinonChai);
@@ -41,8 +42,6 @@ const accountantManagerInstance = {
   getTransactionTypes: sinon.stub().returns(transactionTypesResponse),
 };
 
-const accountantManagerStub = sinon.stub().returns(accountantManagerInstance);
-
 const handleErrorStub = sinon.stub().callsFake((error: Error, res: MockResponse) => {
   (res as unknown as Response).status(500);
   (res as unknown as Response).send({ error: error.message });
@@ -51,19 +50,18 @@ const handleErrorStub = sinon.stub().callsFake((error: Error, res: MockResponse)
 
 const {
   default: controller,
-  TransactionController: TransactionControllerFactory,
+  AccountantController: AccountantControllerFactory,
   getTransactionTypes: getTransactionTypesFn,
-} = proxyquire('../../../src/server/controllers/transactionController', {
+} = proxyquire('../../../src/server/controllers/accountantController', {
   '../managers/accountantManager': {
     default: accountantManagerInstance,
-    AccountantManager: accountantManagerStub,
   },
   '../utils/responseHandlers': {
     handleError: handleErrorStub,
   },
 });
 
-describe('Transaction controller', () => {
+describe('Accountant controller', () => {
   let response: MockResponse;
   let request: MockRequest;
 
@@ -74,8 +72,8 @@ describe('Transaction controller', () => {
     };
 
     request = {
-      body: { name: 'Test Transaction', user: 'user-123' },
-      params: { id: 'transaction-123' },
+      body: { name: 'Test Transaction', accountId: 1 },
+      params: { id: '5' },
       user: {
         id: 'user-123',
         role: 'user',
@@ -83,12 +81,12 @@ describe('Transaction controller', () => {
       },
     };
 
-    accountantManagerInstance.createTransaction.resetHistory();
-    accountantManagerInstance.updateTransaction.resetHistory();
-    accountantManagerInstance.deleteTransaction.resetHistory();
-    accountantManagerInstance.listTransactions.resetHistory();
-    accountantManagerInstance.getTransaction.resetHistory();
-    accountantManagerInstance.getTransactionTypes.resetHistory();
+    accountantManagerInstance.createTransaction.reset();
+    accountantManagerInstance.updateTransaction.reset();
+    accountantManagerInstance.deleteTransaction.reset();
+    accountantManagerInstance.listTransactions.reset();
+    accountantManagerInstance.getTransaction.reset();
+    accountantManagerInstance.getTransactionTypes.reset();
     accountantManagerInstance.getTransactionTypes.returns(transactionTypesResponse);
     handleErrorStub.resetHistory();
   });
@@ -152,8 +150,27 @@ describe('Transaction controller', () => {
   });
 
   describe('createContent', () => {
-    it('should create a transaction successfully', async () => {
-      const mockTransaction = { id: 'tx-1', ...request.body };
+    it('should create a transaction splitting goals from body', async () => {
+      const goals: ITransactionGoalEntry[] = [{ goalId: 1, percentage: 1 }];
+      request.body = { name: 'Test', accountId: 1, goals };
+      const mockTransaction = { id: 1, name: 'Test', accountId: 1 };
+      accountantManagerInstance.createTransaction.resolves(mockTransaction);
+
+      await controller.createContent(
+        request as RequestWithUser,
+        response as unknown as Response,
+      );
+
+      accountantManagerInstance.createTransaction.should.have.been.calledOnce;
+      accountantManagerInstance.createTransaction.should.have.been.calledWith(
+        { name: 'Test', accountId: 1 },
+        goals,
+      );
+      response.send.should.have.been.calledWith(mockTransaction);
+    });
+
+    it('should create a transaction with undefined goals when none provided', async () => {
+      const mockTransaction = { id: 1, ...request.body };
       accountantManagerInstance.createTransaction.resolves(mockTransaction);
 
       await controller.createContent(
@@ -164,15 +181,41 @@ describe('Transaction controller', () => {
       accountantManagerInstance.createTransaction.should.have.been.calledOnce;
       accountantManagerInstance.createTransaction.should.have.been.calledWith(
         request.body,
+        undefined,
       );
-      response.send.should.have.been.calledOnce;
-      response.send.should.have.been.calledWith(mockTransaction);
+    });
+
+    it('should reject when user is not authenticated', async () => {
+      request.user = undefined;
+
+      await controller.createContent(
+        request as RequestWithUser,
+        response as unknown as Response,
+      );
+
+      accountantManagerInstance.createTransaction.should.not.have.been.called;
+      response.status.should.have.been.calledWith(500);
+    });
+
+    it('should handle manager errors', async () => {
+      const error = new Error('Create failed');
+      accountantManagerInstance.createTransaction.rejects(error);
+
+      await controller.createContent(
+        request as RequestWithUser,
+        response as unknown as Response,
+      );
+
+      response.status.should.have.been.calledWith(500);
+      response.send.should.have.been.calledWith({ error: error.message });
     });
   });
 
   describe('updateContent', () => {
-    it('should update a transaction successfully', async () => {
-      const mockTransaction = { id: 'tx-1', ...request.body };
+    it('should update a transaction splitting goals from body', async () => {
+      const goals: ITransactionGoalEntry[] = [{ goalId: 2, percentage: 0.5 }];
+      request.body = { name: 'Updated', goals };
+      const mockTransaction = { id: 5, name: 'Updated' };
       accountantManagerInstance.updateTransaction.resolves(mockTransaction);
 
       await controller.updateContent(
@@ -182,18 +225,45 @@ describe('Transaction controller', () => {
 
       accountantManagerInstance.updateTransaction.should.have.been.calledOnce;
       accountantManagerInstance.updateTransaction.should.have.been.calledWith(
-        request.params.id,
-        request.body,
-        request.user?.id,
-        false,
+        5,
+        { name: 'Updated' },
+        goals,
       );
       response.send.should.have.been.calledWith(mockTransaction);
+    });
+
+    it('should update a transaction with undefined goals when none provided', async () => {
+      const mockTransaction = { id: 5, ...request.body };
+      accountantManagerInstance.updateTransaction.resolves(mockTransaction);
+
+      await controller.updateContent(
+        request as RequestWithUser,
+        response as unknown as Response,
+      );
+
+      accountantManagerInstance.updateTransaction.should.have.been.calledWith(
+        5,
+        request.body,
+        undefined,
+      );
+    });
+
+    it('should reject when user is not authenticated', async () => {
+      request.user = undefined;
+
+      await controller.updateContent(
+        request as RequestWithUser,
+        response as unknown as Response,
+      );
+
+      accountantManagerInstance.updateTransaction.should.not.have.been.called;
+      response.status.should.have.been.calledWith(500);
     });
   });
 
   describe('deleteContent', () => {
-    it('should delete a transaction successfully', async () => {
-      const mockTransaction = { id: 'tx-1', ...request.body };
+    it('should delete a transaction by id only', async () => {
+      const mockTransaction = { id: 5 };
       accountantManagerInstance.deleteTransaction.resolves(mockTransaction);
 
       await controller.deleteContent(
@@ -202,18 +272,14 @@ describe('Transaction controller', () => {
       );
 
       accountantManagerInstance.deleteTransaction.should.have.been.calledOnce;
-      accountantManagerInstance.deleteTransaction.should.have.been.calledWith(
-        request.params.id,
-        request.user?.id,
-        false,
-      );
+      accountantManagerInstance.deleteTransaction.should.have.been.calledWith(5);
       response.send.should.have.been.calledWith(mockTransaction);
     });
   });
 
   describe('listContent', () => {
-    it('should list transactions successfully', async () => {
-      const mockTransactions = [{ id: 'tx-1', ...request.body }];
+    it('should list transactions with no arguments', async () => {
+      const mockTransactions = [{ id: 1 }, { id: 2 }];
       accountantManagerInstance.listTransactions.resolves(mockTransactions);
 
       await controller.listContent(
@@ -222,16 +288,14 @@ describe('Transaction controller', () => {
       );
 
       accountantManagerInstance.listTransactions.should.have.been.calledOnce;
-      accountantManagerInstance.listTransactions.should.have.been.calledWith(
-        request.user?.id,
-      );
+      accountantManagerInstance.listTransactions.should.have.been.calledWith();
       response.send.should.have.been.calledWith(mockTransactions);
     });
   });
 
   describe('getContent', () => {
-    it('should get a transaction successfully', async () => {
-      const mockTransaction = { id: 'tx-1', ...request.body };
+    it('should get a transaction by id only', async () => {
+      const mockTransaction = { id: 5 };
       accountantManagerInstance.getTransaction.resolves(mockTransaction);
 
       await controller.getContent(
@@ -240,24 +304,20 @@ describe('Transaction controller', () => {
       );
 
       accountantManagerInstance.getTransaction.should.have.been.calledOnce;
-      accountantManagerInstance.getTransaction.should.have.been.calledWith(
-        request.params.id,
-        request.user?.id,
-        false,
-      );
+      accountantManagerInstance.getTransaction.should.have.been.calledWith(5);
       response.send.should.have.been.calledWith(mockTransaction);
     });
   });
 
-  describe('TransactionController factory', () => {
-    it('should accept custom error handler', async () => {
+  describe('AccountantController factory', () => {
+    it('should accept a custom error handler', () => {
       const customErrorHandler = sinon.stub().callsFake((error: Error, res: MockResponse) => {
         (res as unknown as Response).status(400);
         (res as unknown as Response).send({ error: error.message });
         return res as unknown as Response;
       });
 
-      const customController = TransactionControllerFactory(customErrorHandler);
+      const customController = AccountantControllerFactory(customErrorHandler);
 
       request.user = undefined;
       customController.getTransactionTypes(
@@ -270,7 +330,7 @@ describe('Transaction controller', () => {
     });
 
     it('should use handleError by default when omitted', () => {
-      const controllerWithDefault = TransactionControllerFactory();
+      const controllerWithDefault = AccountantControllerFactory();
       request.user = undefined;
 
       controllerWithDefault.getTransactionTypes(
@@ -279,10 +339,6 @@ describe('Transaction controller', () => {
       );
 
       handleErrorStub.should.have.been.calledOnce;
-      handleErrorStub.should.have.been.calledWith(
-        sinon.match.instanceOf(Error),
-        response,
-      );
       response.status.should.have.been.calledWith(500);
       response.send.should.have.been.calledWith({
         error: 'User not authenticated to get Transaction',

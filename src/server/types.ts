@@ -2,11 +2,29 @@ import jwt from 'jsonwebtoken';
 import {
   Request, Response, NextFunction,
 } from 'express';
-import { Document, ObjectId, Types } from 'mongoose';
-import type { IRepository } from './resources/repositories/IRepository';
-/* eslint-disable no-unused-vars */
+import { PgColumn, PgTable } from 'drizzle-orm/pg-core';
+import { InferSelectModel } from 'drizzle-orm';
+import { transactions, investmentTypes, transactionTypes } from './resources/models/transactionModel';
+import { categories } from './resources/models/categoryModel';
+import { budgets, budgetTypes } from './resources/models/budgetModel';
+import { goals } from './resources/models/goalModel';
+import { monthlyBalances } from './resources/models/monthlyBalanceModel';
+import { users } from './resources/models/userModel';
+import { accounts, cards } from './resources/models/accountModel';
 
-export type Content = { user: string };
+/* eslint-disable max-len, no-shadow, no-unused-vars, @typescript-eslint/no-unused-vars */
+
+/** Base shape for any domain entity that is owned by a user. */
+export type Content = { userId: number | undefined };
+
+/** Authorization context stored in AsyncLocalStorage for the lifetime of a request. */
+export type RequestContext = {
+  userId: number;
+  isAdmin: boolean;
+};
+
+/** A Drizzle table schema that is guaranteed to have a non-nullable userId column. */
+export type TableWithUserId = Table & { userId: number };
 
 /**
  * Interface for the Token
@@ -37,7 +55,7 @@ export type LoginResponse = {
   /**
    * User object
    */
-  user: Omit<IUser, 'password'>;
+  user: Omit<IUser, 'password' | 'createdAt' | 'updatedAt'>;
 };
 
 /**
@@ -72,7 +90,7 @@ export type UserPayload = {
   /** Role of the user. Can be either 'admin' or 'user' */
   role?: 'admin' | 'user';
   /** Id of the user */
-  id?: string;
+  id?: number;
 };
 
 export interface RequestWithUser extends Request {
@@ -143,378 +161,346 @@ export interface IBudgetController extends IContentController {
   getBudget(req: RequestWithUser, res: Response): Promise<Response>;
 }
 
-/**
- * Interface for the Card
- */
-export interface ICard {
-  /**
-   * Id of the card
-   */
-  id?: string;
-  /**
-   * Number of the card
-   */
-  number: string;
-  /**
-   * Expiration date of the card
-   */
-  expirationDate: string;
-}
+/** All valid investment type values derived from the database enum. */
+export const INVESTMENT_TYPES = investmentTypes.enumValues;
+/** All valid transaction type values derived from the database enum. */
+export const TRANSACTION_TYPES = transactionTypes.enumValues;
+/** All valid budget type values derived from the database enum. */
+export const BUDGET_TYPES = budgetTypes.enumValues;
 
-/**
- * Mongoose document type for the Card
- */
-export interface ICardDocument extends Omit<ICard, 'id'>, Document {}
-
-/**
- * Interface for the Account
- */
-export interface IAccount {
-  /**
-   * Id of the account
-   */
-  id?: string;
-  /**
-   * Name of the account
-   */
-  name: string;
-  /**
-   * Agency of the account
-   */
-  agency: string;
-  /**
-   * Account number
-   */
-  accountNumber: string;
-  /**
-   * Currency of the account
-   */
-  currency: string;
-  /**
-   * User of the account
-   */
-  user: string;
-  /**
-   * Cards of the account
-   */
-  cards: ICard[];
-}
-
-/**
- * Mongoose document type for the Account
- */
-export interface IAccountDocument extends Omit<IAccount, 'id' | 'user'>, Document {
-  _id: Types.ObjectId;
-  user: ObjectId;
-}
-
-/**
- * Interface for the User
- */
-export interface IUser {
-  /**
-   * Unique identifier of the user
-   */
-  id?: string; // Optional to account for new objects
-  /**
-   * Email of the user
-   */
-  email: string;
-  /**
-   * First name of the user
-   */
-  firstName: string;
-  /**
-   * Last name of the user
-   */
-  lastName: string;
-  /**
-   * Role of the user. Can be either 'admin' or 'user'
-   */
-  role: 'admin' | 'user';
-  /**
-   * Password of the user
-   */
-  password: string;
-}
-
-/**
- * Mongoose document type for the User
- */
-export interface IUserDocument extends Omit<IUser, 'id'>, Document {
-  _id: Types.ObjectId;
-}
-
-export enum TRANSACTION_TYPES {
-  WITHDRAW = 'withdraw',
-  DEPOSIT = 'deposit',
-  TRANSFER = 'transfer',
-  BANK_SLIP = 'bank_slip',
-  CARD = 'card',
-  INVESTMENT = 'investment',
-}
-
-export enum INVESTMENT_TYPES {
-  CDB = 'cdb',
-  LCI = 'lci',
-  LCA = 'lca',
-  STOCK = 'stock',
-  FUND = 'fund',
-  CRA = 'cra',
-  CRI = 'cri',
-  DEBENTURE = 'debenture',
-  CURRENCY = 'currency',
-  LC = 'lc',
-  LF = 'lf',
-  FII = 'fii',
-  TRESURY = 'tresury',
-}
-
+/** A goal with its display name and the percentage allocated to it. */
 export interface IGoalItem {
+  /** The full goal record. */
   goal: IGoal;
+  /** Human-readable name of the goal. */
   goalName: string;
+  /** Fraction of the transaction amount directed to this goal (0–1). */
   percentage: number;
 }
 
-export interface ITransaction {
-  id?: string;
-  name: string;
-  category: string;
-  parentCategory: string;
-  account: string;
-  type: TRANSACTION_TYPES;
-  date: Date | string;
-  value: number;
-  investmentType?: INVESTMENT_TYPES;
-  user: string;
-  goalsList: IGoalItem[];
-}
+/** Domain entity representing a payment card. */
+export interface ICard extends InferSelectModel<typeof cards> { }
 
-/**
- * Mongoose document type for the Transaction
- */
-export interface ITransactionDocument extends Omit<ITransaction, 'id' | 'user' | 'goalsList' | 'account'>, Document {
-  _id: Types.ObjectId;
-  user: ObjectId;
-  account: ObjectId;
-  goalsList: {
-    goal: Types.ObjectId;
-    goalName: string;
-    percentage: number;
-  }[];
-}
+/** Card fields accepted from account create/update forms. */
+export type ICardPayload = Pick<ICard, 'number' | 'expirationDate'>;
 
-export interface IGoal extends Content {
-  /**
-   * Unique identifier
-   */
-  id?: string;
-  /**
-   * Name of the Goal
-   */
-  name: string;
-  /**
-   * Goal's target value
-   */
-  value: number;
-  /**
-   * Due date for the goal
-   */
-  dueDate: Date;
-  /**
-   * Whether the goal is archived
-   */
-  archived: boolean;
-  /**
-   * Goal owner
-   */
-  user: string;
-  /**
-   * Saved value of the goal
-   */
-  savedValue: number;
-}
+/** Card payload used when reconciling a submitted full account card list. */
+export type ICardSyncPayload = ICardPayload & {
+  /** Existing card id. Omitted for newly added cards. */
+  id?: number;
+};
 
-/**
- * Mongoose document type for the Goal
- */
-export interface IGoalDocument extends Omit<IGoal, 'id' | 'user'>, Document {
-  _id: Types.ObjectId;
-  user: ObjectId;
-}
+/** Card brands rendered by the client card components. */
+export type ICardBrand = 'amazon' | 'master' | 'visa' | 'amex' | 'diners' | 'discover' | 'maestro' | 'unknown';
 
-export interface ICategory {
-  /**
-   * Unique identifier
-   */
-  id?: string;
-  /**
-   * Name of the category
-   */
-  name: string;
-  /**
-   * Category owner
-   */
-  user: string;
-  /**
-   * Parent category, if this is a sub-category
-   */
-  parentCategory?: string;
-}
+/** Card payload returned to the client when accounts are hydrated with their cards. */
+export type ICardClientPayload = ICardSyncPayload & {
+  /** Client-rendered card brand/flag. */
+  flag: ICardBrand;
+  /** Last four digits rendered by the client card component. */
+  last4Digits: string;
+};
 
-/**
- * Mongoose document type for the Category
- */
-export interface ICategoryDocument extends Omit<ICategory, 'id' | 'user' | 'parentCategory'>, Document {
-  _id: Types.ObjectId;
-  user: ObjectId;
-  parentCategory: ObjectId;
-}
+/** Domain entity representing a bank or financial account. */
+export interface IAccount extends InferSelectModel<typeof accounts> { }
 
-export enum BUDGET_TYPES {
-  ANNUALY = 'annualy',
-  QUARTERLY = 'quarterly',
-  MONTHLY = 'monthly',
-  WEEKLY = 'weekly',
-  DAILY = 'daily',
-}
+/** Account row loaded with its related persisted cards. */
+export type IAccountWithCards = IAccount & {
+  /** Cards related to the account by Drizzle relations. */
+  cards: ICard[];
+};
 
-export interface IBudget extends Content {
-  /**
-   * Unique identifier of the budget
-   */
-  id?: string;
-  /**
-   * Budget's name
-   */
-  name: string;
-  /**
-   * Budget's target value
-   */
-  value: number;
-  /**
-   * Budget type
-   */
-  type: BUDGET_TYPES;
-  /**
-   * Budget's spent value
-   */
+/** Account create/update payload that may include the UI-submitted full card list. */
+export type IAccountPayload = Partial<IAccount> & Content & {
+  /** Full list of cards submitted by the account form. */
+  cards?: Array<ICardSyncPayload | ICardClientPayload>;
+};
+
+/** Domain entity representing an application user. */
+export interface IUser extends InferSelectModel<typeof users> { }
+
+/** Domain entity representing a financial transaction. */
+export interface ITransaction extends InferSelectModel<typeof transactions> { }
+
+/** Domain entity representing a savings goal. */
+export interface IGoal extends InferSelectModel<typeof goals> { }
+
+/** Domain entity representing a spending category. */
+export interface ICategory extends InferSelectModel<typeof categories> { }
+
+/** Domain entity representing a budget with its computed total spent amount. */
+export interface IBudget extends InferSelectModel<typeof budgets> {
+  /** Total amount spent against this budget in the relevant period. */
   spent?: number;
-  /**
-   * Budget's start date
-   */
-  startDate: Date;
-  /**
-   * Budget's end date
-   */
-  endDate: Date;
-  /**
-   * Categories related to this budget
-   */
-  categories: string[];
-  /**
-   * Budget owner
-   */
-  user: string;
+  /** Category rows hydrated for list/detail responses. */
+  categories?: ICategory[];
+  /** Category ids submitted by create/update requests. */
+  categoryIds?: number[];
 }
 
-/**
- * Mongoose document type for the Budget
- */
-export interface IBudgetDocument extends Omit<IBudget, 'id' | 'user'>, Document {
-  _id: Types.ObjectId;
-  user: ObjectId;
-}
+/** Domain entity representing a monthly balance snapshot for an account. */
+export interface IMonthlyBalance extends InferSelectModel<typeof monthlyBalances> { }
 
-export interface IMonthlyBalance {
-  /**
-   * Unique identifier
-   */
-  id?: string;
-  /**
-   * Monthly balance owner
-   */
-  user: string;
-  /**
-   * Monthly balance account
-   */
-  account: string;
-  /**
-   * Month of the monthly balance
-   */
-  month: number;
-  /**
-   * Year of the monthly balance
-   */
-  year: number;
-  /**
-   * Opening balance of the monthly balance
-   */
-  openingBalance: number;
-  /**
-   * Closing balance of the monthly balance
-   */
-  closingBalance: number;
-  /**
-   * Transactions of the monthly balance
-   */
-  transactions: ITransaction[];
-}
-
-/**
- * Mongoose document type for the Monthly Balance
- */
-export interface IMonthlyBalanceDocument extends Omit<IMonthlyBalance, 'id' | 'user' | 'account' | 'transactions'>, Document {
-  user: ObjectId;
-  account: ObjectId;
-  transactions: ObjectId[];
-}
-
+/** Payload used to bulk-update a goal's saved value by a fixed amount. */
 export type BulkGoalsUpdate = {
-  goalId: string;
+  /** The id of the goal to update. */
+  goalId: number;
+  /** The absolute amount to add or subtract from the goal's saved value. */
   amount: number;
 };
 
+/** A single goal allocation entry within a transaction, defined by fraction. */
+export type ITransactionGoalEntry = {
+  /** The id of the goal receiving this allocation. */
+  goalId: number;
+  /** Fraction of the transaction amount directed to this goal (0–1). */
+  percentage: number;
+};
+
 /**
- * Repository interfaces - extend IRepository with repo-specific methods.
- * Use these instead of typeof for dependency injection and testability.
+ * Minimal shape every Drizzle table must satisfy to be usable with
+ * {@link Repository} and {@link getAutorizationDatabaseContext}.
  */
-export interface ITransactionRepo extends IRepository<ITransactionDocument, ITransaction> {
-  deleteGoalFromTransactions(goalId: string): Promise<number>;
-  removeCategoriesFromTransactions(categoryIds: string[]): Promise<number>;
+export interface Table extends PgTable {
+  /** Primary key column. */
+  id: PgColumn;
+  /** Optional user ownership column used for authorization filtering. */
+  userId?: PgColumn;
+}
+
+/**
+ * Generic CRUD contract shared by all repository implementations.
+ *
+ * @template T - The Drizzle table type.
+ * @template K - The domain entity type.
+ */
+export interface IRepository<T extends Table, K> {
+  /** Human-readable model name used in log messages and error strings. */
+  modelName: string;
+  /**
+   * Finds a record by primary key within the current authorization context.
+   *
+   * @param id - The primary key to look up.
+   * @returns The matching record, or null if not found.
+   */
+  findById(id: number): Promise<K | null>;
+  /**
+   * Inserts a new record and returns the persisted row.
+   *
+   * @param entity - The entity data to insert.
+   * @returns The newly inserted row.
+   */
+  save(entity: Partial<K>): Promise<K>;
+  /**
+   * Deletes the record identified by id and returns the deleted row.
+   *
+   * @param id - The primary key of the record to delete.
+   * @returns The deleted row, or null if not found.
+   */
+  deleteById(id: number): Promise<K | null>;
+  /**
+   * Returns all records visible to the current authorization context.
+   *
+   * @returns An array of all matching records.
+   */
+  listAll(): Promise<K[]>;
+  /**
+   * Applies a partial update to the record identified by id.
+   *
+   * @param id - The primary key of the record to update.
+   * @param entity - Partial fields to apply.
+   * @returns The updated row.
+   */
+  update(id: number, entity: Partial<K>): Promise<K>;
+}
+
+/** Repository contract for the transactions table, extending base CRUD with domain-specific queries. */
+export interface ITransactionRepo extends IRepository<typeof transactions, ITransaction> {
+  /**
+   * Returns the count of transaction-goal links for a goal, scoped to the authorization context.
+   *
+   * @param goalId - The goal to check.
+   * @returns Count of linked transaction rows.
+   */
+  deleteGoalFromTransactions(goalId: number): Promise<number>;
+  /**
+   * Sets categoryId to null on all transactions belonging to the given categories.
+   *
+   * @param categoryIds - The category ids to disassociate.
+   * @returns Number of transactions updated.
+   */
+  removeCategoriesFromTransactions(categoryIds: number[]): Promise<number>;
+  /**
+   * Finds transactions for a user filtered by category ids and date range.
+   *
+   * @param userId - The owning user's id.
+   * @param categoryIds - Category ids to match.
+   * @param startDate - Range start (inclusive).
+   * @param endDate - Range end (inclusive).
+   * @returns Matching transactions.
+   */
   findByCategoryWithDateRange(
-    userId: string,
-    categories: string[],
+    userId: number,
+    categoryIds: number[],
     startDate: Date,
     endDate: Date,
-  ): Promise<ITransaction[] | { value: number }[]>;
+  ): Promise<ITransaction[]>;
+  /**
+   * Finds all transactions for a given year and month without authorization filtering.
+   *
+   * @param year - The four-digit year.
+   * @param month - The month (1-indexed).
+   * @returns Matching transactions.
+   */
+  findByMonthAndYear(year: number, month: number): Promise<ITransaction[]>;
+  /**
+   * Removes all goal junction rows for the given transaction.
+   *
+   * @param transactionId - The transaction whose goal links should be removed.
+   * @returns Number of rows deleted.
+   */
+  deleteTransactionFromGoals(transactionId: number): Promise<number>;
+  /**
+   * Inserts goal allocation rows linking a transaction to a set of goals.
+   *
+   * @param transactionId - The transaction to link.
+   * @param goals - The goal entries with goalId and percentage.
+   */
+  saveTransactionGoals(transactionId: number, goals: ITransactionGoalEntry[]): Promise<void>;
 }
 
-export interface ICategoryRepo extends IRepository<ICategoryDocument, ICategory> {
-  findAllSubcategories(parentCategoryId: string): Promise<ICategory[]>;
-  deleteAllSubcategories(parentCategoryId: string): Promise<number>;
+/** Repository contract for the categories table, extending base CRUD with hierarchy queries. */
+export interface ICategoryRepo extends IRepository<typeof categories, ICategory> {
+  /**
+   * Returns all categories whose parent is the given category id.
+   *
+   * @param parentCategoryId - The parent category to query under.
+   * @returns All direct child categories.
+   */
+  findAllSubcategories(parentCategoryId: number): Promise<ICategory[]>;
+  /**
+   * Deletes all subcategories of the given parent category.
+   *
+   * @param parentCategoryId - The parent whose children should be deleted.
+   * @returns Number of rows deleted, or null if none matched.
+   */
+  deleteAllSubcategories(parentCategoryId: number): Promise<number | null>;
+  /**
+   * Returns the category ids associated with a given budget.
+   *
+   * @param budgetId - The budget to look up categories for.
+   * @returns An array of category ids.
+   */
+  listCategoriesByBudgetId(budgetId: number): Promise<number[]>;
 }
 
-export interface IBudgetRepo extends IRepository<IBudgetDocument, IBudget> {
+/** Repository contract for the goals table, extending base CRUD with transaction-driven updates. */
+export interface IGoalRepo extends IRepository<typeof goals, IGoal> {
+  /**
+   * Updates the savedValue of all goals linked to the transaction by their percentage.
+   *
+   * @param transaction - The transaction whose linked goals should be updated.
+   * @param shouldInvertValue - When true the contribution is subtracted (used on delete/revert).
+   */
+  updateGoalFromTransaction(transaction: ITransaction, shouldInvertValue?: boolean): Promise<void>;
+}
+
+/** Repository contract for the budgets table, extending base CRUD with usage tracking. */
+export interface IBudgetRepo extends IRepository<typeof budgets, IBudget> {
+  /**
+   * Inserts a budgetUsage row for every budget whose categories include the transaction's category.
+   *
+   * @param transaction - The newly created transaction to record.
+   */
   updateBudgetsByNewTransaction(transaction: ITransaction): Promise<void>;
+  /**
+   * Removes the budgetUsage row associated with the given transaction.
+   *
+   * @param transaction - The transaction whose usage entry should be deleted.
+   */
+  revertBudgetsByTransaction(transaction: ITransaction): Promise<void>;
+  /**
+   * Creates budget/category junction rows for a persisted budget.
+   *
+   * @param budgetId - The persisted budget id.
+   * @param categoryIds - Category ids linked to the budget.
+   */
+  saveBudgetCategories(budgetId: number, categoryIds: number[]): Promise<void>;
+  /**
+   * Deletes budget/category junction rows for a persisted budget.
+   *
+   * @param budgetId - The persisted budget id.
+   */
+  deleteBudgetCategories(budgetId: number): Promise<void>;
+  listBudgetsWithCategories(): Promise<IBudget[]>;
 }
 
-export interface IGoalRepo extends IRepository<IGoalDocument, IGoal> {
-  incrementGoalsInBulk(bulkGoalsUpdate: BulkGoalsUpdate[]): Promise<void>;
-}
-
-export interface IMonthlyBalanceRepo extends IRepository<IMonthlyBalanceDocument, IMonthlyBalance> {
+/** Repository contract for the monthlyBalances table, extending base CRUD with balance management. */
+export interface IMonthlyBalanceRepo extends IRepository<typeof monthlyBalances, IMonthlyBalance> {
+  /**
+   * Finds the monthly balance for the transaction's account on the given date's month.
+   *
+   * @param transaction - Used to match the accountId.
+   * @param date - The date whose year and month identify the balance record.
+   * @returns The monthly balance, or null if none exists.
+   */
   findMonthlyBalance(transaction: ITransaction, date: Date): Promise<IMonthlyBalance | null>;
+  /**
+   * Atomically updates closingBalance, totalIn, and totalOut for the transaction's account month.
+   *
+   * @param transaction - The transaction to apply or revert.
+   * @param shouldInvertValue - When true the transaction's impact is subtracted.
+   */
+  updateMonthlyBalanceWithTransaction(transaction: ITransaction, shouldInvertValue: boolean): Promise<void>;
 }
 
-export interface IUserRepo extends IRepository<IUserDocument, IUser> {
+/** Repository contract for the users table, extending base CRUD with email lookup. */
+export interface IUserRepo extends IRepository<typeof users, IUser> {
+  /**
+   * Finds a user by their email address.
+   *
+   * @param email - The email address to search for.
+   * @returns The matching user, or null if not found.
+   */
   findByEmail(email: string): Promise<IUser | null>;
 }
 
-export type IAccountRepo = IRepository<IAccountDocument, IAccount>;
+/** Repository contract for the accounts table. */
+export interface IAccountRepo extends IRepository<typeof accounts, IAccount> {
+  /**
+   * Returns all visible accounts with their related cards loaded by Drizzle relations.
+   *
+   * @returns Accounts with persisted cards included.
+   */
+  listAllWithCards(): Promise<IAccountWithCards[]>;
+}
 
+/** Repository contract for account-owned payment cards. */
+export interface ICardRepo extends IRepository<typeof cards, ICard> {
+  /**
+   * Finds all cards that belong to the given account.
+   *
+   * @param accountId - The owner account id.
+   * @returns Cards belonging to the account.
+   */
+  findByAccountId(accountId: number): Promise<ICard[]>;
+  /**
+   * Reconciles the persisted cards for an account with a submitted full list.
+   *
+   * @param accountId - The owner account id.
+   * @param submittedCards - The full card list submitted by the UI.
+   * @returns The reconciled persisted cards.
+   */
+  syncAccountCards(accountId: number, submittedCards: ICardSyncPayload[]): Promise<ICard[]>;
+}
+
+/** Callback invoked when a controller catches an unhandled error. */
 export type ErrorHandler = (error: Error) => void;
 
+/**
+ * Optional route handler overrides passed to a router factory.
+ * Any provided handler replaces the default implementation for that route.
+ */
 export type RouteOverrides = {
   listContent?: (req: RequestWithUser, res: Response) => Promise<Response>;
   createContent?: (req: RequestWithUser, res: Response) => Promise<Response>;
@@ -524,16 +510,15 @@ export type RouteOverrides = {
 };
 
 export interface IAccountantManager {
-  createTransaction: (content: ITransaction) => Promise<ITransaction>;
-  deleteTransaction: (id: string, userId: string, isAdmin: boolean) => Promise<ITransaction | null>;
+  createTransaction: (content: ITransaction, goals?: ITransactionGoalEntry[]) => Promise<ITransaction>;
+  deleteTransaction: (id: number) => Promise<ITransaction | null>;
   updateTransaction: (
-    id: string,
+    id: number,
     payload: Partial<ITransaction>,
-    userId: string,
-    isAdmin: boolean,
+    goals: ITransactionGoalEntry[] | undefined,
   ) => Promise<ITransaction | null>;
-  getTransaction: (id: string, userId: string, isAdmin: boolean) => Promise<ITransaction | null>;
-  listTransactions: (userId: string) => Promise<ITransaction[]>;
+  getTransaction: (id: number) => Promise<ITransaction | null>;
+  listTransactions: () => Promise<ITransaction[]>;
   getTransactionTypes: () => { transactionTypes: string[]; investmentTypes: string[] };
 }
 
@@ -618,15 +603,11 @@ export interface ICommonActions<K extends Content> {
    *
    * @param id - The id of the content to update.
    * @param payload - The payload to update the content with.
-   * @param userId - The id of the user updating the content.
-   * @param isAdmin - Whether the user is an admin.
    * @returns The updated content.
    */
   updateContent: (
-    id: string,
+    id: number,
     payload: Partial<K>,
-    userId: string,
-    isAdmin: boolean,
   ) => Promise<K | null>;
   /**
    * Deletes a content by id.
@@ -635,20 +616,17 @@ export interface ICommonActions<K extends Content> {
    * @throws {Error} - If the user is not authorized to delete the content.
    *
    * @param id - The id of the content to delete.
-   * @param userId - The id of the user deleting the content.
-   * @param isAdmin - Whether the user is an admin.
    * @returns The deleted content.
    */
-  deleteContent: (id: string, userId: string, isAdmin: boolean) => Promise<K | null>;
+  deleteContent: (id: number) => Promise<K | null>;
   /**
    * Lists all content for a user.
    *
    * @throws {Error} - If the user is not authorized to list the content.
    *
-   * @param userId - The id of the user listing the content.
    * @returns The list of content.
    */
-  listContent: (userId: string) => Promise<K[]>;
+  listContent: () => Promise<K[]>;
   /**
    * Gets a content by id.
    *
@@ -656,18 +634,24 @@ export interface ICommonActions<K extends Content> {
    * @throws {Error} - If the user is not authorized to get the content.
    *
    * @param id - The id of the content to get.
-   * @param userId - The id of the user getting the content.
-   * @param isAdmin - Whether the user is an admin.
    * @returns The content.
    */
-  getContent: (id: string, userId: string, isAdmin: boolean) => Promise<K | null>;
+  getContent: (id: number) => Promise<K | null>;
 }
 
+/**
+ * Aggregated manager actions passed to the budget page controller,
+ * covering the four content types that a budget view can interact with.
+ */
 export type ContentManagerActions = {
+  /** CRUD actions for budgets. */
   budgetActions: ICommonActions<IBudget>;
+  /** CRUD actions for categories. */
   categoryActions: ICommonActions<ICategory>;
+  /** CRUD actions for goals. */
   goalActions: ICommonActions<IGoal>;
-  accountActions: ICommonActions<IAccount>;
+  /** CRUD actions for accounts. */
+  accountActions: ICommonActions<IAccountPayload>;
 };
 
 /* eslint-enable no-unused-vars */

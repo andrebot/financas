@@ -9,11 +9,11 @@ import { GoalsTableActionType } from '../../../../../src/client/enums';
 import type { Goal, GoalsTableProps } from '../../../../../src/client/types';
 
 const createGoal = (overrides: Partial<Goal> = {}): Goal => ({
-  id: 'goal-1',
+  id: 1,
   name: 'Save for trip',
   value: 10000,
   dueDate: new Date('2026-12-31'),
-  user: 'user-1',
+  userId: 1,
   archived: false,
   savedValue: 0,
   progress: 33,
@@ -69,7 +69,7 @@ describe('GoalsTable', () => {
     setup({
       goals: [
         createGoal({
-          id: 'goal-1',
+          id: 1,
           name: 'Trip',
           value: 5000,
           dueDate: new Date('2026-06-15'),
@@ -79,7 +79,7 @@ describe('GoalsTable', () => {
     });
 
     expect(screen.getByText('Trip')).toBeInTheDocument();
-    expect(screen.getByText('5000')).toBeInTheDocument();
+    expect(screen.getByText('$5,000.00')).toBeInTheDocument();
     expect(screen.getByText('06/2026')).toBeInTheDocument();
     expect(screen.getByRole('progressbar', { name: '50%' })).toBeInTheDocument();
   });
@@ -87,20 +87,20 @@ describe('GoalsTable', () => {
   it('should render multiple goals', () => {
     setup({
       goals: [
-        createGoal({ id: '1', name: 'Goal A', value: 1000 }),
-        createGoal({ id: '2', name: 'Goal B', value: 2000 }),
+        createGoal({ id: 1, name: 'Goal A', value: 1000 }),
+        createGoal({ id: 2, name: 'Goal B', value: 2000 }),
       ],
     });
 
     expect(screen.getByText('Goal A')).toBeInTheDocument();
     expect(screen.getByText('Goal B')).toBeInTheDocument();
-    expect(screen.getByText('1000')).toBeInTheDocument();
-    expect(screen.getByText('2000')).toBeInTheDocument();
+    expect(screen.getByText('$1,000.00')).toBeInTheDocument();
+    expect(screen.getByText('$2,000.00')).toBeInTheDocument();
   });
 
   it('should call onEditGoal when Edit button is clicked', () => {
     const onEditGoal = jest.fn();
-    const goal = createGoal({ id: 'goal-1', name: 'My goal' });
+    const goal = createGoal({ id: 1, name: 'My goal' });
 
     setup({
       goals: [goal],
@@ -116,7 +116,7 @@ describe('GoalsTable', () => {
 
   it('should call onDeleteGoal when Delete button is clicked', () => {
     const onDeleteGoal = jest.fn();
-    const goal = createGoal({ id: 'goal-1', name: 'My goal' });
+    const goal = createGoal({ id: 1, name: 'My goal' });
 
     setup({
       goals: [goal],
@@ -131,7 +131,7 @@ describe('GoalsTable', () => {
 
   it('should call onArchiveGoal when Archive button is clicked', () => {
     const onArchiveGoal = jest.fn();
-    const goal = createGoal({ id: 'goal-1', name: 'My goal' });
+    const goal = createGoal({ id: 1, name: 'My goal' });
 
     setup({
       goals: [goal],
@@ -146,7 +146,7 @@ describe('GoalsTable', () => {
 
   it('should call onUnarchiveGoal when Unarchive button is clicked', () => {
     const onUnarchiveGoal = jest.fn();
-    const goal = createGoal({ id: 'goal-1', name: 'Archived goal', archived: true });
+    const goal = createGoal({ id: 1, name: 'Archived goal', archived: true });
 
     setup({
       goals: [goal],
@@ -162,11 +162,11 @@ describe('GoalsTable', () => {
 
   it('should call onDeselectGoal when Deselect button is clicked and activeGoalId is set', () => {
     const onDeselectGoal = jest.fn();
-    const goal = createGoal({ id: 'goal-1', name: 'My goal' });
+    const goal = createGoal({ id: 1, name: 'My goal' });
 
     setup({
       goals: [goal],
-      activeGoalId: 'goal-1',
+      activeGoalId: 1,
       onDeselectGoal,
       availableActions: [
         GoalsTableActionType.DESELECT,
@@ -175,15 +175,15 @@ describe('GoalsTable', () => {
       ],
     });
 
-    fireEvent.click(screen.getByRole('button', { name: 'deselect' }));
+    fireEvent.click(screen.getByRole('button', { name: i18nEn.translation.deselect }));
 
     expect(onDeselectGoal).toHaveBeenCalledTimes(1);
   });
 
   it('should hide Edit button when activeGoalId is set', () => {
     setup({
-      goals: [createGoal({ id: 'goal-1', name: 'My goal' })],
-      activeGoalId: 'goal-1',
+      goals: [createGoal({ id: 1, name: 'My goal' })],
+      activeGoalId: 1,
       availableActions: [
         GoalsTableActionType.EDIT,
         GoalsTableActionType.DESELECT,
@@ -193,12 +193,12 @@ describe('GoalsTable', () => {
     });
 
     expect(screen.queryByRole('button', { name: i18nEn.translation.edit })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'deselect' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: i18nEn.translation.deselect })).toBeInTheDocument();
   });
 
   it('should hide Deselect button when activeGoalId is not set', () => {
     setup({
-      goals: [createGoal({ id: 'goal-1', name: 'My goal' })],
+      goals: [createGoal({ id: 1, name: 'My goal' })],
       availableActions: [
         GoalsTableActionType.EDIT,
         GoalsTableActionType.DESELECT,
@@ -208,14 +208,14 @@ describe('GoalsTable', () => {
     });
 
     expect(screen.getByRole('button', { name: i18nEn.translation.edit })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'deselect' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: i18nEn.translation.deselect })).not.toBeInTheDocument();
   });
 
   it('should sort by value when Value column header is clicked', () => {
     setup({
       goals: [
-        createGoal({ id: '1', name: 'High', value: 10000 }),
-        createGoal({ id: '2', name: 'Low', value: 1000 }),
+        createGoal({ id: 1, name: 'High', value: 10000 }),
+        createGoal({ id: 2, name: 'Low', value: 1000 }),
       ],
     });
 
@@ -242,8 +242,8 @@ describe('GoalsTable', () => {
   it('should sort by due date when Due Date column header is clicked', () => {
     setup({
       goals: [
-        createGoal({ id: '1', name: 'Later', dueDate: new Date('2027-12-31'), value: 1000 }),
-        createGoal({ id: '2', name: 'Earlier', dueDate: new Date('2026-01-15'), value: 1000 }),
+        createGoal({ id: 1, name: 'Later', dueDate: new Date('2027-12-31'), value: 1000 }),
+        createGoal({ id: 2, name: 'Earlier', dueDate: new Date('2026-01-15'), value: 1000 }),
       ],
     });
 
@@ -258,8 +258,8 @@ describe('GoalsTable', () => {
   it('should sort by progress when Progress column header is clicked', () => {
     setup({
       goals: [
-        createGoal({ id: '1', name: 'Full', value: 1000, progress: 100 }),
-        createGoal({ id: '2', name: 'Half', value: 1000, progress: 50 }),
+        createGoal({ id: 1, name: 'Full', value: 1000, progress: 100 }),
+        createGoal({ id: 2, name: 'Half', value: 1000, progress: 50 }),
       ],
     });
 
@@ -274,10 +274,10 @@ describe('GoalsTable', () => {
   it('should mark row as selected when activeGoalId matches goal id', () => {
     const { container } = setup({
       goals: [
-        createGoal({ id: 'goal-1', name: 'Selected' }),
-        createGoal({ id: 'goal-2', name: 'Not selected' }),
+        createGoal({ id: 1, name: 'Selected' }),
+        createGoal({ id: 2, name: 'Not selected' }),
       ],
-      activeGoalId: 'goal-1',
+      activeGoalId: 1,
       availableActions: [GoalsTableActionType.EDIT, GoalsTableActionType.DELETE],
     });
 

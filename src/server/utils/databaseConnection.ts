@@ -1,18 +1,25 @@
-import mongoose from 'mongoose';
+import { drizzle, NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { Pool } from 'pg';
+import * as schema from '../resources/models/schema';
 import { createLogger } from './logger';
-import { DB_URL, MONGO_OPT } from '../config/mongo';
+import { DB_URL } from '../config/drizzle';
+
+/* eslint-disable import/no-mutable-exports */
 
 const logger = createLogger('DatabaseConnection');
+export let db: NodePgDatabase<typeof schema>;
+let pool: Pool;
 
 /**
- * Connects to a MongoDB database
+ * Connects to a PostgreSQL database through Drizzle.
  *
  * @returns A promise that resolves when the connection is successful
  */
-async function connectToDatabase(): Promise<void> {
+function connectToDatabase(): void {
   try {
-    logger.info(`Connecting to mongo: ${DB_URL}`);
-    await mongoose.connect(DB_URL, MONGO_OPT);
+    logger.info(`Connecting to drizzle: ${DB_URL}`);
+    pool = new Pool({ connectionString: DB_URL });
+    db = drizzle(pool, { schema, logger: true });
 
     logger.info('Connected to database');
   } catch (error) {
@@ -21,13 +28,13 @@ async function connectToDatabase(): Promise<void> {
 }
 
 /**
- * Disconnects from the MongoDB database
+ * Disconnects from the PostgreSQL database.
  *
  * @returns A promise that resolves when the disconnection is successful
  */
 async function disconnectFromDatabase(): Promise<void> {
   try {
-    await mongoose.disconnect();
+    await pool.end();
 
     logger.info('Disconnected from database');
   } catch (error) {

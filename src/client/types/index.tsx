@@ -4,6 +4,7 @@ import { StyleCompProp, ConfirmModalProps } from './StyleCompProp';
 import {
   Flag,
   FlagIconProps,
+  CreditCard,
   CreditCardProps,
   AccountBankItemProps,
   BankAccount,
@@ -22,6 +23,7 @@ import { ApiBuilder, RTKApi } from './requests';
 import {
   GoalState, GoalAction, Goal, GoalsTableProps,
 } from './goals';
+import { Budget, BudgetFormState, BudgetFormAction } from './budget';
 
 export {
   UserType,
@@ -31,6 +33,7 @@ export {
   ConfirmModalProps,
   Flag,
   FlagIconProps,
+  CreditCard,
   CreditCardProps,
   AccountBankItemProps,
   CreditCardState,
@@ -53,4 +56,7 @@ export {
   GoalAction,
   Goal,
   GoalsTableProps,
+  Budget,
+  BudgetFormState,
+  BudgetFormAction,
 };

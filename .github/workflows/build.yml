@@ -11,12 +11,16 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      mongodb:
-        image: mongo:latest
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: financas
+          POSTGRES_PASSWORD: financas
+          POSTGRES_DB: financas
         ports:
-          - 27017:27017
+          - 5432:5432
         options: >-
-          --health-cmd "mongosh --eval 'db.adminCommand(\"ping\")'"
+          --health-cmd "pg_isready -U financas -d financas"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -51,10 +55,15 @@ jobs:
       - name: Run server integration tests
         run: npm run test:server:integration
 
+      - name: Run database migrations
+        run: npx drizzle-kit migrate
+        env:
+          DB_URL: postgresql://financas:financas@localhost:5432/financas
+
       - name: Run e2e tests
         run: npm run test:e2e:ci
         env:
-          DB_URL: mongodb://localhost:27017/financas
+          DB_URL: postgresql://financas:financas@localhost:5432/financas
 
       - name: Update Coverage Badges
         run: |

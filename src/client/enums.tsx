@@ -36,10 +36,30 @@ export enum GoalActionType {
   EDIT = 'EDIT',
 }
 
+export enum BudgetFormActionType {
+  SET_NAME = 'SET_NAME',
+  SET_VALUE = 'SET_VALUE',
+  SET_START_DATE = 'SET_START_DATE',
+  SET_END_DATE = 'SET_END_DATE',
+  SET_TYPE = 'SET_TYPE',
+  SET_CATEGORY_IDS = 'SET_CATEGORY_IDS',
+  VALIDATE = 'VALIDATE',
+  EDIT = 'EDIT',
+  RESET = 'RESET',
+}
+
 export enum GoalsTableActionType {
   EDIT = 'edit',
   DELETE = 'delete',
   ARCHIVE = 'archive',
   UNARCHIVE = 'unarchive',
   DESELECT = 'deselect',
+}
+
+export enum BUDGET_TYPES {
+  ANNUALY = 'annualy',
+  QUARTERLY = 'quarterly',
+  MONTHLY = 'monthly',
+  WEEKLY = 'weekly',
+  DAILY = 'daily',
 }

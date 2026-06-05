@@ -49,7 +49,7 @@ export function createAccessToken(
   role: 'admin' | 'user',
   firstName: string,
   lastName: string,
-  id: string,
+  id: number,
 ): string {
   return createToken({
     email,
@@ -70,7 +70,7 @@ export function createAccessToken(
  * @param id - Id of the user to be added to the token
  * @returns - the Refresh Token as a string
  */
-export function createRefreshToken(email: string, role: 'admin' | 'user', firstName: string, lastName: string, id: string): string {
+export function createRefreshToken(email: string, role: 'admin' | 'user', firstName: string, lastName: string, id: number): string {
   return createToken({
     email, role, firstName, lastName, id,
   }, REFRESH_TOKEN_EXPIRATION, REFRESH_TOKEN_SECRET);
@@ -96,6 +96,12 @@ export async function createUser(
   role: 'admin' | 'user' = 'user',
 ): Promise<Omit<IUser, 'password'>> {
   if (regExpPassword.test(password)) {
+    const existingUser = await UserRepo.findByEmail(email);
+
+    if (existingUser) {
+      throw new Error(`duplicate key: user email already exists: ${email}`);
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _, ...newUser } = await UserRepo.save({
       email,
@@ -154,9 +160,9 @@ function validateUpdateUser(
  */
 export async function updateUser(
   requestingUser: UserPayload | undefined,
-  id: string,
+  id: number,
   payload: UserPayload,
-): Promise<Omit<IUser, 'password'>> {
+): Promise<Omit<IUser, 'password' | 'createdAt' | 'updatedAt'>> {
   const user = await UserRepo.findById(id);
 
   validateUpdateUser(requestingUser, user, payload);
@@ -207,7 +213,7 @@ export function listUsers(): Promise<IUser[]> {
  * @param id - Id of the user to be found
  * @returns - the User as an object
  */
-export function getUser(id: string): Promise<IUser | null> {
+export function getUser(id: number): Promise<IUser | null> {
   return UserRepo.findById(id);
 }
 
@@ -219,8 +225,8 @@ export function getUser(id: string): Promise<IUser | null> {
  * @param id - Id of the user to be deleted
  * @returns - the User as an object
  */
-export async function deleteUser(id: string): Promise<IUser> {
-  return UserRepo.findByIdAndDelete(id).then((deletedUser) => {
+export async function deleteUser(id: number): Promise<IUser> {
+  return UserRepo.deleteById(id).then((deletedUser) => {
     if (!deletedUser) {
       throw new Error(`User not found ${id}`);
     }
@@ -394,7 +400,7 @@ export async function resetPassword(email: string): Promise<boolean> {
     logger.info(`Resetting password for user: ${email}`);
 
     user.password = bcrypt.hashSync(newPassword, bcrypt.genSaltSync(WORK_FACTOR));
-    await UserRepo.update(user.id!, user);
+    await UserRepo.updatePasswordById(user.id!, user.password);
 
     sendNotification(email, `Your new password is: ${newPassword}`);
 

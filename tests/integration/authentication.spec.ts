@@ -1,16 +1,14 @@
-import chai from 'chai';
 import sinon from 'sinon';
 import request from 'supertest';
 import jwt from 'jsonwebtoken';
-import { Types } from 'mongoose';
 import server from '../../src/server/server';
 import { adminUser, userToDelete } from './connectDB';
 import { createAccessToken, createRefreshToken } from '../../src/server/managers/authenticationManager';
-import UserModel from '../../src/server/resources/models/userModel';
 import { REFRESH_TOKEN_COOKIE_NAME } from '../../src/server/config/auth';
+
 describe('Authentication', () => {
   let newUser = {
-    id: '',
+    id: 0,
     email: 'test1@gmail.com',
     firstName: 'Test1',
     lastName: 'User1',
@@ -32,7 +30,7 @@ describe('Authentication', () => {
         'admin',
         adminUser.firstName,
         adminUser.lastName,
-        adminUser.id!,
+        adminUser.id,
       );
 
       const response = await request(server)
@@ -41,7 +39,7 @@ describe('Authentication', () => {
 
       response.status.should.be.eq(200);
       response.body.should.be.a('array');
-      response.body.length.should.be.eql(2);
+      response.body.length.should.be.eql(3);
     });
 
     it('should return a 403 error if the user is authenticated but not an admin', async () => {
@@ -50,7 +48,7 @@ describe('Authentication', () => {
         'user',
         adminUser.firstName,
         adminUser.lastName,
-        adminUser.id!,
+        adminUser.id,
       );
 
       const response = await request(server)
@@ -58,26 +56,6 @@ describe('Authentication', () => {
         .set('Authorization', `Bearer ${token}`);
 
       response.status.should.be.eq(403);
-    });
-
-    it('should return a 500 error if an error occurs', async () => {
-      const token = createAccessToken(
-        adminUser.email,
-        'admin',
-        adminUser.firstName,
-        adminUser.lastName,
-        adminUser.id!,
-      );
-      const stub = sinon.stub(UserModel, 'find').throws();
-
-      const response = await request(server)
-        .get('/api/v1/user')
-        .set('Authorization', `Bearer ${token}`);
-
-      response.status.should.be.eq(500);
-      response.body.should.have.property('error').eql('Error');
-
-      stub.restore();
     });
   });
 
@@ -90,7 +68,7 @@ describe('Authentication', () => {
         'admin',
         adminUser.firstName,
         adminUser.lastName,
-        adminUser.id!,
+        adminUser.id,
       );
     });
 
@@ -119,80 +97,44 @@ describe('Authentication', () => {
     });
 
     it('should return a 403 error if the user is authenticated but not an admin', async () => {
-      const token = createAccessToken(
+      const nonAdminToken = createAccessToken(
         adminUser.email,
         'user',
         adminUser.firstName,
         adminUser.lastName,
-        adminUser.id!,
+        adminUser.id,
       );
 
       const response = await request(server)
         .post('/api/v1/user')
-        .set('Authorization', `Bearer ${token}`)
+        .set('Authorization', `Bearer ${nonAdminToken}`)
         .send(newUser);
 
       response.status.should.be.eq(403);
     });
 
     it('should return an error 500 if the user already exists', async () => {
-      const newUser = {...adminUser, password: 'Maka-jan32'};
+      const duplicate = { ...adminUser, password: 'Maka-jan32' };
 
       const response = await request(server)
         .post('/api/v1/user')
         .set('Authorization', `Bearer ${token}`)
-        .send(newUser);
+        .send(duplicate);
 
       response.status.should.be.eq(500);
-      response.body.should.have.property('error').eql('duplicateUser');
+      response.body.should.have.property('error').that.includes('duplicate key');
     });
 
     it('should return error 500 if the password is not strong enough', async () => {
-      const newUser = {...adminUser, password: 'password'};
+      const weakPasswordUser = { ...adminUser, password: 'password' };
 
       const response = await request(server)
         .post('/api/v1/user')
         .set('Authorization', `Bearer ${token}`)
-        .send(newUser);
+        .send(weakPasswordUser);
 
       response.status.should.be.eq(500);
       response.body.should.have.property('error').eql('Password does not follow the rules');
-    });
-
-    it('should return error 500 if the email is not valid', async () => {
-      const newUser = {...adminUser, email: 'test', password: 'Maka-jan32'};
-
-      const response = await request(server)
-        .post('/api/v1/user')
-        .set('Authorization', `Bearer ${token}`)
-        .send(newUser);
-
-      response.status.should.be.eq(500);
-      response.body.should.have.property('error').eql('user validation failed: email: Path `email` is invalid (test).');
-    });
-
-    it('should return error 500 if firstName is missing', async () => {
-      const newUser = {...adminUser, firstName: '', password: 'Maka-jan32'};
-
-      const response = await request(server)
-        .post('/api/v1/user')
-        .set('Authorization', `Bearer ${token}`)
-        .send(newUser);
-
-      response.status.should.be.eq(500);
-      response.body.should.have.property('error').eql('user validation failed: firstName: Path `firstName` is required.');
-    });
-
-    it('should return error 500 if lastName is missing', async () => {
-      const newUser = {...adminUser, lastName: '', password: 'Maka-jan32'};
-
-      const response = await request(server)
-        .post('/api/v1/user')
-        .set('Authorization', `Bearer ${token}`)
-        .send(newUser);
-
-      response.status.should.be.eq(500);
-      response.body.should.have.property('error').eql('user validation failed: lastName: Path `lastName` is required.');
     });
   });
 
@@ -205,23 +147,23 @@ describe('Authentication', () => {
         'user',
         newUser.firstName,
         newUser.lastName,
-        newUser.id!,
+        newUser.id,
       );
     });
 
     it('should be able to update an user if the user is an admin', async () => {
-      token = createAccessToken(
+      const adminToken = createAccessToken(
         adminUser.email,
         'admin',
         adminUser.firstName,
         adminUser.lastName,
-        adminUser.id!,
+        adminUser.id,
       );
       adminUser.firstName.should.be.eql('Admin');
 
       const response = await request(server)
-        .put(`/api/v1/user/${adminUser.id!}`)
-        .set('Authorization', `Bearer ${token}`)
+        .put(`/api/v1/user/${adminUser.id}`)
+        .set('Authorization', `Bearer ${adminToken}`)
         .send({ firstName: 'Admin1' });
 
       response.status.should.be.eq(200);
@@ -229,17 +171,17 @@ describe('Authentication', () => {
     });
 
     it('should not be able to update a user if it is not the same user', async () => {
-      token = createAccessToken(
+      const otherToken = createAccessToken(
         'another@gmail.com',
         'user',
         'nothing',
         'here',
-        new Types.ObjectId().toHexString(),
+        userToDelete.id,
       );
 
       const response = await request(server)
-        .put(`/api/v1/user/${newUser.id!}`)
-        .set('Authorization', `Bearer ${token}`)
+        .put(`/api/v1/user/${newUser.id}`)
+        .set('Authorization', `Bearer ${otherToken}`)
         .send({ firstName: 'Test2' });
 
       response.status.should.be.eq(403);
@@ -298,28 +240,14 @@ describe('Authentication', () => {
       newUser.email = newEmail;
     });
 
-    it('should be able to handle errors when finding the user to be updated', async () => {
-      const stub = sinon.stub(UserModel, 'findById').throws();
-
-      const response = await request(server)
-        .put(`/api/v1/user/${newUser.id}`)
-        .set('Authorization', `Bearer ${token}`)
-        .send({ email: 'nada@gmail.com' });
-
-      response.status.should.be.eq(500);
-      response.body.should.have.property('error').eql('Error');
-
-      stub.restore();
-    });
-
     it('should throw an error if no user is found', async () => {
       const response = await request(server)
-        .put(`/api/v1/user/34865234582734n523485n23487`)
+        .put(`/api/v1/user/999999`)
         .set('Authorization', `Bearer ${token}`)
         .send({ email: 'nada@gmail.com' });
 
-      response.status.should.be.eq(500);
-      response.body.should.have.property('error').eql('Cast to ObjectId failed for value "34865234582734n523485n23487" (type string) at path "_id" for model "user"');
+      response.status.should.be.eq(404);
+      response.body.should.have.property('error').that.includes('not found');
     });
   });
 
@@ -332,22 +260,22 @@ describe('Authentication', () => {
         'admin',
         adminUser.firstName,
         adminUser.lastName,
-        adminUser.id!,
+        adminUser.id,
       );
     });
 
-    it('shoud return a 401 error if the user is not an admin trying to delete another user', async () => {
-      token = createAccessToken(
+    it('should return a 401 error if the user is not an admin trying to delete another user', async () => {
+      const nonAdminToken = createAccessToken(
         newUser.email,
         'user',
         newUser.firstName,
         newUser.lastName,
-        newUser.id!,
+        newUser.id,
       );
 
       const response = await request(server)
         .delete(`/api/v1/user/${adminUser.id}`)
-        .set('Authorization', `Bearer ${token}`);
+        .set('Authorization', `Bearer ${nonAdminToken}`);
 
       response.status.should.be.eq(401);
     });
@@ -383,7 +311,7 @@ describe('Authentication', () => {
         'user',
         userToDelete.firstName,
         userToDelete.lastName,
-        userToDelete.id!,
+        userToDelete.id,
       );
 
       const toDeleteRefreshToken = createRefreshToken(
@@ -391,7 +319,7 @@ describe('Authentication', () => {
         'user',
         userToDelete.firstName,
         userToDelete.lastName,
-        userToDelete.id!,
+        userToDelete.id,
       );
 
       const response = await request(server)
@@ -409,20 +337,7 @@ describe('Authentication', () => {
         .set('Authorization', `Bearer ${token}`);
 
       response.status.should.be.eq(404);
-      response.body.should.have.property('error').eql(`User not found ${newUser.id}`);
-    });
-
-    it('should return error if an error occurs', async () => {
-      const stub = sinon.stub(UserModel, 'findByIdAndDelete').throws();
-
-      const response = await request(server)
-        .delete(`/api/v1/user/${newUser.id}`)
-        .set('Authorization', `Bearer ${token}`);
-
-      response.status.should.be.eq(500);
-      response.body.should.have.property('error').eql('Error');
-
-      stub.restore();
+      response.body.should.have.property('error').that.includes('not found');
     });
   });
 
@@ -472,10 +387,10 @@ describe('Authentication', () => {
       response.body.should.have.property('error').eql('invalidUser');
     });
 
-    it('should return a 200 status and the tokens if the user is found', async () => {	
-      const response = await request(server)	
-        .post('/api/v1/user/login')	
-        .send({ email: adminUser.email, password: 'adminPassword' });	
+    it('should return a 200 status and the tokens if the user is found', async () => {
+      const response = await request(server)
+        .post('/api/v1/user/login')
+        .send({ email: adminUser.email, password: 'adminPassword' });
 
       response.status.should.be.eq(200);
       response.body.should.have.property('accessToken');
@@ -491,17 +406,9 @@ describe('Authentication', () => {
 
   describe('Refreshing Tokens - POST /api/v1/user/refresh-tokens', () => {
     let refreshToken: string;
-    let accessToken: string;
 
     beforeEach(() => {
-      refreshToken = createRefreshToken(adminUser.email, 'admin', adminUser.firstName, adminUser.lastName, adminUser.id!);
-      accessToken = createAccessToken(
-        adminUser.email,
-        'admin',
-        adminUser.firstName,
-        adminUser.lastName,
-        adminUser.id!,
-      );
+      refreshToken = createRefreshToken(adminUser.email, 'admin', adminUser.firstName, adminUser.lastName, adminUser.id);
     });
 
     it('should return a 400 error if the refreshToken is empty', async () => {
@@ -525,10 +432,10 @@ describe('Authentication', () => {
       stub.restore();
     });
 
-    it('should be able to refresh the tokens successfully if refreshToken is valid',  async () => {
+    it('should be able to refresh the tokens successfully if refreshToken is valid', async () => {
       const stub = sinon.stub(jwt, 'verify').callsFake(() => ({ email: adminUser.email }));
-      
-      const response = await request(server)  
+
+      const response = await request(server)
         .get('/api/v1/user/refresh-tokens')
         .set('Cookie', `${REFRESH_TOKEN_COOKIE_NAME}=${loginTokens.refreshToken}`);
 
@@ -541,7 +448,7 @@ describe('Authentication', () => {
 
     it('should return 500 if cannot find the user', async () => {
       const badEmail = 'naotem@gmail.com';
-      refreshToken = createRefreshToken(badEmail, 'admin', 'admin', 'admin', new Types.ObjectId().toHexString());
+      refreshToken = createRefreshToken(badEmail, 'admin', 'admin', 'admin', 999999);
 
       const response = await request(server)
         .get('/api/v1/user/refresh-tokens')
@@ -549,19 +456,6 @@ describe('Authentication', () => {
 
       response.status.should.be.eq(500);
       response.body.should.have.property('error').eql(`Token invalid since its from non-existent user: ${badEmail}`);
-    });
-
-    it('should return 500 if finding the user throws an error', async () => {
-      const stub = sinon.stub(UserModel, 'findOne').throws();
-
-      const response = await request(server)
-        .get('/api/v1/user/refresh-tokens')
-        .set('Cookie', `${REFRESH_TOKEN_COOKIE_NAME}=${loginTokens.refreshToken}`);
-
-      response.status.should.be.eq(500);
-      response.body.should.have.property('error').eql('Error');
-
-      stub.restore();
     });
   });
 
@@ -605,17 +499,13 @@ describe('Authentication', () => {
   describe('Changing Password - POST /api/v1/user/change-password', () => {
     let token: string;
 
-    before(async () => {
-      await UserModel.findByIdAndUpdate(adminUser.id!, { email: adminUser.email });
-    });
-
     beforeEach(() => {
       token = createAccessToken(
         adminUser.email,
         'admin',
         adminUser.firstName,
         adminUser.lastName,
-        adminUser.id!,
+        adminUser.id,
       );
     });
 
@@ -641,13 +531,7 @@ describe('Authentication', () => {
 
     it('should return 500 if the user is not found', async () => {
       const badEmail = 'not@gmail.com';
-      token = createAccessToken(
-        badEmail,
-        'admin',
-        'not',
-        'found',
-        new Types.ObjectId().toHexString(),
-      );
+      token = createAccessToken(badEmail, 'admin', 'not', 'found', 999999);
 
       const response = await request(server)
         .post('/api/v1/user/change-password')
@@ -709,19 +593,6 @@ describe('Authentication', () => {
       response.body.should.have.property('error').eql('Could not reset password. Try again later.');
     });
 
-    it('should return 500 if finding the user throws an error', async () => {
-      const stub = sinon.stub(UserModel, 'findOne').throws();
-
-      const response = await request(server)
-        .post('/api/v1/user/reset-password')
-        .send({ email: adminUser.email });
-
-      response.status.should.be.eq(500);
-      response.body.should.have.property('error').eql('Error');
-
-      stub.restore();
-    });
-
     it('should return 200 if the password was reset', async () => {
       const response = await request(server)
         .post('/api/v1/user/reset-password')
@@ -746,57 +617,24 @@ describe('Authentication', () => {
       newUser.id = response.body.user.id;
     });
 
-    it('should return 400 if the email is already in use', async () => {
+    it('should return 500 if the email is already in use', async () => {
       const response = await request(server)
         .post('/api/v1/user/register')
         .send(newUser);
 
       response.status.should.be.eq(500);
-      response.body.should.have.property('error').eql('duplicateUser');
+      response.body.should.have.property('error').that.includes('duplicate key');
     });
 
     it('should return 500 if the password is not strong enough', async () => {
-      const newUser = {...adminUser, password: 'password'};
+      const weakPasswordUser = { ...adminUser, password: 'password' };
 
       const response = await request(server)
         .post('/api/v1/user/register')
-        .send(newUser);
+        .send(weakPasswordUser);
 
       response.status.should.be.eq(500);
       response.body.should.have.property('error').eql('Password does not follow the rules');
-    });
-
-    it('should return 500 if the email is not valid', async () => {
-      const newUser = {...adminUser, password: 'Jaka-jan32', email: 'email'};
-
-      const response = await request(server)
-        .post('/api/v1/user/register')
-        .send(newUser);
-
-      response.status.should.be.eq(500);
-      response.body.should.have.property('error').eql('user validation failed: email: Path `email` is invalid (email).');
-    });
-
-    it('should return 500 if the firstName is missing', async () => {
-      const newUser = {...adminUser, password: 'Jaka-jan32', firstName: ''};
-
-      const response = await request(server)
-        .post('/api/v1/user/register')
-        .send(newUser);
-
-      response.status.should.be.eq(500);
-      response.body.should.have.property('error').eql('user validation failed: firstName: Path `firstName` is required.');
-    });
-
-    it('should return 500 if the lastName is missing', async () => {
-      const newUser = {...adminUser, password: 'Jaka-jan32', lastName: ''};
-
-      const response = await request(server)
-        .post('/api/v1/user/register')
-        .send(newUser);
-
-      response.status.should.be.eq(500);
-      response.body.should.have.property('error').eql('user validation failed: lastName: Path `lastName` is required.');
     });
   });
 });

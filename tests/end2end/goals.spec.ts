@@ -59,7 +59,7 @@ test.describe.serial('Goals', () => {
 
     await expect(page.getByText(i18nKeys.translation.goalSaved).first()).toBeVisible();
     await expect(getGoalRow(page, goal1)).toBeVisible();
-    await expect(page.getByText('1000')).toBeVisible();
+    await expect(page.getByText('$1,000.00')).toBeVisible();
   });
 
   test('should add multiple goals and table updates', async ({ page }) => {
@@ -78,9 +78,9 @@ test.describe.serial('Goals', () => {
     await expect(getGoalRow(page, goal1)).toBeVisible();
     await expect(getGoalRow(page, goal2)).toBeVisible();
     await expect(getGoalRow(page, goal3)).toBeVisible();
-    await expect(page.getByText('1000')).toBeVisible();
-    await expect(page.getByText('2000')).toBeVisible();
-    await expect(page.getByText('3000')).toBeVisible();
+    await expect(page.getByText('$1,000.00')).toBeVisible();
+    await expect(page.getByText('$2,000.00')).toBeVisible();
+    await expect(page.getByText('$3,000.00')).toBeVisible();
   });
 
   test('should filter active goals by name', async ({ page }) => {
@@ -102,9 +102,9 @@ test.describe.serial('Goals', () => {
     await filterGoalsByName(page, ''); // clear filter to see all
     await clickSortByValue(page);
     const rowsByValue = page.locator('tbody tr');
-    await expect(rowsByValue.first()).toContainText('1000');
+    await expect(rowsByValue.first()).toContainText('$1,000.00');
     await clickSortByValue(page); // toggle to desc
-    await expect(rowsByValue.first()).toContainText('3000');
+    await expect(rowsByValue.first()).toContainText('$3,000.00');
 
     await clickSortByDueDate(page);
     await expect(rowsByValue).toHaveCount(3);
@@ -167,7 +167,7 @@ test.describe.serial('Goals', () => {
     await expect(page.getByText(i18nKeys.translation.goalSaved).first()).toBeVisible();
     await expect(getGoalRow(page, newName)).toBeVisible();
     await expect(getGoalRow(page, goalToEdit)).not.toBeVisible();
-    await expect(page.getByText(String(newValue))).toBeVisible();
+    await expect(page.getByText('$1,500.00')).toBeVisible();
   });
 
   test('should cancel edit without saving', async ({ page }) => {
@@ -182,8 +182,8 @@ test.describe.serial('Goals', () => {
     await clickDeselectOnGoal(page, goal1);
 
     await expect(getGoalRow(page, goal1)).toBeVisible();
-    await expect(page.getByText('1000')).toBeVisible();
-    await expect(page.getByText('99999')).not.toBeVisible();
+    await expect(page.getByText('$1,000.00')).toBeVisible();
+    await expect(page.getByText('$99,999.00')).not.toBeVisible();
     await expect(page.getByText('Should Not Save')).not.toBeVisible();
   });
 

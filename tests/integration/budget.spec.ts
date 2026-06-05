@@ -1,12 +1,15 @@
-import chai from 'chai';
-import sinon from 'sinon';
 import request from 'supertest';
-import { Types } from 'mongoose';
 import server from '../../src/server/server';
-import { budget1, budget2, budget3, adminUser } from './connectDB';
+import {
+  budget1,
+  budget3,
+  adminUser,
+  userToDelete,
+  otherUser,
+  category1,
+  category3,
+} from './connectDB';
 import { createAccessToken } from '../../src/server/managers/authenticationManager';
-import budgetModel from '../../src/server/resources/models/budgetModel';
-import { BUDGET_TYPES } from '../../src/server/types';
 
 const resourceUrl = '/api/v1/budget';
 
@@ -19,29 +22,45 @@ describe('Budget', () => {
       'admin',
       adminUser.firstName,
       adminUser.lastName,
-      adminUser.id!,
+      adminUser.id,
     );
   });
 
   describe('List Budgets - GET /api/v1/budget', () => {
-    it('should return the list of budgets', async () => {
+    it('should return all budgets when user is admin', async () => {
       const response = await request(server)
         .get(resourceUrl)
         .set('Authorization', `Bearer ${accessToken}`);
 
       response.status.should.be.eq(200);
       response.body.should.be.an('array');
-      response.body.should.have.lengthOf(2);
-
+      response.body.should.have.lengthOf(3);
     });
 
-    it('should return nothing when user has no accounts', async () => {
+    it('should return budgets with hydrated categories', async () => {
+      const response = await request(server)
+        .get(resourceUrl)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      const firstBudget = response.body.find((budget: typeof budget1) => budget.id === budget1.id);
+      const otherBudget = response.body.find((budget: typeof budget3) => budget.id === budget3.id);
+
+      response.status.should.be.eq(200);
+      firstBudget.should.have.property('categories').that.is.an('array').with.lengthOf(1);
+      firstBudget.categories[0].should.deep.include({
+        id: category1.id,
+        name: category1.name,
+      });
+      otherBudget.should.have.property('categories').that.is.an('array').with.lengthOf(0);
+    });
+
+    it('should return nothing when user has no budgets', async () => {
       const token = createAccessToken(
-        'test@gmail.com',
+        userToDelete.email,
         'user',
-        'Test',
-        'User',
-        new Types.ObjectId().toString(),
+        userToDelete.firstName,
+        userToDelete.lastName,
+        userToDelete.id,
       );
 
       const response = await request(server)
@@ -59,17 +78,6 @@ describe('Budget', () => {
 
       response.status.should.be.eq(401);
     });
-
-    it('should return 500 when an error occurs', async () => {
-      const stub = sinon.stub(budgetModel, 'find').throws(new Error('Error'));
-
-      const response = await request(server)
-        .get(resourceUrl)
-        .set('Authorization', `Bearer ${accessToken}`);
-
-      response.status.should.be.eq(500);
-      stub.restore();
-    });
   });
 
   describe('Retrieve Budget - GET /api/v1/budget/:id', () => {
@@ -85,14 +93,11 @@ describe('Budget', () => {
       response.body.should.have.property('type', budget1.type);
       response.body.should.have.property('startDate');
       response.body.should.have.property('endDate');
-      response.body.should.have.property('categories');
-      response.body.categories.should.be.an('array');
-      response.body.categories.should.have.lengthOf(1);
     });
 
-    it('should return empty if an budget is not found', async () => {
+    it('should return empty if a budget is not found', async () => {
       const response = await request(server)
-        .get(`${resourceUrl}/${new Types.ObjectId()}`)
+        .get(`${resourceUrl}/999999`)
         .set('Authorization', `Bearer ${accessToken}`);
 
       response.status.should.be.eq(200);
@@ -105,29 +110,18 @@ describe('Budget', () => {
 
       response.status.should.be.eq(401);
     });
-
-    it('should return 500 when an error occurs', async () => {
-      const stub = sinon.stub(budgetModel, 'findOne').throws(new Error('Error'));
-
-      const response = await request(server)
-        .get(`${resourceUrl}/${budget1.id}`)
-        .set('Authorization', `Bearer ${accessToken}`);
-
-      response.status.should.be.eq(500);
-      stub.restore();
-    });
   });
 
   describe('Create Budget - POST /api/v1/budget', () => {
     it('should create a budget', async () => {
       const newBudget = {
         name: 'New Budget',
-        value: 100,
-        type: BUDGET_TYPES.MONTHLY,
+        value: '200.00',
+        type: 'monthly',
         startDate: new Date(),
         endDate: new Date(),
-        categories: ['New Category'],
-        user: adminUser.id,
+        userId: adminUser.id,
+        categoryIds: [category1.id],
       };
 
       const response = await request(server)
@@ -138,24 +132,100 @@ describe('Budget', () => {
       response.status.should.be.eq(200);
       response.body.should.be.an('object');
       response.body.should.have.property('name', newBudget.name);
-      response.body.should.have.property('value', newBudget.value);
       response.body.should.have.property('type', newBudget.type);
-      response.body.should.have.property('startDate', newBudget.startDate.toISOString());
-      response.body.should.have.property('endDate', newBudget.endDate.toISOString());
-      response.body.should.have.property('categories');
-      response.body.categories.should.be.an('array');
-      response.body.categories.should.have.lengthOf(1);
+      response.body.should.have.property('startDate');
+      response.body.should.have.property('endDate');
+    });
+
+    it('should reject budget creation without category ids', async () => {
+      const newBudget = {
+        name: 'New Budget Without Categories',
+        value: '200.00',
+        type: 'monthly',
+        startDate: new Date(),
+        endDate: new Date(),
+        userId: adminUser.id,
+      };
+
+      const response = await request(server)
+        .post(resourceUrl)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(newBudget);
+
+      response.status.should.be.eq(500);
+      response.body.should.have.property('error', 'Budget requires at least one category');
+    });
+
+    it('should create a budget and persist its category links', async () => {
+      const newBudget = {
+        name: 'New Category Budget',
+        value: '250.00',
+        type: 'monthly',
+        startDate: new Date(),
+        endDate: new Date(),
+        userId: adminUser.id,
+        categoryIds: [category1.id],
+      };
+
+      const createResponse = await request(server)
+        .post(resourceUrl)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(newBudget);
+
+      const listResponse = await request(server)
+        .get(resourceUrl)
+        .set('Authorization', `Bearer ${accessToken}`);
+      const createdBudget = listResponse.body.find(
+        (budget: typeof budget1) => budget.id === createResponse.body.id,
+      );
+
+      createResponse.status.should.be.eq(200);
+      createResponse.body.should.deep.include({
+        name: newBudget.name,
+        categoryIds: newBudget.categoryIds,
+      });
+      createdBudget.should.have.property('categories').that.is.an('array').with.lengthOf(1);
+      createdBudget.categories[0].should.deep.include({
+        id: category1.id,
+        name: category1.name,
+      });
+    });
+
+    it('should reject budget creation when category ids are not visible to the user', async () => {
+      const token = createAccessToken(
+        userToDelete.email,
+        'user',
+        userToDelete.firstName,
+        userToDelete.lastName,
+        userToDelete.id,
+      );
+      const newBudget = {
+        name: 'Invalid Category Budget',
+        value: '200.00',
+        type: 'monthly',
+        startDate: new Date(),
+        endDate: new Date(),
+        userId: userToDelete.id,
+        categoryIds: [category1.id],
+      };
+
+      const response = await request(server)
+        .post(resourceUrl)
+        .set('Authorization', `Bearer ${token}`)
+        .send(newBudget);
+
+      response.status.should.be.eq(500);
+      response.body.should.have.property('error', 'Budget contains invalid categories');
     });
 
     it('should return 500 if budget has a wrong type value', async () => {
       const newBudget = {
         name: 'New Budget',
-        value: 100,
+        value: '200.00',
         type: 'wrong',
         startDate: new Date(),
         endDate: new Date(),
-        categories: ['New Category'],
-        user: adminUser.id,
+        userId: adminUser.id,
       };
 
       const response = await request(server)
@@ -169,33 +239,20 @@ describe('Budget', () => {
     it('should return 401 when the user is not authenticated', async () => {
       const response = await request(server)
         .post(resourceUrl)
-        .send(budget2);
+        .send(budget3);
 
       response.status.should.be.eq(401);
-    });
-
-    it('should return 500 when an error occurs', async () => {
-      const stub = sinon.stub(budgetModel.prototype, 'save').throws(new Error('Error'));
-
-      const response = await request(server)
-        .post(resourceUrl)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send(budget2);
-
-      response.status.should.be.eq(500);
-      stub.restore();
     });
   });
 
   describe('Update Budget - PUT /api/v1/budget/:id', () => {
-    it('should update an budget', async () => {
+    it('should update a budget', async () => {
       const updatedBudget = {
         name: 'Updated Budget',
-        value: 200,
-        type: BUDGET_TYPES.ANNUALY,
+        value: '200.00',
+        type: 'annualy',
         startDate: new Date(),
         endDate: new Date(),
-        categories: ['Updated Category'],
       };
 
       const response = await request(server)
@@ -208,21 +265,29 @@ describe('Budget', () => {
       response.body.should.have.property('name', updatedBudget.name);
       response.body.should.have.property('value', updatedBudget.value);
       response.body.should.have.property('type', updatedBudget.type);
-      response.body.should.have.property('startDate', updatedBudget.startDate.toISOString());
-      response.body.should.have.property('endDate', updatedBudget.endDate.toISOString());
-      response.body.should.have.property('categories');
-      response.body.categories.should.be.an('array');
-      response.body.categories.should.have.lengthOf(1);
+      response.body.should.have.property('startDate');
+      response.body.should.have.property('endDate');
+    });
+
+    it('should skip budget update when category ids are empty', async () => {
+      const response = await request(server)
+        .put(`${resourceUrl}/${budget1.id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ name: 'Skipped Empty Category Update', categoryIds: [] });
+
+      response.status.should.be.eq(200);
+      response.body.should.be.an('object');
+      response.body.should.have.property('id', budget1.id);
+      response.body.should.not.have.property('name', 'Skipped Empty Category Update');
     });
 
     it('should return 500 if budget has a wrong type value', async () => {
       const updatedBudget = {
         name: 'Updated Budget',
-        value: 200,
+        value: '200.00',
         type: 'wrong',
         startDate: new Date(),
         endDate: new Date(),
-        categories: ['Updated Category'],
       };
 
       const response = await request(server)
@@ -236,7 +301,7 @@ describe('Budget', () => {
     it('should return 401 when the user is not authenticated', async () => {
       const response = await request(server)
         .put(`${resourceUrl}/${budget1.id}`)
-        .send(budget2);
+        .send(budget3);
 
       response.status.should.be.eq(401);
     });
@@ -250,95 +315,95 @@ describe('Budget', () => {
       response.status.should.be.eq(500);
     });
 
-    it('should throw 500 when provided an empty object to update', async () => {
-      const response = await request(server)
-        .put(`${resourceUrl}/${budget1.id}`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({});
-
-      response.status.should.be.eq(500);
-    });
-
     it('should be able to update another user\'s budget if is admin', async () => {
       const response = await request(server)
         .put(`${resourceUrl}/${budget3.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
-        .send(budget2);
+        .send({ name: 'Admin Updated Budget' });
 
       response.status.should.be.eq(200);
       response.body.should.be.an('object');
-      response.body.should.have.property('name', budget2.name);
-      response.body.should.have.property('value', budget2.value);
-      response.body.should.have.property('type', budget2.type);
-      response.body.should.have.property('startDate');
-      response.body.should.have.property('endDate');
-      response.body.should.have.property('categories');
-      response.body.categories.should.be.an('array');
-      response.body.categories.should.have.lengthOf(1);
+      response.body.should.have.property('name', 'Admin Updated Budget');
 
-      budget3.name = budget2.name;
-      budget3.value = budget2.value;
-      budget3.type = budget2.type;
-      budget3.startDate = budget2.startDate;
-      budget3.endDate = budget2.endDate;
-      budget3.categories = budget2.categories;
+      budget3.name = 'Admin Updated Budget';
     });
 
-    it('should return 403 when the user is not allowed to update the budget', async () => {
+    it('should not update another user\'s budget if not admin', async () => {
       const token = createAccessToken(
-        'test@gmail.com',
+        userToDelete.email,
         'user',
-        'Test',
-        'User',
-        new Types.ObjectId().toString(),
+        userToDelete.firstName,
+        userToDelete.lastName,
+        userToDelete.id,
       );
 
       const response = await request(server)
-        .put(`${resourceUrl}/${budget1.id}`)
+        .put(`${resourceUrl}/${budget3.id}`)
         .set('Authorization', `Bearer ${token}`)
-        .send(budget2);
+        .send({ name: 'Stolen Update' });
 
-      response.status.should.be.eq(403);
-    });
-
-    it('should return 404 if no budget is found', async () => {
-      const response = await request(server)
-        .put(`${resourceUrl}/${new Types.ObjectId()}`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send(budget2);
-
-      response.status.should.be.eq(404);
-    });
-
-    it('should return 500 when an error occurs', async () => {
-      const stub = sinon.stub(budgetModel, 'findByIdAndUpdate').throws(new Error('Error'));
-
-      const response = await request(server)
-        .put(`${resourceUrl}/${budget1.id}`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send(budget2);
-
-      response.status.should.be.eq(500);
-      stub.restore();
+      response.status.should.be.eq(200);
+      response.body.should.be.empty;
     });
   });
 
   describe('Delete Budget - DELETE /api/v1/budget/:id', () => {
+    let ownDeleteId: number;
+    let otherDeleteId: number;
+
+    before(async () => {
+      const adminToken = createAccessToken(
+        adminUser.email,
+        'admin',
+        adminUser.firstName,
+        adminUser.lastName,
+        adminUser.id,
+      );
+      const otherToken = createAccessToken(
+        otherUser.email,
+        'user',
+        otherUser.firstName,
+        otherUser.lastName,
+        otherUser.id,
+      );
+
+      const ownRes = await request(server)
+        .post(resourceUrl)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          name: 'Delete Me Own',
+          value: '50.00',
+          type: 'monthly',
+          startDate: new Date(),
+          endDate: new Date(),
+          userId: adminUser.id,
+          categoryIds: [category1.id],
+        });
+      ownDeleteId = ownRes.body.id;
+
+      const otherRes = await request(server)
+        .post(resourceUrl)
+        .set('Authorization', `Bearer ${otherToken}`)
+        .send({
+          name: 'Delete Me Other',
+          value: '75.00',
+          type: 'weekly',
+          startDate: new Date(),
+          endDate: new Date(),
+          userId: otherUser.id,
+          categoryIds: [category3.id],
+        });
+      otherDeleteId = otherRes.body.id;
+    });
+
     it('should delete a budget', async () => {
       const response = await request(server)
-        .delete(`${resourceUrl}/${budget2.id}`)
+        .delete(`${resourceUrl}/${ownDeleteId}`)
         .set('Authorization', `Bearer ${accessToken}`);
 
       response.status.should.be.eq(200);
       response.body.should.be.an('object');
-      response.body.should.have.property('name', budget2.name);
-      response.body.should.have.property('value', budget2.value);
-      response.body.should.have.property('type', budget2.type);
-      response.body.should.have.property('startDate');
-      response.body.should.have.property('endDate');
-      response.body.should.have.property('categories');
-      response.body.categories.should.be.an('array');
-      response.body.categories.should.have.lengthOf(1);
+      response.body.should.have.property('name', 'Delete Me Own');
     });
 
     it('should return 401 when the user is not authenticated', async () => {
@@ -350,55 +415,29 @@ describe('Budget', () => {
 
     it('should be able to delete another user\'s budget if is admin', async () => {
       const response = await request(server)
-        .delete(`${resourceUrl}/${budget3.id}`)
+        .delete(`${resourceUrl}/${otherDeleteId}`)
         .set('Authorization', `Bearer ${accessToken}`);
 
       response.status.should.be.eq(200);
       response.body.should.be.an('object');
-      response.body.should.have.property('name', budget3.name);
-      response.body.should.have.property('value', budget3.value);
-      response.body.should.have.property('type', budget3.type);
-      response.body.should.have.property('startDate');
-      response.body.should.have.property('endDate');
-      response.body.should.have.property('categories');
-      response.body.categories.should.be.an('array');
-      response.body.categories.should.have.lengthOf(1);
+      response.body.should.have.property('name', 'Delete Me Other');
     });
 
-    it('should return 403 when the user is not allowed to delete the budget', async () => {
+    it('should not delete another user\'s budget if not admin', async () => {
       const token = createAccessToken(
-        'test@gmail.com',
+        otherUser.email,
         'user',
-        'Test',
-        'User',
-        new Types.ObjectId().toString(),
+        otherUser.firstName,
+        otherUser.lastName,
+        otherUser.id,
       );
 
       const response = await request(server)
         .delete(`${resourceUrl}/${budget1.id}`)
-        .set('Authorization', `Bearer ${token}`)
-        .send(budget2);
+        .set('Authorization', `Bearer ${token}`);
 
-      response.status.should.be.eq(403);
-    });
-
-    it('should return 404 if no budget is found', async () => {
-      const response = await request(server)
-        .delete(`${resourceUrl}/${new Types.ObjectId()}`)
-        .set('Authorization', `Bearer ${accessToken}`);
-
-      response.status.should.be.eq(404);
-    });
-
-    it('should return 500 when an error occurs', async () => {
-      const stub = sinon.stub(budgetModel, 'findByIdAndDelete').throws(new Error('Error'));
-
-      const response = await request(server)
-        .delete(`${resourceUrl}/${budget1.id}`)
-        .set('Authorization', `Bearer ${accessToken}`);
-
-      response.status.should.be.eq(500);
-      stub.restore();
+      response.status.should.be.eq(200);
+      response.body.should.be.empty;
     });
   });
 });

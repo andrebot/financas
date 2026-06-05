@@ -17,7 +17,8 @@ import { reducer, validateBankAccountForm } from './addBankAccountReducer';
 import CreditCardForm from './creditCardForm';
 import { useAuth } from '../../hooks/authContext';
 import { BankAccountActionType } from '../../enums';
-import { BankAccount, CreditCardProps } from '../../types';
+import { detectCardBrand } from '../../utils/creditCard';
+import { BankAccount, CreditCard, CreditCardProps } from '../../types';
 
 type AddBankAccountModalProps = {
   saveBankAccount: (bankAccount: BankAccount) => void;
@@ -29,11 +30,22 @@ const blankState = {
   currency: '',
   accountNumber: '',
   agency: '',
+  initialBalance: 0,
   nameError: '',
   currencyError: '',
   accountNumberError: '',
   agencyError: '',
 };
+
+/**
+ * Removes UI-only card fields before saving a bank account.
+ *
+ * @param cards - Credit cards from the form state.
+ * @returns Credit cards in the raw API payload shape.
+ */
+function toRawCreditCards(cards: CreditCardProps[]): CreditCard[] {
+  return cards.map(({ number, expirationDate }) => ({ number, expirationDate }));
+}
 
 /**
  * Modal that handles the creation of a bank account.
@@ -47,7 +59,13 @@ export default function AddBankAccountModal({
 }: AddBankAccountModalProps) {
   const { t } = useTranslation();
   const { closeModal } = useModal();
-  const [creditCards, setCreditCards] = useState<CreditCardProps[]>(bankAccount?.cards || []);
+  const [creditCards, setCreditCards] = useState<CreditCardProps[]>(
+    bankAccount?.cards?.map((card) => ({
+      ...card,
+      flag: detectCardBrand(card.number),
+      last4Digits: card.number.slice(-4),
+    })) || [],
+  );
   const { user } = useAuth();
 
   const [state, dispatch] = useReducer(reducer, {
@@ -103,9 +121,10 @@ export default function AddBankAccountModal({
       currency: validatedState.currency,
       accountNumber: validatedState.accountNumber,
       agency: validatedState.agency,
-      cards: creditCards,
+      cards: toRawCreditCards(creditCards),
+      initialBalance: validatedState.initialBalance,
       id: state?.id,
-      user: user!.id,
+      userId: user!.id,
     });
     closeModal();
   };

@@ -1,9 +1,9 @@
 import React, {
   useReducer,
   useState,
-  useEffect,
   useRef,
   useCallback,
+  useMemo,
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
@@ -48,6 +48,21 @@ const archivedAvailableActions = [
 ];
 
 /**
+ * Calculates goal progress as a percentage.
+ *
+ * @param savedValue - The amount already saved toward the goal.
+ * @param value - The target value of the goal.
+ * @returns The progress percentage, or zero when the inputs are invalid.
+ */
+function calculateGoalProgress(savedValue: number, value: number): number {
+  if (!Number.isFinite(savedValue) || !Number.isFinite(value) || savedValue <= 0 || value <= 0) {
+    return 0;
+  }
+
+  return (savedValue / value) * 100;
+}
+
+/**
  * Main component for the goals page. This has the logic for all the
  * Goal CRUD operations.
  *
@@ -69,12 +84,37 @@ export default function Goals(): React.JSX.Element {
   const [goalState, dispatchGoal] = useReducer(goalReducer, initialGoalState);
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState(0);
-  const [activeGoals, setActiveGoals] = useState<Goal[]>([]);
-  const [archivedGoals, setArchivedGoals] = useState<Goal[]>([]);
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const [goalsTableActions, setGoalsTableActions] = useState<GoalsTableActionType[]>(
-    availableActions,
-  );
+
+  const goalsByArchiveStatus = useMemo(() => allGoals.reduce<{
+    activeGoals: Goal[];
+    archivedGoals: Goal[];
+  }>((acc, goal) => {
+    const formattedGoal: Goal = {
+      ...goal,
+      progress: calculateGoalProgress(goal.savedValue, goal.value),
+    };
+
+    if (goal.archived) {
+      acc.archivedGoals.push(formattedGoal);
+    } else {
+      acc.activeGoals.push(formattedGoal);
+    }
+
+    return acc;
+  }, {
+    activeGoals: [],
+    archivedGoals: [],
+  }), [allGoals]);
+
+  const visibleGoals = useMemo(() => (
+    activeTab === 0
+      ? goalsByArchiveStatus.activeGoals
+      : goalsByArchiveStatus.archivedGoals
+  ), [activeTab, goalsByArchiveStatus]);
+
+  const goalsTableActions = useMemo(() => (
+    activeTab === 0 ? availableActions : archivedAvailableActions
+  ), [activeTab]);
 
   /**
    * Handles the change of the name of the goal.
@@ -236,6 +276,19 @@ export default function Goals(): React.JSX.Element {
   };
 
   /**
+   * Checks whether the goal form has validation errors or missing required values.
+   *
+   * @returns True when the form cannot be submitted.
+   */
+  const hasGoalFormErrors = (): boolean => Boolean(
+    goalState.dueDateError
+    || goalState.valueError
+    || goalState.nameError
+    || !goalState.name?.trim()
+    || !goalState.value,
+  );
+
+  /**
    * Handles the saving of the goal in the goal form.
    * Since we create and update the goal in the same form,
    * we need to check if the goal is being created or updated
@@ -247,7 +300,7 @@ export default function Goals(): React.JSX.Element {
    * @returns The new state
    */
   const handleSaveGoal = async () => {
-    if (goalState.dueDateError || goalState.valueError || goalState.nameError) {
+    if (hasGoalFormErrors()) {
       enqueueSnackbar(t('fixErrorsBeforeSaving'), { variant: 'error' });
       return;
     }
@@ -261,7 +314,7 @@ export default function Goals(): React.JSX.Element {
         value: goalState.value,
         dueDate: goalState.dueDate!,
         archived: false,
-        user: user!.id,
+        userId: Number(user!.id),
         savedValue: 0,
         progress: 0,
       }).unwrap();
@@ -289,80 +342,6 @@ export default function Goals(): React.JSX.Element {
         )),
     [search],
   );
-
-  /**
-   * Calculates the progress of the goal.
-   *
-   * @param savedValue - The saved value of the goal
-   * @param value - The value of the goal
-   * @returns The progress of the goal
-   */
-  const calculateGoalProgress = (savedValue: number, value: number) => {
-    if (!savedValue || Number.isNaN(savedValue)) {
-      return 0;
-    }
-
-    return (savedValue / value) * 100;
-  };
-
-  /**
-   * Handles the change of the active tab. Updated the goals
-   * that needs to be displayed in the goals table and the
-   * available actions in the goals table.
-   *
-   * @remarks
-   * This triggers the goals table to be updated
-   * with the active or archived goals.
-   *
-   * @returns The new state
-   */
-  useEffect(() => {
-    if (activeTab === 0) {
-      setGoals(activeGoals);
-      setGoalsTableActions(availableActions);
-    } else {
-      setGoals(archivedGoals);
-      setGoalsTableActions(archivedAvailableActions);
-    }
-  }, [activeTab, allGoals]);
-
-  /**
-   * After we fetch the goals from the API, we need
-   * sort them into active and archived goals and
-   * format them to be displayed in the goals table.
-   *
-   * @returns The new state
-   */
-  useEffect(() => {
-    if (allGoals && allGoals.length > 0) {
-      const [newActiveGoals, newArchivedGoals] = allGoals.reduce<[Goal[], Goal[]]>(
-        ([active, archived], goal) => {
-          const formattedGoal: Goal = {
-            ...goal,
-            progress: calculateGoalProgress(goal.savedValue, goal.value),
-          };
-
-          if (goal.archived) {
-            archived.push(formattedGoal);
-          } else {
-            active.push(formattedGoal);
-          }
-
-          return [active, archived];
-        },
-        [[], []] as [Goal[], Goal[]],
-      );
-
-      setActiveGoals(newActiveGoals);
-      setArchivedGoals(newArchivedGoals);
-
-      if (activeTab === 0) {
-        setGoals(newActiveGoals);
-      } else {
-        setGoals(newArchivedGoals);
-      }
-    }
-  }, [allGoals, activeTab]);
 
   return (
     <GoalsMain>
@@ -424,7 +403,7 @@ export default function Goals(): React.JSX.Element {
           </Tabs>
         </Box>
         <GoalsTable
-          goals={filterGoals(goals)}
+          goals={filterGoals(visibleGoals)}
           activeGoalId={goalState.id}
           availableActions={goalsTableActions}
           onArchiveGoal={handleArchiveGoal}

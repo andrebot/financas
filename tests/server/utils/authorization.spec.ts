@@ -1,7 +1,14 @@
+import { should } from 'chai';
 import { Response, NextFunction } from 'express';
 import sinon from 'sinon';
 import proxyquire from 'proxyquire';
 import { RequestWithUser } from '../../../src/server/types';
+import {
+  getAutorizationDatabaseContext,
+  requestContext,
+} from '../../../src/server/utils/authorization';
+import { categories } from '../../../src/server/resources/models/categoryModel';
+import { monthlyBalances } from '../../../src/server/resources/models/monthlyBalanceModel';
 
 const jwtVerifyStub = sinon.stub();
 
@@ -107,5 +114,37 @@ describe('authorization helper', () => {
       next.should.have.been.calledOnce;
       req.user?.should.deep.equal(userPayload);
     });
+  });
+});
+
+describe('getAutorizationDatabaseContext', () => {
+  it('should throw when called outside a requestContext', () => {
+    (() => getAutorizationDatabaseContext(categories)).should.throw(
+      'No authorization context found',
+    );
+  });
+
+  it('should return undefined for admin context', () => {
+    const result = requestContext.run({ userId: 1, isAdmin: true }, () =>
+      getAutorizationDatabaseContext(categories),
+    );
+
+    should().not.exist(result);
+  });
+
+  it('should return undefined when table has no userId column', () => {
+    const result = requestContext.run({ userId: 1, isAdmin: false }, () =>
+      getAutorizationDatabaseContext(monthlyBalances),
+    );
+
+    should().not.exist(result);
+  });
+
+  it('should return a SQL expression for non-admin context on a tenant table', () => {
+    const result = requestContext.run({ userId: 42, isAdmin: false }, () =>
+      getAutorizationDatabaseContext(categories),
+    );
+
+    should().exist(result);
   });
 });

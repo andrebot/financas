@@ -1,12 +1,12 @@
 import { Express, Router } from 'express';
 import { API_PREFIX } from '../config/server';
 import { createLogger } from '../utils/logger';
-import transactionRouter from './transaction';
+import accountantRouter from './accountant';
 import userRouter from './authentication';
 import CommonController from '../controllers/commonController';
 import ContentManager from '../managers/contentManager';
 import type {
-  IAccount, IBudget, IGoal,
+  IAccountPayload, IBudget, IGoal,
   ICategory,
 } from '../types';
 import routeFactory from './routeFactory';
@@ -22,8 +22,8 @@ const routes: { prefix: string; router: Router }[] = [
     router: userRouter,
   },
   {
-    prefix: 'transaction',
-    router: transactionRouter,
+    prefix: 'accountant',
+    router: accountantRouter,
   },
   {
     prefix: 'category',
@@ -31,7 +31,7 @@ const routes: { prefix: string; router: Router }[] = [
   },
   {
     prefix: 'account',
-    router: routeFactory<IAccount>(CommonController(ContentManager.accountActions, 'Account')),
+    router: routeFactory<IAccountPayload>(CommonController(ContentManager.accountActions, 'Account')),
   },
   {
     prefix: 'goal',

@@ -43,7 +43,7 @@ describe('BankAccounts page', () => {
           accountNumber: '123456',
           cards: [],
           currency: 'BRL',
-          user: 'user-1',
+          userId: 'user-1',
         },
       ],
     });
@@ -88,7 +88,7 @@ describe('BankAccounts page', () => {
           accountNumber: '123456',
           cards: [],
           currency: 'BRL',
-          user: 'user-1',
+          userId: 'user-1',
         },
         {
           id: undefined,
@@ -97,7 +97,7 @@ describe('BankAccounts page', () => {
           accountNumber: '789012',
           cards: [],
           currency: 'USD',
-          user: 'user-1',
+          userId: 'user-1',
         },
       ],
     });
@@ -168,7 +168,7 @@ describe('BankAccounts page', () => {
       accountNumber: '123456',
       cards: [],
       currency: 'BRL',
-      user: 'user-1',
+      userId: 'user-1',
     };
 
     props.saveBankAccount(bankAccountPayload);

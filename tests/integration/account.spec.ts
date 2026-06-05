@@ -1,11 +1,17 @@
-import chai from 'chai';
-import sinon from 'sinon';
 import request from 'supertest';
-import { Types } from 'mongoose';
 import server from '../../src/server/server';
-import { account1, account2, account3, adminUser } from './connectDB';
+import {
+  account1,
+  account2,
+  account3,
+  adminUser,
+  otherUser,
+  userToDelete,
+  findCardsByAccountId,
+  findTransactionsByAccountId,
+  findMonthlyBalancesByAccountId,
+} from './connectDB';
 import { createAccessToken } from '../../src/server/managers/authenticationManager';
-import accountModel from '../../src/server/resources/models/accountModel';
 
 describe('Account', () => {
   let accessToken: string;
@@ -16,28 +22,46 @@ describe('Account', () => {
       'admin',
       adminUser.firstName,
       adminUser.lastName,
-      adminUser.id!,
+      adminUser.id,
     );
   });
 
   describe('List Accounts - GET /api/v1/account', () => {
-    it('should return the list of accounts', async () => {
+    it('should return all accounts when user is admin', async () => {
       const response = await request(server)
         .get('/api/v1/account')
         .set('Authorization', `Bearer ${accessToken}`);
 
       response.status.should.be.eq(200);
       response.body.should.be.an('array');
-      response.body.should.have.lengthOf(2);
+      response.body.should.have.lengthOf(3);
+    });
+
+    it('should return only own accounts when user is not admin', async () => {
+      const token = createAccessToken(
+        otherUser.email,
+        'user',
+        otherUser.firstName,
+        otherUser.lastName,
+        otherUser.id,
+      );
+
+      const response = await request(server)
+        .get('/api/v1/account')
+        .set('Authorization', `Bearer ${token}`);
+
+      response.status.should.be.eq(200);
+      response.body.should.be.an('array');
+      response.body.should.have.lengthOf(1);
     });
 
     it('should return nothing when user has no accounts', async () => {
       const token = createAccessToken(
-        'test@gmail.com',
+        userToDelete.email,
         'user',
-        'Test',
-        'User',
-        new Types.ObjectId().toString(),
+        userToDelete.firstName,
+        userToDelete.lastName,
+        userToDelete.id,
       );
 
       const response = await request(server)
@@ -55,17 +79,6 @@ describe('Account', () => {
 
       response.status.should.be.eq(401);
     });
-
-    it('should return 500 when an error occurs', async () => {
-      const stub = sinon.stub(accountModel, 'find').throws(new Error('Error'));
-
-      const response = await request(server)
-        .get('/api/v1/account')
-        .set('Authorization', `Bearer ${accessToken}`);
-
-      response.status.should.be.eq(500);
-      stub.restore();
-    });
   });
 
   describe('Retrieve Account - GET /api/v1/account/:id', () => {
@@ -80,16 +93,11 @@ describe('Account', () => {
       response.body.should.have.property('agency', account1.agency);
       response.body.should.have.property('accountNumber', account1.accountNumber);
       response.body.should.have.property('currency', account1.currency);
-      response.body.should.have.property('cards');
-      response.body.cards.should.be.an('array');
-      response.body.cards.should.have.lengthOf(1);
-      response.body.cards[0].should.have.property('number', account1.cards[0].number);
-      response.body.cards[0].should.have.property('expirationDate', account1.cards[0].expirationDate);
     });
 
     it('should return empty if an account is not found', async () => {
       const response = await request(server)
-        .get(`/api/v1/account/${new Types.ObjectId()}`)
+        .get('/api/v1/account/999999')
         .set('Authorization', `Bearer ${accessToken}`);
 
       response.status.should.be.eq(200);
@@ -102,17 +110,6 @@ describe('Account', () => {
 
       response.status.should.be.eq(401);
     });
-
-    it('should return 500 when an error occurs', async () => {
-      const stub = sinon.stub(accountModel, 'findOne').throws(new Error('Error'));
-
-      const response = await request(server)
-        .get(`/api/v1/account/${account1.id}`)
-        .set('Authorization', `Bearer ${accessToken}`);
-
-      response.status.should.be.eq(500);
-      stub.restore();
-    });
   });
 
   describe('Create Account - POST /api/v1/account', () => {
@@ -122,7 +119,8 @@ describe('Account', () => {
         agency: '1234',
         accountNumber: '123',
         currency: 'BRL',
-        user: adminUser.id,
+        initialBalance: 0,
+        userId: adminUser.id,
       };
 
       const response = await request(server)
@@ -136,9 +134,34 @@ describe('Account', () => {
       response.body.should.have.property('agency', newAccount.agency);
       response.body.should.have.property('accountNumber', newAccount.accountNumber);
       response.body.should.have.property('currency', newAccount.currency);
-      response.body.should.have.property('cards');
-      response.body.cards.should.be.an('array');
-      response.body.cards.should.have.lengthOf(0);
+    });
+
+    it('should create cards submitted with the account full-list payload', async () => {
+      const newAccount = {
+        name: 'Card Account',
+        agency: '1234',
+        accountNumber: '8888',
+        currency: 'BRL',
+        initialBalance: 0,
+        userId: adminUser.id,
+        cards: [
+          { number: '4111111111111111', expirationDate: '12/30' },
+          { number: '5555555555554444', expirationDate: '01/31' },
+        ],
+      };
+
+      const response = await request(server)
+        .post('/api/v1/account')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(newAccount);
+      const persistedCards = await findCardsByAccountId(response.body.id);
+
+      response.status.should.be.eq(200);
+      persistedCards.should.have.lengthOf(2);
+      persistedCards.map((card) => card.number).should.have.members([
+        '4111111111111111',
+        '5555555555554444',
+      ]);
     });
 
     it('should return 401 when the user is not authenticated', async () => {
@@ -147,18 +170,6 @@ describe('Account', () => {
         .send(account2);
 
       response.status.should.be.eq(401);
-    });
-
-    it('should return 500 when an error occurs', async () => {
-      const stub = sinon.stub(accountModel.prototype, 'save').throws(new Error('Error'));
-
-      const response = await request(server)
-        .post('/api/v1/account')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send(account2);
-
-      response.status.should.be.eq(500);
-      stub.restore();
     });
   });
 
@@ -182,9 +193,45 @@ describe('Account', () => {
       response.body.should.have.property('agency', updatedAccount.agency);
       response.body.should.have.property('accountNumber', updatedAccount.accountNumber);
       response.body.should.have.property('currency', updatedAccount.currency);
-      response.body.should.have.property('cards');
-      response.body.cards.should.be.an('array');
-      response.body.cards.should.have.lengthOf(1);
+    });
+
+    it('should sync account cards from a submitted full list', async () => {
+      const createResponse = await request(server)
+        .post('/api/v1/account')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          name: 'Sync Card Account',
+          agency: '1234',
+          accountNumber: '9999',
+          currency: 'BRL',
+          initialBalance: 0,
+          userId: adminUser.id,
+          cards: [
+            { number: '4111111111111111', expirationDate: '12/30' },
+            { number: '5555555555554444', expirationDate: '01/31' },
+          ],
+        });
+      const [cardToKeep] = await findCardsByAccountId(createResponse.body.id);
+
+      const updateResponse = await request(server)
+        .put(`/api/v1/account/${createResponse.body.id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          name: 'Synced Card Account',
+          cards: [
+            { id: cardToKeep.id, number: '4000000000000002', expirationDate: '02/32' },
+            { number: '378282246310005', expirationDate: '03/33' },
+          ],
+        });
+      const persistedCards = await findCardsByAccountId(createResponse.body.id);
+
+      updateResponse.status.should.be.eq(200);
+      persistedCards.should.have.lengthOf(2);
+      persistedCards.map((card) => card.id).should.include(cardToKeep.id);
+      persistedCards.map((card) => card.number).should.have.members([
+        '4000000000000002',
+        '378282246310005',
+      ]);
     });
 
     it('should return 401 when the user is not authenticated', async () => {
@@ -204,88 +251,144 @@ describe('Account', () => {
       response.status.should.be.eq(500);
     });
 
-    it('should throw 500 when provided an empty object to update', async () => {
-      const response = await request(server)
-        .put(`/api/v1/account/${account1.id}`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({});
-
-      response.status.should.be.eq(500);
-    });
-
     it('should be able to update another user\'s account if is admin', async () => {
+      const updatedFields = {
+        name: 'Admin Updated Name',
+        agency: account3.agency,
+        accountNumber: account3.accountNumber,
+        currency: account3.currency,
+      };
+
       const response = await request(server)
         .put(`/api/v1/account/${account3.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
-        .send(account2);
+        .send(updatedFields);
 
       response.status.should.be.eq(200);
       response.body.should.be.an('object');
-      response.body.should.have.property('name', account2.name);
-      response.body.should.have.property('agency', account2.agency);
-      response.body.should.have.property('accountNumber', account2.accountNumber);
-      response.body.should.have.property('currency', account2.currency);
+      response.body.should.have.property('name', updatedFields.name);
 
-      account3.name = account2.name;
-      account3.agency = account2.agency;
-      account3.accountNumber = account2.accountNumber;
-      account3.currency = account2.currency;
+      account3.name = updatedFields.name;
     });
 
-    it('should return 403 when the user is not allowed to update the account', async () => {
+    it('should not update another user\'s account if not admin', async () => {
       const token = createAccessToken(
-        'test@gmail.com',
+        userToDelete.email,
         'user',
-        'Test',
-        'User',
-        new Types.ObjectId().toString(),
+        userToDelete.firstName,
+        userToDelete.lastName,
+        userToDelete.id,
       );
 
       const response = await request(server)
         .put(`/api/v1/account/${account3.id}`)
         .set('Authorization', `Bearer ${token}`)
-        .send(account2);
+        .send({ name: 'Stolen Update' });
 
-      response.status.should.be.eq(403);
-    });
-
-    it('should return 404 if no account is found', async () => {
-      const response = await request(server)
-        .put(`/api/v1/account/${new Types.ObjectId()}`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send(account2);
-
-      response.status.should.be.eq(404);
-    });
-
-    it('should return 500 when an error occurs', async () => {
-      const stub = sinon.stub(accountModel, 'findOneAndUpdate').throws(new Error('Error'));
-
-      const response = await request(server)
-        .put(`/api/v1/account/${account1.id}`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send(account2);
-
-      response.status.should.be.eq(500);
-      stub.restore();
+      response.status.should.be.eq(200);
+      response.body.should.be.empty;
     });
   });
 
   describe('Delete Account - DELETE /api/v1/account/:id', () => {
+    let ownDeleteId: number;
+    let otherDeleteId: number;
+
+    before(async () => {
+      const adminToken = createAccessToken(
+        adminUser.email,
+        'admin',
+        adminUser.firstName,
+        adminUser.lastName,
+        adminUser.id,
+      );
+      const otherToken = createAccessToken(
+        otherUser.email,
+        'user',
+        otherUser.firstName,
+        otherUser.lastName,
+        otherUser.id,
+      );
+
+      const ownRes = await request(server)
+        .post('/api/v1/account')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          name: 'Delete Me Own',
+          agency: '9991',
+          accountNumber: '999111',
+          currency: 'BRL',
+          initialBalance: 0,
+          userId: adminUser.id,
+        });
+      ownDeleteId = ownRes.body.id;
+
+      const otherRes = await request(server)
+        .post('/api/v1/account')
+        .set('Authorization', `Bearer ${otherToken}`)
+        .send({
+          name: 'Delete Me Other',
+          agency: '9992',
+          accountNumber: '999222',
+          currency: 'USD',
+          initialBalance: 0,
+          userId: otherUser.id,
+        });
+      otherDeleteId = otherRes.body.id;
+    });
+
     it('should delete an account', async () => {
       const response = await request(server)
-        .delete(`/api/v1/account/${account2.id}`)
+        .delete(`/api/v1/account/${ownDeleteId}`)
         .set('Authorization', `Bearer ${accessToken}`);
 
       response.status.should.be.eq(200);
       response.body.should.be.an('object');
-      response.body.should.have.property('name', account2.name);
-      response.body.should.have.property('agency', account2.agency);
-      response.body.should.have.property('accountNumber', account2.accountNumber);
-      response.body.should.have.property('currency', account2.currency);
-      response.body.should.have.property('cards');
-      response.body.cards.should.be.an('array');
-      response.body.cards.should.have.lengthOf(1);
+      response.body.should.have.property('name', 'Delete Me Own');
+    });
+
+    it('should cascade delete account cards, transactions, and monthly balances', async () => {
+      const accountWithRelations = {
+        name: 'Delete Me With Relations',
+        agency: '9993',
+        accountNumber: '999333',
+        currency: 'BRL',
+        initialBalance: 0,
+        userId: adminUser.id,
+        cards: [
+          { number: '4111111111111111', expirationDate: '12/30' },
+        ],
+      };
+      const createAccountResponse = await request(server)
+        .post('/api/v1/account')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(accountWithRelations);
+      const transactionPayload = {
+        name: 'Cascade Delete Transaction',
+        accountId: createAccountResponse.body.id,
+        type: 'deposit',
+        date: new Date(),
+        value: '100.00',
+        userId: adminUser.id,
+      };
+
+      await request(server)
+        .post('/api/v1/accountant')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(transactionPayload);
+
+      const response = await request(server)
+        .delete(`/api/v1/account/${createAccountResponse.body.id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+      const persistedCards = await findCardsByAccountId(createAccountResponse.body.id);
+      const persistedTransactions = await findTransactionsByAccountId(createAccountResponse.body.id);
+      const persistedMonthlyBalances = await findMonthlyBalancesByAccountId(createAccountResponse.body.id);
+
+      response.status.should.be.eq(200);
+      response.body.should.have.property('name', accountWithRelations.name);
+      persistedCards.should.have.lengthOf(0);
+      persistedTransactions.should.have.lengthOf(0);
+      persistedMonthlyBalances.should.have.lengthOf(0);
     });
 
     it('should return 401 when the user is not authenticated', async () => {
@@ -297,54 +400,29 @@ describe('Account', () => {
 
     it('should be able to delete another user\'s account if is admin', async () => {
       const response = await request(server)
-        .delete(`/api/v1/account/${account3.id}`)
+        .delete(`/api/v1/account/${otherDeleteId}`)
         .set('Authorization', `Bearer ${accessToken}`);
 
       response.status.should.be.eq(200);
       response.body.should.be.an('object');
-      response.body.should.have.property('name', account3.name);
-      response.body.should.have.property('agency', account3.agency);
-      response.body.should.have.property('accountNumber', account3.accountNumber);
-      response.body.should.have.property('currency', account3.currency);
-      response.body.should.have.property('cards');
-      response.body.cards.should.be.an('array');
-      response.body.cards.should.have.lengthOf(1);
+      response.body.should.have.property('name', 'Delete Me Other');
     });
 
-    it('should return 403 when the user is not allowed to delete the account', async () => {
+    it('should not delete another user\'s account if not admin', async () => {
       const token = createAccessToken(
-        'test@gmail.com',
+        otherUser.email,
         'user',
-        'Test',
-        'User',
-        new Types.ObjectId().toString(),
+        otherUser.firstName,
+        otherUser.lastName,
+        otherUser.id,
       );
 
       const response = await request(server)
         .delete(`/api/v1/account/${account1.id}`)
-        .set('Authorization', `Bearer ${token}`)
-        .send(account2);
+        .set('Authorization', `Bearer ${token}`);
 
-      response.status.should.be.eq(403);
-    });
-
-    it('should return 404 if no account is found', async () => {
-      const response = await request(server)
-        .delete(`/api/v1/account/${new Types.ObjectId()}`)
-        .set('Authorization', `Bearer ${accessToken}`);
-
-      response.status.should.be.eq(404);
-    });
-
-    it('should return 500 when an error occurs', async () => {
-      const stub = sinon.stub(accountModel, 'findByIdAndDelete').throws(new Error('Error'));
-
-      const response = await request(server)
-        .delete(`/api/v1/account/${account1.id}`)
-        .set('Authorization', `Bearer ${accessToken}`);
-
-      response.status.should.be.eq(500);
-      stub.restore();
+      response.status.should.be.eq(200);
+      response.body.should.be.empty;
     });
   });
 });

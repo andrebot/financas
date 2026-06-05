@@ -12,11 +12,11 @@ const createState = (overrides: Partial<GoalState> = {}): GoalState => ({
 });
 
 const createGoal = (overrides: Partial<Goal> = {}): Goal => ({
-  id: 'goal-1',
+  id: 1,
   name: 'Save for trip',
   value: 10000,
   dueDate: new Date('2026-12-31'),
-  user: 'user-1',
+  userId: 1,
   archived: false,
   savedValue: 0,
   progress: 0,
@@ -196,7 +196,7 @@ describe('goalReducer', () => {
     it('should merge goal payload into state', () => {
       const initialState = createState();
       const goal = createGoal({
-        id: 'goal-2',
+        id: 2,
         name: 'Updated goal',
         value: 20000,
         dueDate: new Date('2027-06-30'),
@@ -207,7 +207,7 @@ describe('goalReducer', () => {
         payload: goal,
       });
 
-      expect(newState.id).toBe('goal-2');
+      expect(newState.id).toBe(2);
       expect(newState.name).toBe('Updated goal');
       expect(newState.value).toBe(20000);
       expect(newState.dueDate).toEqual(new Date('2027-06-30'));

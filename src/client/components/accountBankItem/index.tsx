@@ -16,6 +16,7 @@ import { useDeleteBankAccountMutation, useUpdateBankAccountMutation } from '../.
 import ConfirmModal from '../confirmModal';
 import { useModal } from '../modal/modal';
 import AddBankAccountModal from '../../pages/bankAccounts/addBankAccountModal';
+import { detectCardBrand } from '../../utils/creditCard';
 
 /**
  * Account bank item component. This component displays a bank account and its credit cards.
@@ -29,7 +30,7 @@ export default function AccountBankItem({ bankAccount }: AccountBankItemProps): 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const { showModal, closeModal } = useModal();
-  const [deleteBankAccount, { isError, isSuccess }] = useDeleteBankAccountMutation();
+  const [deleteBankAccount, { isError }] = useDeleteBankAccountMutation();
   const [updateBankAccount, {
     isError: isUpdateError,
     isSuccess: isUpdateSuccess,
@@ -64,10 +65,14 @@ export default function AccountBankItem({ bankAccount }: AccountBankItemProps): 
       closeModal();
     }
 
-    deleteBankAccount(bankAccount.id!);
     closeModal();
   };
 
+  /**
+   * Updates a bank account from the edit modal and closes the modal afterward.
+   *
+   * @param newBankAccount - The updated bank account payload.
+   */
   const handleUpdateBankAccount = async (newBankAccount: BankAccount) => {
     await updateBankAccount(newBankAccount);
     closeModal();
@@ -100,12 +105,6 @@ export default function AccountBankItem({ bankAccount }: AccountBankItemProps): 
       />,
     );
   };
-
-  useEffect(() => {
-    if (isSuccess) {
-      enqueueSnackbar(t('bankAccountDeleted'), { variant: 'success' });
-    }
-  }, [isSuccess]);
 
   useEffect(() => {
     if (isError) {
@@ -169,12 +168,12 @@ export default function AccountBankItem({ bankAccount }: AccountBankItemProps): 
         </div>
       </AccountBankInfo>
       <CreditCardsList>
-        {bankAccount.cards.map(({
-          flag, last4Digits, expirationDate, number,
+        {(bankAccount.cards ?? []).map(({
+          expirationDate, number,
         }) => (
           <CreditCard
-            key={last4Digits}
-            flag={flag}
+            key={number.slice(-4)}
+            flag={detectCardBrand(number)}
             last4Digits={number.slice(-4)}
             expirationDate={expirationDate}
             number={number}

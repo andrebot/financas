@@ -1,6 +1,7 @@
 import { createLogger } from '../utils/logger';
+import { withTransaction } from '../utils/transaction';
 import {
-  parseDate, calculateLastMonth, checkUserAccess, checkVoidPayload,
+  calculateLastMonth, checkVoidPayload,
 } from '../utils/misc';
 import MonthlyBalanceRepo from '../resources/repositories/monthlyBalanceRepo';
 import GoalRepo from '../resources/repositories/goalRepo';
@@ -9,13 +10,13 @@ import TransactionRepo from '../resources/repositories/transactionRepo';
 import {
   ITransaction,
   IMonthlyBalance,
-  BulkGoalsUpdate,
   TRANSACTION_TYPES,
   INVESTMENT_TYPES,
   ITransactionRepo,
   IMonthlyBalanceRepo,
   IGoalRepo,
   IBudgetRepo,
+  ITransactionGoalEntry,
 } from '../types';
 
 const logger = createLogger('AccountantManager');
@@ -33,162 +34,73 @@ const logger = createLogger('AccountantManager');
  */
 const recalculationFields: Array<keyof ITransaction> = [
   'value',
-  'category',
-  'parentCategory',
-  'account',
+  'categoryId',
+  'accountId',
   'date',
-  'goalsList',
   'type',
 ];
 
 /**
- * Gets the last month balance for a transaction. If the last month balance doesn't exist, returns
- * a new monthly balance with the opening balance as the closing balance of the previous month.
+ * Returns the closing balance of the previous month for a given transaction's account.
+ * Defaults to 0 if no prior monthly balance exists.
  *
- * @param content - The transaction to get the last month balance for.
+ * @param content - The transaction used to determine account and month.
  * @param monthlyBalanceRepo - The monthly balance repository to use.
- * @returns The last month balance.
+ * @returns The closing balance of the previous month as a number.
  */
-async function getLastMonthBalance(
+async function getLastMonthClosingBalance(
   content: ITransaction,
   monthlyBalanceRepo: IMonthlyBalanceRepo,
-): Promise<IMonthlyBalance> {
-  const contentDate = parseDate(content.date);
-  const lastMonth = calculateLastMonth(contentDate.getFullYear(), contentDate.getMonth() + 1);
+): Promise<number> {
+  const lastMonth = calculateLastMonth(content.date.getFullYear(), content.date.getMonth() + 1);
 
-  logger.info(`Getting last month balance for ${lastMonth.year}-${lastMonth.month} from user: ${content.user}`);
+  logger.info(`Getting last month balance for ${lastMonth.year}-${lastMonth.month}`);
 
-  let lastMonthBalance = await monthlyBalanceRepo.findMonthlyBalance(
+  const lastMonthBalance = await monthlyBalanceRepo.findMonthlyBalance(
     content,
     new Date(lastMonth.year, lastMonth.month - 1),
   );
 
-  if (!lastMonthBalance) {
-    logger.info('Last month balance not found, creating new one');
-
-    lastMonthBalance = {
-      user: content.user,
-      account: content.account,
-      month: lastMonth.month,
-      year: lastMonth.year,
-      openingBalance: 0,
-      closingBalance: 0,
-      transactions: [],
-    };
-  }
-
-  return lastMonthBalance;
+  return lastMonthBalance ? Number(lastMonthBalance.closingBalance) : 0;
 }
 
 /**
- * Updates the monthly balance for a transaction. If the monthly balance doesn't exist,
- * it creates it.
+ * Updates the monthly balance for a transaction's account and month.
+ * Creates the monthly balance if it doesn't exist, using the previous month's
+ * closing balance as the opening balance.
  *
- * @param content - The transaction to update the monthly balance for.
+ * @param content - The transaction to add to the monthly balance.
  * @param monthlyBalanceRepo - The monthly balance repository to use.
  */
 async function addTransactionToMonthlyBalance(
   content: ITransaction,
   monthlyBalanceRepo: IMonthlyBalanceRepo,
 ): Promise<void> {
-  const contentDate = parseDate(content.date);
+  const { date } = content;
+  const value = Number(content.value);
 
-  logger.info(`Getting monthly balance for ${contentDate.getFullYear()}-${contentDate.getMonth() + 1} from user: ${content.user}`);
+  logger.info(`Getting monthly balance for ${date.getFullYear()}-${date.getMonth() + 1}`);
 
-  let monthlyBalance = await monthlyBalanceRepo.findMonthlyBalance(
-    content,
-    contentDate,
-  );
+  const monthlyBalance = await monthlyBalanceRepo.findMonthlyBalance(content, date);
 
   if (!monthlyBalance) {
     logger.info('Monthly balance not found, creating new one');
 
-    const lastMonthBalance = await getLastMonthBalance(content, monthlyBalanceRepo);
+    const openingBalance = await getLastMonthClosingBalance(content, monthlyBalanceRepo);
 
-    monthlyBalance = {
-      user: content.user,
-      account: content.account,
-      month: contentDate.getMonth() + 1,
-      year: contentDate.getFullYear(),
-      openingBalance: lastMonthBalance.closingBalance,
-      closingBalance: lastMonthBalance.closingBalance + content.value,
-      transactions: [content],
-    };
-
-    await monthlyBalanceRepo.save(monthlyBalance);
+    await monthlyBalanceRepo.save({
+      accountId: content.accountId,
+      month: date.getMonth() + 1,
+      year: date.getFullYear(),
+      openingBalance: String(openingBalance),
+      closingBalance: String(openingBalance + value),
+      totalIn: value > 0 ? String(value) : '0',
+      totalOut: value < 0 ? String(Math.abs(value)) : '0',
+    } as IMonthlyBalance);
   } else {
-    logger.info('Monthly balance found, adding transaction to it');
+    logger.info('Monthly balance found, updating it');
 
-    monthlyBalance.transactions.push(content);
-    monthlyBalance.closingBalance += content.value;
-
-    await monthlyBalanceRepo.update(monthlyBalance.id!, monthlyBalance);
-  }
-}
-
-/**
- * Creates a list of goals to update with the amount to be added to each goal. Then, it updates
- * the goals in bulk.
- *
- * @param transaction - The transaction to update the goals by.
- * @param goalRepo - The goal repository to use.
- */
-async function updateGoalsByTransaction(
-  transaction: ITransaction,
-  goalRepo: IGoalRepo,
-): Promise<void> {
-  if (!transaction.goalsList || transaction.goalsList.length === 0) {
-    logger.info(`No goals to update for transaction: ${transaction.id}`);
-
-    return;
-  }
-
-  logger.info(`Updating ${transaction.goalsList.length} goals for transaction: ${transaction.id}`);
-
-  const goalsToUpdate = transaction.goalsList.map((goal) => {
-    const addValue = transaction.value * goal.percentage;
-
-    return {
-      goalId: goal.goal.id,
-      amount: addValue,
-    };
-  }) as BulkGoalsUpdate[];
-
-  await goalRepo.incrementGoalsInBulk(goalsToUpdate);
-}
-
-/**
- * Subtracts a transaction from the monthly balance if it exists.
- *
- * @throws {Error} - If the monthly balance for the transaction is not found.
- *
- * @param transaction - The transaction to subtract from the monthly balance.
- * @param monthlyBalanceRepo - The monthly balance repository to use.
- */
-async function subtractTransactionFromMonthlyBalance(
-  transaction: ITransaction,
-  monthlyBalanceRepo: IMonthlyBalanceRepo,
-): Promise<void> {
-  const contentDate = parseDate(transaction.date);
-
-  logger.info(`Getting monthly balance for ${contentDate.getFullYear()}-${contentDate.getMonth() + 1} from user: ${transaction.user}`);
-
-  const monthlyBalance = await monthlyBalanceRepo.findMonthlyBalance(
-    transaction,
-    contentDate,
-  );
-
-  if (monthlyBalance) {
-    logger.info('Monthly balance found, subtracting transaction from it');
-
-    monthlyBalance.closingBalance -= transaction.value;
-    monthlyBalance.transactions = monthlyBalance.transactions.filter(
-      (t) => t.id !== transaction.id,
-    );
-
-    await monthlyBalanceRepo.update(monthlyBalance.id!, monthlyBalance);
-  } else {
-    throw new Error(`Monthly balance for transaction ${transaction.id} not found. Cannot execute subtract action.`);
+    await monthlyBalanceRepo.updateMonthlyBalanceWithTransaction(content, false);
   }
 }
 
@@ -206,9 +118,10 @@ function shouldTriggerRecalculation(payload: Partial<ITransaction>): boolean {
 }
 
 /**
- * Deletes a transaction from the monthly balance and updates the goals and budgets.
+ * Reverts a transaction's impact on monthly balance, goal amounts, and budgets.
+ * Does NOT delete goal junction rows — callers are responsible for that when needed.
  *
- * @param transaction - The transaction to delete.
+ * @param transaction - The transaction to revert.
  * @param monthlyBalanceRepo - The monthly balance repository to use.
  * @param goalRepo - The goal repository to use.
  * @param budgetRepo - The budget repository to use.
@@ -219,17 +132,16 @@ async function deleteTransactionFromOtherModels(
   goalRepo: IGoalRepo,
   budgetRepo: IBudgetRepo,
 ): Promise<void> {
-  const invertedTransaction = { ...transaction, value: -transaction.value };
+  logger.info(`Reverting impact of transaction: ${transaction.id}`);
 
-  logger.info(`Deleting transaction: ${transaction.id}`);
-
-  await subtractTransactionFromMonthlyBalance(transaction, monthlyBalanceRepo);
-  await updateGoalsByTransaction(invertedTransaction, goalRepo);
-  await budgetRepo.updateBudgetsByNewTransaction(invertedTransaction);
+  await monthlyBalanceRepo.updateMonthlyBalanceWithTransaction(transaction, true);
+  await goalRepo.updateGoalFromTransaction(transaction, true);
+  await budgetRepo.revertBudgetsByTransaction(transaction);
 }
 
 /**
- * Adds a transaction to the monthly balance and updates the goals and budgets.
+ * Adds a transaction to the monthly balance, goals, and budgets.
+ * Goal junction rows must already exist before calling this function.
  *
  * @param transaction - The transaction to add.
  * @param monthlyBalanceRepo - The monthly balance repository to use.
@@ -245,7 +157,7 @@ async function addTransactionToOtherModels(
   logger.info(`Adding transaction: ${transaction.id}`);
 
   await addTransactionToMonthlyBalance(transaction, monthlyBalanceRepo);
-  await updateGoalsByTransaction(transaction, goalRepo);
+  await goalRepo.updateGoalFromTransaction(transaction);
   await budgetRepo.updateBudgetsByNewTransaction(transaction);
 }
 
@@ -255,6 +167,7 @@ async function addTransactionToOtherModels(
    * @throws {Error} - If the payload is void.
    *
    * @param content - The transaction to create.
+   * @param goals - The list of goals to associate with the transaction.
    * @param transactionRepo - The transaction repository to use.
    * @param monthlyBalanceRepo - The monthly balance repository to use.
    * @param goalRepo - The goal repository to use.
@@ -263,17 +176,22 @@ async function addTransactionToOtherModels(
    */
 async function createTransaction(
   content: ITransaction,
+  goals: ITransactionGoalEntry[],
   transactionRepo: ITransactionRepo,
   monthlyBalanceRepo: IMonthlyBalanceRepo,
   goalRepo: IGoalRepo,
   budgetRepo: IBudgetRepo,
 ): Promise<ITransaction> {
-  logger.info(`Creating new transaction for user: ${content.user}`);
+  logger.info(`Creating new transaction for user: ${content.userId}`);
 
   checkVoidPayload(content, 'Transaction', 'create');
 
-  const savedTransaction = await transactionRepo.save(content);
-  await addTransactionToOtherModels(savedTransaction, monthlyBalanceRepo, goalRepo, budgetRepo);
+  const savedTransaction = await withTransaction(async () => {
+    const saved = await transactionRepo.save(content);
+    await transactionRepo.saveTransactionGoals(saved.id!, goals);
+    await addTransactionToOtherModels(saved, monthlyBalanceRepo, goalRepo, budgetRepo);
+    return saved;
+  });
 
   logger.info(`Transaction created: ${savedTransaction.id}`);
 
@@ -287,13 +205,11 @@ async function createTransaction(
 
 /**
  * Deletes a transaction and updates the monthly balance, goals and budgets.
+ * Authorization is enforced at the database level via the request context.
  *
  * @throws {Error} - If the transaction is not found.
- * @throws {Error} - If the user is not authorized to delete the transaction.
  *
  * @param id - The id of the transaction to delete.
- * @param userId - The id of the user deleting the transaction.
- * @param isAdmin - Whether the user deleting the transaction is an admin.
  * @param transactionRepo - The transaction repository to use.
  * @param monthlyBalanceRepo - The monthly balance repository to use.
  * @param goalRepo - The goal repository to use.
@@ -301,13 +217,11 @@ async function createTransaction(
  * @returns The deleted transaction.
  */
 async function deleteTransaction(
-  id: string,
-  userId: string,
+  id: number,
   transactionRepo: ITransactionRepo,
   monthlyBalanceRepo: IMonthlyBalanceRepo,
   goalRepo: IGoalRepo,
   budgetRepo: IBudgetRepo,
-  isAdmin: boolean,
 ): Promise<ITransaction | null> {
   logger.info(`Deleting transaction: ${id}`);
 
@@ -317,26 +231,26 @@ async function deleteTransaction(
     throw new Error(`Transaction with id ${id} not found. Cannot execute delete action.`);
   }
 
-  checkUserAccess(transaction.user.toString(), userId, isAdmin, 'Transaction', id, 'delete', logger);
+  return withTransaction(async () => {
+    await deleteTransactionFromOtherModels(transaction, monthlyBalanceRepo, goalRepo, budgetRepo);
+    await transactionRepo.deleteTransactionFromGoals(id);
 
-  await deleteTransactionFromOtherModels(transaction, monthlyBalanceRepo, goalRepo, budgetRepo);
+    logger.info('Removed transaction from other models');
 
-  logger.info('Removed transaction from other models');
-
-  return transactionRepo.findByIdAndDelete(id);
+    return transactionRepo.deleteById(id);
+  });
 }
 
 /**
  * Updates a transaction and updates the monthly balance, goals and budgets.
+ * If goals are provided, the existing goal associations are fully replaced.
  *
  * @throws {Error} - If the transaction is not found.
  * @throws {Error} - If the payload is void.
- * @throws {Error} - If the user is not authorized to update the transaction.
  *
  * @param id - The id of the transaction to update.
  * @param payload - The payload to update the transaction with.
- * @param userId - The id of the user updating the transaction.
- * @param isAdmin - Whether the user updating the transaction is an admin.
+ * @param goals - Replacement goal associations, or undefined to leave them unchanged.
  * @param transactionRepo - The transaction repository to use.
  * @param monthlyBalanceRepo - The monthly balance repository to use.
  * @param goalRepo - The goal repository to use.
@@ -344,14 +258,13 @@ async function deleteTransaction(
  * @returns The updated transaction.
  */
 async function updateTransaction(
-  id: string,
+  id: number,
   payload: Partial<ITransaction>,
-  userId: string,
+  goals: ITransactionGoalEntry[] | undefined,
   transactionRepo: ITransactionRepo,
   monthlyBalanceRepo: IMonthlyBalanceRepo,
   goalRepo: IGoalRepo,
   budgetRepo: IBudgetRepo,
-  isAdmin: boolean,
 ): Promise<ITransaction | null> {
   logger.info(`Updating transaction: ${id}`);
 
@@ -363,17 +276,41 @@ async function updateTransaction(
     throw new Error(`Transaction with id ${id} not found. Cannot execute update action.`);
   }
 
-  checkUserAccess(transaction.user.toString(), userId, isAdmin, 'Transaction', id, 'update', logger);
-
   if (shouldTriggerRecalculation(payload)) {
     logger.info('Triggering recalculation');
 
-    const updatedContent = { ...transaction, ...payload };
+    return withTransaction(async () => {
+      await deleteTransactionFromOtherModels(transaction, monthlyBalanceRepo, goalRepo, budgetRepo);
+      const updatedTransaction = await transactionRepo.update(id, payload);
 
-    // we remove and add the transaction to other models to ensure consistency
-    // and avoid missing updates
-    await deleteTransactionFromOtherModels(transaction, monthlyBalanceRepo, goalRepo, budgetRepo);
-    await addTransactionToOtherModels(updatedContent, monthlyBalanceRepo, goalRepo, budgetRepo);
+      if (goals !== undefined) {
+        await transactionRepo.deleteTransactionFromGoals(id);
+        await transactionRepo.saveTransactionGoals(id, goals);
+      }
+
+      await addTransactionToOtherModels(
+        updatedTransaction,
+        monthlyBalanceRepo,
+        goalRepo,
+        budgetRepo,
+      );
+
+      return updatedTransaction;
+    });
+  }
+
+  if (goals !== undefined) {
+    logger.info('Updating goal associations only');
+
+    return withTransaction(async () => {
+      await goalRepo.updateGoalFromTransaction(transaction, true);
+      const updatedTransaction = await transactionRepo.update(id, payload);
+      await transactionRepo.deleteTransactionFromGoals(id);
+      await transactionRepo.saveTransactionGoals(id, goals);
+      await goalRepo.updateGoalFromTransaction(updatedTransaction);
+
+      return updatedTransaction;
+    });
   }
 
   return transactionRepo.update(id, payload);
@@ -407,20 +344,12 @@ function getTransactionTypes(): {
  * @returns The transaction.
  */
 async function getTransaction(
-  id: string,
-  userId: string,
+  id: number,
   transactionRepo: ITransactionRepo,
-  isAdmin: boolean,
 ): Promise<ITransaction | null> {
   logger.info(`Getting transaction: ${id}`);
 
   const transaction = await transactionRepo.findById(id);
-
-  if (!transaction) {
-    return null;
-  }
-
-  checkUserAccess(transaction.user.toString(), userId, isAdmin, 'Transaction', id, 'get', logger);
 
   return transaction;
 }
@@ -433,14 +362,22 @@ async function getTransaction(
  * @returns The transactions.
  */
 async function listTransactions(
-  userId: string,
   transactionRepo: ITransactionRepo,
 ): Promise<ITransaction[]> {
-  logger.info(`Listing transactions for user: ${userId}`);
+  logger.info('Listing transactions');
 
-  return transactionRepo.listAll(userId);
+  return transactionRepo.listAll();
 }
 
+/**
+ * Creates an accountant manager using the provided repositories.
+ *
+ * @param transactionRepo - Repository for transaction persistence.
+ * @param monthlyBalanceRepo - Repository for monthly balance updates.
+ * @param goalRepo - Repository for goal aggregate updates.
+ * @param budgetRepo - Repository for budget usage updates.
+ * @returns Transaction orchestration actions with accounting side effects.
+ */
 export function AccountantManager(
   transactionRepo: ITransactionRepo,
   monthlyBalanceRepo: IMonthlyBalanceRepo,
@@ -448,44 +385,42 @@ export function AccountantManager(
   budgetRepo: IBudgetRepo,
 ) {
   return {
-    createTransaction: (content: ITransaction) => createTransaction(
+    createTransaction: (
+      content: ITransaction,
+      goals: ITransactionGoalEntry[] = [],
+    ) => createTransaction(
       content,
+      goals,
       transactionRepo,
       monthlyBalanceRepo,
       goalRepo,
       budgetRepo,
     ),
-    deleteTransaction: (id: string, userId: string, isAdmin = false) => deleteTransaction(
+    deleteTransaction: (id: number) => deleteTransaction(
       id,
-      userId,
       transactionRepo,
       monthlyBalanceRepo,
       goalRepo,
       budgetRepo,
-      isAdmin,
     ),
     updateTransaction: (
-      id: string,
+      id: number,
       payload: Partial<ITransaction>,
-      userId: string,
-      isAdmin = false,
+      goals: ITransactionGoalEntry[] | undefined,
     ) => updateTransaction(
       id,
       payload,
-      userId,
+      goals,
       transactionRepo,
       monthlyBalanceRepo,
       goalRepo,
       budgetRepo,
-      isAdmin,
     ),
-    getTransaction: (id: string, userId: string, isAdmin = false) => getTransaction(
+    getTransaction: (id: number) => getTransaction(
       id,
-      userId,
       transactionRepo,
-      isAdmin,
     ),
-    listTransactions: (userId: string) => listTransactions(userId, transactionRepo),
+    listTransactions: () => listTransactions(transactionRepo),
     getTransactionTypes: () => getTransactionTypes(),
   };
 }

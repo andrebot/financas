@@ -1,5 +1,4 @@
 import { Response } from 'express';
-import { Types } from 'mongoose';
 
 /**
  * Function to handle errors. It will log the error and return a response with
@@ -23,11 +22,11 @@ export function handleError(error: Error, res: Response, status = 500): Response
 }
 
 /**
- * Validates if a string is a valid Mongoose ObjectId.
+ * Validates if a value is a valid positive integer SQL id.
  *
- * @param {string} id The string to validate as a Mongoose ObjectId.
- * @returns {boolean} True if the string is a valid ObjectId, false otherwise.
+ * @param id - The value to validate.
+ * @returns True if the value is a positive integer, false otherwise.
  */
-export function isValidObjectId(id: string): boolean {
-  return Types.ObjectId.isValid(id) && new Types.ObjectId(id).toString() === id;
+export function isValidSqlId(id: number): boolean {
+  return Number.isInteger(id) && id > 0;
 }

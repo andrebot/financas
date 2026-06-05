@@ -6,6 +6,7 @@ import { REFRESH_TOKEN_EXPIRATION_COOKIE, REFRESH_TOKEN_COOKIE_NAME } from '../.
 type MockResponse = {
   send: sinon.SinonStub;
   status: sinon.SinonStub;
+  json: sinon.SinonStub;
   cookie: sinon.SinonStub;
   clearCookie: sinon.SinonStub;
 };
@@ -30,7 +31,7 @@ type MockRequest = {
   user?: {
     email: string;
     role: string;
-    id: string;
+    id: number;
   };
 };
 
@@ -72,6 +73,7 @@ describe('AuthorizationController', () => {
     response = {
       send: sinon.stub(),
       status: sinon.stub().returnsThis(),
+      json: sinon.stub(),
       cookie: sinon.stub(),
       clearCookie: sinon.stub(),
     };
@@ -86,14 +88,14 @@ describe('AuthorizationController', () => {
         newPassword: 'Malo-ban77',
       },
       params: {
-        userId: '507f1f77bcf86cd799439011',
+        userId: '1',
       },
       cookies: {},
       query: {},
       user: {
         email: 'test@gmail.com',
         role: 'admin',
-        id: '507f1f77bcf86cd799439011',
+        id: 1,
       }
     };
     authManagerStub.createUser.resetHistory();
@@ -163,7 +165,7 @@ describe('AuthorizationController', () => {
       authManagerStub.updateUser.should.have.been.calledOnce;
       authManagerStub.updateUser.should.have.been.calledWith(
         request.user,
-        request.params.userId,
+        Number(request.params.userId),
         {
           email: request.body.email,
           firstName: request.body.firstName,
@@ -252,7 +254,7 @@ describe('AuthorizationController', () => {
       response.send.should.have.been.calledOnce;
       response.send.should.have.been.calledWith(user);
       authManagerStub.getUser.should.have.been.calledOnce;
-      authManagerStub.getUser.should.have.been.calledWith(request.params.userId);
+      authManagerStub.getUser.should.have.been.calledWith(Number(request.params.userId));
     } catch (error) {
       console.error(error);
       chai.assert.fail('Should not have thrown an error');
@@ -279,7 +281,7 @@ describe('AuthorizationController', () => {
       response.send.should.have.been.calledOnce;
       response.send.should.have.been.calledWith({ message: `User deleted: id ${request.params.userId}` });
       authManagerStub.deleteUser.should.have.been.calledOnce;
-      authManagerStub.deleteUser.should.have.been.calledWith(request.params.userId);
+      authManagerStub.deleteUser.should.have.been.calledWith(Number(request.params.userId));
     } catch (error) {
       console.error(error);
       chai.assert.fail('Should not have thrown an error');
@@ -317,7 +319,7 @@ describe('AuthorizationController', () => {
     request.user = {
       email: 'user@example.com',
       role: 'user',
-      id: '1',
+      id: 1,
     };
 
     request.params.userId = '2';

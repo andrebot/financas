@@ -44,14 +44,14 @@ describe('Goals page', () => {
   const mockUpdateGoal = jest.fn();
   const mockDeleteGoal = jest.fn();
 
-  const mockUser = { id: 'user-1', email: 'test@test.com', firstName: 'Test', lastName: 'User', role: 'user' };
+  const mockUser = { id: '1', email: 'test@test.com', firstName: 'Test', lastName: 'User', role: 'user' };
 
   const createMockGoal = (overrides: Partial<Goal> = {}): Goal => ({
-    id: 'goal-1',
+    id: 1,
     name: 'Save for trip',
     value: 10000,
     dueDate: new Date('2026-12-31'),
-    user: 'user-1',
+    userId: 1,
     archived: false,
     savedValue: 0,
     progress: 0,
@@ -90,6 +90,18 @@ describe('Goals page', () => {
 
   const setup = () => render(goalsPageJSX);
 
+  /**
+   * Fills the goal form fields that the save handler requires before submit.
+   */
+  const fillRequiredGoalFields = (): void => {
+    fireEvent.change(screen.getByLabelText(i18nEn.translation.goalName), {
+      target: { value: 'New goal' },
+    });
+    fireEvent.change(screen.getByLabelText(i18nEn.translation.goalValue), {
+      target: { value: '5000' },
+    });
+  };
+
   it('should render goals title, form fields, save button, search and tabs', () => {
     setup();
 
@@ -111,6 +123,29 @@ describe('Goals page', () => {
     expect(screen.getByText(i18nEn.translation.goalsListEmpty)).toBeInTheDocument();
   });
 
+  it('should render empty state when a refetch returns no goals', async () => {
+    let goalsData: Goal[] = [createMockGoal()];
+    (useListGoalsQuery as jest.Mock).mockImplementation(() => ({ data: goalsData }));
+
+    const { rerender } = setup();
+
+    expect(screen.getByText('Save for trip')).toBeInTheDocument();
+
+    goalsData = [];
+    rerender(
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <I18nextProvider i18n={i18n}>
+          <Goals />
+        </I18nextProvider>
+      </LocalizationProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(i18nEn.translation.goalsListEmpty)).toBeInTheDocument();
+      expect(screen.queryByText('Save for trip')).not.toBeInTheDocument();
+    });
+  });
+
   it('should use default empty array when useListGoalsQuery returns no data', () => {
     (useListGoalsQuery as jest.Mock).mockReturnValue({});
 
@@ -123,14 +158,14 @@ describe('Goals page', () => {
     setup();
 
     expect(screen.getByText('Save for trip')).toBeInTheDocument();
-    expect(screen.getByText('10000')).toBeInTheDocument();
+    expect(screen.getByText('$10,000.00')).toBeInTheDocument();
   });
 
   it('should filter goals by search input', () => {
     (useListGoalsQuery as jest.Mock).mockReturnValue({
       data: [
-        createMockGoal({ id: '1', name: 'Trip' }),
-        createMockGoal({ id: '2', name: 'Car' }),
+        createMockGoal({ id: 1, name: 'Trip' }),
+        createMockGoal({ id: 2, name: 'Car' }),
       ],
     });
 
@@ -191,12 +226,7 @@ describe('Goals page', () => {
 
     setup();
 
-    fireEvent.change(screen.getByLabelText(i18nEn.translation.goalName), {
-      target: { value: 'New goal' },
-    });
-    fireEvent.change(screen.getByLabelText(i18nEn.translation.goalValue), {
-      target: { value: '5000' },
-    });
+    fillRequiredGoalFields();
 
     fireEvent.click(screen.getByRole('button', { name: i18nEn.translation.saveGoal }));
 
@@ -205,7 +235,7 @@ describe('Goals page', () => {
         expect.objectContaining({
           name: 'New goal',
           value: 5000,
-          user: mockUser.id,
+          userId: Number(mockUser.id),
           archived: false,
           savedValue: 0,
           progress: 0,
@@ -240,6 +270,7 @@ describe('Goals page', () => {
 
     setup();
 
+    fillRequiredGoalFields();
     fireEvent.click(screen.getByRole('button', { name: i18nEn.translation.saveGoal }));
 
     await waitFor(() => {
@@ -264,10 +295,10 @@ describe('Goals page', () => {
     await waitFor(() => {
       expect(mockUpdateGoal).toHaveBeenCalledWith(
         expect.objectContaining({
-          id: 'goal-1',
+          id: 1,
           name: 'Save for trip',
           value: 10000,
-          user: mockUser.id,
+          userId: Number(mockUser.id),
           archived: false,
         }),
       );
@@ -303,7 +334,7 @@ describe('Goals page', () => {
     props.onConfirm();
 
     await waitFor(() => {
-      expect(mockDeleteGoal).toHaveBeenCalledWith('goal-1');
+      expect(mockDeleteGoal).toHaveBeenCalledWith(1);
     });
   });
 
@@ -368,7 +399,7 @@ describe('Goals page', () => {
     await waitFor(() => {
       expect(mockUpdateGoal).toHaveBeenCalledWith(
         expect.objectContaining({
-          id: 'goal-1',
+          id: 1,
           name: 'Save for trip',
           archived: true,
         }),
@@ -396,8 +427,8 @@ describe('Goals page', () => {
   it('should show archived goals when switching to archived tab', () => {
     (useListGoalsQuery as jest.Mock).mockReturnValue({
       data: [
-        createMockGoal({ id: 'active-1', name: 'Active goal', archived: false }),
-        createMockGoal({ id: 'archived-1', name: 'Archived goal', archived: true }),
+        createMockGoal({ id: 101, name: 'Active goal', archived: false }),
+        createMockGoal({ id: 201, name: 'Archived goal', archived: true }),
       ],
     });
 
@@ -414,8 +445,8 @@ describe('Goals page', () => {
 
   it('should set goals to archived when allGoals loads while on archived tab', async () => {
     const goalsData = [
-      createMockGoal({ id: 'active-1', name: 'Active goal', archived: false }),
-      createMockGoal({ id: 'archived-1', name: 'Archived goal', archived: true }),
+      createMockGoal({ id: 101, name: 'Active goal', archived: false }),
+      createMockGoal({ id: 201, name: 'Archived goal', archived: true }),
     ];
     let callCount = 0;
     (useListGoalsQuery as jest.Mock).mockImplementation(() => {
@@ -437,7 +468,7 @@ describe('Goals page', () => {
     mockUpdateGoal.mockReturnValue({ unwrap: () => Promise.reject(new Error('Failed')) });
 
     (useListGoalsQuery as jest.Mock).mockReturnValue({
-      data: [createMockGoal({ id: 'archived-1', name: 'Archived goal', archived: true })],
+      data: [createMockGoal({ id: 201, name: 'Archived goal', archived: true })],
     });
 
     setup();
@@ -456,7 +487,7 @@ describe('Goals page', () => {
     (useListGoalsQuery as jest.Mock).mockReturnValue({
       data: [
         createMockGoal({
-          id: 'goal-1',
+          id: 1,
           name: 'Half saved',
           value: 10000,
           savedValue: 5000,
@@ -475,7 +506,7 @@ describe('Goals page', () => {
     mockUpdateGoal.mockReturnValue({ unwrap: () => Promise.resolve() });
 
     (useListGoalsQuery as jest.Mock).mockReturnValue({
-      data: [createMockGoal({ id: 'archived-1', name: 'Archived goal', archived: true })],
+      data: [createMockGoal({ id: 201, name: 'Archived goal', archived: true })],
     });
 
     setup();
@@ -487,7 +518,7 @@ describe('Goals page', () => {
     await waitFor(() => {
       expect(mockUpdateGoal).toHaveBeenCalledWith(
         expect.objectContaining({
-          id: 'archived-1',
+          id: 201,
           name: 'Archived goal',
           archived: false,
         }),
@@ -505,7 +536,7 @@ describe('Goals page', () => {
 
     expect((screen.getByLabelText(i18nEn.translation.goalName) as HTMLInputElement).value).toBe('Save for trip');
 
-    fireEvent.click(screen.getByRole('button', { name: 'deselect' }));
+    fireEvent.click(screen.getByRole('button', { name: i18nEn.translation.deselect }));
 
     expect((screen.getByLabelText(i18nEn.translation.goalName) as HTMLInputElement).value).toBe('');
     expect((screen.getByLabelText(i18nEn.translation.goalValue) as HTMLInputElement).value).toBe('0');

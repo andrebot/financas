@@ -20,7 +20,7 @@ describe('AddCategoryModal', () => {
     (useModal as jest.Mock).mockReturnValue({ closeModal: mockCloseModal });
   });
 
-  const setup = (category?: { id?: string; name: string; user: string }) =>
+  const setup = (category?: { id?: number; name: string; userId: number }) =>
     render(
       <I18nextProvider i18n={i18n}>
         <AddCategoryModal onSaveCategory={mockOnSaveCategory} category={category} />
@@ -57,13 +57,13 @@ describe('AddCategoryModal', () => {
   });
 
   it('should pre-fill the category name when editing existing category', () => {
-    setup({ id: 'cat-1', name: 'Food', user: 'user-1' });
+    setup({ id: 1, name: 'Food', userId: 1 });
 
     expect(screen.getByLabelText(i18nEn.translation.categoryName)).toHaveValue('Food');
   });
 
   it('should call onSaveCategory with updated name when editing', () => {
-    setup({ id: 'cat-1', name: 'Food', user: 'user-1' });
+    setup({ id: 1, name: 'Food', userId: 1 });
 
     fireEvent.change(screen.getByLabelText(i18nEn.translation.categoryName), {
       target: { value: 'Updated Food' },

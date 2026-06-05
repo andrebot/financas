@@ -1,36 +1,79 @@
-import CategoryModel from '../models/categoryModel';
+import { and, eq } from 'drizzle-orm';
+import { getDb } from '../../utils/transaction';
 import Repository from './repository';
-import type { ICategoryDocument, ICategory, ICategoryRepo } from '../../types';
+import { categories } from '../models/categoryModel';
+import { createLogger } from '../../utils/logger';
+import { getAutorizationDatabaseContext } from '../../utils/authorization';
+import { budgetToCategories, budgets } from '../models/budgetModel';
+import type { ICategory } from '../../types';
 
-export class CategoryRepo extends Repository<ICategoryDocument, ICategory>
-  implements ICategoryRepo {
-  constructor(categoryModel: typeof CategoryModel = CategoryModel) {
-    super(categoryModel);
-  }
+const logger = createLogger('Repository:Category');
+const categoryRepo = Repository<typeof categories, ICategory>(categories, 'Category', logger);
 
-  /**
-   * Finds all subcategories of a parent category.
-   *
-   * @param parentCategoryId - The id of the parent category.
-   * @returns The subcategories.
-   */
-  async findAllSubcategories(parentCategoryId: string): Promise<ICategory[]> {
-    return this.Model.find({ parentCategory: parentCategoryId });
-  }
+/**
+ * Finds all subcategories of a parent category.
+ *
+ * @param parentCategoryId - The id of the parent category.
+ * @returns The subcategories.
+ */
+async function findAllSubcategories(parentCategoryId: number): Promise<ICategory[]> {
+  logger.info(`Finding all subcategories of parent category: ${parentCategoryId}`);
 
-  /**
-   * Deletes all subcategories of a parent category.
-   *
-   * @param parentCategoryId - The id of the parent category.
-   * @returns The number of deleted subcategories.
-   */
-  async deleteAllSubcategories(parentCategoryId: string): Promise<number> {
-    this.logger.info(`Deleting all subcategories of parent category: ${parentCategoryId}`);
-
-    const result = await this.Model.deleteMany({ parentCategory: parentCategoryId });
-
-    return result.deletedCount;
-  }
+  return getDb().select().from(categories).where(
+    and(
+      eq(categories.parentCategoryId, parentCategoryId),
+      getAutorizationDatabaseContext(categories),
+    ),
+  );
 }
 
-export default new CategoryRepo();
+/**
+ * Deletes all subcategories of a parent category.
+ *
+ * @param parentCategoryId - The id of the parent category.
+ * @returns The number of deleted subcategories.
+ */
+async function deleteAllSubcategories(parentCategoryId: number): Promise<number | null> {
+  logger.info(`Deleting all subcategories of parent category: ${parentCategoryId}`);
+
+  const deletedCount = await getDb().delete(categories).where(
+    and(
+      eq(categories.parentCategoryId, parentCategoryId),
+      getAutorizationDatabaseContext(categories),
+    ),
+  );
+
+  return deletedCount.rowCount;
+}
+
+/**
+ * Lists category ids linked to a budget within the current authorization context.
+ *
+ * @param budgetId - The budget id whose category links should be loaded.
+ * @returns The linked category ids visible to the current user.
+ */
+async function listCategoriesByBudgetId(budgetId: number): Promise<number[]> {
+  logger.info(`Finding categories by budget id: ${budgetId}`);
+
+  const rows = await getDb()
+    .select({ categoryId: budgetToCategories.categoryId })
+    .from(budgetToCategories)
+    .innerJoin(budgets, eq(budgetToCategories.budgetId, budgets.id))
+    .innerJoin(categories, eq(budgetToCategories.categoryId, categories.id))
+    .where(
+      and(
+        eq(budgetToCategories.budgetId, budgetId),
+        getAutorizationDatabaseContext(budgets),
+        getAutorizationDatabaseContext(categories),
+      ),
+    );
+
+  return rows.map((row) => row.categoryId);
+}
+
+export default {
+  ...categoryRepo,
+  findAllSubcategories,
+  deleteAllSubcategories,
+  listCategoriesByBudgetId,
+};

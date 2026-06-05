@@ -1,6 +1,6 @@
 import sinon from 'sinon';
 import { Response } from 'express';
-import { handleError, isValidObjectId } from '../../../src/server/utils/responseHandlers';
+import { handleError, isValidSqlId } from '../../../src/server/utils/responseHandlers';
 
 describe('responseHandlers', () => {
   describe('handleError', () => {
@@ -58,17 +58,25 @@ describe('responseHandlers', () => {
     });
   });
 
-  describe('isValidObjectId', () => {
-    it('should return true if the string is a valid ObjectId', () => {
-      const result = isValidObjectId('5f0c0d9b0b4e3f001f2e8b2e');
-
-      result.should.be.true;
+  describe('isValidSqlId', () => {
+    it('should return true for a positive integer', () => {
+      isValidSqlId(1).should.be.true;
     });
 
-    it('should return false if the string is not a valid ObjectId', () => {
-      const result = isValidObjectId('test');
+    it('should return true for a large positive integer', () => {
+      isValidSqlId(999999).should.be.true;
+    });
 
-      result.should.be.false;
+    it('should return false for zero', () => {
+      isValidSqlId(0).should.be.false;
+    });
+
+    it('should return false for a negative integer', () => {
+      isValidSqlId(-1).should.be.false;
+    });
+
+    it('should return false for a float', () => {
+      isValidSqlId(1.5).should.be.false;
     });
   });
 });

@@ -26,7 +26,7 @@ test('should register successfully and not allow to register again', async ({ pa
     await goToRegisterPageFromLoginPage(page);
     await fillRegisterForm(page);
     await page.getByRole('button', { name: i18nKeys.translation.register }).click();
-    await expect(page.getByText(i18nKeys.translation.duplicateUser)).toBeVisible();
+    await expect(page.getByText('duplicate key')).toBeVisible();
   });
 });
 

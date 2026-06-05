@@ -1,18 +1,26 @@
-import { Schema, model } from 'mongoose';
-import type { ICategoryDocument } from '../../types';
-import { transformMongooseObject } from '../../utils/misc';
+import {
+  integer, pgTable, serial, text, AnyPgColumn,
+} from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
+import { users } from './userModel';
+import { timestampColumns } from './columHelpers';
 
-const CategorySchema = new Schema<ICategoryDocument>({
-  name: { type: String, required: true },
-  user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  parentCategory: { type: Schema.Types.ObjectId, ref: 'Category' },
-}, {
-  toObject: {
-    transform: transformMongooseObject,
-  },
-  toJSON: {
-    transform: transformMongooseObject,
-  },
+export const categories = pgTable('categories', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(),
+  userId: integer('userId').notNull().references(() => users.id),
+  parentCategoryId: integer('parentCategoryId').references((): AnyPgColumn => categories.id),
+  ...timestampColumns,
 });
 
-export default model<ICategoryDocument>('Category', CategorySchema);
+export const categoryRelations = relations(categories, ({ one, many }) => ({
+  user: one(users, {
+    fields: [categories.userId],
+    references: [users.id],
+  }),
+  parentCategory: one(categories, {
+    fields: [categories.parentCategoryId],
+    references: [categories.id],
+  }),
+  subCategories: many(categories),
+}));

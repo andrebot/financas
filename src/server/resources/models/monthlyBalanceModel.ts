@@ -1,27 +1,25 @@
-import { Schema, model } from 'mongoose';
-import type { IMonthlyBalanceDocument } from '../../types';
+import { relations } from 'drizzle-orm';
+import {
+  pgTable, serial, integer, numeric,
+} from 'drizzle-orm/pg-core';
+import { accounts } from './accountModel';
+import { timestampColumns } from './columHelpers';
 
-const MonthlyBalanceSchema = new Schema<IMonthlyBalanceDocument>({
-  user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  account: { type: Schema.Types.ObjectId, ref: 'Account', required: true },
-  month: {
-    type: Number, required: true, min: 1, max: 12,
-  },
-  year: { type: Number, required: true },
-  openingBalance: { type: Number, required: true },
-  closingBalance: { type: Number, required: true },
-  transactions: { type: [Schema.Types.ObjectId], ref: 'Transaction', required: true },
-}, {
-  toJSON: {
-    transform: (doc, ret) => {
-      const newObject = { ...ret };
-
-      newObject.id = newObject._id.toString();
-      delete newObject._id;
-
-      return newObject;
-    },
-  },
+export const monthlyBalances = pgTable('monthlyBalances', {
+  id: serial('id').primaryKey(),
+  accountId: integer('accountId').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  year: integer('year').notNull(),
+  month: integer('month').notNull(),
+  openingBalance: numeric({ precision: 14, scale: 2 }).notNull(),
+  closingBalance: numeric({ precision: 14, scale: 2 }).notNull(),
+  totalIn: numeric({ precision: 14, scale: 2 }).notNull(),
+  totalOut: numeric({ precision: 14, scale: 2 }).notNull(),
+  ...timestampColumns,
 });
 
-export default model<IMonthlyBalanceDocument>('MonthlyBalance', MonthlyBalanceSchema);
+export const monthlyBalanceRelations = relations(monthlyBalances, ({ one }) => ({
+  account: one(accounts, {
+    fields: [monthlyBalances.accountId],
+    references: [accounts.id],
+  }),
+}));

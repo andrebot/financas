@@ -1,15 +1,53 @@
 import jwt from 'jsonwebtoken';
 import { NextFunction, Response } from 'express';
+import { AsyncLocalStorage } from 'async_hooks';
+import { eq, SQL } from 'drizzle-orm';
 import { ACCESS_TOKEN_SECRET } from '../config/auth';
 import {
   UserPayload,
   RequestWithUser,
   TokenValidationMiddleware,
+  RequestContext,
+  TableWithUserId,
+  Table,
 } from '../types';
 import { regExpBearer } from './validators';
 import { createLogger } from './logger';
 
 const logger = createLogger('AuthorizationUtils');
+export const requestContext = new AsyncLocalStorage<RequestContext>();
+
+/**
+ * Checks whether a Drizzle table participates in tenant-scoped authorization.
+ *
+ * @param table - The table metadata to inspect.
+ * @returns True when the table exposes a userId column.
+ */
+function tableHasTenantUserId(table: Table): table is TableWithUserId {
+  return table.userId !== undefined;
+}
+
+/**
+ * Builds the tenant authorization filter for the current request context.
+ *
+ * @throws {Error} When no authorization context is available.
+ *
+ * @param table - The table to scope by userId when applicable.
+ * @returns A Drizzle SQL filter for non-admin users, or undefined when no filter is needed.
+ */
+export function getAutorizationDatabaseContext(table: Table): SQL | undefined {
+  const context = requestContext.getStore();
+
+  if (!context) {
+    throw new Error('No authorization context found');
+  }
+
+  if (context.isAdmin || !tableHasTenantUserId(table)) {
+    return undefined;
+  }
+
+  return eq(table.userId, context.userId);
+}
 
 /**
  * Check if the payload is valid
@@ -77,18 +115,20 @@ TokenValidationMiddleware {
     }
 
     try {
-      const payload = jwt.verify(token, ACCESS_TOKEN_SECRET);
+      const payload = jwt.verify(token, ACCESS_TOKEN_SECRET) as UserPayload;
 
       checkValidPayload(payload);
-      checkAdminAccess(payload as UserPayload, isAdmin);
+      checkAdminAccess(payload, isAdmin);
 
       logger.info('Token is valid');
 
-      req.user = payload as UserPayload;
+      req.user = payload;
 
       logger.info('User payload added to request object');
 
-      next();
+      requestContext.run({ userId: payload.id!, isAdmin: payload.role === 'admin' }, () => {
+        next();
+      });
     } catch (err) {
       logger.error(err);
       res.sendStatus(403);

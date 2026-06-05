@@ -19,7 +19,7 @@ const routeFactory = proxyquire('../../../src/server/routes/routeFactory', {
 }).default;
 
 describe('routeFactory', () => {
-  const idPattern = '/:id([0-9a-fA-F]{24})';
+  const idPattern = '/:id([0-9]+)';
 
   beforeEach(() => {
     accessTokenValidationStub.resetHistory();

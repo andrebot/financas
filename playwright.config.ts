@@ -13,6 +13,7 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './tests/end2end',
+  timeout: 60000,
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -49,7 +50,6 @@ export default defineConfig({
       use: {
         ...devices['Desktop Firefox'],
         navigationTimeout: 60000,
-        timeout: 60000, // Allow slow page.goto (test timeout must be >= navigationTimeout)
       },
     },
 
@@ -58,7 +58,6 @@ export default defineConfig({
       use: {
         ...devices['Desktop Safari'],
         navigationTimeout: 60000,
-        timeout: 60000, // Allow slow page.goto (test timeout must be >= navigationTimeout)
       },
     },
 
@@ -86,7 +85,7 @@ export default defineConfig({
   /* Run your local dev server before starting the tests */
   webServer: {
     command: 'npm run dev',
-    url: 'http://127.0.0.1:3000',
+    url: process.env.E2E_WEB_SERVER_URL || process.env.E2E_APP_URL || 'http://127.0.0.1:3000',
     reuseExistingServer: !process.env.CI,
   },
 });

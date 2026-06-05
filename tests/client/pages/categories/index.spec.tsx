@@ -41,7 +41,7 @@ describe('Categories page', () => {
   const mockDeleteCategory = jest.fn();
   const mockUpdateCategory = jest.fn();
 
-  const mockUser = { id: 'user-1', email: 'test@test.com', firstName: 'Test', lastName: 'User', role: 'user' };
+  const mockUser = { id: '1', email: 'test@test.com', firstName: 'Test', lastName: 'User', role: 'user' };
 
   beforeEach(() => {
     jest.resetAllMocks();
@@ -50,8 +50,8 @@ describe('Categories page', () => {
     (useAuth as jest.Mock).mockReturnValue({ user: mockUser });
     (useListCategoriesQuery as jest.Mock).mockReturnValue({
       data: [
-        { id: 'cat-1', name: 'Food', user: 'user-1' },
-        { id: 'cat-2', name: 'Sub Food', user: 'user-1', parentCategory: 'cat-1' },
+        { id: 1, name: 'Food', userId: 1 },
+        { id: 2, name: 'Sub Food', userId: 1, parentCategoryId: 1 },
       ],
     });
     (useCreateCategoryMutation as jest.Mock).mockReturnValue([
@@ -102,8 +102,8 @@ describe('Categories page', () => {
   it('should format flat categories into tree structure', () => {
     (useListCategoriesQuery as jest.Mock).mockReturnValue({
       data: [
-        { id: 'parent-1', name: 'Parent', user: 'user-1' },
-        { id: 'child-1', name: 'Child', user: 'user-1', parentCategory: 'parent-1' },
+        { id: 10, name: 'Parent', userId: 1 },
+        { id: 11, name: 'Child', userId: 1, parentCategoryId: 10 },
       ],
     });
 
@@ -136,7 +136,7 @@ describe('Categories page', () => {
     await waitFor(() => {
       expect(mockCreateCategory).toHaveBeenCalledWith({
         name: 'New Category',
-        user: mockUser.id,
+        userId: Number(mockUser.id),
       });
     });
   });
@@ -199,7 +199,7 @@ describe('Categories page', () => {
 
     const modalElement = mockShowModal.mock.calls[0][0] as React.ReactElement;
     const props = modalElement.props as {
-      category: { id: string; name: string; user: string };
+      category: { id: number; name: string; userId: number };
       onSaveCategory: (categoryName: string) => void;
     };
 
@@ -207,10 +207,10 @@ describe('Categories page', () => {
 
     await waitFor(() => {
       expect(mockUpdateCategory).toHaveBeenCalledWith({
-        id: 'cat-1',
+        id: 1,
         name: 'Updated Food',
-        user: 'user-1',
-        parentCategory: undefined,
+        userId: 1,
+        parentCategoryId: undefined,
       });
     });
   });
@@ -296,7 +296,7 @@ describe('Categories page', () => {
     props.onConfirm();
 
     await waitFor(() => {
-      expect(mockDeleteCategory).toHaveBeenCalledWith('cat-1');
+      expect(mockDeleteCategory).toHaveBeenCalledWith(1);
     });
   });
 
@@ -354,7 +354,7 @@ describe('Categories page', () => {
     fireEvent.click(deleteButton!);
 
     await waitFor(() => {
-      expect(mockDeleteCategory).toHaveBeenCalledWith('cat-2');
+      expect(mockDeleteCategory).toHaveBeenCalledWith(2);
     });
   });
 
@@ -404,8 +404,8 @@ describe('Categories page', () => {
     await waitFor(() => {
       expect(mockCreateCategory).toHaveBeenCalledWith({
         name: 'New Sub',
-        user: mockUser.id,
-        parentCategory: 'cat-1',
+        userId: Number(mockUser.id),
+        parentCategoryId: 1,
       });
     });
   });

@@ -32,7 +32,7 @@ describe('category endpoints', () => {
     it('should correctly prepare the create bank account mutation request', () => {
       const category: Category = {
         name: 'My category',
-        user: 'user-1',
+        userId: 1,
       };
 
       const result = createCategoryMutation(category);
@@ -45,32 +45,32 @@ describe('category endpoints', () => {
 
     it('should correctly prepare the update bank account mutation request', () => {
       const category: Category = {
-        id: 'category-1',
+        id: 1,
         name: 'Updated category',
-        user: 'user-1',
+        userId: 1,
       };
 
       const result = updateCategoryMutation(category);
 
       expect(result).toBeDefined();
-      expect(result.url).toBe('/category/category-1');
+      expect(result.url).toBe('/category/1');
       expect(result.method).toBe('PUT');
       expect(result.body).toEqual(category);
     });
 
     it('should correctly prepare the delete bank account mutation request', () => {
-      const result = deleteCategoryMutation('category-1');
+      const result = deleteCategoryMutation(1);
 
       expect(result).toBeDefined();
-      expect(result.url).toBe('/category/category-1');
+      expect(result.url).toBe('/category/1');
       expect(result.method).toBe('DELETE');
     });
 
     it('should correctly prepare the get category query request', () => {
-      const result = getCategoryQuery('category-1');
+      const result = getCategoryQuery(1);
 
       expect(result).toBeDefined();
-      expect(result.url).toBe('/category/category-1');
+      expect(result.url).toBe('/category/1');
       expect(result.method).toBe('GET');
     });
   });

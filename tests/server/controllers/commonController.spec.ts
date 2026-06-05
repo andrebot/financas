@@ -27,6 +27,7 @@ type MockRequest = {
 type TestContent = {
   id: string;
   user: string;
+  userId: number | undefined;
   name?: string;
 };
 
@@ -35,6 +36,7 @@ describe('CommonController', () => {
   const mockContent: TestContent = {
     id: 'content-123',
     user: 'user-123',
+    userId: 1,
     name: 'Test Content',
   };
 
@@ -152,30 +154,11 @@ describe('CommonController', () => {
 
       managerStub.updateContent.should.have.been.calledOnce;
       managerStub.updateContent.should.have.been.calledWith(
-        request.params.id,
+        Number(request.params.id),
         request.body,
-        request.user?.id,
-        false,
       );
       response.send.should.have.been.calledOnce;
       response.send.should.have.been.calledWith(mockContent);
-    });
-
-    it('should pass isAdmin true when user is admin', async () => {
-      request.user!.role = 'admin';
-      managerStub.updateContent.resolves(mockContent);
-
-      await controller.updateContent(
-        request as RequestWithUser,
-        response as unknown as Response,
-      );
-
-      managerStub.updateContent.should.have.been.calledWith(
-        request.params.id,
-        request.body,
-        request.user?.id,
-        true,
-      );
     });
 
     it('should reject when user is not authenticated', async () => {
@@ -231,29 +214,9 @@ describe('CommonController', () => {
       );
 
       managerStub.deleteContent.should.have.been.calledOnce;
-      managerStub.deleteContent.should.have.been.calledWith(
-        request.params.id,
-        request.user?.id,
-        false,
-      );
+      managerStub.deleteContent.should.have.been.calledWith(Number(request.params.id));
       response.send.should.have.been.calledOnce;
       response.send.should.have.been.calledWith(mockContent);
-    });
-
-    it('should pass isAdmin true when user is admin', async () => {
-      request.user!.role = 'admin';
-      managerStub.deleteContent.resolves(mockContent);
-
-      await controller.deleteContent(
-        request as RequestWithUser,
-        response as unknown as Response,
-      );
-
-      managerStub.deleteContent.should.have.been.calledWith(
-        request.params.id,
-        request.user?.id,
-        true,
-      );
     });
 
     it('should reject when user is not authenticated', async () => {
@@ -325,7 +288,6 @@ describe('CommonController', () => {
       );
 
       managerStub.listContent.should.have.been.calledOnce;
-      managerStub.listContent.should.have.been.calledWith(request.user?.id);
       response.send.should.have.been.calledOnce;
       response.send.should.have.been.calledWith(contentList);
     });
@@ -368,29 +330,9 @@ describe('CommonController', () => {
       );
 
       managerStub.getContent.should.have.been.calledOnce;
-      managerStub.getContent.should.have.been.calledWith(
-        request.params.id,
-        request.user?.id,
-        false,
-      );
+      managerStub.getContent.should.have.been.calledWith(Number(request.params.id));
       response.send.should.have.been.calledOnce;
       response.send.should.have.been.calledWith(mockContent);
-    });
-
-    it('should pass isAdmin true when user is admin', async () => {
-      request.user!.role = 'admin';
-      managerStub.getContent.resolves(mockContent);
-
-      await controller.getContent(
-        request as RequestWithUser,
-        response as unknown as Response,
-      );
-
-      managerStub.getContent.should.have.been.calledWith(
-        request.params.id,
-        request.user?.id,
-        true,
-      );
     });
 
     it('should reject when user is not authenticated', async () => {
@@ -467,7 +409,7 @@ describe('CommonController', () => {
       );
 
       response.status.should.have.been.calledWith(500);
-      response.send.should.have.been.calledWith({ error: 'Manager error' });
+      response.send.should.have.been.calledWith({ error: error.message });
     });
   });
 });

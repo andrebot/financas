@@ -1,8 +1,3 @@
-import {
-  Document,
-  FlatRecord,
-} from 'mongoose';
-import { Logger } from 'winston';
 import { UserPayload } from '../types';
 
 /**
@@ -84,7 +79,7 @@ export function checkVoidPayload(content: any, modelName: string, action: string
  * @param instance - The instance to check
  * @param modelName - The name of the model
  */
-export function checkVoidInstance(instance: any, modelName: string, id: string): void {
+export function checkVoidInstance(instance: any, modelName: string, id: number): void {
   if (!instance) {
     throw new Error(`${modelName} not found with id ${id}`);
   }
@@ -133,57 +128,4 @@ export function calculateLastMonth(year: number, month: number): { year: number,
    */
 export function parseDate(date: Date | string): Date {
   return date instanceof Date ? date : new Date(date);
-}
-
-/**
- * Function to transform the user object by removing the password, since it should not be returned.
- * Also, it will convert the _id to id and remove it from the object.
- *
- * @param doc - Document of the user
- * @param ret - Record of the user
- * @returns - Record of the user
- */
-export function transformMongooseObject(
-  doc: Document<unknown, {}, FlatRecord<unknown>>,
-  ret: Record<string, any>,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  options: any,
-) {
-  const { ...newObject } = ret;
-
-  newObject.id = newObject._id.toString();
-  delete newObject._id;
-
-  return newObject;
-}
-
-/**
- * Checks if the user has access to the content.
- *
- * @throws {Error} - If the user is not allowed to access the content.
- *
- * @param contentOwnerId - The id of the content owner.
- * @param userId - The id of the user.
- * @param isAdmin - Whether the user is an admin.
- * @param modelName - The name of the model.
- * @param contentId - The id of the content.
- * @param action - The action to check.
- * @param logger - The logger to use.
- */
-export function checkUserAccess(
-  contentOwnerId: string,
-  userId: string,
-  isAdmin: boolean,
-  modelName: string,
-  contentId: string,
-  action: string,
-  logger: Logger,
-): void {
-  logger.info(`Checking user access for ${action} ${modelName} with id ${contentId} for user ${userId}`);
-
-  if (!isAdmin && contentOwnerId !== userId) {
-    throw new Error(`User ${userId} is not allowed to ${action} ${modelName} with id ${contentId}`);
-  }
-
-  logger.info(`User ${userId} is allowed to ${action} ${modelName} with id ${contentId}`);
 }

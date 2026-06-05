@@ -1,42 +1,46 @@
-import { Model } from 'mongoose';
-import UserModel from '../models/userModel';
+import { eq } from 'drizzle-orm';
 import Repository from './repository';
-import type { IUser, IUserDocument, IUserRepo } from '../../types';
+import { users } from '../models/userModel';
+import { db } from '../../utils/databaseConnection';
+import { createLogger } from '../../utils/logger';
+import type { IUser } from '../../types';
+
+const logger = createLogger('Repository:User');
+const userRepo = Repository<typeof users, IUser>(users, 'User', logger);
 
 /**
- * Error handler for the user repository.
+ * Finds a user by their unique email address.
  *
- * @remarks
- * This error handler is used to translate server errors to
- * client errors using i18n keys.
- *
- * @param error - The error to handle.
- * @returns The error.
+ * @param email - The email to search for.
+ * @returns The matching user, or null when no user exists.
  */
-export function errorHandler(error: Error): Error {
-  if ((error as any).code === 11000) {
-    return new Error('duplicateUser');
-  }
+async function findByEmail(email: string): Promise<IUser | null> {
+  logger.info(`Finding user by email: ${email}`);
 
-  return error;
+  const user = await db.select().from(users).where(eq(users.email, email)).limit(1);
+
+  return user.length > 0 ? user[0] : null;
 }
 
-export class UserRepo extends Repository<IUserDocument, IUser> implements IUserRepo {
-  constructor(model: Model<IUserDocument> = UserModel) {
-    super(model, errorHandler);
-  }
+/**
+ * Updates only the stored password for a user without requiring a request
+ * authorization context. Password reset runs before authentication, so it
+ * cannot use the generic repository update method that applies tenant scoping.
+ *
+ * @param id - The id of the user whose password should be replaced.
+ * @param password - The already-hashed password to store.
+ * @returns The updated user record.
+ */
+async function updatePasswordById(id: number, password: string): Promise<IUser | null> {
+  logger.info(`Updating password for user by id: ${id}`);
 
-  /**
-   * Finds a user by email.
-   *
-   * @param email - The email of the user to find.
-   * @returns The user.
-   */
-  findByEmail(email: string): Promise<IUser | null> {
-    this.logger.info(`Finding user by email: ${email}`);
+  const [user] = await db.update(users).set({ password }).where(eq(users.id, id)).returning();
 
-    return this.Model.findOne({ email }).then((doc) => doc?.toObject() as IUser);
-  }
+  return user ?? null;
 }
 
-export default new UserRepo();
+export default {
+  ...userRepo,
+  findByEmail,
+  updatePasswordById,
+};
