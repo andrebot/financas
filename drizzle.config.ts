@@ -6,6 +6,6 @@ export default defineConfig({
   schema: './src/server/resources/models',
   dialect: 'postgresql',
   dbCredentials: {
-    url: 'postgresql://financas:financas@localhost:5432/financas',
+    url: DB_URL,
   },
 });
