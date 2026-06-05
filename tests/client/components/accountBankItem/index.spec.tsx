@@ -122,6 +122,12 @@ describe('AccountBankItem', () => {
     expect(creditCards[1]).toHaveTextContent('5678');
   });
 
+  it('should render no credit cards when the account has no cards', () => {
+    renderAccountBankItem({ ...bankAccount, cards: undefined });
+
+    expect(screen.queryAllByTestId('credit-card')).toHaveLength(0);
+  });
+
   it('should render action menu button', () => {
     renderAccountBankItem();
 

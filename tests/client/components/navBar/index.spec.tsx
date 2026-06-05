@@ -163,4 +163,17 @@ describe('NavBar', () => {
     fireEvent.click(screen.getByRole('button', { name: 'menu' }));
     fireEvent.click(screen.getByText(i18nKeys.translation.goals));
   });
+
+  it('should go to the budget page when the budget button is clicked', () => {
+    render(
+      <I18nextProvider i18n={i18n}>
+        <NavBar />
+      </I18nextProvider>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'menu' }));
+    fireEvent.click(screen.getByText(i18nKeys.translation.budget));
+
+    expect(navigateMock).toHaveBeenCalledWith('/budget');
+  });
 });

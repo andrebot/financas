@@ -50,7 +50,7 @@ const MenuProps = {
  * @param categories - Categories returned by the API.
  * @returns Category ids and display labels in the format "Parent - Child".
  */
-function formatCategories(categories: Category[]): FormattedBudgetCategory[] {
+export function formatCategories(categories: Category[]): FormattedBudgetCategory[] {
   const categoryNamesById = new Map(
     categories.map((category) => [category.id, category.name]),
   );
@@ -76,7 +76,7 @@ function formatCategories(categories: Category[]): FormattedBudgetCategory[] {
  * @param value - Raw value from the select change event.
  * @returns Numeric category ids selected by the user.
  */
-function toCategoryIds(value: unknown): number[] {
+export function toCategoryIds(value: unknown): number[] {
   const values = typeof value === 'string' ? value.split(',') : value as Array<number | string>;
 
   return values.map((categoryId) => Number(categoryId));

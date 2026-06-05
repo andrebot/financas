@@ -1,7 +1,8 @@
 import React from 'react';
 import '@testing-library/jest-dom';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
+import { enqueueSnackbar } from 'notistack';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import i18n from '../../../../src/client/i18n';
@@ -63,6 +64,10 @@ function createBudget(overrides: Partial<Budget> = {}): Budget {
 }
 
 describe('BudgetPage', () => {
+  const showModalMock = jest.fn();
+  const closeModalMock = jest.fn();
+  const deleteBudgetMock = jest.fn();
+
   beforeEach(() => {
     jest.resetAllMocks();
     (useAuth as jest.Mock).mockReturnValue({
@@ -75,14 +80,14 @@ describe('BudgetPage', () => {
       },
     });
     (useModal as jest.Mock).mockReturnValue({
-      showModal: jest.fn(),
-      closeModal: jest.fn(),
+      showModal: showModalMock,
+      closeModal: closeModalMock,
     });
     (useListCategoriesQuery as jest.Mock).mockReturnValue({ data: [] });
     (useListBudgetsQuery as jest.Mock).mockReturnValue({ data: [createBudget()] });
     (useCreateBudgetMutation as jest.Mock).mockReturnValue([jest.fn()]);
     (useUpdateBudgetMutation as jest.Mock).mockReturnValue([jest.fn()]);
-    (useDeleteBudgetMutation as jest.Mock).mockReturnValue([jest.fn()]);
+    (useDeleteBudgetMutation as jest.Mock).mockReturnValue([deleteBudgetMock]);
   });
 
   /**
@@ -110,5 +115,77 @@ describe('BudgetPage', () => {
 
     expect((screen.getByLabelText(i18nEn.translation.budgetName) as HTMLInputElement).value).toBe('');
     expect(screen.getByRole('button', { name: i18nEn.translation.edit })).toBeInTheDocument();
+  });
+
+  it('should show the empty budget message when there are no budgets', () => {
+    (useListBudgetsQuery as jest.Mock).mockReturnValue({ data: [] });
+
+    setup();
+
+    expect(screen.getByText(i18nEn.translation.noBudgets)).toBeInTheDocument();
+  });
+
+  it('should show hydrated category names in the budget table', () => {
+    (useListBudgetsQuery as jest.Mock).mockReturnValue({
+      data: [createBudget({ name: 'House', categories: [{ id: 2, name: 'Groceries', userId: 1 }] })],
+    });
+
+    setup();
+
+    expect(screen.getByText('Groceries')).toBeInTheDocument();
+  });
+
+  it('should delete a budget after confirmation', async () => {
+    deleteBudgetMock.mockReturnValue({ unwrap: () => Promise.resolve() });
+    setup();
+
+    fireEvent.click(screen.getByRole('button', { name: i18nEn.translation.delete }));
+    const modal = showModalMock.mock.calls[0][0];
+    await modal.props.onConfirm();
+
+    await waitFor(() => {
+      expect(deleteBudgetMock).toHaveBeenCalledWith(1);
+      expect(enqueueSnackbar).toHaveBeenCalledWith(
+        i18nEn.translation.budgetDeletedSuccessfully,
+        { variant: 'success' },
+      );
+      expect(closeModalMock).toHaveBeenCalled();
+    });
+  });
+
+  it('should show an error when budget deletion fails', async () => {
+    deleteBudgetMock.mockReturnValue({ unwrap: () => Promise.reject(new Error('fail')) });
+    setup();
+
+    fireEvent.click(screen.getByRole('button', { name: i18nEn.translation.delete }));
+    const modal = showModalMock.mock.calls[0][0];
+    await modal.props.onConfirm();
+
+    await waitFor(() => {
+      expect(enqueueSnackbar).toHaveBeenCalledWith(
+        i18nEn.translation.budgetDeletedError,
+        { variant: 'error' },
+      );
+      expect(closeModalMock).toHaveBeenCalled();
+    });
+  });
+
+  it('should close the delete confirmation modal when cancellation is requested', () => {
+    setup();
+
+    fireEvent.click(screen.getByRole('button', { name: i18nEn.translation.delete }));
+    const modal = showModalMock.mock.calls[0][0];
+    modal.props.onCancel();
+
+    expect(closeModalMock).toHaveBeenCalled();
+  });
+
+  it('should use empty lists while budget and category queries are loading', () => {
+    (useListCategoriesQuery as jest.Mock).mockReturnValue({});
+    (useListBudgetsQuery as jest.Mock).mockReturnValue({});
+
+    setup();
+
+    expect(screen.getByText(i18nEn.translation.noBudgets)).toBeInTheDocument();
   });
 });
