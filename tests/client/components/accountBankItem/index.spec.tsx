@@ -310,19 +310,6 @@ describe('AccountBankItem', () => {
     });
   });
 
-  it('should show success snackbar when delete succeeds', async () => {
-    (useDeleteBankAccountMutation as jest.Mock).mockReturnValue([
-      mockDeleteBankAccount,
-      { isError: false, isSuccess: true },
-    ]);
-
-    renderAccountBankItem();
-
-    await waitFor(() => {
-      expect(enqueueSnackbar).toHaveBeenCalledWith(i18nEn.translation.bankAccountDeleted, { variant: 'success' });
-    });
-  });
-
   it('should show error snackbar when delete fails', async () => {
     (useDeleteBankAccountMutation as jest.Mock).mockReturnValue([
       mockDeleteBankAccount,

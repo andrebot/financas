@@ -65,7 +65,6 @@ export default function AccountBankItem({ bankAccount }: AccountBankItemProps): 
       closeModal();
     }
 
-    deleteBankAccount(bankAccount.id!);
     closeModal();
   };
 
@@ -106,12 +105,6 @@ export default function AccountBankItem({ bankAccount }: AccountBankItemProps): 
       />,
     );
   };
-
-  useEffect(() => {
-    if (isSuccess) {
-      enqueueSnackbar(t('bankAccountDeleted'), { variant: 'success' });
-    }
-  }, [isSuccess]);
 
   useEffect(() => {
     if (isError) {
