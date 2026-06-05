@@ -12,7 +12,7 @@ export const initialBudgetFormState: BudgetFormState = {
   endDate: new Date(),
   nameError: '',
   valueError: '',
-  categoriesError: 'budgetCategoriesRequired',
+  categoriesError: '',
   typeError: '',
   startDateError: '',
   endDateError: '',

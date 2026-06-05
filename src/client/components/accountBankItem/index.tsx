@@ -30,7 +30,7 @@ export default function AccountBankItem({ bankAccount }: AccountBankItemProps): 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const { showModal, closeModal } = useModal();
-  const [deleteBankAccount, { isError, isSuccess }] = useDeleteBankAccountMutation();
+  const [deleteBankAccount, { isError }] = useDeleteBankAccountMutation();
   const [updateBankAccount, {
     isError: isUpdateError,
     isSuccess: isUpdateSuccess,

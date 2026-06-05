@@ -23,6 +23,7 @@ import {
   CategorySelect,
   SaveBudgetButton,
 } from './styledComponents';
+import { useListCategoriesQuery } from '../../features/category';
 import { useCreateBudgetMutation, useUpdateBudgetMutation } from '../../features/budget';
 import { useAuth } from '../../hooks/authContext';
 import { BUDGET_TYPES, BudgetFormActionType } from '../../enums';
@@ -100,23 +101,21 @@ function getCategoryLabel(
 /**
  * Budget form used for both budget creation and update flows.
  *
- * @param categories - Categories available for budget category selection.
  * @param budgetFormState - The current reducer-backed form state.
  * @param budgetFormDispatch - Dispatch function used to update the form state.
  * @returns The budget form component.
  */
 export default function BudgetForm({
-  categories,
   budgetFormState,
   budgetFormDispatch,
 }: {
-  categories: Category[],
   budgetFormState: BudgetFormState,
   budgetFormDispatch: React.Dispatch<BudgetFormAction>
 }): React.JSX.Element {
   const { t } = useTranslation();
   const theme = useTheme();
   const { user } = useAuth();
+  const { data: categories = [] } = useListCategoriesQuery();
   const [createBudget] = useCreateBudgetMutation();
   const [updateBudget] = useUpdateBudgetMutation();
 

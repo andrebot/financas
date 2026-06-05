@@ -1,11 +1,12 @@
 import { styled } from '@mui/material/styles';
 import Select from '@mui/material/Select';
-import type { StyleCompProp } from '../../types';
-import { RowInput } from '../../components/formStyledComponents';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import Button from '@mui/material/Button';
 import FormControl from '@mui/material/FormControl';
 import Paper from '@mui/material/Paper';
+import TableCell from '@mui/material/TableCell';
+import { RowInput } from '../../components/formStyledComponents';
+import type { StyleCompProp } from '../../types';
 
 export const BudgetMain = styled('div')(({ theme }: StyleCompProp) => ({
   display: 'flex',
@@ -85,5 +86,18 @@ export const NoBudgetMessage = styled('div')(({ theme }: StyleCompProp) => ({
   justifyContent: 'center',
   gap: '20px',
   padding: '20px',
+}));
+
+export const BudgetTableHeader = styled(TableCell)(() => ({
+  width: '150px',
+}));
+
+export const CategoryChipsHolder = styled('div')(({ theme }: StyleCompProp) => ({
+  display: 'flex',
+  flexDirection: 'row',
+  flexWrap: 'wrap',
+  gap: '5px',
+  alignItems: 'center',
+  justifyContent: 'flex-start',
 }));
 
