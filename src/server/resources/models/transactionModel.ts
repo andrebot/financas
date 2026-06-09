@@ -16,11 +16,13 @@ export const transactionTypes = pgEnum('transactionTypes', [
   'bankSlip',
   'cardPurchase',
   'cardRefund',
-  'payment',
   'investmentBuy',
   'investmentSell',
   'investmentDividend',
   'investmentInterest',
+  'investmentDueDate',
+  'pixIn',
+  'pixOut',
 ]);
 
 export const investmentTypes = pgEnum('investmentTypes', [

@@ -23,6 +23,7 @@ import {
   GoalsTableEmpty,
 } from './styledComponents';
 import { GoalsTableActionType } from '../../../enums';
+import { formatValueToCurrency } from '../../../utils/money';
 import type { Goal, GoalsTableProps } from '../../../types';
 
 type SortColumn = 'value' | 'dueDate' | 'progress';
@@ -115,17 +116,6 @@ export default function GoalsTable({
     return 'primary';
   };
 
-  /**
-   * Formats a numeric goal value using the configured currency.
-   *
-   * @param value - The goal value to format.
-   * @returns The formatted currency string.
-   */
-  const formatValueToCurrency = (value: number) => new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: t('currencyFormat'),
-  }).format(value);
-
   const ActionIcons = {
     [GoalsTableActionType.EDIT]: <EditIcon />,
     [GoalsTableActionType.DELETE]: <DeleteIcon color="error" />,
@@ -183,7 +173,7 @@ export default function GoalsTable({
             {sortedGoals.map((goal) => (
               <TableRow key={goal.id} selected={activeGoalId === goal.id}>
                 <TableCell>{goal.name}</TableCell>
-                <TableCell>{formatValueToCurrency(goal.value)}</TableCell>
+                <TableCell>{formatValueToCurrency(goal.value, t('currencyFormat'))}</TableCell>
                 <TableCell>{dayjs(goal.dueDate).format('MM/YYYY')}</TableCell>
                 <TableCell>
                   <Tooltip title={`${goal.progress}%`}>

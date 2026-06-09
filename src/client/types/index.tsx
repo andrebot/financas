@@ -24,6 +24,13 @@ import {
   GoalState, GoalAction, Goal, GoalsTableProps,
 } from './goals';
 import { Budget, BudgetFormState, BudgetFormAction } from './budget';
+import {
+  TransactionType,
+  TransactionProps,
+  Transaction,
+  SortedTransactionItem,
+  TransactionListProps,
+} from './transaction';
 
 export {
   UserType,
@@ -59,4 +66,9 @@ export {
   Budget,
   BudgetFormState,
   BudgetFormAction,
+  TransactionType,
+  TransactionProps,
+  Transaction,
+  SortedTransactionItem,
+  TransactionListProps,
 };
