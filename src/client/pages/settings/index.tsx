@@ -1,6 +1,7 @@
 import React, { useReducer } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
+import dayjs from 'dayjs';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -198,7 +199,9 @@ export default function Settings(): React.JSX.Element {
    */
   const handleChangeLanguage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
+    const dayjsLocaleMap: Record<string, string> = { pt: 'pt-br' };
     i18n.changeLanguage(value);
+    dayjs.locale(dayjsLocaleMap[value] ?? value);
   };
 
   /**
