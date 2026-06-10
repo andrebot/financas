@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import Typography from '@mui/material/Typography';
@@ -13,9 +13,11 @@ import {
  } from './styledComponents';
  import { useListTransactionsQuery } from '../../features/transaction';
  import { TRANSACTION_TYPES } from '../../enums';
+ import type { Transaction } from '../../types';
 
 export default function Transactions(): React.JSX.Element {
   const { t } = useTranslation();
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction>();
   const { data: transactions = [] } = useListTransactionsQuery();
 
   return (
@@ -31,10 +33,11 @@ export default function Transactions(): React.JSX.Element {
         <Divider orientation='horizontal' />
         <TransactionList
           transactions={transactions}
+          editSelectTrigger={setSelectedTransaction}
         />
       </TransactionsList>
       <ActionPanel>
-        <AddTransactionForm />
+        <AddTransactionForm selectedTransaction={selectedTransaction}/>
       </ActionPanel>
     </TransactionsWrapper>
   );

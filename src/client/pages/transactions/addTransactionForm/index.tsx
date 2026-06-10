@@ -1,4 +1,4 @@
-import React, { useReducer } from 'react';
+import React, { useReducer, useEffect } from 'react';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { enqueueSnackbar } from 'notistack';
@@ -9,7 +9,6 @@ import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import InputAdornment from '@mui/material/InputAdornment';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import {
   transactionFormReducer,
   initialTransactionFormState,
@@ -34,6 +33,7 @@ import {
 } from '../../../features/transaction';
 import type { SelectChangeEvent } from '@mui/material/Select';
 import type { PickerValue } from '@mui/x-date-pickers/internals/models';
+import type { Transaction } from '../../../types';
 
 /**
  * Form used to create or update a transaction.
@@ -43,7 +43,7 @@ import type { PickerValue } from '@mui/x-date-pickers/internals/models';
  *
  * @returns The add/edit transaction form component.
  */
-export default function AddTransactionForm() {
+export default function AddTransactionForm({ selectedTransaction }: {selectedTransaction: Transaction | undefined}) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const formattedCategories = useFormattedCategories();
@@ -148,34 +148,40 @@ export default function AddTransactionForm() {
    * on API failure it shows an error snackbar without clearing the form.
    */
   const handleSaveTransaction = async () => {
-      const validatedState = validateTransactionFormState(transactionFormState);
-      transactionFormDispatch({ type: TransactionFormActionType.VALIDATE });
-  
-      if (hasTransactionFormErrors(validatedState)) {
-        enqueueSnackbar(t('fixErrorsBeforeSaving'), { variant: 'error' });
-        return;
-      }
-  
-      const action = transactionFormState.id ? updateTransaction : createTransaction;
-  
-      try {
-        await action({
-          id: transactionFormState.id,
-          name: transactionFormState.name,
-          date: transactionFormState.date.toISOString(),
-          value: transactionFormState.value,
-          type: transactionFormState.type!,
-          categoryId: transactionFormState.categoryId,
-          accountId: transactionFormState.bankAccountId,
-          userId: Number(user!.id),
-        }).unwrap();
-  
-        transactionFormDispatch({ type: TransactionFormActionType.RESET });
-        enqueueSnackbar(t('transactionCreated'), { variant: 'success' });
-      } catch {
-        enqueueSnackbar(t('transactionCreationFailed'), { variant: 'error' });
-      }
-    };
+    const validatedState = validateTransactionFormState(transactionFormState);
+    transactionFormDispatch({ type: TransactionFormActionType.VALIDATE });
+
+    if (hasTransactionFormErrors(validatedState)) {
+      enqueueSnackbar(t('fixErrorsBeforeSaving'), { variant: 'error' });
+      return;
+    }
+
+    const action = transactionFormState.id ? updateTransaction : createTransaction;
+
+    try {
+      await action({
+        id: transactionFormState.id,
+        name: transactionFormState.name,
+        date: transactionFormState.date.toISOString(),
+        value: transactionFormState.value,
+        type: transactionFormState.type!,
+        categoryId: transactionFormState.categoryId,
+        accountId: transactionFormState.bankAccountId,
+        userId: Number(user!.id),
+      }).unwrap();
+
+      transactionFormDispatch({ type: TransactionFormActionType.RESET });
+      enqueueSnackbar(t('transactionCreated'), { variant: 'success' });
+    } catch {
+      enqueueSnackbar(t('transactionCreationFailed'), { variant: 'error' });
+    }
+  };
+
+  useEffect(() => {
+    if (selectedTransaction) {
+      transactionFormDispatch({ type: TransactionFormActionType.EDIT, payload: selectedTransaction });
+    }
+  }, [selectedTransaction]);
 
   return (
     <AddTransactionWrapper>
@@ -194,7 +200,7 @@ export default function AddTransactionForm() {
           <Select
             label={t('category')}
             labelId='transaction-label'
-            value={transactionFormState.categoryId}
+            value={transactionFormState.categoryId || ''}
             onChange={handleCategoryChange}
           >
             {formattedCategories.map((category) => (
@@ -207,7 +213,7 @@ export default function AddTransactionForm() {
           <Select
             label='Bank Accounts'
             labelId='bank-account-label'
-            value={transactionFormState.bankAccountId}
+            value={transactionFormState.bankAccountId || ''}
             onChange={handleBankChange}
           >
             {bankAccounts.map((bankAccount) => (
@@ -222,7 +228,7 @@ export default function AddTransactionForm() {
           <Select
             label={t('type')}
             labelId='type-label'
-            value={transactionFormState.type}
+            value={transactionFormState.type ?? ''}
             onChange={handleTypeChange}
           >
             {Object.values(TRANSACTION_TYPES).map((type) => (

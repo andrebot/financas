@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import IconButton from '@mui/material/IconButton';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
@@ -52,18 +52,21 @@ export const typeIconMap = {
 };
 
 export default function Transaction({
-  id,
+  transaction,
   selectedId,
-  name,
-  value,
-  type,
+  onSelect,
+  editSelectTrigger,
 }: TransactionProps) {
   const { t } = useTranslation();
-  const isTransactionPositive = positiveTypes.includes(type);
-  const [isSelected, setSelected] = useState(selectedId === id);
+  const isTransactionPositive = positiveTypes.includes(transaction.type);
+  const [isSelected, setSelected] = useState(selectedId === transaction.id);
 
   function onClick() {
-    setSelected(!isSelected);
+    if (selectedId === transaction.id) {
+      onSelect(0);
+    } else {
+      onSelect(transaction.id!);
+    }
   }
 
   function onDeleteClick(evt: MouseEvent) {
@@ -72,25 +75,30 @@ export default function Transaction({
 
   function onEditClick(evt: MouseEvent) {
     evt.stopPropagation();
+    editSelectTrigger(transaction);
   }
+
+  useEffect(() => {
+    setSelected(selectedId === transaction.id);
+  }, [selectedId]);
 
   return (
     <TransactionItem
-      key={id}
+      key={transaction.id}
       className={isSelected ? 'selected' : ''}
       onClick={onClick}
     >
-      <Tooltip title={t(type)}>
-        {typeIconMap[type]}
+      <Tooltip title={t(transaction.type)}>
+        {typeIconMap[transaction.type]}
       </Tooltip>
       <TransactionItemTextWrapper>
-        {name}
+        {transaction.name}
         <TransactionBankAccount>
           Conta de banco - Categoria 1
         </TransactionBankAccount>
       </TransactionItemTextWrapper>
       <TransactionValueWrapper className={isTransactionPositive ? 'positive' : 'negative'}>
-        {isTransactionPositive ? '+' : '-'} {formatValueToCurrency(value, t('currencyFormat'))}
+        {isTransactionPositive ? '+' : '-'} {formatValueToCurrency(transaction.value, t('currencyFormat'))}
       </TransactionValueWrapper>
       <TransactionItemActions className={isSelected ? 'selected' : ''}>
         <IconButton onClick={onEditClick}>

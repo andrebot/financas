@@ -33,8 +33,12 @@ function insertDayGroup(acc: SortedTransactionItem[], curTrans: Transaction) {
   insertDescending(acc, { date: curTrans.date, transactions: [curTrans] });
 }
 
-export default function TransactionList({ transactions }: TransactionListProps) {
+export default function TransactionList({
+  transactions,
+  editSelectTrigger,
+}: TransactionListProps) {
   const { t } = useTranslation();
+  const [selectedListItem, setSelectedListItem] = useState(0);
   const [sortedTransactions, setSortedTransactions] = useState<SortedTransactionItem[]>([]);
 
   useEffect(() => {
@@ -63,11 +67,10 @@ export default function TransactionList({ transactions }: TransactionListProps) 
           {trans.transactions.map((trs) =>
             <TransactionItem
               key={trs.id}
-              id={trs.id!}
-              selectedId={0}
-              name={trs.name}
-              value={trs.value}
-              type={trs.type}
+              transaction={trs}
+              selectedId={selectedListItem}
+              onSelect={setSelectedListItem}
+              editSelectTrigger={editSelectTrigger}
             />
           )}
         </TransactionItemList>

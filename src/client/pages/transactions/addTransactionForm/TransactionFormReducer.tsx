@@ -177,12 +177,13 @@ function editTransaction(
 ): TransactionFormState {
   return {
     ...state,
+    id: payload.id,
     name: payload.name,
     value: payload.value,
     type: payload.type,
     date: new Date(payload.date),
-    categoryId: 0,
-    bankAccountId: 0,
+    categoryId: payload.categoryId!,
+    bankAccountId: payload.accountId,
     nameError: '',
     valueError: '',
     typeError: '',

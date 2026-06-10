@@ -1,11 +1,10 @@
 import { INVESTMENT_TYPES, TRANSACTION_TYPES, TransactionFormActionType } from '../enums';
 
 export type TransactionProps = {
-  name: string;
-  value: number;
-  type: TRANSACTION_TYPES;
-  id: number;
+  transaction: Transaction;
   selectedId: number;
+  onSelect: (id: number) => void;
+  editSelectTrigger: (transaction: Transaction | undefined) => void;
 };
 
 export type Transaction = {
@@ -27,6 +26,7 @@ export type SortedTransactionItem = {
 
 export type TransactionListProps = {
   transactions: Transaction[];
+  editSelectTrigger: (transaction: Transaction | undefined) => void;
 }
 
 export type TransactionFormState = {
