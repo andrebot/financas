@@ -186,9 +186,15 @@ export default {
     investmentSell: 'Venda de Investimento',
     investmentDividend: 'Dividendos de Investimento',
     investmentInterest: 'Juros de Investimento',
-    investmentDueData: 'Vencimento de Investimento',
-    pix: 'Pix',
+    investmentDueDate: 'Vencimento de Investimento',
+    pixIn: 'Pix Recebido',
+    pixOut: 'Pix Pago',
     import: 'Importar',
     add: 'Adicionar',
+    addTransaction: 'Adicionar Transação',
+    category: 'Categoria',
+    bankAccount: 'Conta bancária',
+    transactionCreated: 'Transação salva com sucesso!',
+    transactionCreationFailed: 'Error ao salvar transação! Tente denovo mais tarde.'
   },
 };

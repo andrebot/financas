@@ -5,7 +5,8 @@ export const TransactionsWrapper = styled('div')(() => ({
   display: 'flex',
   height: '100%',
   gap: '20px',
-  padding: '10px'
+  padding: '10px',
+  width: '100%',
 }));
 
 export const TransactionsList = styled(Paper)(() => ({
@@ -17,4 +18,10 @@ export const TransactionsList = styled(Paper)(() => ({
   padding: '10px',
   gap: '10px',
   justifyContent: 'center'
+}));
+
+export const ActionPanel = styled(Paper)(() => ({
+  flexGrow: 1,
+  padding: '10px',
+  justifyContent: 'center',
 }));

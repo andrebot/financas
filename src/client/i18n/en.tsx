@@ -186,9 +186,15 @@ export default {
     investmentSell: 'Investment Sell',
     investmentDividend: 'Investment Dividends',
     investmentInterest: 'Investment Interest',
-    investmentDueData: 'Investment Due Date',
-    pix: 'Pix',
+    investmentDueDate: 'Investment Due Date',
+    pixIn: 'Pix In',
+    pixOut: 'Pix Out',
     import: 'import',
     add: 'Add',
+    addTransaction: 'Add Transaction',
+    category: 'Category',
+    bankAccount: 'Bank Account',
+    transactionCreated: 'Transaction saved successfully!',
+    transactionCreationFailed: 'Error while saving transaction! Try again later'
   },
 };

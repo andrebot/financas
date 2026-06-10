@@ -1,7 +1,12 @@
 import dayjs from 'dayjs';
 import { BUDGET_TYPES, BudgetFormActionType } from '../../enums';
 import { regExpNameWithNumbers } from '../../utils/validators';
-import type { BudgetFormState, BudgetFormAction, Budget } from '../../types';
+import type {
+  ActionFunction,
+  BudgetFormState,
+  BudgetFormAction,
+  Budget,
+} from '../../types';
 
 export const initialBudgetFormState: BudgetFormState = {
   name: '',
@@ -223,6 +228,18 @@ function editBudget(
   };
 }
 
+const actionMap: Record<BudgetFormActionType, ActionFunction> = {
+  [BudgetFormActionType.SET_NAME]: setName,
+  [BudgetFormActionType.SET_VALUE]: setValue,
+  [BudgetFormActionType.SET_START_DATE]: setStartDate,
+  [BudgetFormActionType.SET_END_DATE]: setEndDate,
+  [BudgetFormActionType.SET_TYPE]: setType,
+  [BudgetFormActionType.SET_CATEGORY_IDS]: setCategoryIds,
+  [BudgetFormActionType.EDIT]: editBudget,
+  [BudgetFormActionType.VALIDATE]: validateBudgetFormState,
+  [BudgetFormActionType.RESET]: () => ({ ...initialBudgetFormState }),
+}
+
 /**
  * Reducer for the budget form state.
  *
@@ -234,26 +251,11 @@ export const budgetFormReducer = (
   state: BudgetFormState,
   action: BudgetFormAction,
 ): BudgetFormState => {
-  switch (action.type) {
-    case BudgetFormActionType.SET_NAME:
-      return setName(state, action.payload);
-    case BudgetFormActionType.SET_VALUE:
-      return setValue(state, action.payload);
-    case BudgetFormActionType.SET_START_DATE:
-      return setStartDate(state, action.payload);
-    case BudgetFormActionType.SET_END_DATE:
-      return setEndDate(state, action.payload);
-    case BudgetFormActionType.SET_TYPE:
-      return setType(state, action.payload);
-    case BudgetFormActionType.SET_CATEGORY_IDS:
-      return setCategoryIds(state, action.payload);
-    case BudgetFormActionType.VALIDATE:
-      return validateBudgetFormState(state);
-    case BudgetFormActionType.EDIT:
-      return editBudget(state, action.payload);
-    case BudgetFormActionType.RESET:
-      return { ...initialBudgetFormState };
-    default:
-      return state;
+  const func = actionMap[action.type];
+
+  if (func) {
+    return func(state, action.payload);
   }
+
+  return state;
 };

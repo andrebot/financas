@@ -20,6 +20,7 @@ import {
   TransactionBankAccount,
   TransactionItemActions,
 } from './styledComponents';
+import { TRANSACTION_TYPES } from '../../../enums';
 import type { MouseEvent } from 'react';
 import type { TransactionProps } from '../../../types';
 
@@ -30,23 +31,25 @@ const positiveTypes = [
   'investmentSell',
   'investmentDividend',
   'investmentInterest',
+  'pixIn'
 ];
 
 export const typeIconMap = {
-  withdraw: <WithdrawIcon />,
-  transferIn: <TransferIcon />,
-  transferOut: <TransferIcon />,
-  deposit: <DepositIcon />,
-  bankSlipt: <BankSlipIcon />,
-  cardPurchase: <CreditCardIcon />,
-  cardRefund: <CreditCardIcon />,
-  investmentBuy: <InvesetmentIcon />,
-  investmentSell: <InvesetmentIcon />,
-  investmentDividend: <InvesetmentIcon />,
-  investmentInterest: <InvesetmentIcon />,
-  investmentDueDate: <InvestmentDueDateIcon />,
-  pix: <PixIcon />
-}
+  [TRANSACTION_TYPES.WITHDRAW]: <WithdrawIcon />,
+  [TRANSACTION_TYPES.TRANSFER_IN]: <TransferIcon />,
+  [TRANSACTION_TYPES.TRANSFER_OUT]: <TransferIcon />,
+  [TRANSACTION_TYPES.DEPOSIT]: <DepositIcon />,
+  [TRANSACTION_TYPES.BANK_SLIP]: <BankSlipIcon />,
+  [TRANSACTION_TYPES.CARD_PURCHASE]: <CreditCardIcon />,
+  [TRANSACTION_TYPES.CARD_REFUND]: <CreditCardIcon />,
+  [TRANSACTION_TYPES.INVESTMENT_BUY]: <InvesetmentIcon />,
+  [TRANSACTION_TYPES.INVESTMENT_SELL]: <InvesetmentIcon />,
+  [TRANSACTION_TYPES.INVESTMENT_DIVIDEND]: <InvesetmentIcon />,
+  [TRANSACTION_TYPES.INVESTMENT_INTEREST]: <InvesetmentIcon />,
+  [TRANSACTION_TYPES.INVESTMENT_DUE_DATE]: <InvestmentDueDateIcon />,
+  [TRANSACTION_TYPES.PIX_IN]: <PixIcon />,
+  [TRANSACTION_TYPES.PIX_OUT]: <PixIcon />
+};
 
 export default function Transaction({
   id,
@@ -73,6 +76,7 @@ export default function Transaction({
 
   return (
     <TransactionItem
+      key={id}
       className={isSelected ? 'selected' : ''}
       onClick={onClick}
     >

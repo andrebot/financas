@@ -36,6 +36,8 @@ async function updateBudgetsByNewTransaction(transaction: ITransaction): Promise
         transactionId: sql<number>`${transaction.id}`.as('transactionId'),
         date: sql<Date>`${transaction.date}`.as('date'),
         valueUsed: sql<string>`${transaction.value}`.as('valueUsed'),
+        createdAt: sql<Date>`now()`.as('createdAt'),
+        updatedAt: sql<Date>`null`.as('updatedAt'),
       })
       .from(budgets)
       .innerJoin(budgetToCategories, eq(budgetToCategories.budgetId, budgets.id))

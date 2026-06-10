@@ -57,13 +57,14 @@ export default function TransactionList({ transactions }: TransactionListProps) 
   return (
     <TransactionItemListWrapper>
       {sortedTransactions.map((trans) => 
-        <TransactionItemList>
+        <TransactionItemList key={trans.date.toISOString()}>
           {dayjs(trans.date).format(t('dateFormat'))}
           <Divider />
           {trans.transactions.map((trs) =>
             <TransactionItem
-              id={trs.id}
-              selectedId='0'
+              key={trs.id}
+              id={trs.id!}
+              selectedId={0}
               name={trs.name}
               value={trs.value}
               type={trs.type}

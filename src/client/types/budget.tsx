@@ -29,6 +29,8 @@ export type BudgetFormState = {
   endDateError: string;
 };
 
+export type ActionFunction = (state: BudgetFormState, payload?: any) => BudgetFormState;
+
 export type BudgetFormAction = {
   type: BudgetFormActionType.SET_NAME;
   payload: string;
@@ -49,9 +51,11 @@ export type BudgetFormAction = {
   payload: number[];
 } | {
   type: BudgetFormActionType.VALIDATE;
+  payload?: never;
 } | {
   type: BudgetFormActionType.EDIT;
   payload: Budget;
 } | {
   type: BudgetFormActionType.RESET;
+  payload?: never;
 };

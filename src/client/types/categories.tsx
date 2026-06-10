@@ -8,3 +8,8 @@ export type Category = {
 export type FormattedCategory = Category & {
   children: Category[];
 };
+
+export type CategorySelectOption = {
+  id: number;
+  label: string;
+};

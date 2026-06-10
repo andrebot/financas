@@ -5,41 +5,48 @@ import Typography from '@mui/material/Typography';
 import { useTranslation } from 'react-i18next';
 import { enqueueSnackbar } from 'notistack';
 import TransactionList from './transactionList';
+import AddTransactionForm from './addTransactionForm';
 import {
   TransactionsWrapper,
   TransactionsList,
+  ActionPanel,
  } from './styledComponents';
+ import { TRANSACTION_TYPES } from '../../enums';
 
 export default function Transactions(): React.JSX.Element {
   const { t } = useTranslation();
   const transactions = [{
-    id: '1',
+    id: 1,
     name: 'test1',
-    accountId: 'alksndsdkfbw83u',
-    type: 'cardPurchase',
+    accountId: 1,
+    type: TRANSACTION_TYPES.CARD_PURCHASE,
     value: 1234,
     date: new Date('01/12/2026'),
+    userId: 123,
   },{
-    id: '2',
+    id: 2,
     name: 'test2',
-    accountId: 'alksndsdkfbw83u',
-    type: 'transferIn',
+    accountId: 1,
+    type: TRANSACTION_TYPES.TRANSFER_IN,
     value: 1234,
+    userId: 123,
     date: new Date('01/14/2026'),
   },{
-    id: '3',
+    id: 3,
     name: 'test2',
-    accountId: 'alksndsdkfbw83u',
-    type: 'withdraw',
+    accountId: 1,
+    type: TRANSACTION_TYPES.WITHDRAW,
     value: 1234,
     date: new Date('01/15/2026'),
+    userId: 123,
   },{
-    id: '4',
+    id: 4,
     name: 'test2',
-    accountId: 'alksndsdkfbw83u',
-    type: 'pix',
+    accountId: 1,
+    type: TRANSACTION_TYPES.PIX_OUT,
     value: 1234,
     date: new Date('01/12/2026'),
+    userId: 123,
   }]
 
   return (
@@ -57,7 +64,9 @@ export default function Transactions(): React.JSX.Element {
           transactions={transactions}
         />
       </TransactionsList>
-      <h1>transactions</h1>
+      <ActionPanel>
+        <AddTransactionForm />
+      </ActionPanel>
     </TransactionsWrapper>
   );
 }

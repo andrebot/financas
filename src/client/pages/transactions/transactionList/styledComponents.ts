@@ -1,9 +1,10 @@
 import { styled } from '@mui/material/styles';
-import ButtonBase from '@mui/material/ButtonBase';
 import type { StyleCompProp } from '../../../types';
 
-export const TransactionItem = styled(ButtonBase)(({ theme } : StyleCompProp) => ({
+export const TransactionItem = styled('div')(({ theme } : StyleCompProp) => ({
   display: 'flex',
+  position: 'relative',
+  height: '60px',
   justifyContent: 'space-between',
   padding: '20px',
   gap: '20px',
