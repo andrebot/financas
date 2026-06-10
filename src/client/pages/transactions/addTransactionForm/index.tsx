@@ -157,7 +157,7 @@ export default function AddTransactionForm() {
         await action({
           id: transactionFormState.id,
           name: transactionFormState.name,
-          date: transactionFormState.date,
+          date: transactionFormState.date.toISOString(),
           value: transactionFormState.value,
           type: transactionFormState.type!,
           categoryId: transactionFormState.categoryId,

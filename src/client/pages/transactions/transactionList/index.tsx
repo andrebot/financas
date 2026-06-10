@@ -13,7 +13,7 @@ import type {
   TransactionListProps,
 } from '../../../types';
 
-function insertDescending<T extends { date: Date }>(arr: T[], item: T) {
+function insertDescending<T extends { date: string }>(arr: T[], item: T) {
   const insertIndex = arr.findIndex(
     (existing) => new Date(existing.date).getTime() < new Date(item.date).getTime()
   );
@@ -57,7 +57,7 @@ export default function TransactionList({ transactions }: TransactionListProps) 
   return (
     <TransactionItemListWrapper>
       {sortedTransactions.map((trans) => 
-        <TransactionItemList key={trans.date.toISOString()}>
+        <TransactionItemList key={trans.date}>
           {dayjs(trans.date).format(t('dateFormat'))}
           <Divider />
           {trans.transactions.map((trs) =>

@@ -11,43 +11,12 @@ import {
   TransactionsList,
   ActionPanel,
  } from './styledComponents';
+ import { useListTransactionsQuery } from '../../features/transaction';
  import { TRANSACTION_TYPES } from '../../enums';
 
 export default function Transactions(): React.JSX.Element {
   const { t } = useTranslation();
-  const transactions = [{
-    id: 1,
-    name: 'test1',
-    accountId: 1,
-    type: TRANSACTION_TYPES.CARD_PURCHASE,
-    value: 1234,
-    date: new Date('01/12/2026'),
-    userId: 123,
-  },{
-    id: 2,
-    name: 'test2',
-    accountId: 1,
-    type: TRANSACTION_TYPES.TRANSFER_IN,
-    value: 1234,
-    userId: 123,
-    date: new Date('01/14/2026'),
-  },{
-    id: 3,
-    name: 'test2',
-    accountId: 1,
-    type: TRANSACTION_TYPES.WITHDRAW,
-    value: 1234,
-    date: new Date('01/15/2026'),
-    userId: 123,
-  },{
-    id: 4,
-    name: 'test2',
-    accountId: 1,
-    type: TRANSACTION_TYPES.PIX_OUT,
-    value: 1234,
-    date: new Date('01/12/2026'),
-    userId: 123,
-  }]
+  const { data: transactions = [] } = useListTransactionsQuery();
 
   return (
     <TransactionsWrapper>

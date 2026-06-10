@@ -3,6 +3,7 @@ import { withTransaction } from '../utils/transaction';
 import {
   calculateLastMonth, checkVoidPayload,
 } from '../utils/misc';
+import { isInflowType } from '../utils/transactionTypeUtils';
 import MonthlyBalanceRepo from '../resources/repositories/monthlyBalanceRepo';
 import GoalRepo from '../resources/repositories/goalRepo';
 import BudgetRepo from '../resources/repositories/budgetRepo';
@@ -78,6 +79,8 @@ async function addTransactionToMonthlyBalance(
 ): Promise<void> {
   const { date } = content;
   const value = Number(content.value);
+  const inflow = isInflowType(content.type);
+  const closingDelta = inflow ? value : -value;
 
   logger.info(`Getting monthly balance for ${date.getFullYear()}-${date.getMonth() + 1}`);
 
@@ -93,9 +96,9 @@ async function addTransactionToMonthlyBalance(
       month: date.getMonth() + 1,
       year: date.getFullYear(),
       openingBalance: String(openingBalance),
-      closingBalance: String(openingBalance + value),
-      totalIn: value > 0 ? String(value) : '0',
-      totalOut: value < 0 ? String(Math.abs(value)) : '0',
+      closingBalance: String(openingBalance + closingDelta),
+      totalIn: inflow ? String(value) : '0',
+      totalOut: !inflow ? String(value) : '0',
     } as IMonthlyBalance);
   } else {
     logger.info('Monthly balance found, updating it');

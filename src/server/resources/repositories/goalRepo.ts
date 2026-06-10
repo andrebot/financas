@@ -1,4 +1,5 @@
 import { eq, and, sql } from 'drizzle-orm';
+import { isInflowType } from '../../utils/transactionTypeUtils';
 import Repository from './repository';
 import { getAutorizationDatabaseContext } from '../../utils/authorization';
 import { goals } from '../models/goalModel';
@@ -25,7 +26,9 @@ async function updateGoalFromTransaction(
   logger.info(`Updating goal from transaction: ${transaction.id}`);
 
   const transactionValue = Number(transaction.value);
-  const signedTransactionValue = shouldInvertValue ? -transactionValue : transactionValue;
+  const typeSign = isInflowType(transaction.type) ? 1 : -1;
+  const invertSign = shouldInvertValue ? -1 : 1;
+  const signedTransactionValue = typeSign * invertSign * transactionValue;
 
   await getDb().update(goals)
     .set({

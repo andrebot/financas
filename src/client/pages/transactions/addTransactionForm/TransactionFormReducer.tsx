@@ -180,7 +180,7 @@ function editTransaction(
     name: payload.name,
     value: payload.value,
     type: payload.type,
-    date: payload.date,
+    date: new Date(payload.date),
     categoryId: 0,
     bankAccountId: 0,
     nameError: '',

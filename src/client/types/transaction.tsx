@@ -10,7 +10,7 @@ export type TransactionProps = {
 
 export type Transaction = {
   id?: number;
-  date: Date;
+  date: string;
   name: string;
   value: number;
   type: TRANSACTION_TYPES;
@@ -21,7 +21,7 @@ export type Transaction = {
 }
 
 export type SortedTransactionItem = {
-  date: Date;
+  date: string;
   transactions: Transaction[];
 } 
 
