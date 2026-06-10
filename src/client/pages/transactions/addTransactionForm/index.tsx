@@ -5,7 +5,6 @@ import { enqueueSnackbar } from 'notistack';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
-import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
@@ -18,7 +17,13 @@ import {
   hasTransactionFormErrors,
 } from './TransactionFormReducer';
 import { useAuth } from '../../../hooks/authContext';
-import { AddTransactionWrapper } from './styledComponents';
+import {
+  AddTransactionWrapper,
+  CategorySelect,
+  BankSelect,
+  TypeSelect,
+  TransactionDatePicker,
+} from './styledComponents';
 import { RowInput } from '../../../components/formStyledComponents';
 import { TransactionFormActionType, TRANSACTION_TYPES } from '../../../enums';
 import { useFormattedCategories } from '../../../hooks/useFormattedCategories';
@@ -184,7 +189,7 @@ export default function AddTransactionForm() {
           error={!!transactionFormState.nameError}
           helperText={transactionFormState.nameError ? t(transactionFormState.nameError) : ''}
         />
-        <FormControl sx={{flexGrow: 1}} error={!!transactionFormState.categoryError}>
+        <CategorySelect error={!!transactionFormState.categoryError}>
           <InputLabel id='transaction-label'>{t('category')}</InputLabel>
           <Select
             label={t('category')}
@@ -196,8 +201,8 @@ export default function AddTransactionForm() {
               <MenuItem key={category.id} value={category.id}>{category.label}</MenuItem>
             ))}
           </Select>
-        </FormControl>
-        <FormControl sx={{flexGrow: 1}} error={!!transactionFormState.bankAccountError}>
+        </CategorySelect>
+        <BankSelect error={!!transactionFormState.bankAccountError}>
           <InputLabel id='bank-account-label'>{t('bankAccount')}</InputLabel>
           <Select
             label='Bank Accounts'
@@ -209,10 +214,10 @@ export default function AddTransactionForm() {
               <MenuItem key={bankAccount.id} value={bankAccount.id}>{bankAccount.name}</MenuItem>
             ))}
           </Select>
-        </FormControl>
+        </BankSelect>
       </RowInput>
       <RowInput>
-        <FormControl sx={{flexGrow: 1}}>
+        <TypeSelect>
           <InputLabel id='type-label'>{t('type')}</InputLabel>
           <Select
             label={t('type')}
@@ -224,8 +229,8 @@ export default function AddTransactionForm() {
               <MenuItem key={type} value={type}>{t(type)}</MenuItem>
             ))}
           </Select>
-        </FormControl>
-        <DatePicker
+        </TypeSelect>
+        <TransactionDatePicker
           format='DD/MM/YYYY'
           value={transactionFormState.date ? dayjs(transactionFormState.date) : null}
           onChange={handleDateChange}
@@ -235,7 +240,6 @@ export default function AddTransactionForm() {
               helperText: transactionFormState.dateError ? t(transactionFormState.dateError) : '',
             },
           }}
-          sx={{flexGrow: 1}}
         />
         <TextField
           label={t('value')}
