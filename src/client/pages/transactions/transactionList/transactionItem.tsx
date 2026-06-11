@@ -28,6 +28,7 @@ import { TRANSACTION_TYPES } from '../../../enums';
 import type { MouseEvent } from 'react';
 import type { TransactionProps } from '../../../types';
 
+/** Transaction types whose value should be displayed as positive (green, prefixed with `+`). */
 const positiveTypes = [
   'transferIn',
   'deposit',
@@ -55,6 +56,12 @@ export const typeIconMap = {
   [TRANSACTION_TYPES.PIX_OUT]: <PixIcon />
 };
 
+/**
+ * Renders a single transaction row with its type icon, name, bank account,
+ * formatted value, and a slide-in actions panel with edit and delete buttons.
+ *
+ * @param props - {@link TransactionProps}
+ */
 export default function Transaction({
   transaction,
   selectedId,
@@ -67,6 +74,7 @@ export default function Transaction({
   const isTransactionPositive = positiveTypes.includes(transaction.type);
   const [isSelected, setSelected] = useState(selectedId === transaction.id);
 
+  /** Toggles selection: deselects if already selected, otherwise selects this row. */
   function onClick() {
     if (selectedId === transaction.id) {
       onSelect(0);
@@ -75,6 +83,12 @@ export default function Transaction({
     }
   }
 
+  /**
+   * Calls the delete mutation for the given transaction id and shows a
+   * success or error snackbar depending on the outcome.
+   *
+   * @param id - The id of the transaction to delete
+   */
   async function submitDeleteTransaction(id: number) {
     try {
       await deleteTransaction(id).unwrap();
@@ -86,6 +100,11 @@ export default function Transaction({
     }
   }
 
+  /**
+   * Stops event propagation and opens a confirm modal before deleting the transaction.
+   *
+   * @param evt - The mouse click event from the delete button
+   */
   function onDeleteClick(evt: MouseEvent) {
     evt.stopPropagation();
 
@@ -99,6 +118,11 @@ export default function Transaction({
     );
   }
 
+  /**
+   * Stops event propagation and triggers the edit flow for the current transaction.
+   *
+   * @param evt - The mouse click event from the edit button
+   */
   function onEditClick(evt: MouseEvent) {
     evt.stopPropagation();
     editSelectTrigger(transaction);
