@@ -10,6 +10,7 @@ import BudgetRepo from '../resources/repositories/budgetRepo';
 import TransactionRepo from '../resources/repositories/transactionRepo';
 import {
   ITransaction,
+  ITransactionWithRelations,
   IMonthlyBalance,
   TRANSACTION_TYPES,
   INVESTMENT_TYPES,
@@ -366,10 +367,10 @@ async function getTransaction(
  */
 async function listTransactions(
   transactionRepo: ITransactionRepo,
-): Promise<ITransaction[]> {
+): Promise<ITransactionWithRelations[]> {
   logger.info('Listing transactions');
 
-  return transactionRepo.listAll();
+  return transactionRepo.listAllWithRelations();
 }
 
 /**

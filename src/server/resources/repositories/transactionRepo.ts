@@ -5,9 +5,11 @@ import { getAutorizationDatabaseContext } from '../../utils/authorization';
 import Repository from './repository';
 import { goals } from '../models/goalModel';
 import { transactions, transactionToGoals } from '../models/transactionModel';
+import { accounts } from '../models/accountModel';
+import { categories } from '../models/categoryModel';
 import { createLogger } from '../../utils/logger';
 import { getDb } from '../../utils/transaction';
-import type { ITransaction, ITransactionGoalEntry } from '../../types';
+import type { ITransaction, ITransactionGoalEntry, ITransactionWithRelations } from '../../types';
 
 const logger = createLogger('Repository:Transaction');
 const transactionRepo = Repository<typeof transactions, ITransaction>(transactions, 'Transaction', logger);
@@ -156,6 +158,35 @@ async function saveTransactionGoals(
   );
 }
 
+/**
+ * Lists all transactions for the current authorization context, joined with
+ * their related account name and category name.
+ *
+ * @returns Transactions enriched with `accountName` and `categoryName`.
+ */
+async function listAllWithRelations(): Promise<ITransactionWithRelations[]> {
+  return getDb()
+    .select({
+      id: transactions.id,
+      name: transactions.name,
+      categoryId: transactions.categoryId,
+      accountId: transactions.accountId,
+      type: transactions.type,
+      date: transactions.date,
+      value: transactions.value,
+      investmentType: transactions.investmentType,
+      userId: transactions.userId,
+      createdAt: transactions.createdAt,
+      updatedAt: transactions.updatedAt,
+      accountName: accounts.name,
+      categoryName: categories.name,
+    })
+    .from(transactions)
+    .leftJoin(accounts, eq(transactions.accountId, accounts.id))
+    .leftJoin(categories, eq(transactions.categoryId, categories.id))
+    .where(getAutorizationDatabaseContext(transactions)) as Promise<ITransactionWithRelations[]>;
+}
+
 export default {
   ...transactionRepo,
   findByCategoryWithDateRange,
@@ -164,4 +195,5 @@ export default {
   findByMonthAndYear,
   deleteTransactionFromGoals,
   saveTransactionGoals,
+  listAllWithRelations,
 };

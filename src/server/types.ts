@@ -222,6 +222,12 @@ export interface IUser extends InferSelectModel<typeof users> { }
 /** Domain entity representing a financial transaction. */
 export interface ITransaction extends InferSelectModel<typeof transactions> { }
 
+/** Transaction enriched with its related account name and category name. */
+export type ITransactionWithRelations = ITransaction & {
+  accountName: string;
+  categoryName: string | null;
+};
+
 /** Domain entity representing a savings goal. */
 export interface IGoal extends InferSelectModel<typeof goals> { }
 
@@ -367,6 +373,13 @@ export interface ITransactionRepo extends IRepository<typeof transactions, ITran
    * @param goals - The goal entries with goalId and percentage.
    */
   saveTransactionGoals(transactionId: number, goals: ITransactionGoalEntry[]): Promise<void>;
+  /**
+   * Lists all transactions for the current authorization context, joined with
+   * their related account name and category name.
+   *
+   * @returns Transactions enriched with `accountName` and `categoryName`.
+   */
+  listAllWithRelations(): Promise<ITransactionWithRelations[]>;
 }
 
 /** Repository contract for the categories table, extending base CRUD with hierarchy queries. */
@@ -526,7 +539,7 @@ export interface IAccountantManager {
     goals: ITransactionGoalEntry[] | undefined,
   ) => Promise<ITransaction | null>;
   getTransaction: (id: number) => Promise<ITransaction | null>;
-  listTransactions: () => Promise<ITransaction[]>;
+  listTransactions: () => Promise<ITransactionWithRelations[]>;
   listMonthlyBalances: (year: number, month: number) => Promise<IMonthlyBalance[]>;
   getTransactionTypes: () => { transactionTypes: string[]; investmentTypes: string[] };
 }

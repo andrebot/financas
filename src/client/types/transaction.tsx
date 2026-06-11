@@ -17,6 +17,8 @@ export type Transaction = {
   accountId: number;
   investmentType?: INVESTMENT_TYPES,
   userId: number,
+  accountName?: string;
+  categoryName?: string | null;
 }
 
 export type SortedTransactionItem = {

@@ -144,7 +144,7 @@ export default function Transaction({
       <TransactionItemTextWrapper>
         {transaction.name}
         <TransactionBankAccount>
-          Conta de banco - Categoria 1
+          {[transaction.accountName, transaction.categoryName].filter(Boolean).join(' - ')}
         </TransactionBankAccount>
       </TransactionItemTextWrapper>
       <TransactionValueWrapper className={isTransactionPositive ? 'positive' : 'negative'}>
