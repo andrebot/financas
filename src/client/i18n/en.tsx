@@ -195,6 +195,10 @@ export default {
     category: 'Category',
     bankAccount: 'Bank Account',
     transactionCreated: 'Transaction saved successfully!',
-    transactionCreationFailed: 'Error while saving transaction! Try again later'
+    transactionCreationFailed: 'Error while saving transaction! Try again later',
+    deleteTransaction: 'Delete Transaction',
+    deleteTransactionMessage: 'Are you sure you want to delete the transaction?',
+    transactionDeletedSuccessfully: 'Transaction successfully deleted!',
+    transactionDeletedError: 'Error while deleting the transaction. Try again later.',
   },
 };

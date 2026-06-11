@@ -18,12 +18,12 @@ export const updateTransactionMutation = (body: Transaction) => ({
   body,
 });
 
-export const deleteTransactionMutation = (id: string) => ({
+export const deleteTransactionMutation = (id: number) => ({
   url: `/accountant/${id}`,
   method: 'DELETE',
 });
 
-export const getTransactionQuery = (id: string) => ({
+export const getTransactionQuery = (id: number) => ({
   url: `/accountant/${id}`,
   method: 'GET',
 });
@@ -42,11 +42,11 @@ export const endpoints = (builder: ApiBuilder) => ({
     query: updateTransactionMutation,
     invalidatesTags: [{ type: 'Transaction', id: 'LIST' }],
   }),
-  deleteTransaction: builder.mutation<Transaction, string>({
+  deleteTransaction: builder.mutation<Transaction, number>({
     query: deleteTransactionMutation ,
     invalidatesTags: [{ type: 'Transaction', id: 'LIST' }],
   }),
-  getTransaction: builder.query<Transaction, string>({
+  getTransaction: builder.query<Transaction, number>({
     query: getTransactionQuery ,
   }),
 });

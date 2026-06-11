@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { enqueueSnackbar } from 'notistack';
 import IconButton from '@mui/material/IconButton';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -12,6 +13,9 @@ import InvesetmentIcon from '@mui/icons-material/Savings';
 import InvestmentDueDateIcon from '@mui/icons-material/Event';
 import Tooltip from '@mui/material/Tooltip';
 import PixIcon from '@mui/icons-material/Pix';
+import { useModal } from '../../../components/modal/modal';
+import ConfirmModal from '../../../components/confirmModal';
+import { useDeleteTransactionMutation } from '../../../features/transaction';
 import { formatValueToCurrency } from '../../../utils/money';
 import {
   TransactionItem,
@@ -58,6 +62,8 @@ export default function Transaction({
   editSelectTrigger,
 }: TransactionProps) {
   const { t } = useTranslation();
+  const { showModal, closeModal } = useModal();
+  const [deleteTransaction] = useDeleteTransactionMutation();
   const isTransactionPositive = positiveTypes.includes(transaction.type);
   const [isSelected, setSelected] = useState(selectedId === transaction.id);
 
@@ -69,8 +75,28 @@ export default function Transaction({
     }
   }
 
+  async function submitDeleteTransaction(id: number) {
+    try {
+      await deleteTransaction(id).unwrap();
+      enqueueSnackbar(t('transactionDeletedSuccessfully'), { variant: 'success' });
+    } catch {
+      enqueueSnackbar(t('transactionDeletedError'), { variant: 'error' });
+    } finally {
+      closeModal();
+    }
+  }
+
   function onDeleteClick(evt: MouseEvent) {
     evt.stopPropagation();
+
+    showModal(
+      <ConfirmModal
+        title={t('deleteTransaction')}
+        confirmationText={t('deleteTransactionMessage')}
+        onConfirm={() => submitDeleteTransaction(transaction.id!)}
+        onCancel={() => closeModal()}
+      />,
+    );
   }
 
   function onEditClick(evt: MouseEvent) {

@@ -195,6 +195,10 @@ export default {
     category: 'Categoria',
     bankAccount: 'Conta bancária',
     transactionCreated: 'Transação salva com sucesso!',
-    transactionCreationFailed: 'Error ao salvar transação! Tente denovo mais tarde.'
+    transactionCreationFailed: 'Error ao salvar transação! Tente denovo mais tarde.',
+    deleteTransaction: 'Deletar Transação',
+    deleteTransactionMessage: 'Você tem certeza que quer deletar essa transação?',
+    transactionDeletedSuccessfully: 'Transação deletada com sucesso!',
+    transactionDeletedError: 'Erro ao deletar a transação. Tente novamente mais tarde.',
   },
 };
