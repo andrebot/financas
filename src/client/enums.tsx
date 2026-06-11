@@ -96,6 +96,11 @@ export enum INVESTMENT_TYPES {
   OTHER = 'other',
 }
 
+export enum TransactionPanelPage {
+  DASHBOARD = 'dashboard',
+  ADD_TRANSACTION = 'addTransaction',
+}
+
 export enum TRANSACTION_TYPES {
   WITHDRAW = 'withdraw',
   TRANSFER_IN = 'transferIn',

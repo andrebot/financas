@@ -36,15 +36,15 @@ export const endpoints = (builder: ApiBuilder) => ({
   }),
   createTransaction: builder.mutation<Transaction, Transaction>({
     query: createTransactionMutation,
-    invalidatesTags: [{ type: 'Transaction', id: 'LIST' }],
+    invalidatesTags: [{ type: 'Transaction', id: 'LIST' }, { type: 'MonthlyBalance', id: 'LIST' }],
   }),
   updateTransaction: builder.mutation<Transaction, Transaction>({
     query: updateTransactionMutation,
-    invalidatesTags: [{ type: 'Transaction', id: 'LIST' }],
+    invalidatesTags: [{ type: 'Transaction', id: 'LIST' }, { type: 'MonthlyBalance', id: 'LIST' }],
   }),
   deleteTransaction: builder.mutation<Transaction, number>({
     query: deleteTransactionMutation ,
-    invalidatesTags: [{ type: 'Transaction', id: 'LIST' }],
+    invalidatesTags: [{ type: 'Transaction', id: 'LIST' }, { type: 'MonthlyBalance', id: 'LIST' }],
   }),
   getTransaction: builder.query<Transaction, number>({
     query: getTransactionQuery ,

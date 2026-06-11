@@ -38,6 +38,7 @@ import {
   TransactionFormAction,
   TransactionActionFunction,
 } from './transaction';
+import { MonthlyBalance } from './monthlyBalance';
 
 export {
   UserType,
@@ -82,4 +83,5 @@ export {
   TransactionFormState,
   TransactionFormAction,
   TransactionActionFunction,
+  MonthlyBalance,
 };

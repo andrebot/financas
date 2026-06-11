@@ -72,8 +72,30 @@ async function updateMonthlyBalanceWithTransaction(
     ));
 }
 
+/**
+ * Returns all monthly balance records for a given year and month,
+ * scoped to the current authorization context.
+ *
+ * @param year - The four-digit year.
+ * @param month - The month (1-indexed).
+ * @returns All matching monthly balance records.
+ */
+async function findByYearAndMonth(year: number, month: number): Promise<IMonthlyBalance[]> {
+  return getDb()
+    .select()
+    .from(monthlyBalances)
+    .where(
+      and(
+        eq(monthlyBalances.year, year),
+        eq(monthlyBalances.month, month),
+        getAutorizationDatabaseContext(monthlyBalances),
+      ),
+    );
+}
+
 export default {
   ...monthlyBalanceRepo,
   findMonthlyBalance,
+  findByYearAndMonth,
   updateMonthlyBalanceWithTransaction,
 };

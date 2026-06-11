@@ -452,6 +452,14 @@ export interface IMonthlyBalanceRepo extends IRepository<typeof monthlyBalances,
    * @param shouldInvertValue - When true the transaction's impact is subtracted.
    */
   updateMonthlyBalanceWithTransaction(transaction: ITransaction, shouldInvertValue: boolean): Promise<void>;
+  /**
+   * Returns all monthly balance records for a given year and month,
+   * scoped to the current authorization context.
+   *
+   * @param year - The four-digit year.
+   * @param month - The month (1-indexed).
+   */
+  findByYearAndMonth(year: number, month: number): Promise<IMonthlyBalance[]>;
 }
 
 /** Repository contract for the users table, extending base CRUD with email lookup. */
@@ -519,6 +527,7 @@ export interface IAccountantManager {
   ) => Promise<ITransaction | null>;
   getTransaction: (id: number) => Promise<ITransaction | null>;
   listTransactions: () => Promise<ITransaction[]>;
+  listMonthlyBalances: (year: number, month: number) => Promise<IMonthlyBalance[]>;
   getTransactionTypes: () => { transactionTypes: string[]; investmentTypes: string[] };
 }
 

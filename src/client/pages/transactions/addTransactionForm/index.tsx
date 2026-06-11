@@ -43,7 +43,13 @@ import type { Transaction } from '../../../types';
  *
  * @returns The add/edit transaction form component.
  */
-export default function AddTransactionForm({ selectedTransaction }: {selectedTransaction: Transaction | undefined}) {
+export default function AddTransactionForm({
+  selectedTransaction,
+  onCancel,
+}: {
+  selectedTransaction: Transaction | undefined;
+  onCancel?: () => void;
+}) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const formattedCategories = useFormattedCategories();
@@ -133,12 +139,12 @@ export default function AddTransactionForm({ selectedTransaction }: {selectedTra
   };
 
   /**
-   * Resets the form to its initial blank state, discarding any unsaved input.
+   * Resets the form to its initial blank state, discarding any unsaved input,
+   * then notifies the parent so it can hide this form.
    */
   const handleCancel = () => {
-    transactionFormDispatch({
-      type: TransactionFormActionType.RESET,
-    });
+    transactionFormDispatch({ type: TransactionFormActionType.RESET });
+    onCancel?.();
   };
 
   /**

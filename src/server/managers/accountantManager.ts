@@ -373,6 +373,24 @@ async function listTransactions(
 }
 
 /**
+ * Lists all monthly balance records for a given year and month.
+ *
+ * @param year - The four-digit year.
+ * @param month - The month (1-indexed).
+ * @param monthlyBalanceRepo - The monthly balance repository to use.
+ * @returns The monthly balance records for the period.
+ */
+async function listMonthlyBalances(
+  year: number,
+  month: number,
+  monthlyBalanceRepo: IMonthlyBalanceRepo,
+): Promise<IMonthlyBalance[]> {
+  logger.info(`Listing monthly balances for ${year}/${month}`);
+
+  return monthlyBalanceRepo.findByYearAndMonth(year, month);
+}
+
+/**
  * Creates an accountant manager using the provided repositories.
  *
  * @param transactionRepo - Repository for transaction persistence.
@@ -424,6 +442,11 @@ export function AccountantManager(
       transactionRepo,
     ),
     listTransactions: () => listTransactions(transactionRepo),
+    listMonthlyBalances: (year: number, month: number) => listMonthlyBalances(
+      year,
+      month,
+      monthlyBalanceRepo,
+    ),
     getTransactionTypes: () => getTransactionTypes(),
   };
 }

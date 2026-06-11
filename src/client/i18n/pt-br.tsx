@@ -61,6 +61,7 @@ export default {
     configuration: 'Configuração',
     createAccount: 'Criar Conta',
     bankAccounts: 'Contas Bancárias',
+    bankAccountBalances: 'Saldos das Contas Bancárias',
     credit: 'Crédito',
     expires: 'Expira',
     actionMenu: 'Ações da conta bancária',

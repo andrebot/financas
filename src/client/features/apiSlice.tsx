@@ -72,6 +72,6 @@ export async function baseQueryWithReauth(
 export default createApi({
   reducerPath: '/api/v1',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['BankAccount', 'Category', 'Goal', 'Budget', 'Transaction'],
+  tagTypes: ['BankAccount', 'Category', 'Goal', 'Budget', 'Transaction', 'MonthlyBalance'],
   endpoints: () => ({}),
 });
