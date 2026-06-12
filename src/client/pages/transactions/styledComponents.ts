@@ -13,6 +13,7 @@ export const TransactionsList = styled(Paper)(() => ({
   display: 'flex',
   flexDirection: 'column',
   flexGrow: 0,
+  flexShrink: 0,
   width: '400px',
   overflow: 'auto',
   padding: '10px',
@@ -22,7 +23,7 @@ export const TransactionsList = styled(Paper)(() => ({
 
 export const ActionPanel = styled(Paper)(() => ({
   flexGrow: 1,
-  maxWidth: '1080px',
+  minWidth: 205,
   padding: '10px',
   justifyContent: 'center',
 }));
