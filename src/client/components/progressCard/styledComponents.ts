@@ -2,6 +2,7 @@ import { styled } from '@mui/material/styles';
 import LinearProgress from '@mui/material/LinearProgress';
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
+import Box from '@mui/material/Box';
 
 export const ProgressBarWrapper = styled(Paper)(() => ({
   display: 'flex',
@@ -19,12 +20,22 @@ export const ProgressBarContainer = styled('div')({
   overflow: 'hidden',
 });
 
-export const ProgressBarFill = styled(LinearProgress)({
+export const ItemBox = styled(Box)(() => ({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '4px',
+}));
+
+export const ProgressBarFill = styled(LinearProgress, {
+  shouldForwardProp: (prop) => prop !== 'barcolor',
+})<{ barcolor: string }>(({ barcolor }) => ({
   height: '100%',
+  backgroundColor: 'rgba(0, 0, 0, 0.08)',
   '& .MuiLinearProgress-bar': {
     borderRadius: 0,
+    backgroundColor: barcolor,
   },
-});
+}));
 
 export const ProgressBarLabel = styled(Typography)({
   position: 'absolute',

@@ -1,7 +1,14 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import ProgressCard from '../../../../components/progressCard';
+import ProgressCard, { ProgressColors } from '../../../../components/progressCard';
 import { useListGoalsQuery } from '../../../../features/goal';
+
+const GOALS_COLORS: ProgressColors = {
+  low: '#add8e6',
+  medium: '#fff176',
+  high: '#90ee90',
+  complete: '#ffd700',
+};
 
 export default function GoalsCard() {
   const { t } = useTranslation();
@@ -16,5 +23,5 @@ export default function GoalsCard() {
       total: Number(g.value),
     }));
 
-  return <ProgressCard title={t('goals')} items={items} />;
+  return <ProgressCard title={t('goals')} items={items} colors={GOALS_COLORS} />;
 }

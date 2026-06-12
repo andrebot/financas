@@ -1,7 +1,14 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import ProgressCard from '../../../../components/progressCard';
+import ProgressCard, { ProgressColors } from '../../../../components/progressCard';
 import { useListBudgetsQuery } from '../../../../features/budget';
+
+const BUDGET_COLORS: ProgressColors = {
+  low: '#90ee90',
+  medium: '#fff176',
+  high: '#ffb74d',
+  complete: '#f44336',
+};
 
 export default function BudgetCard() {
   const { t } = useTranslation();
@@ -14,5 +21,5 @@ export default function BudgetCard() {
     total: Number(b.value),
   }));
 
-  return <ProgressCard title={t('budget')} items={items} />;
+  return <ProgressCard title={t('budget')} items={items} colors={BUDGET_COLORS} />;
 }
