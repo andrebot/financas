@@ -2,8 +2,10 @@ import React, { useState, useMemo } from 'react';
 import dayjs from 'dayjs';
 import DashboardHeader from './dashboardHeader';
 import BankAccountBalances from './bankAccountBalances';
+import GoalsCard from './goalsCard';
+import BudgetCard from './budgetCard';
 import { useListTransactionsQuery } from '../../../features/transaction';
-import { DashboardWrapper } from './styledComponents';
+import { DashboardWrapper, BudgetGoalsWrapper } from './styledComponents';
 
 /**
  * Main dashboard panel. Owns the selected year/month state and passes it down
@@ -36,6 +38,10 @@ export default function Dashboard() {
         selectedYear={selectedYear}
         selectedMonth={selectedMonth}
       />
+      <BudgetGoalsWrapper>
+        <GoalsCard />
+        <BudgetCard />
+      </BudgetGoalsWrapper>
     </DashboardWrapper>
   );
 }

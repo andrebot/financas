@@ -1,5 +1,5 @@
 import {
-  and, eq, gte, lte, sql,
+  and, eq, gte, inArray, lte, sql,
 } from 'drizzle-orm';
 import { isInflowType } from '../../utils/transactionTypeUtils';
 import Repository from './repository';
@@ -121,6 +121,38 @@ async function listBudgetsWithCategories(): Promise<IBudget[]> {
   }));
 }
 
+/**
+ * Lists budgets with their linked categories and the total amount spent against
+ * each budget, derived from the budgetUsage table.
+ *
+ * @returns Budgets with categories and a `spent` field (0 when no usage exists).
+ */
+async function listBudgetsWithSpent(): Promise<IBudget[]> {
+  const budgetsWithCategories = await listBudgetsWithCategories();
+
+  if (budgetsWithCategories.length === 0) {
+    return budgetsWithCategories;
+  }
+
+  const budgetIds = budgetsWithCategories.map((b) => b.id!);
+
+  const spentRows = await getDb()
+    .select({
+      budgetId: budgetUsage.budgetId,
+      spent: sql<string>`COALESCE(SUM(${budgetUsage.valueUsed}), 0)`,
+    })
+    .from(budgetUsage)
+    .where(inArray(budgetUsage.budgetId, budgetIds))
+    .groupBy(budgetUsage.budgetId);
+
+  const spentMap = new Map(spentRows.map((r) => [r.budgetId, Number(r.spent)]));
+
+  return budgetsWithCategories.map((b) => ({
+    ...b,
+    spent: spentMap.get(b.id!) ?? 0,
+  }));
+}
+
 export default {
   ...budgetRepo,
   updateBudgetsByNewTransaction,
@@ -128,4 +160,5 @@ export default {
   saveBudgetCategories,
   deleteBudgetCategories,
   listBudgetsWithCategories,
+  listBudgetsWithSpent,
 };

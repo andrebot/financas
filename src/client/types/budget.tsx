@@ -11,6 +11,7 @@ export type Budget = {
   categories?: Category[];
   categoryIds?: number[];
   userId: number;
+  spent?: number;
 };
 
 export type BudgetFormState = {

@@ -446,6 +446,12 @@ export interface IBudgetRepo extends IRepository<typeof budgets, IBudget> {
    */
   deleteBudgetCategories(budgetId: number): Promise<void>;
   listBudgetsWithCategories(): Promise<IBudget[]>;
+  /**
+   * Lists all budgets with categories and their total spent amount from budgetUsage.
+   *
+   * @returns Budgets with categories and a computed `spent` field.
+   */
+  listBudgetsWithSpent(): Promise<IBudget[]>;
 }
 
 /** Repository contract for the monthlyBalances table, extending base CRUD with balance management. */

@@ -176,7 +176,7 @@ export async function listBudgetWithCategories(
 ): Promise<IBudget[]> {
   logger.info('Listing budgets');
 
-  return budgetRepo.listBudgetsWithCategories();
+  return budgetRepo.listBudgetsWithSpent();
 }
 
 /**
