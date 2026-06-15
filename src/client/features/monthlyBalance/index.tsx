@@ -1,11 +1,5 @@
 import baseApi from '../apiSlice';
-import type { ApiBuilder, MonthlyBalance } from '../../types';
-
-type MonthlyBalanceParams = {
-  year: number;
-  /** 1-indexed month (1 = January … 12 = December). */
-  month: number;
-};
+import type { ApiBuilder, MonthlyBalance, MonthlyBalanceParams } from '../../types';
 
 export const listMonthlyBalancesQuery = ({ year, month }: MonthlyBalanceParams) => ({
   url: `/accountant/monthly-balance?year=${year}&month=${month}`,

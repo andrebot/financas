@@ -1,7 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import ProgressCard, { ProgressColors } from '../../../../components/progressCard';
-import { useListGoalsQuery } from '../../../../features/goal';
+import ProgressCard from '../../../../components/progressCard';
+import { useListGoalsForMonthQuery } from '../../../../features/goal';
+import type { GoalsCardProps, ProgressColors } from '../../../../types';
 
 const GOALS_COLORS: ProgressColors = {
   low: '#add8e6',
@@ -10,9 +11,9 @@ const GOALS_COLORS: ProgressColors = {
   complete: '#ffd700',
 };
 
-export default function GoalsCard() {
+export default function GoalsCard({ selectedYear, selectedMonth }: GoalsCardProps) {
   const { t } = useTranslation();
-  const { data: goals = [] } = useListGoalsQuery();
+  const { data: goals = [] } = useListGoalsForMonthQuery({ year: selectedYear, month: selectedMonth + 1 });
 
   const items = goals
     .filter((g) => !g.archived)

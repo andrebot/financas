@@ -13,3 +13,12 @@ export type CategorySelectOption = {
   id: number;
   label: string;
 };
+
+export type AddCategoryModalProps = {
+  onSaveCategory: (categoryName: string) => void;
+  category?: Category;
+};
+
+export type SubCategoryFormProps = {
+  onAddSubCategory: (subCategoryName: string) => void;
+};

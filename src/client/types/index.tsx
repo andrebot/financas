@@ -15,13 +15,20 @@ import {
   BankAccountAction,
   CardBrand,
   CreditCardFormProps,
+  AddBankAccountModalProps,
 } from './bankAccounts';
 import { ChangePasswordAction, SettingsAction } from './settings';
 import { ModalContextType, ModalProviderProps } from './modal';
-import { Category, FormattedCategory, CategorySelectOption } from './categories';
+import {
+  Category,
+  FormattedCategory,
+  CategorySelectOption,
+  AddCategoryModalProps,
+  SubCategoryFormProps,
+} from './categories';
 import { ApiBuilder, RTKApi } from './requests';
 import {
-  GoalState, GoalAction, Goal, GoalsTableProps,
+  GoalState, GoalAction, Goal, GoalsTableProps, SortColumn, SortOrder,
 } from './goals';
 import {
   Budget,
@@ -38,7 +45,14 @@ import {
   TransactionFormAction,
   TransactionActionFunction,
 } from './transaction';
-import { MonthlyBalance } from './monthlyBalance';
+import { MonthlyBalance, MonthlyBalanceParams } from './monthlyBalance';
+import { ProgressItem, ProgressColors, ProgressCardProps } from './progressCard';
+import {
+  DashboardHeaderProps,
+  BankAccountBalancesProps,
+  BudgetCardProps,
+  GoalsCardProps,
+} from './dashboard';
 
 export {
   UserType,
@@ -57,6 +71,7 @@ export {
   BankAccountAction,
   BankAccount,
   BankAccountState,
+  AddBankAccountModalProps,
   ModalContextType,
   ModalProviderProps,
   ChangePasswordAction,
@@ -68,10 +83,14 @@ export {
   RTKApi,
   FormattedCategory,
   CategorySelectOption,
+  AddCategoryModalProps,
+  SubCategoryFormProps,
   GoalState,
   GoalAction,
   Goal,
   GoalsTableProps,
+  SortColumn,
+  SortOrder,
   Budget,
   BudgetFormState,
   BudgetFormAction,
@@ -84,4 +103,12 @@ export {
   TransactionFormAction,
   TransactionActionFunction,
   MonthlyBalance,
+  MonthlyBalanceParams,
+  ProgressItem,
+  ProgressColors,
+  ProgressCardProps,
+  DashboardHeaderProps,
+  BankAccountBalancesProps,
+  BudgetCardProps,
+  GoalsCardProps,
 };

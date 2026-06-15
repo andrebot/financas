@@ -6,12 +6,7 @@ import { useListBankAccountsQuery } from '../../../../features/bankAccount';
 import { useListMonthlyBalancesQuery } from '../../../../features/monthlyBalance';
 import { formatValueToCurrency } from '../../../../utils/money';
 import { BalanceCardList, BalanceCards, BalanceCard, BankNameRow, BalanceAmount } from './styledComponents';
-
-type BankAccountBalancesProps = {
-  selectedYear: number;
-  /** 0-indexed month from dayjs — converted to 1-indexed before calling the API. */
-  selectedMonth: number;
-};
+import type { BankAccountBalancesProps } from '../../../../types';
 
 /**
  * Renders a wrapping list of cards showing the closing balance of every

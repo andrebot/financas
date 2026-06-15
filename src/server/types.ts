@@ -416,6 +416,14 @@ export interface IGoalRepo extends IRepository<typeof goals, IGoal> {
    * @param shouldInvertValue - When true the contribution is subtracted (used on delete/revert).
    */
   updateGoalFromTransaction(transaction: ITransaction, shouldInvertValue?: boolean): Promise<void>;
+  /**
+   * Lists goals with savedValue computed from transactions up to the last day of the given month.
+   *
+   * @param year - The four-digit year.
+   * @param month - The month, 1-indexed.
+   * @returns Goals with a month-scoped savedValue.
+   */
+  listGoalsWithSavedValueUpTo(year: number, month: number): Promise<IGoal[]>;
 }
 
 /** Repository contract for the budgets table, extending base CRUD with usage tracking. */
@@ -667,6 +675,10 @@ export interface ICommonActions<K extends Content> {
   getContent: (id: number) => Promise<K | null>;
 }
 
+export interface IGoalActions extends ICommonActions<IGoal> {
+  listGoalsForMonth(year: number, month: number): Promise<IGoal[]>;
+}
+
 /**
  * Aggregated manager actions passed to the budget page controller,
  * covering the four content types that a budget view can interact with.
@@ -677,7 +689,7 @@ export type ContentManagerActions = {
   /** CRUD actions for categories. */
   categoryActions: ICommonActions<ICategory>;
   /** CRUD actions for goals. */
-  goalActions: ICommonActions<IGoal>;
+  goalActions: IGoalActions;
   /** CRUD actions for accounts. */
   accountActions: ICommonActions<IAccountPayload>;
 };

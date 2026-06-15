@@ -4,12 +4,7 @@ import Button from '@mui/material/Button';
 import { useTranslation } from 'react-i18next';
 import { CreateCategoryModal } from './styledComponents';
 import { useModal } from '../../components/modal/modal';
-import { Category } from '../../types';
-
-type AddCategoryModalProps = {
-  onSaveCategory: (categoryName: string) => void;
-  category?: Category;
-};
+import { AddCategoryModalProps } from '../../types';
 
 /**
  * Modal to add a category. This was created to de-clutter the Categories page.

@@ -11,13 +11,7 @@ import { DashboardHeaderWrapper, YearCarousel, YearLabel } from './styledCompone
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => dayjs().month(i).format('MMM'));
 
-export type DashboardHeaderProps = {
-  selectedYear: number;
-  selectedMonth: number;
-  oldestYear: number;
-  onYearChange: (year: number) => void;
-  onMonthChange: (month: number) => void;
-};
+import type { DashboardHeaderProps } from '../../../../types';
 
 /**
  * Dashboard header with a year carousel and a month tab bar.

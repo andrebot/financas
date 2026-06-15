@@ -92,3 +92,8 @@ export type CardBrand =
   | 'amazon'
   | 'maestro'
   | 'unknown';
+
+export type AddBankAccountModalProps = {
+  saveBankAccount: (bankAccount: BankAccount) => void;
+  bankAccount?: BankAccount;
+};

@@ -10,26 +10,7 @@ import {
   ProgressBarWrapper,
   ItemBox,
 } from './styledComponents';
-
-export type ProgressItem = {
-  id?: number;
-  name: string;
-  current: number;
-  total: number;
-};
-
-export type ProgressColors = {
-  low: string;
-  medium: string;
-  high: string;
-  complete: string;
-};
-
-type ProgressCardProps = {
-  title: string;
-  items: ProgressItem[];
-  colors: ProgressColors;
-};
+import type { ProgressItem, ProgressColors, ProgressCardProps } from '../../types';
 
 function getBarColor(percentage: number, colors: ProgressColors): string {
   if (percentage >= 100) return colors.complete;

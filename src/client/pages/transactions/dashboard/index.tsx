@@ -39,8 +39,8 @@ export default function Dashboard() {
         selectedMonth={selectedMonth}
       />
       <BudgetGoalsWrapper>
-        <GoalsCard />
-        <BudgetCard />
+        <GoalsCard selectedYear={selectedYear} selectedMonth={selectedMonth} />
+        <BudgetCard selectedYear={selectedYear} selectedMonth={selectedMonth} />
       </BudgetGoalsWrapper>
     </DashboardWrapper>
   );

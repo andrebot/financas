@@ -4,6 +4,7 @@ import { createLogger } from '../utils/logger';
 import accountantRouter from './accountant';
 import userRouter from './authentication';
 import CommonController from '../controllers/commonController';
+import GoalController from '../controllers/goalController';
 import ContentManager from '../managers/contentManager';
 import type {
   IAccountPayload, IBudget, IGoal,
@@ -35,7 +36,7 @@ const routes: { prefix: string; router: Router }[] = [
   },
   {
     prefix: 'goal',
-    router: routeFactory<IGoal>(CommonController(ContentManager.goalActions, 'Goal')),
+    router: routeFactory<IGoal>(GoalController(ContentManager.goalActions)),
   },
   {
     prefix: 'budget',

@@ -18,12 +18,7 @@ import CreditCardForm from './creditCardForm';
 import { useAuth } from '../../hooks/authContext';
 import { BankAccountActionType } from '../../enums';
 import { detectCardBrand } from '../../utils/creditCard';
-import { BankAccount, CreditCard, CreditCardProps } from '../../types';
-
-type AddBankAccountModalProps = {
-  saveBankAccount: (bankAccount: BankAccount) => void;
-  bankAccount?: BankAccount;
-};
+import { AddBankAccountModalProps, BankAccount, CreditCard, CreditCardProps } from '../../types';
 
 const blankState = {
   name: '',
