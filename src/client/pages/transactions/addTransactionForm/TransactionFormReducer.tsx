@@ -14,6 +14,7 @@ export const initialTransactionFormState: TransactionFormState = {
   type: undefined,
   categoryId: 0,
   bankAccountId: 0,
+  cardId: undefined,
   date: new Date(),
   nameError: '',
   dateError: '',
@@ -136,6 +137,20 @@ function setBankAccountId(state: TransactionFormState, payload: number): Transac
 }
 
 /**
+ * Sets the optional card id on the form state.
+ *
+ * @param state - Current form state.
+ * @param payload - Card id selected by the user, or undefined to clear.
+ * @returns Updated form state with the new card id.
+ */
+function setCardId(
+  state: TransactionFormState,
+  payload: number | undefined,
+): TransactionFormState {
+  return { ...state, cardId: payload };
+}
+
+/**
  * Sets the transaction date and validates it is present and not in the future.
  * Defaults to today when the payload is null or undefined and sets dateRequired;
  * sets dateMustNotBeInTheFuture when the date is ahead of the current moment.
@@ -184,6 +199,7 @@ function editTransaction(
     date: new Date(payload.date),
     categoryId: payload.categoryId!,
     bankAccountId: payload.accountId,
+    cardId: payload.cardId,
     nameError: '',
     valueError: '',
     typeError: '',
@@ -244,6 +260,7 @@ const actionMap: Record<TransactionFormActionType, TransactionActionFunction> = 
   [TransactionFormActionType.SET_TYPE]: setType,
   [TransactionFormActionType.SET_CATEGORY_ID]: setCategoryId,
   [TransactionFormActionType.SET_BANK_ACCOUNT_ID]: setBankAccountId,
+  [TransactionFormActionType.SET_CARD_ID]: setCardId,
   [TransactionFormActionType.SET_DATE]: setDate,
   [TransactionFormActionType.VALIDATE]: validateTransactionFormState,
   [TransactionFormActionType.EDIT]: editTransaction,

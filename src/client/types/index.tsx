@@ -53,6 +53,7 @@ import {
   BankAccountBalancesProps,
   BudgetCardProps,
   GoalsCardProps,
+  CreditCardBalancesProps,
 } from './dashboard';
 
 export {
@@ -113,4 +114,5 @@ export {
   BankAccountBalancesProps,
   BudgetCardProps,
   GoalsCardProps,
+  CreditCardBalancesProps,
 };

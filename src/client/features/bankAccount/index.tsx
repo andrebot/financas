@@ -78,11 +78,11 @@ export const endpoints = (builder: ApiBuilder) => ({
   }),
   updateBankAccount: builder.mutation<BankAccount, BankAccount>({
     query: updateBankAccountMutation,
-    invalidatesTags: [{ type: 'BankAccount', id: 'LIST' }],
+    invalidatesTags: [{ type: 'BankAccount', id: 'LIST' }, { type: 'Transaction', id: 'LIST' }],
   }),
   deleteBankAccount: builder.mutation<BankAccount, string>({
     query: deleteBankAccountMutation,
-    invalidatesTags: [{ type: 'BankAccount', id: 'LIST' }],
+    invalidatesTags: [{ type: 'BankAccount', id: 'LIST' }, { type: 'Transaction', id: 'LIST' }],
   }),
   getBankAccount: builder.query<BankAccount, string>({
     query: getBankAccountQuery,

@@ -204,5 +204,9 @@ export default {
     closingDay: 'Closing Day',
     closingDayRequired: 'Closing day required',
     closingDayInvalid: 'Invalid closing day',
+    card: 'Card',
+    none: 'None',
+    creditCardBalances: 'Credit Card Balances',
+    noCardTransactions: 'No card transactions this month',
   },
 };

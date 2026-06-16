@@ -30,6 +30,13 @@ export const TypeSelect = styled(FormControl)(({ theme }: StyleCompProp) => ({
   }
 }));
 
+export const CardSelect = styled(FormControl)(({ theme }: StyleCompProp) => ({
+  width: '220px',
+  [theme.breakpoints.down('md')]: {
+    width: '100%',
+  }
+}));
+
 export const TransactionDatePicker = styled(DatePicker)(({ theme }: StyleCompProp) => ({
   width: '150px',
   [theme.breakpoints.down('md')]: {

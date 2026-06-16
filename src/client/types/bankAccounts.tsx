@@ -12,6 +12,7 @@ export type FlagIconProps = Omit<SvgIconProps, 'component' | 'viewBox'> & {
 };
 
 export type CreditCard = {
+  id?: number;
   number: string;
   expirationDate: string;
   closingDay: number;

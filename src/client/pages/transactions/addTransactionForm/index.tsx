@@ -20,6 +20,7 @@ import {
   AddTransactionWrapper,
   CategorySelect,
   BankSelect,
+  CardSelect,
   TypeSelect,
   TransactionDatePicker,
 } from './styledComponents';
@@ -54,6 +55,12 @@ export default function AddTransactionForm({
   const { user } = useAuth();
   const formattedCategories = useFormattedCategories();
   const { data: bankAccounts = [] } = useListBankAccountsQuery();
+  const cardOptions = bankAccounts.flatMap((account) =>
+    (account.cards ?? []).filter((card) => card.id).map((card) => ({
+      id: card.id!,
+      label: `${account.name} - ${card.number.slice(-4)}`,
+    }))
+  );
   const [createTransaction] = useCreateTransactionMutation();
   const [updateTransaction] = useUpdateTransactionMutation();
   const [transactionFormState, transactionFormDispatch] = useReducer(
@@ -100,12 +107,23 @@ export default function AddTransactionForm({
     transactionFormDispatch({ type: TransactionFormActionType.SET_BANK_ACCOUNT_ID, payload: type });
   };
 
+  const handleCardChange = (event: SelectChangeEvent<unknown>) => {
+    const value = event.target.value;
+    transactionFormDispatch({
+      type: TransactionFormActionType.SET_CARD_ID,
+      payload: value ? Number(value) : undefined,
+    });
+  };
+
   /**
    * Dispatches the selected transaction type to the reducer.
    * The type controls how the monthly balance totals (in/out) are updated on the server.
    *
    * @param event - The select change event from the transaction type dropdown.
    */
+  const CARD_TYPES = [TRANSACTION_TYPES.CARD_PURCHASE, TRANSACTION_TYPES.CARD_REFUND];
+  const isCardType = transactionFormState.type !== undefined && CARD_TYPES.includes(transactionFormState.type);
+
   const handleTypeChange = (event: SelectChangeEvent<unknown>) => {
     const {
       target: { value },
@@ -113,6 +131,10 @@ export default function AddTransactionForm({
 
     const type = value as TRANSACTION_TYPES;
     transactionFormDispatch({ type: TransactionFormActionType.SET_TYPE, payload: type });
+
+    if (!CARD_TYPES.includes(type)) {
+      transactionFormDispatch({ type: TransactionFormActionType.SET_CARD_ID, payload: undefined });
+    }
   };
 
   /**
@@ -173,6 +195,7 @@ export default function AddTransactionForm({
         type: transactionFormState.type!,
         categoryId: transactionFormState.categoryId,
         accountId: transactionFormState.bankAccountId,
+        cardId: transactionFormState.cardId,
         userId: Number(user!.id),
       }).unwrap();
 
@@ -253,6 +276,21 @@ export default function AddTransactionForm({
             },
           }}
         />
+        <CardSelect>
+          <InputLabel id='card-label'>{t('card')}</InputLabel>
+          <Select
+            label={t('card')}
+            labelId='card-label'
+            value={transactionFormState.cardId ?? ''}
+            onChange={handleCardChange}
+            disabled={!isCardType}
+          >
+            <MenuItem value=''><em>{t('none')}</em></MenuItem>
+            {cardOptions.map((option) => (
+              <MenuItem key={option.id} value={option.id}>{option.label}</MenuItem>
+            ))}
+          </Select>
+        </CardSelect>
         <TextField
           label={t('value')}
           value={transactionFormState.value}

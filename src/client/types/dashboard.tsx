@@ -21,3 +21,9 @@ export type GoalsCardProps = {
   selectedYear: number;
   selectedMonth: number;
 };
+
+export type CreditCardBalancesProps = {
+  selectedYear: number;
+  /** 0-indexed month from dayjs — converted to 1-indexed before calling the API. */
+  selectedMonth: number;
+};

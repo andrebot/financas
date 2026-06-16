@@ -204,5 +204,9 @@ export default {
     closingDay: 'Dia do Fechamento da Fatura',
     closingDayRequired: 'Dia de fechamento é obrigatório',
     closingDayInvalid: 'Dia de fechamento inválido',
+    card: 'Cartão',
+    none: 'Nenhum',
+    creditCardBalances: 'Saldos dos Cartões de Crédito',
+    noCardTransactions: 'Nenhuma transação no cartão este mês',
   },
 };

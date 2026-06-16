@@ -15,6 +15,7 @@ export type Transaction = {
   type: TRANSACTION_TYPES;
   categoryId?: number;
   accountId: number;
+  cardId?: number;
   investmentType?: INVESTMENT_TYPES,
   userId: number,
   accountName?: string;
@@ -38,6 +39,7 @@ export type TransactionFormState = {
   type?: TRANSACTION_TYPES,
   categoryId: number,
   bankAccountId: number,
+  cardId?: number,
   date: Date,
   nameError: string,
   dateError: string,
@@ -64,6 +66,9 @@ export type TransactionFormAction = {
 } | {
   type: TransactionFormActionType.SET_BANK_ACCOUNT_ID;
   payload: number;
+} | {
+  type: TransactionFormActionType.SET_CARD_ID;
+  payload: number | undefined;
 } | {
   type: TransactionFormActionType.SET_DATE;
   payload: Date | undefined | null;
