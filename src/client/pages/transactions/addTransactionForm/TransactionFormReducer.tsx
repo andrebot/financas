@@ -7,6 +7,8 @@ import type {
   Transaction,
 } from '../../../types';
 
+const CARD_TYPES = [TRANSACTION_TYPES.CARD_PURCHASE, TRANSACTION_TYPES.CARD_REFUND];
+
 /** Blank form state used when opening the form for a new transaction. */
 export const initialTransactionFormState: TransactionFormState = {
   name: '',
@@ -15,6 +17,7 @@ export const initialTransactionFormState: TransactionFormState = {
   categoryId: 0,
   bankAccountId: 0,
   cardId: undefined,
+  isCardType: false,
   date: new Date(),
   nameError: '',
   dateError: '',
@@ -87,7 +90,14 @@ function setType(
   state: TransactionFormState,
   payload: TRANSACTION_TYPES,
 ): TransactionFormState {
-  const nextState: TransactionFormState = { ...state, type: payload, typeError: '' };
+  const isCardType = CARD_TYPES.includes(payload);
+  const nextState: TransactionFormState = {
+    ...state,
+    type: payload,
+    typeError: '',
+    isCardType,
+    cardId: isCardType ? state.cardId : undefined,
+  };
 
   if (!payload) {
     nextState.typeError = 'typeRequired';
@@ -200,6 +210,7 @@ function editTransaction(
     categoryId: payload.categoryId!,
     bankAccountId: payload.accountId,
     cardId: payload.cardId,
+    isCardType: CARD_TYPES.includes(payload.type),
     nameError: '',
     valueError: '',
     typeError: '',

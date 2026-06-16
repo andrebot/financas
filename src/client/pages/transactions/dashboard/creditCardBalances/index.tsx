@@ -14,6 +14,13 @@ import {
 } from './styledComponents';
 import type { CreditCardBalancesProps } from '../../../../types';
 
+/**
+ * Displays the total spend per credit card for the selected month, grouped by
+ * each card's billing cycle (closing day of the previous month + 1 day through
+ * closing day of the selected month).
+ *
+ * @param props - {@link CreditCardBalancesProps}
+ */
 export default function CreditCardBalances({ selectedYear, selectedMonth }: CreditCardBalancesProps) {
   const { t } = useTranslation();
   const { data: transactions = [] } = useListTransactionsQuery();

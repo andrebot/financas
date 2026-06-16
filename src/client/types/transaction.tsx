@@ -40,6 +40,7 @@ export type TransactionFormState = {
   categoryId: number,
   bankAccountId: number,
   cardId?: number,
+  isCardType: boolean,
   date: Date,
   nameError: string,
   dateError: string,

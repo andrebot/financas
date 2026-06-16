@@ -11,6 +11,12 @@ const GOALS_COLORS: ProgressColors = {
   complete: '#ffd700',
 };
 
+/**
+ * Renders a progress card showing saved vs target value for every active goal
+ * as of the selected month.
+ *
+ * @param props - {@link GoalsCardProps}
+ */
 export default function GoalsCard({ selectedYear, selectedMonth }: GoalsCardProps) {
   const { t } = useTranslation();
   const { data: goals = [] } = useListGoalsForMonthQuery({ year: selectedYear, month: selectedMonth + 1 });

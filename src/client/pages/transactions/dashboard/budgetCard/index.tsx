@@ -12,6 +12,12 @@ const BUDGET_COLORS: ProgressColors = {
   complete: '#f44336',
 };
 
+/**
+ * Renders a progress card showing spending against each active budget for the
+ * selected month, filtering out budgets whose date range does not overlap it.
+ *
+ * @param props - {@link BudgetCardProps}
+ */
 export default function BudgetCard({ selectedYear, selectedMonth }: BudgetCardProps) {
   const { t } = useTranslation();
   const { data: budgets = [] } = useListBudgetsQuery();

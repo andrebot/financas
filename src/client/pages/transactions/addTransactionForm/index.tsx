@@ -107,6 +107,12 @@ export default function AddTransactionForm({
     transactionFormDispatch({ type: TransactionFormActionType.SET_BANK_ACCOUNT_ID, payload: type });
   };
 
+  /**
+   * Dispatches the selected card id to the reducer, or clears it when the
+   * empty "None" option is chosen.
+   *
+   * @param event - The select change event from the card dropdown.
+   */
   const handleCardChange = (event: SelectChangeEvent<unknown>) => {
     const value = event.target.value;
     transactionFormDispatch({
@@ -117,13 +123,11 @@ export default function AddTransactionForm({
 
   /**
    * Dispatches the selected transaction type to the reducer.
-   * The type controls how the monthly balance totals (in/out) are updated on the server.
+   * The reducer derives `isCardType` and clears `cardId` when switching to a
+   * non-card type.
    *
    * @param event - The select change event from the transaction type dropdown.
    */
-  const CARD_TYPES = [TRANSACTION_TYPES.CARD_PURCHASE, TRANSACTION_TYPES.CARD_REFUND];
-  const isCardType = transactionFormState.type !== undefined && CARD_TYPES.includes(transactionFormState.type);
-
   const handleTypeChange = (event: SelectChangeEvent<unknown>) => {
     const {
       target: { value },
@@ -131,10 +135,6 @@ export default function AddTransactionForm({
 
     const type = value as TRANSACTION_TYPES;
     transactionFormDispatch({ type: TransactionFormActionType.SET_TYPE, payload: type });
-
-    if (!CARD_TYPES.includes(type)) {
-      transactionFormDispatch({ type: TransactionFormActionType.SET_CARD_ID, payload: undefined });
-    }
   };
 
   /**
@@ -283,7 +283,7 @@ export default function AddTransactionForm({
             labelId='card-label'
             value={transactionFormState.cardId ?? ''}
             onChange={handleCardChange}
-            disabled={!isCardType}
+            disabled={!transactionFormState.isCardType}
           >
             <MenuItem value=''><em>{t('none')}</em></MenuItem>
             {cardOptions.map((option) => (
