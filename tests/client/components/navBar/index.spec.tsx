@@ -176,4 +176,17 @@ describe('NavBar', () => {
 
     expect(navigateMock).toHaveBeenCalledWith('/budget');
   });
+
+  it('should go to the transactions page when the transactions button is clicked', () => {
+    render(
+      <I18nextProvider i18n={i18n}>
+        <NavBar />
+      </I18nextProvider>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'menu' }));
+    fireEvent.click(screen.getByText(i18nKeys.translation.transactions));
+
+    expect(navigateMock).toHaveBeenCalledWith('/transactions');
+  });
 });

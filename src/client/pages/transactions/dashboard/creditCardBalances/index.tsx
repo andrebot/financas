@@ -62,7 +62,7 @@ export default function CreditCardBalances({ selectedYear, selectedMonth }: Cred
 
   const entries = Object.entries(cardTotals).map(([id, total]) => ({
     id: Number(id),
-    label: cardInfoMap[Number(id)]?.label ?? `Card ${id}`,
+    label: cardInfoMap[Number(id)].label,
     total,
   }));
 

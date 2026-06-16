@@ -1,5 +1,6 @@
 import {
   listGoalQuery,
+  listGoalForMonthQuery,
   createGoalMutation,
   updateGoalMutation,
   deleteGoalMutation,
@@ -83,6 +84,14 @@ describe('goal endpoints', () => {
       expect(result.url).toBe('/goal/1');
       expect(result.method).toBe('GET');
     });
+
+    it('should correctly prepare the list goal for month query request', () => {
+      const result = listGoalForMonthQuery({ year: 2025, month: 3 });
+
+      expect(result).toBeDefined();
+      expect(result.url).toBe('/goal?year=2025&month=3');
+      expect(result.method).toBe('GET');
+    });
   });
 
   describe('endpoints', () => {
@@ -91,11 +100,12 @@ describe('goal endpoints', () => {
 
       expect(builtEndpoints).toBeDefined();
       expect(builtEndpoints.listGoals).toBeDefined();
+      expect(builtEndpoints.listGoalsForMonth).toBeDefined();
       expect(builtEndpoints.createGoal).toBeDefined();
       expect(builtEndpoints.updateGoal).toBeDefined();
       expect(builtEndpoints.deleteGoal).toBeDefined();
       expect(builtEndpoints.getGoal).toBeDefined();
-      expect(mockBuilder.query).toHaveBeenCalledTimes(2);
+      expect(mockBuilder.query).toHaveBeenCalledTimes(3);
       expect(mockBuilder.mutation).toHaveBeenCalledTimes(3);
     });
   });

@@ -267,12 +267,12 @@ export default function AddTransactionForm({
         </TypeSelect>
         <TransactionDatePicker
           format='DD/MM/YYYY'
-          value={transactionFormState.date ? dayjs(transactionFormState.date) : null}
+          value={dayjs(transactionFormState.date)}
           onChange={handleDateChange}
           slotProps={{
             textField: {
               error: !!transactionFormState.dateError,
-              helperText: transactionFormState.dateError ? t(transactionFormState.dateError) : '',
+              helperText: t(transactionFormState.dateError),
             },
           }}
         />

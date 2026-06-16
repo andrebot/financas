@@ -159,6 +159,49 @@ describe('creditCardReducer', () => {
     expect(newState.number).toBe('1234');
   });
 
+  describe('SET_CLOSING_DAY', () => {
+    it('should set closingDay when value is valid', () => {
+      const initialState = createState({});
+      const newState = creditCardReducer(initialState, {
+        type: CreditCardActionType.SET_CLOSING_DAY,
+        payload: 15,
+      });
+
+      expect(newState.closingDay).toBe(15);
+      expect(newState.closingDayError).toBe('');
+    });
+
+    it('should set closingDayError when value is undefined', () => {
+      const initialState = createState({});
+      const newState = creditCardReducer(initialState, {
+        type: CreditCardActionType.SET_CLOSING_DAY,
+        payload: undefined,
+      });
+
+      expect(newState.closingDayError).toBe('closingDayRequired');
+    });
+
+    it('should set closingDayError when value is less than 1', () => {
+      const initialState = createState({});
+      const newState = creditCardReducer(initialState, {
+        type: CreditCardActionType.SET_CLOSING_DAY,
+        payload: 0,
+      });
+
+      expect(newState.closingDayError).toBe('closingDayInvalid');
+    });
+
+    it('should set closingDayError when value is greater than 31', () => {
+      const initialState = createState({});
+      const newState = creditCardReducer(initialState, {
+        type: CreditCardActionType.SET_CLOSING_DAY,
+        payload: 32,
+      });
+
+      expect(newState.closingDayError).toBe('closingDayInvalid');
+    });
+  });
+
   describe('validateCreditCardForm', () => {
     it('should set numberError when number contains invalid characters (regExpOnlyNumbers fails)', () => {
       const state = createState({
