@@ -201,5 +201,8 @@ export default {
     deleteTransactionMessage: 'Are you sure you want to delete the transaction?',
     transactionDeletedSuccessfully: 'Transaction successfully deleted!',
     transactionDeletedError: 'Error while deleting the transaction. Try again later.',
+    closingDay: 'Closing Day',
+    closingDayRequired: 'Closing day required',
+    closingDayInvalid: 'Invalid closing day',
   },
 };

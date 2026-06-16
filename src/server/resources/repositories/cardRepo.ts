@@ -22,6 +22,7 @@ function toCardPayload(card: ICardSyncPayload): ICardPayload {
   return {
     number: card.number,
     expirationDate: card.expirationDate,
+    closingDay: card.closingDay,
   };
 }
 

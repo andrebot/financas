@@ -16,6 +16,7 @@ import {
   CardBrand,
   CreditCardFormProps,
   AddBankAccountModalProps,
+  TransferIconProps,
 } from './bankAccounts';
 import { ChangePasswordAction, SettingsAction } from './settings';
 import { ModalContextType, ModalProviderProps } from './modal';
@@ -72,6 +73,7 @@ export {
   BankAccount,
   BankAccountState,
   AddBankAccountModalProps,
+  TransferIconProps,
   ModalContextType,
   ModalProviderProps,
   ChangePasswordAction,

@@ -15,6 +15,7 @@ export enum ChangePasswordActionType {
 export enum CreditCardActionType {
   SET_NUMBER = 'SET_NUMBER',
   SET_EXPIRATION_DATE = 'SET_EXPIRATION_DATE',
+  SET_CLOSING_DAY = 'SET_CLOSING_DAY',
   VALIDATE = 'VALIDATE',
   RESET = 'RESET',
 }

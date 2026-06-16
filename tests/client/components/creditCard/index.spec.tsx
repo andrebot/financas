@@ -18,6 +18,7 @@ describe('CreditCard', () => {
     last4Digits: '1234',
     number: '4111111111111234',
     expirationDate: '01/25',
+    closingDay: 15,
   };
 
   const renderCreditCard = (props: CreditCardProps = defaultProps) =>

@@ -1,6 +1,10 @@
 import { SvgIconProps } from '@mui/material/SvgIcon';
 import { BankAccountActionType, CreditCardActionType } from '../enums';
 
+export type TransferIconProps = Omit<SvgIconProps, 'viewBox'> & {
+  direction?: 'in' | 'out' | 'both';
+};
+
 export type Flag = 'amazon' | 'master' | 'visa' | 'amex' | 'diners' | 'discover' | 'maestro' | 'unknown';
 
 export type FlagIconProps = Omit<SvgIconProps, 'component' | 'viewBox'> & {
@@ -10,6 +14,7 @@ export type FlagIconProps = Omit<SvgIconProps, 'component' | 'viewBox'> & {
 export type CreditCard = {
   number: string;
   expirationDate: string;
+  closingDay: number;
 }
 
 export type CreditCardState = CreditCard & {
@@ -67,14 +72,17 @@ export type BankAccountAction = {
 export type CreditCardFormState = {
   number: string;
   expirationDate: Date | undefined;
+  closingDay: number | undefined;
   numberError: string;
   expirationDateError: string;
+  closingDayError: string;
   flag: Flag | '';
 };
 
 export type CreditCardFormAction =
   | { type: CreditCardActionType.SET_NUMBER; payload: string }
   | { type: CreditCardActionType.SET_EXPIRATION_DATE; payload: Date | undefined }
+  | { type: CreditCardActionType.SET_CLOSING_DAY; payload: number | undefined }
   | { type: CreditCardActionType.VALIDATE }
   | { type: CreditCardActionType.RESET };
 

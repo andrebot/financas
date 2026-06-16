@@ -55,6 +55,7 @@ describe('AccountBankItem', () => {
       {
         number: '4111111111111234',
         expirationDate: '01/25',
+        closingDay: 15,
       },
     ],
   };
@@ -109,8 +110,8 @@ describe('AccountBankItem', () => {
     const accountWithMultipleCards: BankAccount = {
       ...bankAccount,
       cards: [
-        { number: '4111111111111234', expirationDate: '01/25' },
-        { number: '5500000000005678', expirationDate: '12/26' },
+        { number: '4111111111111234', expirationDate: '01/25', closingDay: 15 },
+        { number: '5500000000005678', expirationDate: '12/26', closingDay: 20 },
       ],
     };
 

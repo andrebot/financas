@@ -182,7 +182,7 @@ export interface IGoalItem {
 export interface ICard extends InferSelectModel<typeof cards> { }
 
 /** Card fields accepted from account create/update forms. */
-export type ICardPayload = Pick<ICard, 'number' | 'expirationDate'>;
+export type ICardPayload = Pick<ICard, 'number' | 'expirationDate' | 'closingDay'>;
 
 /** Card payload used when reconciling a submitted full account card list. */
 export type ICardSyncPayload = ICardPayload & {

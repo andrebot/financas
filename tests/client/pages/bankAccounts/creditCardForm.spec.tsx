@@ -208,6 +208,7 @@ describe('CreditCardForm', () => {
         last4Digits: '1111',
         number: '4111111111111111',
         expirationDate: '01/25',
+        closingDay: 15,
       },
     ];
 

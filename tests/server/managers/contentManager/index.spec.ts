@@ -177,7 +177,7 @@ describe('ContentManager', () => {
   describe('accountActions', () => {
     it('should create account', async () => {
       const { id: _id, ...content } = mockAccount;
-      const submittedCards = [{ number: '4111111111111111', expirationDate: '12/30' }];
+      const submittedCards = [{ number: '4111111111111111', expirationDate: '12/30', closingDay: 15 }];
       accountRepoStub.save.resolves({ ...content, id: 1 });
       cardRepoStub.syncAccountCards.resolves([{ ...submittedCards[0], id: 9, accountId: 1 }]);
 
@@ -192,7 +192,7 @@ describe('ContentManager', () => {
     });
 
     it('should update account cards when a full card list is provided', async () => {
-      const submittedCards = [{ id: 9, number: '5555555555554444', expirationDate: '01/31' }];
+      const submittedCards = [{ id: 9, number: '5555555555554444', expirationDate: '01/31', closingDay: 20 }];
       const updatedAccount = { ...mockAccount, name: 'Updated Checking' };
       accountRepoStub.update.resolves(updatedAccount);
       cardRepoStub.syncAccountCards.resolves(submittedCards.map((card) => ({ ...card, accountId: 1 })));

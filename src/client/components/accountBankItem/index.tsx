@@ -169,7 +169,7 @@ export default function AccountBankItem({ bankAccount }: AccountBankItemProps): 
       </AccountBankInfo>
       <CreditCardsList>
         {(bankAccount.cards ?? []).map(({
-          expirationDate, number,
+          expirationDate, number, closingDay,
         }) => (
           <CreditCard
             key={number.slice(-4)}
@@ -177,6 +177,7 @@ export default function AccountBankItem({ bankAccount }: AccountBankItemProps): 
             last4Digits={number.slice(-4)}
             expirationDate={expirationDate}
             number={number}
+            closingDay={closingDay}
           />
         ))}
       </CreditCardsList>

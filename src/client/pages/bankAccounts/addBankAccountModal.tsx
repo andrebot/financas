@@ -39,7 +39,7 @@ const blankState = {
  * @returns Credit cards in the raw API payload shape.
  */
 function toRawCreditCards(cards: CreditCardProps[]): CreditCard[] {
-  return cards.map(({ number, expirationDate }) => ({ number, expirationDate }));
+  return cards.map(({ number, expirationDate, closingDay }) => ({ number, expirationDate, closingDay }));
 }
 
 /**

@@ -201,5 +201,8 @@ export default {
     deleteTransactionMessage: 'Você tem certeza que quer deletar essa transação?',
     transactionDeletedSuccessfully: 'Transação deletada com sucesso!',
     transactionDeletedError: 'Erro ao deletar a transação. Tente novamente mais tarde.',
+    closingDay: 'Dia do Fechamento da Fatura',
+    closingDayRequired: 'Dia de fechamento é obrigatório',
+    closingDayInvalid: 'Dia de fechamento inválido',
   },
 };

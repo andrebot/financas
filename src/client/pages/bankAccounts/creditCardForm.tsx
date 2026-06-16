@@ -65,8 +65,10 @@ export default function CreditCardForm({ creditCards, setCreditCards }: CreditCa
     const validatedState = validateCreditCardForm(state);
     const isValid = !validatedState.numberError
       && !validatedState.expirationDateError
+      && !validatedState.closingDayError
       && !!validatedState.number
-      && !!validatedState.expirationDate;
+      && !!validatedState.expirationDate
+      && validatedState.closingDay !== undefined;
 
     if (!isValid) {
       dispatch({ type: CreditCardActionType.VALIDATE });
@@ -80,6 +82,7 @@ export default function CreditCardForm({ creditCards, setCreditCards }: CreditCa
         last4Digits: validatedState.number.slice(-4),
         number: validatedState.number,
         expirationDate: formatExpirationDate(validatedState.expirationDate),
+        closingDay: validatedState.closingDay!,
       },
     ]);
     dispatch({ type: CreditCardActionType.RESET });
@@ -120,6 +123,8 @@ export default function CreditCardForm({ creditCards, setCreditCards }: CreditCa
               },
             }}
           />
+        </RowInput>
+        <RowInput>
           <ExpirationDatePicker
             label={t('expirationDate')}
             views={['year', 'month']}
@@ -138,6 +143,25 @@ export default function CreditCardForm({ creditCards, setCreditCards }: CreditCa
               },
             }}
           />
+          <TextFieldStyled
+            label={t('closingDay')}
+            variant="outlined"
+            type="number"
+            value={state.closingDay ?? ''}
+            onChange={(e) => {
+              const val = e.target.value === '' ? undefined : Number(e.target.value);
+              dispatch({ type: CreditCardActionType.SET_CLOSING_DAY, payload: val });
+            }}
+            error={!!state.closingDayError}
+            helperText={state.closingDayError ? t(state.closingDayError) : ''}
+            slotProps={{
+              htmlInput: {
+                min: 1,
+                max: 31,
+                'data-testid': 'credit-card-closing-day-input',
+              },
+            }}
+          />
         </RowInput>
         <Button variant="contained" fullWidth onClick={handleAddCard} data-testid="credit-card-add-button">{t('addCard')}</Button>
       </CreditCardFormHolder>
@@ -149,6 +173,7 @@ export default function CreditCardForm({ creditCards, setCreditCards }: CreditCa
               last4Digits={card.last4Digits}
               expirationDate={card.expirationDate}
               number={card.number}
+              closingDay={card.closingDay}
             />
             <CreditCardDeleteItem
               className="credit-card-delete-item"

@@ -171,6 +171,7 @@ async function listAllWithRelations(): Promise<ITransactionWithRelations[]> {
       name: transactions.name,
       categoryId: transactions.categoryId,
       accountId: transactions.accountId,
+      cardId: transactions.cardId,
       type: transactions.type,
       date: transactions.date,
       value: transactions.value,
