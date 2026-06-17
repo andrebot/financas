@@ -1,7 +1,6 @@
 import {
   and, eq, gte, inArray, lte, sql,
 } from 'drizzle-orm';
-import { isInflowType } from '../../utils/transactionTypeUtils';
 import Repository from './repository';
 import { budgets, budgetToCategories, budgetUsage } from '../models/budgetModel';
 import { createLogger } from '../../utils/logger';

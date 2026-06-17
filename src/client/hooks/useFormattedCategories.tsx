@@ -38,7 +38,11 @@ export function formatCategories(categories: Category[]): CategorySelectOption[]
   );
 
   return categories
-    .reduce((acc, category) => toCategorySelectOption(categoryNamesById, acc, category), [] as CategorySelectOption[])
+    .reduce((acc, category) => toCategorySelectOption(
+      categoryNamesById,
+      acc,
+      category,
+    ), [] as CategorySelectOption[])
     .sort((a, b) => a.label.localeCompare(b.label));
 }
 

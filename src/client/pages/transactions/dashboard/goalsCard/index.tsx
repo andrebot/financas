@@ -19,7 +19,10 @@ const GOALS_COLORS: ProgressColors = {
  */
 export default function GoalsCard({ selectedYear, selectedMonth }: GoalsCardProps) {
   const { t } = useTranslation();
-  const { data: goals = [] } = useListGoalsForMonthQuery({ year: selectedYear, month: selectedMonth + 1 });
+  const { data: goals = [] } = useListGoalsForMonthQuery({
+    year: selectedYear,
+    month: selectedMonth + 1,
+  });
 
   const items = goals
     .filter((g) => !g.archived)

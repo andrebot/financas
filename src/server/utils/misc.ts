@@ -87,7 +87,7 @@ export function checkVoidInstance(instance: any, modelName: string, id: number):
 
 /**
  * Check if the user is void
- * 
+ *
  * @throws If the the user object is null or if the user object has no
  * properties
  *

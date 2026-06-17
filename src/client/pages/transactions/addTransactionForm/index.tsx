@@ -9,6 +9,8 @@ import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import InputAdornment from '@mui/material/InputAdornment';
+import type { SelectChangeEvent } from '@mui/material/Select';
+import type { PickerValue } from '@mui/x-date-pickers/internals/models';
 import {
   transactionFormReducer,
   initialTransactionFormState,
@@ -32,8 +34,6 @@ import {
   useCreateTransactionMutation,
   useUpdateTransactionMutation,
 } from '../../../features/transaction';
-import type { SelectChangeEvent } from '@mui/material/Select';
-import type { PickerValue } from '@mui/x-date-pickers/internals/models';
 import type { Transaction } from '../../../types';
 
 /**
@@ -55,12 +55,13 @@ export default function AddTransactionForm({
   const { user } = useAuth();
   const formattedCategories = useFormattedCategories();
   const { data: bankAccounts = [] } = useListBankAccountsQuery();
-  const cardOptions = bankAccounts.flatMap((account) =>
-    (account.cards ?? []).filter((card) => card.id).map((card) => ({
-      id: card.id!,
-      label: `${account.name} - ${card.number.slice(-4)}`,
-    }))
-  );
+  const cardOptions = bankAccounts
+    .flatMap((account) => (account.cards ?? [])
+      .filter((card) => card.id)
+      .map((card) => ({
+        id: card.id!,
+        label: `${account.name} - ${card.number.slice(-4)}`,
+      })));
   const [createTransaction] = useCreateTransactionMutation();
   const [updateTransaction] = useUpdateTransactionMutation();
   const [transactionFormState, transactionFormDispatch] = useReducer(
@@ -74,7 +75,10 @@ export default function AddTransactionForm({
    * @param event - The input change event from the name text field.
    */
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    transactionFormDispatch({ type: TransactionFormActionType.SET_NAME, payload: event.target.value });
+    transactionFormDispatch({
+      type: TransactionFormActionType.SET_NAME,
+      payload: event.target.value,
+    });
   };
 
   /**
@@ -94,7 +98,8 @@ export default function AddTransactionForm({
 
   /**
    * Dispatches the selected bank account id to the reducer.
-   * The bank account is the source or destination account for the transaction and is required by the DB.
+   * The bank account is the source or destination account for
+   * the transaction and is required by the DB.
    *
    * @param event - The select change event from the bank account dropdown.
    */
@@ -114,7 +119,7 @@ export default function AddTransactionForm({
    * @param event - The select change event from the card dropdown.
    */
   const handleCardChange = (event: SelectChangeEvent<unknown>) => {
-    const value = event.target.value;
+    const { value } = event.target;
     transactionFormDispatch({
       type: TransactionFormActionType.SET_CARD_ID,
       payload: value ? Number(value) : undefined,
@@ -208,27 +213,30 @@ export default function AddTransactionForm({
 
   useEffect(() => {
     if (selectedTransaction) {
-      transactionFormDispatch({ type: TransactionFormActionType.EDIT, payload: selectedTransaction });
+      transactionFormDispatch({
+        type: TransactionFormActionType.EDIT,
+        payload: selectedTransaction,
+      });
     }
   }, [selectedTransaction]);
 
   return (
     <AddTransactionWrapper>
-      <Typography variant='h3' align='center'>{t('addTransaction')}</Typography>
+      <Typography variant="h3" align="center">{t('addTransaction')}</Typography>
       <RowInput>
         <TextField
           label={t('name')}
-          sx={{flexGrow: 1}}
+          sx={{ flexGrow: 1 }}
           value={transactionFormState.name}
           onChange={handleNameChange}
           error={!!transactionFormState.nameError}
           helperText={transactionFormState.nameError ? t(transactionFormState.nameError) : ''}
         />
         <CategorySelect error={!!transactionFormState.categoryError}>
-          <InputLabel id='transaction-label'>{t('category')}</InputLabel>
+          <InputLabel id="transaction-label">{t('category')}</InputLabel>
           <Select
             label={t('category')}
-            labelId='transaction-label'
+            labelId="transaction-label"
             value={transactionFormState.categoryId || ''}
             onChange={handleCategoryChange}
           >
@@ -238,10 +246,10 @@ export default function AddTransactionForm({
           </Select>
         </CategorySelect>
         <BankSelect error={!!transactionFormState.bankAccountError}>
-          <InputLabel id='bank-account-label'>{t('bankAccount')}</InputLabel>
+          <InputLabel id="bank-account-label">{t('bankAccount')}</InputLabel>
           <Select
-            label='Bank Accounts'
-            labelId='bank-account-label'
+            label="Bank Accounts"
+            labelId="bank-account-label"
             value={transactionFormState.bankAccountId || ''}
             onChange={handleBankChange}
           >
@@ -253,10 +261,10 @@ export default function AddTransactionForm({
       </RowInput>
       <RowInput>
         <TypeSelect>
-          <InputLabel id='type-label'>{t('type')}</InputLabel>
+          <InputLabel id="type-label">{t('type')}</InputLabel>
           <Select
             label={t('type')}
-            labelId='type-label'
+            labelId="type-label"
             value={transactionFormState.type ?? ''}
             onChange={handleTypeChange}
           >
@@ -266,7 +274,7 @@ export default function AddTransactionForm({
           </Select>
         </TypeSelect>
         <TransactionDatePicker
-          format='DD/MM/YYYY'
+          format="DD/MM/YYYY"
           value={dayjs(transactionFormState.date)}
           onChange={handleDateChange}
           slotProps={{
@@ -277,15 +285,15 @@ export default function AddTransactionForm({
           }}
         />
         <CardSelect>
-          <InputLabel id='card-label'>{t('card')}</InputLabel>
+          <InputLabel id="card-label">{t('card')}</InputLabel>
           <Select
             label={t('card')}
-            labelId='card-label'
+            labelId="card-label"
             value={transactionFormState.cardId ?? ''}
             onChange={handleCardChange}
             disabled={!transactionFormState.isCardType}
           >
-            <MenuItem value=''><em>{t('none')}</em></MenuItem>
+            <MenuItem value=""><em>{t('none')}</em></MenuItem>
             {cardOptions.map((option) => (
               <MenuItem key={option.id} value={option.id}>{option.label}</MenuItem>
             ))}
@@ -297,7 +305,7 @@ export default function AddTransactionForm({
           onChange={handleValueChange}
           error={!!transactionFormState.valueError}
           helperText={transactionFormState.valueError ? t(transactionFormState.valueError) : ''}
-          sx={{flexGrow: 1}}
+          sx={{ flexGrow: 1 }}
           slotProps={{
             input: {
               inputMode: 'decimal',
@@ -306,8 +314,8 @@ export default function AddTransactionForm({
           }}
         />
       </RowInput>
-      <Button variant='contained' onClick={handleSaveTransaction}>{t('save')}</Button>
-      <Button variant='outlined' onClick={handleCancel}>{t('cancel')}</Button>
+      <Button variant="contained" onClick={handleSaveTransaction}>{t('save')}</Button>
+      <Button variant="outlined" onClick={handleCancel}>{t('cancel')}</Button>
     </AddTransactionWrapper>
   );
 }

@@ -26,7 +26,8 @@ export default function BudgetCard({ selectedYear, selectedMonth }: BudgetCardPr
   const lastOfMonth = dayjs().year(selectedYear).month(selectedMonth).endOf('month');
 
   const items = budgets
-    .filter((b) => !dayjs(b.startDate).isAfter(lastOfMonth) && !dayjs(b.endDate).isBefore(firstOfMonth))
+    .filter((b) => !dayjs(b.startDate).isAfter(lastOfMonth)
+      && !dayjs(b.endDate).isBefore(firstOfMonth))
     .map((b) => ({
       id: b.id,
       name: b.name,

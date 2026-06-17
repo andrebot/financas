@@ -119,7 +119,7 @@ function setType(
 function setCategoryId(state: TransactionFormState, payload: number): TransactionFormState {
   const nextState: TransactionFormState = { ...state, categoryId: payload, categoryError: '' };
 
-  if (!payload || isNaN(payload)) {
+  if (!payload || Number.isNaN(payload)) {
     nextState.categoryError = 'categoryRequired';
   }
 
@@ -137,7 +137,7 @@ function setCategoryId(state: TransactionFormState, payload: number): Transactio
 function setBankAccountId(state: TransactionFormState, payload: number): TransactionFormState {
   const nextState: TransactionFormState = { ...state, bankAccountId: payload, bankAccountError: '' };
 
-  if (!payload || isNaN(payload)) {
+  if (!payload || Number.isNaN(payload)) {
     nextState.bankAccountError = 'bankAccountRequired';
   }
 

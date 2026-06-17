@@ -12,7 +12,11 @@ import type {
 
 const logger = createLogger('GoalController');
 
-async function listGoals(req: RequestWithUser, res: Response, manager: IGoalActions): Promise<Response<IGoal>> {
+async function listGoals(
+  req: RequestWithUser,
+  res: Response,
+  manager: IGoalActions,
+): Promise<Response<IGoal>> {
   try {
     checkVoidUser(req.user, 'Goal', 'list');
 

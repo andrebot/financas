@@ -9,9 +9,9 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { DashboardHeaderWrapper, YearCarousel, YearLabel } from './styledComponents';
 
-const MONTHS = Array.from({ length: 12 }, (_, i) => dayjs().month(i).format('MMM'));
-
 import type { DashboardHeaderProps } from '../../../../types';
+
+const MONTHS = Array.from({ length: 12 }, (_, i) => dayjs().month(i).format('MMM'));
 
 /**
  * Dashboard header with a year carousel and a month tab bar.
@@ -29,19 +29,36 @@ export default function DashboardHeader({
 }: DashboardHeaderProps) {
   const currentYear = dayjs().year();
   const [yearMenuAnchor, setYearMenuAnchor] = useState<HTMLElement | null>(null);
+  const yearOptions = useMemo(
+    () => Array.from(
+      { length: currentYear - oldestYear + 1 },
+      (_, i) => currentYear - i,
+    ),
+    [currentYear, oldestYear],
+  );
 
-  const yearOptions = useMemo(() => {
-    return Array.from({ length: currentYear - oldestYear + 1 }, (_, i) => currentYear - i);
-  }, [currentYear, oldestYear]);
-
-  function handleYearLabelClick(evt: React.MouseEvent<HTMLElement>) {
+  /**
+   * Sets the anchor for the Year Menu component to open
+   * the menu
+   *
+   * @param evt Html event
+   */
+  const handleYearLabelClick = (evt: React.MouseEvent<HTMLElement>) => {
     setYearMenuAnchor(evt.currentTarget);
-  }
+  };
 
-  function handleYearMenuClose() {
+  /**
+   * Nullifies the YearMenu Anchor to close the menu
+   */
+  const handleYearMenuClose = () => {
     setYearMenuAnchor(null);
-  }
+  };
 
+  /**
+   * Set the year and closes the Year menu
+   *
+   * @param year Selected year
+   */
   function handleYearSelect(year: number) {
     onYearChange(year);
     setYearMenuAnchor(null);

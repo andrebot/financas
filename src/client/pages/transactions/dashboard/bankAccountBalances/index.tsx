@@ -5,7 +5,9 @@ import Typography from '@mui/material/Typography';
 import { useListBankAccountsQuery } from '../../../../features/bankAccount';
 import { useListMonthlyBalancesQuery } from '../../../../features/monthlyBalance';
 import { formatValueToCurrency } from '../../../../utils/money';
-import { BalanceCardList, BalanceCards, BalanceCard, BankNameRow, BalanceAmount } from './styledComponents';
+import {
+  BalanceCardList, BalanceCards, BalanceCard, BankNameRow, BalanceAmount,
+} from './styledComponents';
 import type { BankAccountBalancesProps } from '../../../../types';
 
 /**
@@ -15,13 +17,31 @@ import type { BankAccountBalancesProps } from '../../../../types';
  *
  * @param props - {@link BankAccountBalancesProps}
  */
-export default function BankAccountBalances({ selectedYear, selectedMonth }: BankAccountBalancesProps) {
+export default function BankAccountBalances({
+  selectedYear,
+  selectedMonth,
+}: BankAccountBalancesProps) {
   const { t } = useTranslation();
   const { data: bankAccounts = [] } = useListBankAccountsQuery();
   const { data: monthlyBalances = [] } = useListMonthlyBalancesQuery({
     year: selectedYear,
     month: selectedMonth + 1,
   });
+
+  /**
+   * Return the value's color for the given balance. Red if
+   * negative and green if positive.
+   *
+   * @param balance Current balance
+   * @returns The value's color
+   */
+  const getBalanceClass = (balance: number | null): string => {
+    if (balance === null) {
+      return '';
+    }
+
+    return balance < 0 ? 'negative' : 'positive';
+  };
 
   return (
     <BalanceCardList>
@@ -37,7 +57,7 @@ export default function BankAccountBalances({ selectedYear, selectedMonth }: Ban
                 <AccountBalanceIcon fontSize="small" />
                 <Typography variant="subtitle2">{account.name}</Typography>
               </BankNameRow>
-              <BalanceAmount className={balance === null ? '' : balance < 0 ? 'negative' : 'positive'}>
+              <BalanceAmount className={getBalanceClass(balance)}>
                 {balance === null
                   ? '—'
                   : formatValueToCurrency(balance, t('currencyFormat'))}

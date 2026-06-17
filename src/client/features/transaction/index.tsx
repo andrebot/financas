@@ -70,11 +70,11 @@ export const endpoints = (builder: ApiBuilder) => ({
     invalidatesTags: [{ type: 'Transaction', id: 'LIST' }, { type: 'MonthlyBalance', id: 'LIST' }, { type: 'Budget', id: 'LIST' }, { type: 'Goal', id: 'LIST' }],
   }),
   deleteTransaction: builder.mutation<Transaction, number>({
-    query: deleteTransactionMutation ,
+    query: deleteTransactionMutation,
     invalidatesTags: [{ type: 'Transaction', id: 'LIST' }, { type: 'MonthlyBalance', id: 'LIST' }, { type: 'Budget', id: 'LIST' }, { type: 'Goal', id: 'LIST' }],
   }),
   getTransaction: builder.query<Transaction, number>({
-    query: getTransactionQuery ,
+    query: getTransactionQuery,
   }),
 });
 

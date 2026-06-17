@@ -16,14 +16,14 @@ import type {
 /**
  * Inserts an item into a date-sorted array in descending order (newest first).
  * Mutates the array in place.
- * 
+ *
  * @template T - Object type with a `date` string field
  * @param arr - The target array to insert into
  * @param item - The item to insert
  */
 function insertDescending<T extends { date: string }>(arr: T[], item: T) {
   const insertIndex = arr.findIndex(
-    (existing) => new Date(existing.date).getTime() < new Date(item.date).getTime()
+    (existing) => new Date(existing.date).getTime() < new Date(item.date).getTime(),
   );
 
   if (insertIndex === -1) {
@@ -87,11 +87,11 @@ export default function TransactionList({
 
   return (
     <TransactionItemListWrapper>
-      {sortedTransactions.map((trans) => 
+      {sortedTransactions.map((trans) => (
         <TransactionItemList key={trans.date}>
           {dayjs(trans.date).format(t('dateFormat'))}
           <Divider />
-          {trans.transactions.map((trs) =>
+          {trans.transactions.map((trs) => (
             <TransactionItem
               key={trs.id}
               transaction={trs}
@@ -99,9 +99,9 @@ export default function TransactionList({
               onSelect={setSelectedListItem}
               editSelectTrigger={editSelectTrigger}
             />
-          )}
+          ))}
         </TransactionItemList>
-      )}
+      ))}
     </TransactionItemListWrapper>
   );
-};
+}

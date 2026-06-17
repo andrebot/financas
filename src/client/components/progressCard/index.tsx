@@ -1,7 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
 import { formatValueToCurrency } from '../../utils/money';
 import {
   ProgressBarContainer,
@@ -10,7 +9,7 @@ import {
   ProgressBarWrapper,
   ItemBox,
 } from './styledComponents';
-import type { ProgressItem, ProgressColors, ProgressCardProps } from '../../types';
+import type { ProgressColors, ProgressCardProps } from '../../types';
 
 function getBarColor(percentage: number, colors: ProgressColors): string {
   if (percentage >= 100) return colors.complete;

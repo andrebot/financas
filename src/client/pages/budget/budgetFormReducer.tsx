@@ -238,7 +238,7 @@ const actionMap: Record<BudgetFormActionType, ActionFunction> = {
   [BudgetFormActionType.EDIT]: editBudget,
   [BudgetFormActionType.VALIDATE]: validateBudgetFormState,
   [BudgetFormActionType.RESET]: () => ({ ...initialBudgetFormState }),
-}
+};
 
 /**
  * Reducer for the budget form state.

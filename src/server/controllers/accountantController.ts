@@ -131,7 +131,10 @@ export function AccountantController(
    * @param res - The response object.
    * @returns Array of {@link IMonthlyBalance} records for the period.
    */
-  const listMonthlyBalances = async (req: RequestWithUser, res: Response): Promise<Response<IMonthlyBalance[]>> => {
+  const listMonthlyBalances = async (
+    req: RequestWithUser,
+    res: Response,
+  ): Promise<Response<IMonthlyBalance[]>> => {
     try {
       checkVoidUser(req.user, 'MonthlyBalance', 'list');
 

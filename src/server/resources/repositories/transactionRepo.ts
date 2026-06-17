@@ -25,12 +25,12 @@ const transactionRepo = Repository<typeof transactions, ITransaction>(transactio
  */
 async function findByCategoryWithDateRange(
   userId: number,
-  categories: number[],
+  categoriesIds: number[],
   startDate: Date,
   endDate: Date,
 ): Promise<ITransaction[]> {
   logger.info(`Finding transactions by category and date range for user: ${userId}`);
-  logger.info(`Categories: ${categories}`);
+  logger.info(`Categories: ${categoriesIds}`);
   logger.info(`Start date: ${startDate}`);
   logger.info(`End date: ${endDate}`);
 
@@ -39,7 +39,7 @@ async function findByCategoryWithDateRange(
     .from(transactions)
     .where(and(
       eq(transactions.userId, userId),
-      inArray(transactions.categoryId, categories),
+      inArray(transactions.categoryId, categoriesIds),
       gte(transactions.date, startDate),
       lte(transactions.date, endDate),
       getAutorizationDatabaseContext(transactions),

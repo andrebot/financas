@@ -24,7 +24,9 @@ import {
 } from './styledComponents';
 import { GoalsTableActionType } from '../../../enums';
 import { formatValueToCurrency } from '../../../utils/money';
-import type { Goal, GoalsTableProps, SortColumn, SortOrder } from '../../../types';
+import type {
+  Goal, GoalsTableProps, SortColumn, SortOrder,
+} from '../../../types';
 
 /**
  * Component for the goals table. This is used to display the goals in a table.

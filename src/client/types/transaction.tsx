@@ -25,7 +25,7 @@ export type Transaction = {
 export type SortedTransactionItem = {
   date: string;
   transactions: Transaction[];
-} 
+}
 
 export type TransactionListProps = {
   transactions: Transaction[];
@@ -50,7 +50,10 @@ export type TransactionFormState = {
   typeError: string,
 }
 
-export type TransactionActionFunction = (state: TransactionFormState, payload?: any) => TransactionFormState;
+export type TransactionActionFunction = (
+  state: TransactionFormState,
+  payload?: any,
+) => TransactionFormState;
 
 export type TransactionFormAction = {
   type: TransactionFormActionType.SET_NAME;

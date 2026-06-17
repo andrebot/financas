@@ -18,7 +18,9 @@ import CreditCardForm from './creditCardForm';
 import { useAuth } from '../../hooks/authContext';
 import { BankAccountActionType } from '../../enums';
 import { detectCardBrand } from '../../utils/creditCard';
-import { AddBankAccountModalProps, BankAccount, CreditCard, CreditCardProps } from '../../types';
+import {
+  AddBankAccountModalProps, CreditCard, CreditCardProps,
+} from '../../types';
 
 const blankState = {
   name: '',
@@ -39,7 +41,11 @@ const blankState = {
  * @returns Credit cards in the raw API payload shape.
  */
 function toRawCreditCards(cards: CreditCardProps[]): CreditCard[] {
-  return cards.map(({ number, expirationDate, closingDay }) => ({ number, expirationDate, closingDay }));
+  return cards.map(({ number, expirationDate, closingDay }) => ({
+    number,
+    expirationDate,
+    closingDay,
+  }));
 }
 
 /**

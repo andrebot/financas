@@ -13,6 +13,7 @@ import InvesetmentIcon from '@mui/icons-material/Savings';
 import InvestmentDueDateIcon from '@mui/icons-material/Event';
 import Tooltip from '@mui/material/Tooltip';
 import PixIcon from '@mui/icons-material/Pix';
+import type { MouseEvent } from 'react';
 import { useModal } from '../../../components/modal/modal';
 import ConfirmModal from '../../../components/confirmModal';
 import { useDeleteTransactionMutation } from '../../../features/transaction';
@@ -25,7 +26,6 @@ import {
   TransactionItemActions,
 } from './styledComponents';
 import { TRANSACTION_TYPES } from '../../../enums';
-import type { MouseEvent } from 'react';
 import type { TransactionProps } from '../../../types';
 
 /** Transaction types whose value should be displayed as positive (green, prefixed with `+`). */
@@ -36,7 +36,7 @@ const positiveTypes = [
   'investmentSell',
   'investmentDividend',
   'investmentInterest',
-  'pixIn'
+  'pixIn',
 ];
 
 export const typeIconMap = {
@@ -53,7 +53,7 @@ export const typeIconMap = {
   [TRANSACTION_TYPES.INVESTMENT_INTEREST]: <InvesetmentIcon />,
   [TRANSACTION_TYPES.INVESTMENT_DUE_DATE]: <InvestmentDueDateIcon />,
   [TRANSACTION_TYPES.PIX_IN]: <PixIcon />,
-  [TRANSACTION_TYPES.PIX_OUT]: <PixIcon />
+  [TRANSACTION_TYPES.PIX_OUT]: <PixIcon />,
 };
 
 /**
@@ -74,14 +74,16 @@ export default function Transaction({
   const isTransactionPositive = positiveTypes.includes(transaction.type);
   const [isSelected, setSelected] = useState(selectedId === transaction.id);
 
-  /** Toggles selection: deselects if already selected, otherwise selects this row. */
-  function onClick() {
+  /**
+   * Toggles selection: deselects if already selected, otherwise selects this row.
+   */
+  const onClick = () => {
     if (selectedId === transaction.id) {
       onSelect(0);
     } else {
       onSelect(transaction.id!);
     }
-  }
+  };
 
   /**
    * Calls the delete mutation for the given transaction id and shows a
@@ -105,7 +107,7 @@ export default function Transaction({
    *
    * @param evt - The mouse click event from the delete button
    */
-  function onDeleteClick(evt: MouseEvent) {
+  const onDeleteClick = (evt: MouseEvent) => {
     evt.stopPropagation();
 
     showModal(
@@ -116,17 +118,17 @@ export default function Transaction({
         onCancel={() => closeModal()}
       />,
     );
-  }
+  };
 
   /**
    * Stops event propagation and triggers the edit flow for the current transaction.
    *
    * @param evt - The mouse click event from the edit button
    */
-  function onEditClick(evt: MouseEvent) {
+  const onEditClick = (evt: MouseEvent) => {
     evt.stopPropagation();
     editSelectTrigger(transaction);
-  }
+  };
 
   useEffect(() => {
     setSelected(selectedId === transaction.id);
@@ -149,16 +151,18 @@ export default function Transaction({
         </TransactionBankAccount>
       </TransactionItemTextWrapper>
       <TransactionValueWrapper className={isTransactionPositive ? 'positive' : 'negative'}>
-        {isTransactionPositive ? '+' : '-'} {formatValueToCurrency(transaction.value, t('currencyFormat'))}
+        {isTransactionPositive ? '+' : '-'}
+        {' '}
+        {formatValueToCurrency(transaction.value, t('currencyFormat'))}
       </TransactionValueWrapper>
       <TransactionItemActions className={isSelected ? 'selected' : ''}>
         <IconButton onClick={onEditClick} aria-label={t('edit')}>
           <EditIcon />
         </IconButton>
         <IconButton onClick={onDeleteClick} aria-label={t('delete')}>
-          <DeleteIcon color='error'/>
+          <DeleteIcon color="error" />
         </IconButton>
       </TransactionItemActions>
     </TransactionItem>
   );
-};
+}
