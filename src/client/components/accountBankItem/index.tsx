@@ -125,7 +125,7 @@ export default function AccountBankItem({ bankAccount }: AccountBankItemProps): 
   }, [isUpdateError]);
 
   return (
-    <AccountBankItemMain elevation={3}>
+    <AccountBankItemMain elevation={3} data-testid="bank-account-card">
       <AccountBankInfo>
         <BankIcon sx={{ fontSize: 40 }} />
         <div style={{ flexGrow: 1 }}>

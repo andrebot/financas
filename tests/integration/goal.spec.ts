@@ -31,6 +31,26 @@ describe('Goal', () => {
       response.body.should.have.lengthOf(3);
     });
 
+    it('should return goals with savedValue field when year and month are provided', async () => {
+      const response = await request(server)
+        .get(`${resourceUrl}?year=2026&month=12`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      response.status.should.be.eq(200);
+      response.body.should.be.an('array');
+      response.body.length.should.be.greaterThan(0);
+      response.body.forEach((goal: any) => {
+        goal.should.have.property('savedValue');
+      });
+    });
+
+    it('should return 401 when the user is not authenticated for month-scoped list', async () => {
+      const response = await request(server)
+        .get(`${resourceUrl}?year=2026&month=12`);
+
+      response.status.should.be.eq(401);
+    });
+
     it('should return nothing when user has no goals', async () => {
       const token = createAccessToken(
         userToDelete.email,

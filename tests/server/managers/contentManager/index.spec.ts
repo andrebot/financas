@@ -36,6 +36,7 @@ describe('ContentManager', () => {
     saveBudgetCategories: sinon.stub(),
     deleteBudgetCategories: sinon.stub(),
     listBudgetsWithCategories: sinon.stub(),
+    listBudgetsWithSpent: sinon.stub(),
   };
   const categoryRepoStub = {
     ...createRepoStub(),
@@ -43,7 +44,10 @@ describe('ContentManager', () => {
     deleteAllSubcategories: sinon.stub(),
     listCategoriesByBudgetId: sinon.stub(),
   };
-  const goalRepoStub = createRepoStub();
+  const goalRepoStub = {
+    ...createRepoStub(),
+    listGoalsWithSavedValueUpTo: sinon.stub(),
+  };
   const transactionRepoStub = {
     deleteGoalFromTransactions: sinon.stub(),
     removeCategoriesFromTransactions: sinon.stub(),
@@ -128,6 +132,7 @@ describe('ContentManager', () => {
     budgetRepoExtendedStub.saveBudgetCategories.resetHistory();
     budgetRepoExtendedStub.deleteBudgetCategories.resetHistory();
     budgetRepoExtendedStub.listBudgetsWithCategories.resetHistory();
+    budgetRepoExtendedStub.listBudgetsWithSpent.resetHistory();
 
     categoryRepoStub.save.resetHistory();
     categoryRepoStub.findById.reset();
@@ -143,6 +148,7 @@ describe('ContentManager', () => {
     goalRepoStub.deleteById.resetHistory();
     goalRepoStub.update.resetHistory();
     goalRepoStub.listAll.resetHistory();
+    goalRepoStub.listGoalsWithSavedValueUpTo.resetHistory();
 
     transactionRepoStub.deleteGoalFromTransactions.resetHistory();
     transactionRepoStub.removeCategoriesFromTransactions.resetHistory();
@@ -401,13 +407,13 @@ describe('ContentManager', () => {
       chai.expect(result).to.be.null;
     });
 
-    it('should list budgets with hydrated categories', async () => {
-      const budgets = [{ ...mockBudget, categories: [mockCategory] }];
-      budgetRepoExtendedStub.listBudgetsWithCategories.resolves(budgets);
+    it('should list budgets with hydrated categories and spent amounts', async () => {
+      const budgets = [{ ...mockBudget, categories: [mockCategory], spent: 50 }];
+      budgetRepoExtendedStub.listBudgetsWithSpent.resolves(budgets);
 
       const result = await contentManager.budgetActions.listContent();
 
-      budgetRepoExtendedStub.listBudgetsWithCategories.should.have.been.calledOnce;
+      budgetRepoExtendedStub.listBudgetsWithSpent.should.have.been.calledOnce;
       budgetRepoStub.listAll.should.not.have.been.called;
       result.should.deep.equal(budgets);
     });
@@ -518,6 +524,16 @@ describe('ContentManager', () => {
 
       goalRepoStub.save.should.have.been.calledOnce;
       result.should.have.property('id', 1);
+    });
+
+    it('should list goals with savedValue up to a given month', async () => {
+      const goalsForMonth = [{ ...mockGoal, savedValue: '500' }];
+      goalRepoStub.listGoalsWithSavedValueUpTo.resolves(goalsForMonth);
+
+      const result = await contentManager.goalActions.listGoalsForMonth(2026, 6);
+
+      goalRepoStub.listGoalsWithSavedValueUpTo.should.have.been.calledOnceWith(2026, 6);
+      result.should.deep.equal(goalsForMonth);
     });
   });
 

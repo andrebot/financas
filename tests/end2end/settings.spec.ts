@@ -16,7 +16,7 @@ test('should allow user to change name', async ({ page }) => {
   await expect(page.getByText(i18nKeys.translation.settingsUpdated)).toBeVisible();
   await expect(page.getByRole('textbox', { name: i18nKeys.translation.firstName })).toHaveValue(newName);
 
-  await page.getByRole('button', { name: /menu/i }).click();
+  await page.getByRole('button', { name: 'menu', exact: true }).click();
 
   await expect(page.getByText(newName)).toBeVisible();
 });

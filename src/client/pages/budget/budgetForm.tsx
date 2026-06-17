@@ -146,7 +146,7 @@ export default function BudgetForm({
    * @param event - The selected end date value.
    */
   const handleEndDateChange = (event: PickerValue) => {
-    budgetFormDispatch({ type: BudgetFormActionType.SET_END_DATE, payload: event?.toDate() });
+    budgetFormDispatch({ type: BudgetFormActionType.SET_END_DATE, payload: event?.endOf('month').toDate() });
   };
 
   /**

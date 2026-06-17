@@ -17,12 +17,14 @@ const transactionRepoStub = {
   listAll: sinon.stub(),
   deleteTransactionFromGoals: sinon.stub(),
   saveTransactionGoals: sinon.stub(),
+  listAllWithRelations: sinon.stub(),
 };
 
 const monthlyBalanceRepoStub = {
   findMonthlyBalance: sinon.stub(),
   save: sinon.stub(),
   updateMonthlyBalanceWithTransaction: sinon.stub(),
+  findByYearAndMonth: sinon.stub(),
 };
 
 const goalRepoStub = {
@@ -105,12 +107,14 @@ describe('AccountantManager', () => {
     transactionRepoStub.deleteById.reset();
     transactionRepoStub.update.reset();
     transactionRepoStub.listAll.reset();
+    transactionRepoStub.listAllWithRelations.reset();
     transactionRepoStub.deleteTransactionFromGoals.reset();
     transactionRepoStub.saveTransactionGoals.reset();
 
     monthlyBalanceRepoStub.findMonthlyBalance.reset();
     monthlyBalanceRepoStub.save.reset();
     monthlyBalanceRepoStub.updateMonthlyBalanceWithTransaction.reset();
+    monthlyBalanceRepoStub.findByYearAndMonth.reset();
 
     goalRepoStub.updateGoalFromTransaction.reset();
     budgetRepoStub.updateBudgetsByNewTransaction.reset();
@@ -211,7 +215,7 @@ describe('AccountantManager', () => {
       savedBalance.should.have.property('openingBalance', '250');
     });
 
-    it('should set totalOut and zero totalIn when transaction value is negative', async () => {
+    it('should store the raw negative value in totalIn when type is inflow and value is negative', async () => {
       const negativeTxn = buildTransaction({ value: '-50.00' });
       transactionRepoStub.save.resolves(negativeTxn);
       monthlyBalanceRepoStub.findMonthlyBalance.reset();
@@ -225,8 +229,8 @@ describe('AccountantManager', () => {
 
       monthlyBalanceRepoStub.save.should.have.been.calledOnce;
       const savedBalance = monthlyBalanceRepoStub.save.firstCall.args[0];
-      savedBalance.should.have.property('totalIn', '0');
-      savedBalance.should.have.property('totalOut', '50');
+      savedBalance.should.have.property('totalIn', '-50');
+      savedBalance.should.have.property('totalOut', '0');
     });
 
     it('should update an existing monthly balance when one already exists', async () => {
@@ -242,6 +246,22 @@ describe('AccountantManager', () => {
         false,
       );
       monthlyBalanceRepoStub.save.should.not.have.been.called;
+    });
+
+    it('should save a negative closingDelta when transaction type is outflow', async () => {
+      const outflowTxn = buildTransaction({ id: undefined as unknown as number, type: 'cardPurchase', value: '100.00' });
+      const savedOutflow = { ...outflowTxn, id: 2 };
+      transactionRepoStub.save.resolves(savedOutflow);
+      monthlyBalanceRepoStub.findMonthlyBalance.reset();
+      monthlyBalanceRepoStub.findMonthlyBalance.resolves(null);
+      monthlyBalanceRepoStub.save.resolves();
+
+      await accountantManager.createTransaction(outflowTxn);
+
+      monthlyBalanceRepoStub.save.should.have.been.calledOnce;
+      const savedBalance = monthlyBalanceRepoStub.save.firstCall.args[0];
+      savedBalance.should.have.property('totalOut', '100');
+      savedBalance.should.have.property('totalIn', '0');
     });
   });
 
@@ -408,14 +428,26 @@ describe('AccountantManager', () => {
   });
 
   describe('listTransactions', () => {
-    it('should return all transactions', async () => {
-      const transactions = [mockTransaction];
-      transactionRepoStub.listAll.resolves(transactions);
+    it('should return all transactions with relations', async () => {
+      const transactions = [{ ...mockTransaction, accountName: 'Checking', categoryName: 'Food' }];
+      transactionRepoStub.listAllWithRelations.resolves(transactions);
 
       const result = await accountantManager.listTransactions();
 
-      transactionRepoStub.listAll.should.have.been.calledOnce;
+      transactionRepoStub.listAllWithRelations.should.have.been.calledOnce;
       result.should.deep.equal(transactions);
+    });
+  });
+
+  describe('listMonthlyBalances', () => {
+    it('should return monthly balances for the given year and month', async () => {
+      const balances = [mockMonthlyBalance];
+      monthlyBalanceRepoStub.findByYearAndMonth.resolves(balances);
+
+      const result = await accountantManager.listMonthlyBalances(2026, 6);
+
+      monthlyBalanceRepoStub.findByYearAndMonth.should.have.been.calledOnceWith(2026, 6);
+      result.should.deep.equal(balances);
     });
   });
 

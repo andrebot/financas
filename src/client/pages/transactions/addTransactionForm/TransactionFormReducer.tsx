@@ -66,12 +66,10 @@ function setValue(
   const nextValue: number = payload ?? 0;
   const nextState: TransactionFormState = { ...state, value: nextValue, valueError: '' };
 
-  if (Number.isNaN(nextValue) || nextValue === 0) {
+  if (Number.isNaN(nextValue)) {
     nextState.valueError = 'valueRequired';
     nextState.value = 0;
-  }
-
-  if (nextValue < 0) {
+  } else if (nextValue <= 0) {
     nextState.valueError = 'valueMustBeGreaterThanZero';
   }
 

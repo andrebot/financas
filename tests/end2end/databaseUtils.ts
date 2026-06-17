@@ -63,6 +63,15 @@ export async function deleteEndToEndUserData(pool: Pool): Promise<void> {
     [DELETE_USER_EMAIL_REGEX],
   );
   await pool.query(
+    `DELETE FROM "budgetUsage"
+     WHERE "budgetId" IN (
+       SELECT budgets.id FROM budgets
+       INNER JOIN users ON budgets."userId" = users.id
+       WHERE users.email ~ $1
+     )`,
+    [DELETE_USER_EMAIL_REGEX],
+  );
+  await pool.query(
     `DELETE FROM budgets
      USING users
      WHERE budgets."userId" = users.id AND users.email ~ $1`,

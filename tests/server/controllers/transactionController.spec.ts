@@ -21,6 +21,7 @@ type MockResponse = {
 type MockRequest = {
   body?: Record<string, unknown>;
   params: Record<string, string>;
+  query?: Record<string, string>;
   user?: {
     id: string;
     role: 'admin' | 'user';
@@ -40,6 +41,7 @@ const accountantManagerInstance = {
   listTransactions: sinon.stub(),
   getTransaction: sinon.stub(),
   getTransactionTypes: sinon.stub().returns(transactionTypesResponse),
+  listMonthlyBalances: sinon.stub(),
 };
 
 const handleErrorStub = sinon.stub().callsFake((error: Error, res: MockResponse) => {
@@ -88,6 +90,7 @@ describe('Accountant controller', () => {
     accountantManagerInstance.getTransaction.reset();
     accountantManagerInstance.getTransactionTypes.reset();
     accountantManagerInstance.getTransactionTypes.returns(transactionTypesResponse);
+    accountantManagerInstance.listMonthlyBalances.reset();
     handleErrorStub.resetHistory();
   });
 
@@ -306,6 +309,52 @@ describe('Accountant controller', () => {
       accountantManagerInstance.getTransaction.should.have.been.calledOnce;
       accountantManagerInstance.getTransaction.should.have.been.calledWith(5);
       response.send.should.have.been.calledWith(mockTransaction);
+    });
+  });
+
+  describe('listMonthlyBalances', () => {
+    it('should list monthly balances for a given year and month', async () => {
+      request.query = { year: '2026', month: '6' };
+      const balances = [{ id: 1, month: 6, year: 2026, closingBalance: '500.00' }];
+      accountantManagerInstance.listMonthlyBalances.resolves(balances);
+
+      await controller.listMonthlyBalances(
+        request as RequestWithUser,
+        response as unknown as Response,
+      );
+
+      accountantManagerInstance.listMonthlyBalances.should.have.been.calledOnceWith(2026, 6);
+      response.send.should.have.been.calledWith(balances);
+    });
+
+    it('should reject when user is not authenticated', async () => {
+      request.user = undefined;
+      request.query = { year: '2026', month: '6' };
+
+      await controller.listMonthlyBalances(
+        request as RequestWithUser,
+        response as unknown as Response,
+      );
+
+      accountantManagerInstance.listMonthlyBalances.should.not.have.been.called;
+      response.status.should.have.been.calledWith(500);
+      response.send.should.have.been.calledWith({
+        error: 'User not authenticated to list MonthlyBalance',
+      });
+    });
+
+    it('should handle manager errors', async () => {
+      request.query = { year: '2026', month: '6' };
+      const error = new Error('List balances failed');
+      accountantManagerInstance.listMonthlyBalances.rejects(error);
+
+      await controller.listMonthlyBalances(
+        request as RequestWithUser,
+        response as unknown as Response,
+      );
+
+      response.status.should.have.been.calledWith(500);
+      response.send.should.have.been.calledWith({ error: error.message });
     });
   });
 

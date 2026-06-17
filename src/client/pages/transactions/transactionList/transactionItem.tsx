@@ -135,6 +135,7 @@ export default function Transaction({
   return (
     <TransactionItem
       key={transaction.id}
+      data-testid="transaction-item"
       className={isSelected ? 'selected' : ''}
       onClick={onClick}
     >
@@ -151,10 +152,10 @@ export default function Transaction({
         {isTransactionPositive ? '+' : '-'} {formatValueToCurrency(transaction.value, t('currencyFormat'))}
       </TransactionValueWrapper>
       <TransactionItemActions className={isSelected ? 'selected' : ''}>
-        <IconButton onClick={onEditClick}>
+        <IconButton onClick={onEditClick} aria-label={t('edit')}>
           <EditIcon />
         </IconButton>
-        <IconButton onClick={onDeleteClick}>
+        <IconButton onClick={onDeleteClick} aria-label={t('delete')}>
           <DeleteIcon color='error'/>
         </IconButton>
       </TransactionItemActions>

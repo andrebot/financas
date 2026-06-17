@@ -25,7 +25,7 @@ export function getBankAccountsUser(projectName: string) {
 }
 
 export async function goToBankAccountsPage(page: Page) {
-  await page.getByRole('button', { name: /menu/i }).click();
+  await page.getByRole('button', { name: 'menu', exact: true }).click();
   await page.getByRole('button', { name: i18nKeys.translation.bankAccounts }).click();
 }
 
@@ -64,10 +64,11 @@ export async function saveBankAccount(page: Page) {
   await page.getByTestId('bank-account-save-button').click();
 }
 
-export async function addCreditCard(page: Page, cardNumber: string, expirationDate = '12/30') {
+export async function addCreditCard(page: Page, cardNumber: string, expirationDate = '12/30', closingDay = 15) {
   const modal = page.getByTestId('add-bank-account-modal');
   await modal.getByTestId('credit-card-number-input').fill(cardNumber);
   await fillMuiMonthYear(modal, expirationDate);
+  await modal.getByTestId('credit-card-closing-day-input').fill(String(closingDay));
   await modal.getByTestId('credit-card-add-button').click();
 }
 
@@ -80,7 +81,7 @@ export async function deleteCreditCardFromForm(page: Page, cardIndex: number) {
 }
 
 export async function openBankAccountMenu(page: Page, accountName: string) {
-  await page.locator('.MuiPaper-root').filter({ hasText: accountName }).first().getByRole('button', { name: i18nKeys.translation.actionMenu }).click();
+  await page.getByTestId('bank-account-card').filter({ hasText: accountName }).first().getByRole('button', { name: i18nKeys.translation.actionMenu }).click();
 }
 
 export async function editBankAccount(page: Page, accountName: string) {

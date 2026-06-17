@@ -167,6 +167,72 @@ describe('Budget Repository', () => {
     });
   });
 
+  describe('listBudgetsWithSpent', () => {
+    it('should return an empty array when there are no budgets', async () => {
+      findManyStub.resolves([]);
+
+      const result = await requestContext.run({ userId: 1, isAdmin: false }, async () => (
+        budgetRepo.listBudgetsWithSpent()
+      ));
+
+      result.should.deep.equal([]);
+      selectStub.should.not.have.been.called;
+    });
+
+    it('should return budgets with spent amounts derived from budgetUsage', async () => {
+      const persistedCategory = {
+        id: 10, name: 'Food', userId: 1, parentCategoryId: null,
+        createdAt: new Date('2026-01-01'), updatedAt: null,
+      };
+      const persistedBudget = {
+        id: 5, name: 'Groceries', value: '500.00', type: 'monthly',
+        startDate: new Date('2026-01-01'), endDate: new Date('2026-01-31'),
+        userId: 1, createdAt: new Date('2026-01-01'), updatedAt: null,
+      };
+      findManyStub.resolves([{
+        ...persistedBudget,
+        categories: [{ category: persistedCategory }],
+      }]);
+
+      const groupByStub = sinon.stub().resolves([{ budgetId: 5, spent: '120.50' }]);
+      const spentWhereStub = sinon.stub().returns({ groupBy: groupByStub });
+      const spentFromStub = sinon.stub().returns({ where: spentWhereStub });
+      selectStub.returns({ from: spentFromStub });
+
+      const result = await requestContext.run({ userId: 1, isAdmin: false }, async () => (
+        budgetRepo.listBudgetsWithSpent()
+      ));
+
+      selectStub.should.have.been.calledOnce;
+      spentFromStub.should.have.been.calledOnceWithExactly(budgetUsage);
+      spentWhereStub.should.have.been.calledOnce;
+      groupByStub.should.have.been.calledOnce;
+      result.should.have.lengthOf(1);
+      result[0].should.deep.include({ id: 5, name: 'Groceries', spent: 120.5 });
+    });
+
+    it('should assign spent=0 for budgets with no usage rows', async () => {
+      const persistedBudget = {
+        id: 7, name: 'Travel', value: '1000.00', type: 'monthly',
+        startDate: new Date('2026-01-01'), endDate: new Date('2026-01-31'),
+        userId: 1, createdAt: new Date('2026-01-01'), updatedAt: null,
+      };
+      findManyStub.resolves([{ ...persistedBudget, categories: [] }]);
+
+      const groupByStub = sinon.stub().resolves([]);
+      const spentWhereStub = sinon.stub().returns({ groupBy: groupByStub });
+      const spentFromStub = sinon.stub().returns({ where: spentWhereStub });
+      selectStub.returns({ from: spentFromStub });
+
+      const result = await requestContext.run({ userId: 1, isAdmin: false }, async () => (
+        budgetRepo.listBudgetsWithSpent()
+      ));
+
+      result.should.have.lengthOf(1);
+      result[0].should.deep.include({ id: 7, spent: 0 });
+    });
+  });
+
   describe('listBudgetsWithCategories', () => {
     it('should list budgets with category junction rows flattened', async () => {
       const persistedCategory = {

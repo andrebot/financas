@@ -25,7 +25,7 @@ export function getGoalsUser(projectName: string) {
 }
 
 export async function goToGoalsPage(page: Page) {
-  await page.getByRole('button', { name: /menu/i }).click();
+  await page.getByRole('button', { name: 'menu', exact: true }).click();
   await page.getByRole('button', { name: i18nKeys.translation.goals }).click();
 }
 
