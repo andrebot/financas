@@ -11,6 +11,11 @@ export const listGoalQuery = () => ({
   method: 'GET',
 });
 
+export const listGoalForMonthQuery = ({ year, month }: { year: number; month: number }) => ({
+  url: `/goal?year=${year}&month=${month}`,
+  method: 'GET',
+});
+
 /**
  * Builds the request used to create a goal.
  *
@@ -69,6 +74,10 @@ export const endpoints = (builder: ApiBuilder) => ({
     query: listGoalQuery,
     providesTags: [{ type: 'Goal', id: 'LIST' }],
   }),
+  listGoalsForMonth: builder.query<Goal[], { year: number; month: number }>({
+    query: listGoalForMonthQuery,
+    providesTags: [{ type: 'Goal', id: 'LIST' }],
+  }),
   createGoal: builder.mutation<Goal, Goal>({
     query: createGoalMutation,
     invalidatesTags: [{ type: 'Goal', id: 'LIST' }],
@@ -92,6 +101,7 @@ export const goalAPI = baseApi.injectEndpoints({
 
 export const {
   useListGoalsQuery,
+  useListGoalsForMonthQuery,
   useCreateGoalMutation,
   useUpdateGoalMutation,
   useDeleteGoalMutation,

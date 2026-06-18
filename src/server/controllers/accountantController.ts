@@ -5,7 +5,7 @@ import { checkVoidUser, checkVoidPayload } from '../utils/misc';
 import { createLogger } from '../utils/logger';
 import { handleError } from '../utils/responseHandlers';
 import type {
-  IAccountantManager, ITransaction, ITransactionGoalEntry, RequestWithUser,
+  IAccountantManager, ITransaction, ITransactionGoalEntry, IMonthlyBalance, RequestWithUser,
 } from '../types';
 
 const logger = createLogger('AccountantController');
@@ -123,10 +123,40 @@ export function AccountantController(
     }
   };
 
+  /**
+   * Lists monthly balances for the year and month provided as query params.
+   * Month is 1-indexed (1 = January … 12 = December).
+   *
+   * @param req - Request with `year` and `month` query params.
+   * @param res - The response object.
+   * @returns Array of {@link IMonthlyBalance} records for the period.
+   */
+  const listMonthlyBalances = async (
+    req: RequestWithUser,
+    res: Response,
+  ): Promise<Response<IMonthlyBalance[]>> => {
+    try {
+      checkVoidUser(req.user, 'MonthlyBalance', 'list');
+
+      const year = Number(req.query.year);
+      const month = Number(req.query.month);
+      const balances = await AccountantManager.listMonthlyBalances(year, month);
+
+      logger.info(`Listed ${balances.length} monthly balances for ${year}/${month}, user: ${req.user?.id}`);
+
+      return res.send(balances);
+    } catch (error) {
+      logger.error(error);
+
+      return errorHandler(error as Error, res);
+    }
+  };
+
   return {
     ...commonTransactionController,
     createContent,
     updateContent,
+    listMonthlyBalances,
     getTransactionTypes: (req: RequestWithUser, res: Response) => getTransactionTypes(
       req,
       res,

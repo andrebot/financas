@@ -49,3 +49,6 @@ export type GoalAction = {
   type: GoalActionType.EDIT;
   payload: Goal;
 }
+
+export type SortColumn = 'value' | 'dueDate' | 'progress';
+export type SortOrder = 'asc' | 'desc';

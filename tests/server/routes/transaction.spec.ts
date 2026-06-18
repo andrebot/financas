@@ -11,6 +11,7 @@ const accountantControllerStub = {
   updateContent: sinon.stub(),
   deleteContent: sinon.stub(),
   getTransactionTypes: sinon.stub(),
+  listMonthlyBalances: sinon.stub(),
 };
 
 const accountantRouter = proxyquire('../../../src/server/routes/accountant', {
@@ -35,8 +36,8 @@ describe('Accountant routes', () => {
     chai.expect(accountantRouter).to.be.a('function');
   });
 
-  it('should register 6 routes (5 CRUD from routeFactory + GET /types)', () => {
-    accountantRouter.stack.should.have.lengthOf(6);
+  it('should register 7 routes (5 CRUD from routeFactory + GET /types + GET /monthly-balance)', () => {
+    accountantRouter.stack.should.have.lengthOf(7);
   });
 
   it('should register GET /types for getTransactionTypes with auth middleware', () => {
@@ -45,6 +46,14 @@ describe('Accountant routes', () => {
     );
     chai.expect(typesRoute).to.exist;
     typesRoute.route.stack.should.have.lengthOf(2);
+  });
+
+  it('should register GET /monthly-balance for listMonthlyBalances with auth middleware', () => {
+    const balanceRoute = accountantRouter.stack.find(
+      (layer: any) => layer.route?.path === '/monthly-balance' && layer.route?.methods?.get,
+    );
+    chai.expect(balanceRoute).to.exist;
+    balanceRoute.route.stack.should.have.lengthOf(2);
   });
 
   it('should register standard CRUD routes', () => {

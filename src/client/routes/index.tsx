@@ -11,6 +11,7 @@ import BankAccounts from '../pages/bankAccounts';
 import Categories from '../pages/categories';
 import Goals from '../pages/goals';
 import Budget from '../pages/budget';
+import Transactions from '../pages/transactions';
 
 /**
  * Routes for the application.
@@ -40,6 +41,7 @@ export default function routes(): React.JSX.Element {
             <Route path="categories" element={<Categories />} />
             <Route path="goals" element={<Goals />} />
             <Route path="budget" element={<Budget />} />
+            <Route path="transactions" element={<Transactions />} />
           </Route>
         </Route>
         <Route path={apiConfig.user.loginPage} element={<Login />} />

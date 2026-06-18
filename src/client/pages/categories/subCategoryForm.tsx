@@ -5,10 +5,7 @@ import {
   SubCategoryHolder,
   SubCategoryTextField,
 } from './styledComponents';
-
-type SubCategoryFormProps = {
-  onAddSubCategory: (subCategoryName: string) => void;
-};
+import { SubCategoryFormProps } from '../../types';
 
 /**
  * Form to add a sub-category. It is a simple

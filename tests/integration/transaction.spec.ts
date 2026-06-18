@@ -2,6 +2,7 @@ import request from 'supertest';
 import server from '../../src/server/server';
 import {
   transaction1, transaction2, transaction3, account1, adminUser, userToDelete, goal1,
+  findMonthlyBalancesByAccountId,
 } from './connectDB';
 import { createAccessToken } from '../../src/server/managers/authenticationManager';
 import { TRANSACTION_TYPES, INVESTMENT_TYPES } from '../../src/server/types';
@@ -30,6 +31,17 @@ describe('Transactions', () => {
       response.status.should.be.eq(200);
       response.body.should.be.an('array');
       response.body.should.have.lengthOf(3);
+    });
+
+    it('should include accountName and categoryName in each transaction', async () => {
+      const response = await request(server)
+        .get(resourceUrl)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      const t1 = response.body.find((t: any) => t.id === transaction1.id);
+      response.status.should.be.eq(200);
+      t1.should.have.property('accountName').that.is.a('string');
+      t1.should.have.property('categoryName', null);
     });
 
     it('should return nothing when user has no transactions', async () => {
@@ -289,6 +301,141 @@ describe('Transactions', () => {
         .get(`${resourceUrl}/types`);
 
       response.status.should.be.eq(401);
+    });
+  });
+
+  describe('List Monthly Balances - GET /api/v1/accountant/monthly-balance', () => {
+    const testDate = new Date('2026-03-10');
+    let testAccountId: number;
+
+    before(async () => {
+      const token = createAccessToken(
+        adminUser.email, 'admin', adminUser.firstName, adminUser.lastName, adminUser.id,
+      );
+      const accountRes = await request(server)
+        .post('/api/v1/account')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          name: 'Monthly Balance Test Account',
+          agency: '8881',
+          accountNumber: '888111',
+          currency: 'BRL',
+          initialBalance: '0.00',
+          userId: adminUser.id,
+        });
+      testAccountId = accountRes.body.id;
+
+      await request(server)
+        .post(resourceUrl)
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          name: 'Monthly Balance Test Txn',
+          accountId: testAccountId,
+          type: 'deposit',
+          date: testDate,
+          value: '400.00',
+          userId: adminUser.id,
+        });
+    });
+
+    it('should return monthly balances for the given year and month', async () => {
+      const response = await request(server)
+        .get(`${resourceUrl}/monthly-balance?year=2026&month=3`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      response.status.should.be.eq(200);
+      response.body.should.be.an('array');
+      const balance = response.body.find((b: any) => b.accountId === testAccountId);
+      balance.should.exist;
+      balance.should.have.property('year', 2026);
+      balance.should.have.property('month', 3);
+      Number(balance.closingBalance).should.equal(400);
+    });
+
+    it('should return an empty array when no balances exist for the period', async () => {
+      const response = await request(server)
+        .get(`${resourceUrl}/monthly-balance?year=1999&month=1`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      response.status.should.be.eq(200);
+      response.body.should.be.an('array');
+      response.body.should.have.lengthOf(0);
+    });
+
+    it('should return 401 when the user is not authenticated', async () => {
+      const response = await request(server)
+        .get(`${resourceUrl}/monthly-balance?year=2026&month=3`);
+
+      response.status.should.be.eq(401);
+    });
+  });
+
+  describe('Monthly Balance Side Effects', () => {
+    let sideEffectAccountId: number;
+
+    before(async () => {
+      const token = createAccessToken(
+        adminUser.email, 'admin', adminUser.firstName, adminUser.lastName, adminUser.id,
+      );
+      const accountRes = await request(server)
+        .post('/api/v1/account')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          name: 'Side Effect Test Account',
+          agency: '7771',
+          accountNumber: '777111',
+          currency: 'BRL',
+          initialBalance: '0.00',
+          userId: adminUser.id,
+        });
+      sideEffectAccountId = accountRes.body.id;
+    });
+
+    it('should create a monthly balance record when a transaction is posted', async () => {
+      const response = await request(server)
+        .post(resourceUrl)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          name: 'Side Effect Txn',
+          accountId: sideEffectAccountId,
+          type: 'deposit',
+          date: new Date('2026-05-20'),
+          value: '150.00',
+          userId: adminUser.id,
+        });
+
+      const balances = await findMonthlyBalancesByAccountId(sideEffectAccountId);
+
+      response.status.should.be.eq(200);
+      balances.should.have.lengthOf(1);
+      balances[0].should.have.property('year', 2026);
+      balances[0].should.have.property('month', 5);
+      Number(balances[0].closingBalance).should.equal(150);
+      Number(balances[0].openingBalance).should.equal(0);
+    });
+
+    it('should revert the monthly balance when the transaction is deleted', async () => {
+      const createRes = await request(server)
+        .post(resourceUrl)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          name: 'Txn To Delete',
+          accountId: sideEffectAccountId,
+          type: 'withdraw',
+          date: new Date('2026-05-25'),
+          value: '50.00',
+          userId: adminUser.id,
+        });
+
+      const balancesAfterCreate = await findMonthlyBalancesByAccountId(sideEffectAccountId);
+      Number(balancesAfterCreate[0].closingBalance).should.equal(100);
+
+      await request(server)
+        .delete(`${resourceUrl}/${createRes.body.id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      const balancesAfterDelete = await findMonthlyBalancesByAccountId(sideEffectAccountId);
+      Number(balancesAfterDelete[0].closingBalance).should.equal(150);
     });
   });
 });

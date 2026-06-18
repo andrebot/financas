@@ -125,7 +125,7 @@ export default function AccountBankItem({ bankAccount }: AccountBankItemProps): 
   }, [isUpdateError]);
 
   return (
-    <AccountBankItemMain elevation={3}>
+    <AccountBankItemMain elevation={3} data-testid="bank-account-card">
       <AccountBankInfo>
         <BankIcon sx={{ fontSize: 40 }} />
         <div style={{ flexGrow: 1 }}>
@@ -169,7 +169,7 @@ export default function AccountBankItem({ bankAccount }: AccountBankItemProps): 
       </AccountBankInfo>
       <CreditCardsList>
         {(bankAccount.cards ?? []).map(({
-          expirationDate, number,
+          expirationDate, number, closingDay,
         }) => (
           <CreditCard
             key={number.slice(-4)}
@@ -177,6 +177,7 @@ export default function AccountBankItem({ bankAccount }: AccountBankItemProps): 
             last4Digits={number.slice(-4)}
             expirationDate={expirationDate}
             number={number}
+            closingDay={closingDay}
           />
         ))}
       </CreditCardsList>

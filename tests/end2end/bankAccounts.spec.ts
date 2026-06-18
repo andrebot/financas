@@ -319,6 +319,7 @@ test.describe('Bank Account Modal - Credit Card Validation', () => {
 
     const modal = page.getByTestId('add-bank-account-modal');
     await fillMuiMonthYear(modal, '12/30');
+    await modal.getByTestId('credit-card-closing-day-input').fill('15');
     await modal.getByTestId('credit-card-add-button').click();
 
     await expect(page.getByText(i18nKeys.translation.creditCardNumberRequired)).toBeVisible();
@@ -341,6 +342,7 @@ test.describe('Bank Account Modal - Credit Card Validation', () => {
 
     const modal = page.getByTestId('add-bank-account-modal');
     await modal.getByTestId('credit-card-number-input').fill('4111111111111111');
+    await modal.getByTestId('credit-card-closing-day-input').fill('15');
     await modal.getByTestId('credit-card-add-button').click();
 
     await expect(page.getByText(i18nKeys.translation.expirationDateRequired)).toBeVisible();
@@ -351,9 +353,36 @@ test.describe('Bank Account Modal - Credit Card Validation', () => {
     await goToBankAccountsPage(page);
     await openAddBankAccountModal(page);
 
-    await addCreditCard(page, '4111111111111111', '01/24');
+    await addCreditCard(page, '4111111111111111', '01/20');
 
     await expect(page.getByText(i18nKeys.translation.expirationDateInvalid)).toBeVisible();
+  });
+
+  test('should show required error when adding card with no closing day', async ({ page }) => {
+    await login(page, getBankAccountsUser(test.info().project.name).email, bankAccountsUserPassword);
+    await goToBankAccountsPage(page);
+    await openAddBankAccountModal(page);
+
+    const modal = page.getByTestId('add-bank-account-modal');
+    await modal.getByTestId('credit-card-number-input').fill('4111111111111111');
+    await fillMuiMonthYear(modal, '12/30');
+    await modal.getByTestId('credit-card-add-button').click();
+
+    await expect(page.getByText(i18nKeys.translation.closingDayRequired)).toBeVisible();
+  });
+
+  test('should show invalid error when adding card with out-of-range closing day', async ({ page }) => {
+    await login(page, getBankAccountsUser(test.info().project.name).email, bankAccountsUserPassword);
+    await goToBankAccountsPage(page);
+    await openAddBankAccountModal(page);
+
+    const modal = page.getByTestId('add-bank-account-modal');
+    await modal.getByTestId('credit-card-number-input').fill('4111111111111111');
+    await fillMuiMonthYear(modal, '12/30');
+    await modal.getByTestId('credit-card-closing-day-input').fill('32');
+    await modal.getByTestId('credit-card-add-button').click();
+
+    await expect(page.getByText(i18nKeys.translation.closingDayInvalid)).toBeVisible();
   });
 });
 

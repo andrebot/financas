@@ -1,4 +1,5 @@
 import { eq, and, sql } from 'drizzle-orm';
+import { isInflowType } from '../../utils/transactionTypeUtils';
 import Repository from './repository';
 import { getAutorizationDatabaseContext } from '../../utils/authorization';
 import { monthlyBalances } from '../models/monthlyBalanceModel';
@@ -50,16 +51,18 @@ async function updateMonthlyBalanceWithTransaction(
 
   const year = transaction.date.getFullYear();
   const month = transaction.date.getMonth() + 1;
-  const op = shouldInvertValue ? '-' : '+';
+  const inflow = isInflowType(transaction.type);
+  const sign = shouldInvertValue ? -1 : 1;
+  const value = Number(transaction.value);
+  const closingDelta = inflow ? sign * value : -(sign * value);
+  const totalInDelta = inflow ? sign * value : 0;
+  const totalOutDelta = inflow ? 0 : sign * value;
 
   await getDb().update(monthlyBalances)
     .set({
-      closingBalance: sql`${monthlyBalances.closingBalance} ${sql.raw(op)} ${transaction.value}`,
-      totalIn: sql`${monthlyBalances.totalIn} ${sql.raw(op)}
-        CASE WHEN ${transaction.value}::numeric > 0 THEN ${transaction.value}::numeric ELSE 0 END`,
-      totalOut: sql`${monthlyBalances.totalOut} ${sql.raw(op)}
-        CASE WHEN ${transaction.value}::numeric < 0
-        THEN ABS(${transaction.value}::numeric) ELSE 0 END`,
+      closingBalance: sql`${monthlyBalances.closingBalance} + ${closingDelta}`,
+      totalIn: sql`${monthlyBalances.totalIn} + ${totalInDelta}`,
+      totalOut: sql`${monthlyBalances.totalOut} + ${totalOutDelta}`,
     })
     .where(and(
       eq(monthlyBalances.accountId, transaction.accountId),
@@ -69,8 +72,30 @@ async function updateMonthlyBalanceWithTransaction(
     ));
 }
 
+/**
+ * Returns all monthly balance records for a given year and month,
+ * scoped to the current authorization context.
+ *
+ * @param year - The four-digit year.
+ * @param month - The month (1-indexed).
+ * @returns All matching monthly balance records.
+ */
+async function findByYearAndMonth(year: number, month: number): Promise<IMonthlyBalance[]> {
+  return getDb()
+    .select()
+    .from(monthlyBalances)
+    .where(
+      and(
+        eq(monthlyBalances.year, year),
+        eq(monthlyBalances.month, month),
+        getAutorizationDatabaseContext(monthlyBalances),
+      ),
+    );
+}
+
 export default {
   ...monthlyBalanceRepo,
   findMonthlyBalance,
+  findByYearAndMonth,
   updateMonthlyBalanceWithTransaction,
 };

@@ -3,12 +3,14 @@ import { withTransaction } from '../utils/transaction';
 import {
   calculateLastMonth, checkVoidPayload,
 } from '../utils/misc';
+import { isInflowType } from '../utils/transactionTypeUtils';
 import MonthlyBalanceRepo from '../resources/repositories/monthlyBalanceRepo';
 import GoalRepo from '../resources/repositories/goalRepo';
 import BudgetRepo from '../resources/repositories/budgetRepo';
 import TransactionRepo from '../resources/repositories/transactionRepo';
 import {
   ITransaction,
+  ITransactionWithRelations,
   IMonthlyBalance,
   TRANSACTION_TYPES,
   INVESTMENT_TYPES,
@@ -78,6 +80,8 @@ async function addTransactionToMonthlyBalance(
 ): Promise<void> {
   const { date } = content;
   const value = Number(content.value);
+  const inflow = isInflowType(content.type);
+  const closingDelta = inflow ? value : -value;
 
   logger.info(`Getting monthly balance for ${date.getFullYear()}-${date.getMonth() + 1}`);
 
@@ -93,9 +97,9 @@ async function addTransactionToMonthlyBalance(
       month: date.getMonth() + 1,
       year: date.getFullYear(),
       openingBalance: String(openingBalance),
-      closingBalance: String(openingBalance + value),
-      totalIn: value > 0 ? String(value) : '0',
-      totalOut: value < 0 ? String(Math.abs(value)) : '0',
+      closingBalance: String(openingBalance + closingDelta),
+      totalIn: inflow ? String(value) : '0',
+      totalOut: !inflow ? String(value) : '0',
     } as IMonthlyBalance);
   } else {
     logger.info('Monthly balance found, updating it');
@@ -363,10 +367,28 @@ async function getTransaction(
  */
 async function listTransactions(
   transactionRepo: ITransactionRepo,
-): Promise<ITransaction[]> {
+): Promise<ITransactionWithRelations[]> {
   logger.info('Listing transactions');
 
-  return transactionRepo.listAll();
+  return transactionRepo.listAllWithRelations();
+}
+
+/**
+ * Lists all monthly balance records for a given year and month.
+ *
+ * @param year - The four-digit year.
+ * @param month - The month (1-indexed).
+ * @param monthlyBalanceRepo - The monthly balance repository to use.
+ * @returns The monthly balance records for the period.
+ */
+async function listMonthlyBalances(
+  year: number,
+  month: number,
+  monthlyBalanceRepo: IMonthlyBalanceRepo,
+): Promise<IMonthlyBalance[]> {
+  logger.info(`Listing monthly balances for ${year}/${month}`);
+
+  return monthlyBalanceRepo.findByYearAndMonth(year, month);
 }
 
 /**
@@ -421,6 +443,11 @@ export function AccountantManager(
       transactionRepo,
     ),
     listTransactions: () => listTransactions(transactionRepo),
+    listMonthlyBalances: (year: number, month: number) => listMonthlyBalances(
+      year,
+      month,
+      monthlyBalanceRepo,
+    ),
     getTransactionTypes: () => getTransactionTypes(),
   };
 }

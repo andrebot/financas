@@ -54,6 +54,20 @@ describe('Budget', () => {
       otherBudget.should.have.property('categories').that.is.an('array').with.lengthOf(0);
     });
 
+    it('should include a spent field on each budget', async () => {
+      const response = await request(server)
+        .get(resourceUrl)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      const firstBudget = response.body.find((budget: typeof budget1) => budget.id === budget1.id);
+
+      response.status.should.be.eq(200);
+      firstBudget.should.have.property('spent', 0);
+      response.body.forEach((budget: any) => {
+        budget.should.have.property('spent');
+      });
+    });
+
     it('should return nothing when user has no budgets', async () => {
       const token = createAccessToken(
         userToDelete.email,

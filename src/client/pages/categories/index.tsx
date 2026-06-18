@@ -245,7 +245,7 @@ export default function Categories(): React.JSX.Element {
           </IconButton>
         </AddCategoryButton>
         {formattedCategories.map((category) => (
-          <ParentCategory elevation={6} key={category.id}>
+          <ParentCategory elevation={6} key={category.id} data-testid="category-card">
             <CategoryTitleHolder>
               <Typography variant="h3">{category.name}</Typography>
               <Tooltip title={t('editCategory')}>

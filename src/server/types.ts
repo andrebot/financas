@@ -182,7 +182,7 @@ export interface IGoalItem {
 export interface ICard extends InferSelectModel<typeof cards> { }
 
 /** Card fields accepted from account create/update forms. */
-export type ICardPayload = Pick<ICard, 'number' | 'expirationDate'>;
+export type ICardPayload = Pick<ICard, 'number' | 'expirationDate' | 'closingDay'>;
 
 /** Card payload used when reconciling a submitted full account card list. */
 export type ICardSyncPayload = ICardPayload & {
@@ -221,6 +221,12 @@ export interface IUser extends InferSelectModel<typeof users> { }
 
 /** Domain entity representing a financial transaction. */
 export interface ITransaction extends InferSelectModel<typeof transactions> { }
+
+/** Transaction enriched with its related account name and category name. */
+export type ITransactionWithRelations = ITransaction & {
+  accountName: string;
+  categoryName: string | null;
+};
 
 /** Domain entity representing a savings goal. */
 export interface IGoal extends InferSelectModel<typeof goals> { }
@@ -367,6 +373,13 @@ export interface ITransactionRepo extends IRepository<typeof transactions, ITran
    * @param goals - The goal entries with goalId and percentage.
    */
   saveTransactionGoals(transactionId: number, goals: ITransactionGoalEntry[]): Promise<void>;
+  /**
+   * Lists all transactions for the current authorization context, joined with
+   * their related account name and category name.
+   *
+   * @returns Transactions enriched with `accountName` and `categoryName`.
+   */
+  listAllWithRelations(): Promise<ITransactionWithRelations[]>;
 }
 
 /** Repository contract for the categories table, extending base CRUD with hierarchy queries. */
@@ -403,6 +416,14 @@ export interface IGoalRepo extends IRepository<typeof goals, IGoal> {
    * @param shouldInvertValue - When true the contribution is subtracted (used on delete/revert).
    */
   updateGoalFromTransaction(transaction: ITransaction, shouldInvertValue?: boolean): Promise<void>;
+  /**
+   * Lists goals with savedValue computed from transactions up to the last day of the given month.
+   *
+   * @param year - The four-digit year.
+   * @param month - The month, 1-indexed.
+   * @returns Goals with a month-scoped savedValue.
+   */
+  listGoalsWithSavedValueUpTo(year: number, month: number): Promise<IGoal[]>;
 }
 
 /** Repository contract for the budgets table, extending base CRUD with usage tracking. */
@@ -433,6 +454,12 @@ export interface IBudgetRepo extends IRepository<typeof budgets, IBudget> {
    */
   deleteBudgetCategories(budgetId: number): Promise<void>;
   listBudgetsWithCategories(): Promise<IBudget[]>;
+  /**
+   * Lists all budgets with categories and their total spent amount from budgetUsage.
+   *
+   * @returns Budgets with categories and a computed `spent` field.
+   */
+  listBudgetsWithSpent(): Promise<IBudget[]>;
 }
 
 /** Repository contract for the monthlyBalances table, extending base CRUD with balance management. */
@@ -452,6 +479,14 @@ export interface IMonthlyBalanceRepo extends IRepository<typeof monthlyBalances,
    * @param shouldInvertValue - When true the transaction's impact is subtracted.
    */
   updateMonthlyBalanceWithTransaction(transaction: ITransaction, shouldInvertValue: boolean): Promise<void>;
+  /**
+   * Returns all monthly balance records for a given year and month,
+   * scoped to the current authorization context.
+   *
+   * @param year - The four-digit year.
+   * @param month - The month (1-indexed).
+   */
+  findByYearAndMonth(year: number, month: number): Promise<IMonthlyBalance[]>;
 }
 
 /** Repository contract for the users table, extending base CRUD with email lookup. */
@@ -518,7 +553,8 @@ export interface IAccountantManager {
     goals: ITransactionGoalEntry[] | undefined,
   ) => Promise<ITransaction | null>;
   getTransaction: (id: number) => Promise<ITransaction | null>;
-  listTransactions: () => Promise<ITransaction[]>;
+  listTransactions: () => Promise<ITransactionWithRelations[]>;
+  listMonthlyBalances: (year: number, month: number) => Promise<IMonthlyBalance[]>;
   getTransactionTypes: () => { transactionTypes: string[]; investmentTypes: string[] };
 }
 
@@ -639,6 +675,10 @@ export interface ICommonActions<K extends Content> {
   getContent: (id: number) => Promise<K | null>;
 }
 
+export interface IGoalActions extends ICommonActions<IGoal> {
+  listGoalsForMonth(year: number, month: number): Promise<IGoal[]>;
+}
+
 /**
  * Aggregated manager actions passed to the budget page controller,
  * covering the four content types that a budget view can interact with.
@@ -649,7 +689,7 @@ export type ContentManagerActions = {
   /** CRUD actions for categories. */
   categoryActions: ICommonActions<ICategory>;
   /** CRUD actions for goals. */
-  goalActions: ICommonActions<IGoal>;
+  goalActions: IGoalActions;
   /** CRUD actions for accounts. */
   accountActions: ICommonActions<IAccountPayload>;
 };

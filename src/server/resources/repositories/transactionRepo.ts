@@ -5,9 +5,11 @@ import { getAutorizationDatabaseContext } from '../../utils/authorization';
 import Repository from './repository';
 import { goals } from '../models/goalModel';
 import { transactions, transactionToGoals } from '../models/transactionModel';
+import { accounts } from '../models/accountModel';
+import { categories } from '../models/categoryModel';
 import { createLogger } from '../../utils/logger';
 import { getDb } from '../../utils/transaction';
-import type { ITransaction, ITransactionGoalEntry } from '../../types';
+import type { ITransaction, ITransactionGoalEntry, ITransactionWithRelations } from '../../types';
 
 const logger = createLogger('Repository:Transaction');
 const transactionRepo = Repository<typeof transactions, ITransaction>(transactions, 'Transaction', logger);
@@ -23,12 +25,12 @@ const transactionRepo = Repository<typeof transactions, ITransaction>(transactio
  */
 async function findByCategoryWithDateRange(
   userId: number,
-  categories: number[],
+  categoriesIds: number[],
   startDate: Date,
   endDate: Date,
 ): Promise<ITransaction[]> {
   logger.info(`Finding transactions by category and date range for user: ${userId}`);
-  logger.info(`Categories: ${categories}`);
+  logger.info(`Categories: ${categoriesIds}`);
   logger.info(`Start date: ${startDate}`);
   logger.info(`End date: ${endDate}`);
 
@@ -37,7 +39,7 @@ async function findByCategoryWithDateRange(
     .from(transactions)
     .where(and(
       eq(transactions.userId, userId),
-      inArray(transactions.categoryId, categories),
+      inArray(transactions.categoryId, categoriesIds),
       gte(transactions.date, startDate),
       lte(transactions.date, endDate),
       getAutorizationDatabaseContext(transactions),
@@ -156,6 +158,36 @@ async function saveTransactionGoals(
   );
 }
 
+/**
+ * Lists all transactions for the current authorization context, joined with
+ * their related account name and category name.
+ *
+ * @returns Transactions enriched with `accountName` and `categoryName`.
+ */
+async function listAllWithRelations(): Promise<ITransactionWithRelations[]> {
+  return getDb()
+    .select({
+      id: transactions.id,
+      name: transactions.name,
+      categoryId: transactions.categoryId,
+      accountId: transactions.accountId,
+      cardId: transactions.cardId,
+      type: transactions.type,
+      date: transactions.date,
+      value: transactions.value,
+      investmentType: transactions.investmentType,
+      userId: transactions.userId,
+      createdAt: transactions.createdAt,
+      updatedAt: transactions.updatedAt,
+      accountName: accounts.name,
+      categoryName: categories.name,
+    })
+    .from(transactions)
+    .leftJoin(accounts, eq(transactions.accountId, accounts.id))
+    .leftJoin(categories, eq(transactions.categoryId, categories.id))
+    .where(getAutorizationDatabaseContext(transactions)) as Promise<ITransactionWithRelations[]>;
+}
+
 export default {
   ...transactionRepo,
   findByCategoryWithDateRange,
@@ -164,4 +196,5 @@ export default {
   findByMonthAndYear,
   deleteTransactionFromGoals,
   saveTransactionGoals,
+  listAllWithRelations,
 };

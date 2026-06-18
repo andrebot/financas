@@ -5,7 +5,7 @@ import { relations } from 'drizzle-orm';
 import { users } from './userModel';
 import { categories } from './categoryModel';
 import { timestampColumns } from './columHelpers';
-import { accounts } from './accountModel';
+import { accounts, cards } from './accountModel';
 import { goals } from './goalModel';
 
 export const transactionTypes = pgEnum('transactionTypes', [
@@ -16,11 +16,13 @@ export const transactionTypes = pgEnum('transactionTypes', [
   'bankSlip',
   'cardPurchase',
   'cardRefund',
-  'payment',
   'investmentBuy',
   'investmentSell',
   'investmentDividend',
   'investmentInterest',
+  'investmentDueDate',
+  'pixIn',
+  'pixOut',
 ]);
 
 export const investmentTypes = pgEnum('investmentTypes', [
@@ -48,6 +50,7 @@ export const transactions = pgTable('transactions', {
   name: text().notNull(),
   categoryId: integer().references(() => categories.id),
   accountId: integer().notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  cardId: integer().references(() => cards.id, { onDelete: 'set null' }),
   type: transactionTypes().notNull(),
   date: timestamp().notNull(),
   value: numeric({ precision: 14, scale: 2 }).notNull(),

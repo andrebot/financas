@@ -36,7 +36,7 @@ export function getBudgetUser(projectName: string) {
  * @param page - Playwright page under test.
  */
 export async function goToBudgetPage(page: Page) {
-  await page.getByRole('button', { name: /menu/i }).click();
+  await page.getByRole('button', { name: 'menu', exact: true }).click();
   await page.getByRole('button', { name: i18nKeys.translation.budget }).click();
 }
 

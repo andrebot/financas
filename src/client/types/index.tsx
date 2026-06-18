@@ -15,15 +15,46 @@ import {
   BankAccountAction,
   CardBrand,
   CreditCardFormProps,
+  AddBankAccountModalProps,
+  TransferIconProps,
 } from './bankAccounts';
 import { ChangePasswordAction, SettingsAction } from './settings';
 import { ModalContextType, ModalProviderProps } from './modal';
-import { Category, FormattedCategory } from './categories';
+import {
+  Category,
+  FormattedCategory,
+  CategorySelectOption,
+  AddCategoryModalProps,
+  SubCategoryFormProps,
+} from './categories';
 import { ApiBuilder, RTKApi } from './requests';
 import {
-  GoalState, GoalAction, Goal, GoalsTableProps,
+  GoalState, GoalAction, Goal, GoalsTableProps, SortColumn, SortOrder,
 } from './goals';
-import { Budget, BudgetFormState, BudgetFormAction } from './budget';
+import {
+  Budget,
+  ActionFunction,
+  BudgetFormState,
+  BudgetFormAction,
+} from './budget';
+import {
+  TransactionProps,
+  Transaction,
+  SortedTransactionItem,
+  TransactionListProps,
+  TransactionFormState,
+  TransactionFormAction,
+  TransactionActionFunction,
+} from './transaction';
+import { MonthlyBalance, MonthlyBalanceParams } from './monthlyBalance';
+import { ProgressItem, ProgressColors, ProgressCardProps } from './progressCard';
+import {
+  DashboardHeaderProps,
+  BankAccountBalancesProps,
+  BudgetCardProps,
+  GoalsCardProps,
+  CreditCardBalancesProps,
+} from './dashboard';
 
 export {
   UserType,
@@ -42,6 +73,8 @@ export {
   BankAccountAction,
   BankAccount,
   BankAccountState,
+  AddBankAccountModalProps,
+  TransferIconProps,
   ModalContextType,
   ModalProviderProps,
   ChangePasswordAction,
@@ -52,11 +85,34 @@ export {
   ApiBuilder,
   RTKApi,
   FormattedCategory,
+  CategorySelectOption,
+  AddCategoryModalProps,
+  SubCategoryFormProps,
   GoalState,
   GoalAction,
   Goal,
   GoalsTableProps,
+  SortColumn,
+  SortOrder,
   Budget,
   BudgetFormState,
   BudgetFormAction,
+  ActionFunction,
+  TransactionProps,
+  Transaction,
+  SortedTransactionItem,
+  TransactionListProps,
+  TransactionFormState,
+  TransactionFormAction,
+  TransactionActionFunction,
+  MonthlyBalance,
+  MonthlyBalanceParams,
+  ProgressItem,
+  ProgressColors,
+  ProgressCardProps,
+  DashboardHeaderProps,
+  BankAccountBalancesProps,
+  BudgetCardProps,
+  GoalsCardProps,
+  CreditCardBalancesProps,
 };

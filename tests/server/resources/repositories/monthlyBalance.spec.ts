@@ -94,6 +94,37 @@ describe('MonthlyBalanceRepo', function () {
     should().not.exist(result);
   });
 
+  describe('findByYearAndMonth', function () {
+    it('should return all matching monthly balance records for a given year and month', async function () {
+      const row = {
+        id: 10,
+        accountId: 3,
+        month: 6,
+        year: 2026,
+        openingBalance: '0.00',
+        closingBalance: '500.00',
+        createdAt: new Date(),
+        updatedAt: null,
+      };
+      selectWhereStub.resolves([row]);
+
+      const result = await runWithContext(() => monthlyBalanceRepo.findByYearAndMonth(2026, 6)) as typeof row[];
+
+      selectStub.should.have.been.calledOnce;
+      selectFromStub.should.have.been.calledOnceWithExactly(monthlyBalances);
+      selectWhereStub.should.have.been.calledOnce;
+      result.should.deep.equal([row]);
+    });
+
+    it('should return an empty array when no records match', async function () {
+      selectWhereStub.resolves([]);
+
+      const result = await runWithContext(() => monthlyBalanceRepo.findByYearAndMonth(2020, 1));
+
+      (result as unknown[]).should.deep.equal([]);
+    });
+  });
+
   describe('updateMonthlyBalanceWithTransaction', function () {
     it('should call update with correct chain when adding a transaction', async function () {
       const txn = buildTransaction({ accountId: 5, value: '50.00' });
@@ -125,6 +156,18 @@ describe('MonthlyBalanceRepo', function () {
 
       updateStub.should.have.been.calledOnceWithExactly(monthlyBalances);
       updateSetStub.should.have.been.calledOnce;
+      updateWhereStub.should.have.been.calledOnce;
+    });
+
+    it('should correctly compute outflow deltas when type is an outflow', async function () {
+      const txn = buildTransaction({ accountId: 5, type: 'cardPurchase', value: '75.00' });
+
+      await runWithContext(() => monthlyBalanceRepo.updateMonthlyBalanceWithTransaction(txn, false));
+
+      updateStub.should.have.been.calledOnceWithExactly(monthlyBalances);
+      updateSetStub.should.have.been.calledOnce;
+      const setArgs = updateSetStub.firstCall.args[0];
+      setArgs.should.have.keys('closingBalance', 'totalIn', 'totalOut');
       updateWhereStub.should.have.been.calledOnce;
     });
   });

@@ -11,7 +11,7 @@ This APP is made to help you manage your finances and invest, by providing power
 3. ~~Build Category page~~
 4. ~~Build Goals page~~
 5. ~~Build Budget page~~
-6. Build transactions page
+6. ~~Build transactions page~~
 7. Build Investments page
 8. Build dashboard page
 9. Build FII portifolio builder page

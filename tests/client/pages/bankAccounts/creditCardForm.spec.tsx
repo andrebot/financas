@@ -92,6 +92,9 @@ describe('CreditCardForm', () => {
       fireEvent.keyDown(yearSpinbutton, { key: 'ArrowUp' });
     }
 
+    const closingDayInput = screen.getByLabelText(i18nEn.translation.closingDay) as HTMLInputElement;
+    fireEvent.change(closingDayInput, { target: { value: '15' } });
+
     fireEvent.click(screen.getByRole('button', { name: /add card/i }));
 
     expect(mockSetCreditCards).toHaveBeenCalledTimes(1);
@@ -120,6 +123,9 @@ describe('CreditCardForm', () => {
     for (let i = 0; i < 6; i += 1) {
       fireEvent.keyDown(yearSpinbutton, { key: 'ArrowUp' });
     }
+
+    const closingDayInput = screen.getByLabelText(i18nEn.translation.closingDay) as HTMLInputElement;
+    fireEvent.change(closingDayInput, { target: { value: '15' } });
 
     fireEvent.click(screen.getByRole('button', { name: /add card/i }));
 
@@ -201,6 +207,22 @@ describe('CreditCardForm', () => {
     expect(screen.getByText(i18nEn.translation.expirationDateInvalid)).toBeInTheDocument();
   });
 
+  it('should dispatch undefined when closing day input is cleared', () => {
+    setup([]);
+
+    const closingDayInput = screen.getByLabelText(i18nEn.translation.closingDay) as HTMLInputElement;
+    // First set a value, then clear it to trigger the empty-string branch
+    fireEvent.change(closingDayInput, { target: { value: '15' } });
+    fireEvent.change(closingDayInput, { target: { value: '' } });
+
+    // After clearing, clicking Add card should show closingDayRequired error
+    const numberInput = screen.getByLabelText(i18nEn.translation.creditCardNumber) as HTMLInputElement;
+    fireEvent.change(numberInput, { target: { value: '4111111111111111' } });
+    fireEvent.click(screen.getByRole('button', { name: /add card/i }));
+
+    expect(mockSetCreditCards).not.toHaveBeenCalled();
+  });
+
   it('should list existing cards and allows deleting one', () => {
     const initialCards: CreditCardProps[] = [
       {
@@ -208,6 +230,7 @@ describe('CreditCardForm', () => {
         last4Digits: '1111',
         number: '4111111111111111',
         expirationDate: '01/25',
+        closingDay: 15,
       },
     ];
 

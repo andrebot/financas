@@ -223,4 +223,26 @@ describe('TransactionRepo', () => {
       insertStub.should.not.have.been.called;
     });
   });
+
+  describe('listAllWithRelations', () => {
+    it('should return transactions joined with account and category names', async () => {
+      const mockRow = {
+        id: 1, name: 'Coffee', categoryId: 2, accountId: 3, cardId: null,
+        type: 'cardPurchase', date: new Date('2026-06-01'), value: '5.00',
+        investmentType: null, userId: 1, createdAt: new Date(), updatedAt: null,
+        accountName: 'Checking', categoryName: 'Food',
+      };
+      const leftJoinWhereStub = sinon.stub().resolves([mockRow]);
+      const leftJoinStub = sinon.stub();
+      leftJoinStub.returns({ leftJoin: leftJoinStub, where: leftJoinWhereStub });
+      selectFromStub.returns({ leftJoin: leftJoinStub, where: leftJoinWhereStub });
+
+      const result = await runWithContext(() => transactionRepo.listAllWithRelations());
+
+      selectStub.should.have.been.calledOnce;
+      leftJoinStub.should.have.been.calledTwice;
+      leftJoinWhereStub.should.have.been.calledOnce;
+      (result as typeof mockRow[]).should.deep.equal([mockRow]);
+    });
+  });
 });

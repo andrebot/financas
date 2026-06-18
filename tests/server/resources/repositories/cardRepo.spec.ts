@@ -38,6 +38,7 @@ describe('CardRepo', () => {
     id: 10,
     number: '4111111111111111',
     expirationDate: '12/30',
+    closingDay: 15,
     accountId: 1,
     createdAt: new Date(),
     updatedAt: null,
@@ -94,6 +95,7 @@ describe('CardRepo', () => {
       const result = await runWithContext(() => cardRepo.syncAccountCards(1, [{
         number: savedCard.number,
         expirationDate: savedCard.expirationDate,
+        closingDay: savedCard.closingDay,
       }]));
 
       dbHolder.db.insert.should.have.been.calledOnceWithExactly(cards);
@@ -101,6 +103,7 @@ describe('CardRepo', () => {
         accountId: 1,
         number: savedCard.number,
         expirationDate: savedCard.expirationDate,
+        closingDay: savedCard.closingDay,
       });
       result.should.deep.equal([savedCard]);
     });
@@ -112,12 +115,14 @@ describe('CardRepo', () => {
         id: savedCard.id,
         number: '5555555555554444',
         expirationDate: '01/31',
+        closingDay: 20,
       }]));
 
       dbHolder.db.update.should.have.been.calledOnceWithExactly(cards);
       updateSetStub.should.have.been.calledOnceWithExactly({
         number: '5555555555554444',
         expirationDate: '01/31',
+        closingDay: 20,
       });
     });
 
@@ -139,6 +144,7 @@ describe('CardRepo', () => {
           id: 999,
           number: '5555555555554444',
           expirationDate: '01/31',
+          closingDay: 10,
         }]));
         chai.assert.fail('Should have thrown');
       } catch (error) {

@@ -24,7 +24,7 @@ export function getCategoryUser(projectName: string) {
 }
 
 export async function goToCategoriesPage(page: Page) {
-  await page.getByRole('button', { name: /menu/i }).click();
+  await page.getByRole('button', { name: 'menu', exact: true }).click();
   await page.getByRole('button', { name: i18nKeys.translation.categories }).click();
 }
 
@@ -42,18 +42,18 @@ export async function saveCategory(page: Page) {
 }
 
 export function getCategoryCard(page: Page, categoryName: string) {
-  return page.locator('.MuiPaper-root').filter({ hasText: categoryName }).first();
+  return page.getByTestId('category-card').filter({ hasText: categoryName }).first();
 }
 
 export async function editCategory(page: Page, categoryName: string) {
   const card = getCategoryCard(page, categoryName);
-  await card.getByRole('button').nth(0).click();
+  await card.getByRole('button', { name: i18nKeys.translation.editCategory }).click();
   await page.getByRole('textbox', { name: i18nKeys.translation.categoryName, exact: true }).waitFor({ state: 'visible' });
 }
 
 export async function deleteCategory(page: Page, categoryName: string) {
   const card = getCategoryCard(page, categoryName);
-  await card.getByRole('button').nth(1).click();
+  await card.getByRole('button', { name: i18nKeys.translation.deleteCategory }).click();
   await page.getByRole('button', { name: new RegExp(i18nKeys.translation.confirm, 'i') }).click();
 }
 

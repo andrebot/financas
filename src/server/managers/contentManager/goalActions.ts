@@ -2,10 +2,10 @@ import { Logger } from 'winston';
 import commonActions from './commonActions';
 import { checkVoidInstance } from '../../utils/misc';
 import type {
-  ICommonActions,
   IGoalRepo,
   ITransactionRepo,
   IGoal,
+  IGoalActions,
 } from '../../types';
 
 /**
@@ -40,6 +40,17 @@ async function deleteGoal(
   return goal;
 }
 
+async function listGoalsForMonth(
+  year: number,
+  month: number,
+  goalRepo: IGoalRepo,
+  logger: Logger,
+): Promise<IGoal[]> {
+  logger.info(`Listing goals for ${year}/${month}`);
+
+  return goalRepo.listGoalsWithSavedValueUpTo(year, month);
+}
+
 /**
  * Creates the goal actions.
  *
@@ -52,7 +63,7 @@ export default function createGoalActions(
   goalRepo: IGoalRepo,
   transactionRepo: ITransactionRepo,
   logger: Logger,
-): ICommonActions<IGoal> {
+): IGoalActions {
   const commonGoalActions = commonActions(goalRepo, 'Goal');
 
   return {
@@ -61,6 +72,12 @@ export default function createGoalActions(
       id,
       goalRepo,
       transactionRepo,
+      logger,
+    ),
+    listGoalsForMonth: async (year: number, month: number): Promise<IGoal[]> => listGoalsForMonth(
+      year,
+      month,
+      goalRepo,
       logger,
     ),
   };

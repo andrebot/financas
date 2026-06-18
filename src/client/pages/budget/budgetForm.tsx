@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { enqueueSnackbar } from 'notistack';
 import TextField from '@mui/material/TextField';
@@ -23,18 +23,12 @@ import {
   CategorySelect,
   SaveBudgetButton,
 } from './styledComponents';
-import { useListCategoriesQuery } from '../../features/category';
 import { useCreateBudgetMutation, useUpdateBudgetMutation } from '../../features/budget';
 import { useAuth } from '../../hooks/authContext';
+import { useFormattedCategories } from '../../hooks/useFormattedCategories';
 import { BUDGET_TYPES, BudgetFormActionType } from '../../enums';
-import { Category } from '../../types/categories';
-import type { BudgetFormState, BudgetFormAction } from '../../types';
+import type { BudgetFormState, BudgetFormAction, CategorySelectOption } from '../../types';
 import { hasBudgetFormErrors, validateBudgetFormState } from './budgetFormReducer';
-
-type FormattedBudgetCategory = {
-  id: number;
-  label: string;
-};
 
 const MenuProps = {
   PaperProps: {
@@ -44,32 +38,6 @@ const MenuProps = {
     },
   },
 };
-
-/**
- * Formats child categories with their parent category names for display.
- *
- * @param categories - Categories returned by the API.
- * @returns Category ids and display labels in the format "Parent - Child".
- */
-export function formatCategories(categories: Category[]): FormattedBudgetCategory[] {
-  const categoryNamesById = new Map(
-    categories.map((category) => [category.id, category.name]),
-  );
-
-  return categories
-    .reduce((acc, category) => {
-      const parentName = category.parentCategoryId
-        ? categoryNamesById.get(category.parentCategoryId)
-        : undefined;
-
-      if (parentName && category.id !== undefined) {
-        acc.push({ id: category.id, label: `${parentName} - ${category.name}` });
-      }
-
-      return acc;
-    }, [] as FormattedBudgetCategory[])
-    .sort((a, b) => a.label.localeCompare(b.label));
-}
 
 /**
  * Converts a MUI multi-select value to numeric category ids.
@@ -83,16 +51,9 @@ export function toCategoryIds(value: unknown): number[] {
   return values.map((categoryId) => Number(categoryId));
 }
 
-/**
- * Finds the display label for a selected category id.
- *
- * @param categoryId - Selected category id.
- * @param formattedCategories - Category display options.
- * @returns The display label or the id if the option is no longer loaded.
- */
 function getCategoryLabel(
   categoryId: number,
-  formattedCategories: FormattedBudgetCategory[],
+  formattedCategories: CategorySelectOption[],
 ): string {
   return formattedCategories.find((category) => category.id === categoryId)?.label
     ?? String(categoryId);
@@ -115,14 +76,9 @@ export default function BudgetForm({
   const { t } = useTranslation();
   const theme = useTheme();
   const { user } = useAuth();
-  const { data: categories = [] } = useListCategoriesQuery();
+  const formattedCategories = useFormattedCategories();
   const [createBudget] = useCreateBudgetMutation();
   const [updateBudget] = useUpdateBudgetMutation();
-
-  const formattedCategories = useMemo(
-    () => formatCategories(categories),
-    [categories],
-  );
 
   /**
    * Gets the font weight for a category menu option based on selection state.
@@ -190,7 +146,7 @@ export default function BudgetForm({
    * @param event - The selected end date value.
    */
   const handleEndDateChange = (event: PickerValue) => {
-    budgetFormDispatch({ type: BudgetFormActionType.SET_END_DATE, payload: event?.toDate() });
+    budgetFormDispatch({ type: BudgetFormActionType.SET_END_DATE, payload: event?.endOf('month').toDate() });
   };
 
   /**

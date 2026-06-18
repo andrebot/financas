@@ -8,9 +8,11 @@ const MAX_CARD_DIGITS = 16;
 const initialState: CreditCardFormState = {
   number: '',
   expirationDate: undefined,
+  closingDay: undefined,
   flag: '',
   numberError: '',
   expirationDateError: '',
+  closingDayError: '',
 };
 
 /**
@@ -65,14 +67,28 @@ function setExpirationDate(
   return nextState;
 }
 
-/**
- * Runs full validation on the current state (e.g. on submit).
- *
- * @param state - The current state
- * @returns The new state with validation errors
- */
+function setClosingDay(
+  state: CreditCardFormState,
+  payload: number | undefined
+): CreditCardFormState {
+  const nextState = { ...state, closingDay: payload, closingDayError: '' };
+
+  if (payload === undefined || payload === null) {
+    return { ...nextState, closingDayError: 'closingDayRequired' };
+  }
+
+  if (!Number.isInteger(payload) || payload < 1 || payload > 31) {
+    return { ...nextState, closingDayError: 'closingDayInvalid' };
+  }
+
+  return nextState;
+}
+
 export function validateCreditCardForm(state: CreditCardFormState): CreditCardFormState {
-  return setExpirationDate(setNumber(state, state.number), state.expirationDate);
+  return setClosingDay(
+    setExpirationDate(setNumber(state, state.number), state.expirationDate),
+    state.closingDay
+  );
 }
 
 /**
@@ -91,6 +107,8 @@ export function creditCardReducer(
       return setNumber(state, action.payload);
     case CreditCardActionType.SET_EXPIRATION_DATE:
       return setExpirationDate(state, action.payload);
+    case CreditCardActionType.SET_CLOSING_DAY:
+      return setClosingDay(state, action.payload);
     case CreditCardActionType.VALIDATE:
       return validateCreditCardForm(state);
     case CreditCardActionType.RESET:

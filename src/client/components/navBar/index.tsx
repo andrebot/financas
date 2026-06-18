@@ -66,7 +66,7 @@ export default function NavBar() {
           </List>
           <Divider />
           <List>
-            <CustomListItem text={t('transactions')}>
+            <CustomListItem text={t('transactions')} onClick={() => navigate('/transactions')}>
               <CompareArrowsIcon />
             </CustomListItem>
             <CustomListItem text={t('bankAccounts')} onClick={() => navigate('/bank-accounts')}>
