@@ -72,12 +72,12 @@ describe('transactionFormReducer', () => {
       expect(result.valueError).toBe('');
     });
 
-    it('sets valueError to valueRequired when value is 0', () => {
+    it('sets valueError to valueMustBeGreaterThanZero when value is 0', () => {
       const result = transactionFormReducer(initialTransactionFormState, {
         type: TransactionFormActionType.SET_VALUE,
         payload: 0,
       });
-      expect(result.valueError).toBe('valueRequired');
+      expect(result.valueError).toBe('valueMustBeGreaterThanZero');
     });
 
     it('sets valueError to valueRequired when value is NaN', () => {
