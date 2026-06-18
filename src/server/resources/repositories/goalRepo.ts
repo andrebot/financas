@@ -1,11 +1,12 @@
 import {
-  eq, and, lte, sql,
+  eq, and, lte, sql, inArray,
 } from 'drizzle-orm';
 import { isInflowType } from '../../utils/transactionTypeUtils';
 import Repository from './repository';
 import { getAutorizationDatabaseContext } from '../../utils/authorization';
 import { goals } from '../models/goalModel';
-import { transactions, transactionToGoals } from '../models/transactionModel';
+import { transactions } from '../models/transactionModel';
+import { transactionToInvestments, investmentToGoals } from '../models/investmentModel';
 import { createLogger } from '../../utils/logger';
 import type { IGoal, ITransaction } from '../../types';
 import { getDb } from '../../utils/transaction';
@@ -14,11 +15,11 @@ const logger = createLogger('Repository:Goals');
 const goalRepo = Repository<typeof goals, IGoal>(goals, 'Goals', logger);
 
 /**
- * Updates the savedValue of all goals linked to a transaction by the percentage
- * defined in the transactionToGoals junction table.
+ * Updates the savedValue of all goals linked to a transaction's investment by the percentage
+ * defined in the investmentToGoals junction table.
  * When shouldInvertValue is true, the contribution is subtracted (used on delete/revert).
  *
- * @param transaction - The transaction whose linked goals should be updated.
+ * @param transaction - The transaction whose linked investment goals should be updated.
  * @param shouldInvertValue - Whether to subtract instead of add the contribution.
  */
 async function updateGoalFromTransaction(
@@ -32,20 +33,27 @@ async function updateGoalFromTransaction(
   const invertSign = shouldInvertValue ? -1 : 1;
   const signedTransactionValue = typeSign * invertSign * transactionValue;
 
+  const linkedInvestments = await getDb()
+    .select({ investmentId: transactionToInvestments.investmentId })
+    .from(transactionToInvestments)
+    .where(eq(transactionToInvestments.transactionId, transaction.id!));
+
+  if (linkedInvestments.length === 0) return;
+
   await getDb().update(goals)
     .set({
-      savedValue: sql`${goals.savedValue} + (${signedTransactionValue} * ${transactionToGoals.percentage})`,
+      savedValue: sql`${goals.savedValue} + (${signedTransactionValue} * ${investmentToGoals.percentage}::numeric / 100)`,
     })
-    .from(transactionToGoals)
+    .from(investmentToGoals)
     .where(and(
-      eq(transactionToGoals.goalId, goals.id),
-      eq(transactionToGoals.transactionId, transaction.id),
+      eq(investmentToGoals.goalId, goals.id),
+      inArray(investmentToGoals.investmentId, linkedInvestments.map((r) => r.investmentId)),
       getAutorizationDatabaseContext(goals),
     ));
 }
 
 /**
- * Lists all non-archived goals with savedValue computed from transactions
+ * Lists all non-archived goals with savedValue computed from investment transactions
  * that occurred on or before the last day of the given month.
  *
  * @param year - The four-digit year (e.g. 2026).
@@ -62,11 +70,10 @@ async function listGoalsWithSavedValueUpTo(year: number, month: number): Promise
       value: goals.value,
       savedValue: sql<string>`COALESCE(SUM(
         CASE WHEN ${transactions.type}::text = ANY(ARRAY[
-          'deposit','transferIn','pixIn','cardRefund',
           'investmentSell','investmentDividend','investmentInterest','investmentDueDate'
         ])
-             THEN ${transactions.value}::numeric * ${transactionToGoals.percentage}::numeric
-             ELSE -${transactions.value}::numeric * ${transactionToGoals.percentage}::numeric
+             THEN ${transactions.value}::numeric * ${investmentToGoals.percentage}::numeric / 100
+             ELSE -${transactions.value}::numeric * ${investmentToGoals.percentage}::numeric / 100
         END
       ), 0)`,
       dueDate: goals.dueDate,
@@ -76,11 +83,15 @@ async function listGoalsWithSavedValueUpTo(year: number, month: number): Promise
       updatedAt: goals.updatedAt,
     })
     .from(goals)
-    .leftJoin(transactionToGoals, eq(transactionToGoals.goalId, goals.id))
+    .leftJoin(investmentToGoals, eq(investmentToGoals.goalId, goals.id))
+    .leftJoin(
+      transactionToInvestments,
+      eq(transactionToInvestments.investmentId, investmentToGoals.investmentId),
+    )
     .leftJoin(
       transactions,
       and(
-        eq(transactions.id, transactionToGoals.transactionId),
+        eq(transactions.id, transactionToInvestments.transactionId),
         lte(transactions.date, lastDayOfMonth),
       ),
     )

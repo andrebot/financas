@@ -43,7 +43,7 @@ export function createContentManager(
   return {
     budgetActions: budgetActions(budgetRepo, transactionRepo, categoryRepo, logger),
     categoryActions: categoryActions(categoryRepo, transactionRepo, logger),
-    goalActions: goalActions(goalRepo, transactionRepo, logger),
+    goalActions: goalActions(goalRepo, logger),
     accountActions: accountActions(accountRepo, cardRepo, logger),
   };
 }

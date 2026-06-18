@@ -3,8 +3,7 @@ import sinon, { SinonStub } from 'sinon';
 import sinonChai from 'sinon-chai';
 import transactionRepo from '../../../../src/server/resources/repositories/transactionRepo';
 import * as databaseConnection from '../../../../src/server/utils/databaseConnection';
-import { transactions, transactionToGoals } from '../../../../src/server/resources/models/transactionModel';
-import type { ITransactionGoalEntry } from '../../../../src/server/types';
+import { transactions } from '../../../../src/server/resources/models/transactionModel';
 import { requestContext } from '../../../../src/server/utils/authorization';
 
 const runWithContext = (fn: () => Promise<unknown>) =>
@@ -131,29 +130,6 @@ describe('TransactionRepo', () => {
     });
   });
 
-  describe('deleteGoalFromTransactions', () => {
-    it('should select from transactionToGoals with inner joins and return row count', async () => {
-      const goalId = 55;
-      selectWhereStub.resolves([{ goalId: 55 }, { goalId: 55 }]);
-
-      const result = await runWithContext(() => transactionRepo.deleteGoalFromTransactions(goalId)) as number;
-
-      selectStub.should.have.been.calledOnce;
-      selectFromStub.should.have.been.calledOnceWithExactly(transactionToGoals);
-      selectInnerJoinStub.should.have.been.called;
-      selectWhereStub.should.have.been.calledOnce;
-      result.should.equal(2);
-    });
-
-    it('should return 0 when no rows are found', async () => {
-      selectWhereStub.resolves([]);
-
-      const result = await runWithContext(() => transactionRepo.deleteGoalFromTransactions(777)) as number;
-
-      result.should.equal(0);
-    });
-  });
-
   describe('findByMonthAndYear', () => {
     it('should query transactions for the given month and year', async () => {
       const expected = [{ id: 1 }, { id: 2 }];
@@ -174,53 +150,6 @@ describe('TransactionRepo', () => {
       const rows = await transactionRepo.findByMonthAndYear(2024, 1);
 
       rows.should.be.an('array').that.is.empty;
-    });
-  });
-
-  describe('deleteTransactionFromGoals', () => {
-    it('should delete goal junction rows for the given transaction', async () => {
-      const transactionId = 42;
-      deleteWhereStub.resolves({ rowCount: 3 });
-
-      const result = await transactionRepo.deleteTransactionFromGoals(transactionId);
-
-      deleteStub.should.have.been.calledOnceWithExactly(transactionToGoals);
-      deleteWhereStub.should.have.been.calledOnce;
-      chai.assert.exists(deleteWhereStub.firstCall.args[0]);
-      result.should.equal(3);
-    });
-
-    it('should return 0 when rowCount is null', async () => {
-      deleteWhereStub.resolves({ rowCount: null });
-
-      const result = await transactionRepo.deleteTransactionFromGoals(99);
-
-      result.should.equal(0);
-    });
-  });
-
-  describe('saveTransactionGoals', () => {
-    it('should insert goal entries for the given transaction', async () => {
-      const transactionId = 10;
-      const goals: ITransactionGoalEntry[] = [
-        { goalId: 1, percentage: 0.5 },
-        { goalId: 2, percentage: 0.5 },
-      ];
-
-      await transactionRepo.saveTransactionGoals(transactionId, goals);
-
-      insertStub.should.have.been.calledOnceWithExactly(transactionToGoals);
-      insertValuesStub.should.have.been.calledOnce;
-      const insertedRows = insertValuesStub.firstCall.args[0];
-      insertedRows.should.have.lengthOf(2);
-      insertedRows[0].should.deep.include({ transactionId: 10, goalId: 1 });
-      insertedRows[1].should.deep.include({ transactionId: 10, goalId: 2 });
-    });
-
-    it('should not insert when goals list is empty', async () => {
-      await transactionRepo.saveTransactionGoals(10, []);
-
-      insertStub.should.not.have.been.called;
     });
   });
 

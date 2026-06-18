@@ -15,6 +15,15 @@ export {
   investmentTypes,
   transactionRelations,
 } from './transactionModel';
+export {
+  rateTypes,
+  investments,
+  transactionToInvestments,
+  investmentToGoals,
+  investmentRelations,
+  transactionToInvestmentsRelations,
+  investmentToGoalsRelations,
+} from './investmentModel';
 export { goals, goalRelations } from './goalModel';
 export {
   budgets,

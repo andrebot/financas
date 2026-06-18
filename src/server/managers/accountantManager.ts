@@ -8,6 +8,7 @@ import MonthlyBalanceRepo from '../resources/repositories/monthlyBalanceRepo';
 import GoalRepo from '../resources/repositories/goalRepo';
 import BudgetRepo from '../resources/repositories/budgetRepo';
 import TransactionRepo from '../resources/repositories/transactionRepo';
+import InvestmentManager from './investmentManager';
 import {
   ITransaction,
   ITransactionWithRelations,
@@ -18,7 +19,8 @@ import {
   IMonthlyBalanceRepo,
   IGoalRepo,
   IBudgetRepo,
-  ITransactionGoalEntry,
+  IInvestmentManager,
+  IInvestmentTransactionEntry,
 } from '../types';
 
 const logger = createLogger('AccountantManager');
@@ -167,24 +169,28 @@ async function addTransactionToOtherModels(
 
 /**
    * Creates a new transaction and updates the monthly balance, goals and budgets.
+   * When an investmentEntry is provided along with an investmentManager, the investment
+   * position is updated atomically and a tax transaction is auto-created for due dates.
    *
    * @throws {Error} - If the payload is void.
    *
    * @param content - The transaction to create.
-   * @param goals - The list of goals to associate with the transaction.
    * @param transactionRepo - The transaction repository to use.
    * @param monthlyBalanceRepo - The monthly balance repository to use.
    * @param goalRepo - The goal repository to use.
    * @param budgetRepo - The budget repository to use.
+   * @param investmentEntry - Optional investment-specific data.
+   * @param investmentManager - Optional investment manager.
    * @returns The created transaction.
    */
 async function createTransaction(
   content: ITransaction,
-  goals: ITransactionGoalEntry[],
   transactionRepo: ITransactionRepo,
   monthlyBalanceRepo: IMonthlyBalanceRepo,
   goalRepo: IGoalRepo,
   budgetRepo: IBudgetRepo,
+  investmentEntry?: IInvestmentTransactionEntry,
+  investmentManager?: IInvestmentManager,
 ): Promise<ITransaction> {
   logger.info(`Creating new transaction for user: ${content.userId}`);
 
@@ -192,23 +198,28 @@ async function createTransaction(
 
   const savedTransaction = await withTransaction(async () => {
     const saved = await transactionRepo.save(content);
-    await transactionRepo.saveTransactionGoals(saved.id!, goals);
+
+    if (investmentEntry && investmentManager) {
+      const taxPayload = await investmentManager.applyInvestmentTransaction(saved, investmentEntry);
+
+      if (taxPayload) {
+        const savedTax = await transactionRepo.save(taxPayload as ITransaction);
+        await addTransactionToMonthlyBalance(savedTax, monthlyBalanceRepo);
+      }
+    }
+
     await addTransactionToOtherModels(saved, monthlyBalanceRepo, goalRepo, budgetRepo);
     return saved;
   });
 
   logger.info(`Transaction created: ${savedTransaction.id}`);
 
-  // Create investments here later
-  // if (content.type === TRANSACTION_TYPES.INVESTMENT) {
-  //   await investmentRepo.updateInvestmentsByTransaction(content);
-  // }
-
   return savedTransaction;
 }
 
 /**
  * Deletes a transaction and updates the monthly balance, goals and budgets.
+ * Reverts the investment position before deletion when an investmentManager is provided.
  * Authorization is enforced at the database level via the request context.
  *
  * @throws {Error} - If the transaction is not found.
@@ -218,6 +229,7 @@ async function createTransaction(
  * @param monthlyBalanceRepo - The monthly balance repository to use.
  * @param goalRepo - The goal repository to use.
  * @param budgetRepo - The budget repository to use.
+ * @param investmentManager - Optional investment manager.
  * @returns The deleted transaction.
  */
 async function deleteTransaction(
@@ -226,6 +238,7 @@ async function deleteTransaction(
   monthlyBalanceRepo: IMonthlyBalanceRepo,
   goalRepo: IGoalRepo,
   budgetRepo: IBudgetRepo,
+  investmentManager?: IInvestmentManager,
 ): Promise<ITransaction | null> {
   logger.info(`Deleting transaction: ${id}`);
 
@@ -237,7 +250,10 @@ async function deleteTransaction(
 
   return withTransaction(async () => {
     await deleteTransactionFromOtherModels(transaction, monthlyBalanceRepo, goalRepo, budgetRepo);
-    await transactionRepo.deleteTransactionFromGoals(id);
+
+    if (investmentManager) {
+      await investmentManager.revertInvestmentTransaction(transaction);
+    }
 
     logger.info('Removed transaction from other models');
 
@@ -247,28 +263,31 @@ async function deleteTransaction(
 
 /**
  * Updates a transaction and updates the monthly balance, goals and budgets.
- * If goals are provided, the existing goal associations are fully replaced.
+ * On recalculation, reverts the investment position and reapplies it when
+ * investmentEntry and investmentManager are provided.
  *
  * @throws {Error} - If the transaction is not found.
  * @throws {Error} - If the payload is void.
  *
  * @param id - The id of the transaction to update.
  * @param payload - The payload to update the transaction with.
- * @param goals - Replacement goal associations, or undefined to leave them unchanged.
  * @param transactionRepo - The transaction repository to use.
  * @param monthlyBalanceRepo - The monthly balance repository to use.
  * @param goalRepo - The goal repository to use.
  * @param budgetRepo - The budget repository to use.
+ * @param investmentEntry - Optional updated investment-specific data.
+ * @param investmentManager - Optional investment manager.
  * @returns The updated transaction.
  */
 async function updateTransaction(
   id: number,
   payload: Partial<ITransaction>,
-  goals: ITransactionGoalEntry[] | undefined,
   transactionRepo: ITransactionRepo,
   monthlyBalanceRepo: IMonthlyBalanceRepo,
   goalRepo: IGoalRepo,
   budgetRepo: IBudgetRepo,
+  investmentEntry?: IInvestmentTransactionEntry,
+  investmentManager?: IInvestmentManager,
 ): Promise<ITransaction | null> {
   logger.info(`Updating transaction: ${id}`);
 
@@ -285,11 +304,21 @@ async function updateTransaction(
 
     return withTransaction(async () => {
       await deleteTransactionFromOtherModels(transaction, monthlyBalanceRepo, goalRepo, budgetRepo);
+
+      if (investmentManager) {
+        await investmentManager.revertInvestmentTransaction(transaction);
+      }
+
       const updatedTransaction = await transactionRepo.update(id, payload);
 
-      if (goals !== undefined) {
-        await transactionRepo.deleteTransactionFromGoals(id);
-        await transactionRepo.saveTransactionGoals(id, goals);
+      if (investmentEntry && investmentManager) {
+        // eslint-disable-next-line max-len
+        const taxPayload = await investmentManager.applyInvestmentTransaction(updatedTransaction, investmentEntry);
+
+        if (taxPayload) {
+          const savedTax = await transactionRepo.save(taxPayload as ITransaction);
+          await addTransactionToMonthlyBalance(savedTax, monthlyBalanceRepo);
+        }
       }
 
       await addTransactionToOtherModels(
@@ -298,20 +327,6 @@ async function updateTransaction(
         goalRepo,
         budgetRepo,
       );
-
-      return updatedTransaction;
-    });
-  }
-
-  if (goals !== undefined) {
-    logger.info('Updating goal associations only');
-
-    return withTransaction(async () => {
-      await goalRepo.updateGoalFromTransaction(transaction, true);
-      const updatedTransaction = await transactionRepo.update(id, payload);
-      await transactionRepo.deleteTransactionFromGoals(id);
-      await transactionRepo.saveTransactionGoals(id, goals);
-      await goalRepo.updateGoalFromTransaction(updatedTransaction);
 
       return updatedTransaction;
     });
@@ -398,6 +413,7 @@ async function listMonthlyBalances(
  * @param monthlyBalanceRepo - Repository for monthly balance updates.
  * @param goalRepo - Repository for goal aggregate updates.
  * @param budgetRepo - Repository for budget usage updates.
+ * @param investmentManager - Optional investment manager for position management.
  * @returns Transaction orchestration actions with accounting side effects.
  */
 export function AccountantManager(
@@ -405,18 +421,20 @@ export function AccountantManager(
   monthlyBalanceRepo: IMonthlyBalanceRepo,
   goalRepo: IGoalRepo,
   budgetRepo: IBudgetRepo,
+  investmentManager?: IInvestmentManager,
 ) {
   return {
     createTransaction: (
       content: ITransaction,
-      goals: ITransactionGoalEntry[] = [],
+      investmentEntry?: IInvestmentTransactionEntry,
     ) => createTransaction(
       content,
-      goals,
       transactionRepo,
       monthlyBalanceRepo,
       goalRepo,
       budgetRepo,
+      investmentEntry,
+      investmentManager,
     ),
     deleteTransaction: (id: number) => deleteTransaction(
       id,
@@ -424,19 +442,21 @@ export function AccountantManager(
       monthlyBalanceRepo,
       goalRepo,
       budgetRepo,
+      investmentManager,
     ),
     updateTransaction: (
       id: number,
       payload: Partial<ITransaction>,
-      goals: ITransactionGoalEntry[] | undefined,
+      investmentEntry?: IInvestmentTransactionEntry,
     ) => updateTransaction(
       id,
       payload,
-      goals,
       transactionRepo,
       monthlyBalanceRepo,
       goalRepo,
       budgetRepo,
+      investmentEntry,
+      investmentManager,
     ),
     getTransaction: (id: number) => getTransaction(
       id,
@@ -452,4 +472,10 @@ export function AccountantManager(
   };
 }
 
-export default AccountantManager(TransactionRepo, MonthlyBalanceRepo, GoalRepo, BudgetRepo);
+export default AccountantManager(
+  TransactionRepo,
+  MonthlyBalanceRepo,
+  GoalRepo,
+  BudgetRepo,
+  InvestmentManager,
+);

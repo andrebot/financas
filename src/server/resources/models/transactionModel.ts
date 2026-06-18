@@ -1,12 +1,11 @@
 import {
-  pgTable, serial, text, integer, timestamp, numeric, pgEnum, primaryKey,
+  pgTable, serial, text, integer, timestamp, numeric, pgEnum,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { users } from './userModel';
 import { categories } from './categoryModel';
 import { timestampColumns } from './columHelpers';
 import { accounts, cards } from './accountModel';
-import { goals } from './goalModel';
 
 export const transactionTypes = pgEnum('transactionTypes', [
   'withdraw',
@@ -21,6 +20,7 @@ export const transactionTypes = pgEnum('transactionTypes', [
   'investmentDividend',
   'investmentInterest',
   'investmentDueDate',
+  'investmentTax',
   'pixIn',
   'pixOut',
 ]);
@@ -59,16 +59,7 @@ export const transactions = pgTable('transactions', {
   ...timestampColumns,
 });
 
-export const transactionToGoals = pgTable('transactionToGoals', {
-  transactionId: integer().notNull().references(() => transactions.id, { onDelete: 'cascade' }),
-  goalId: integer().notNull().references(() => goals.id),
-  percentage: numeric({ precision: 14, scale: 2 }).notNull(),
-  ...timestampColumns,
-}, (table) => ([
-  primaryKey({ columns: [table.transactionId, table.goalId] }),
-]));
-
-export const transactionRelations = relations(transactions, ({ one, many }) => ({
+export const transactionRelations = relations(transactions, ({ one }) => ({
   user: one(users, {
     fields: [transactions.userId],
     references: [users.id],
@@ -81,5 +72,4 @@ export const transactionRelations = relations(transactions, ({ one, many }) => (
     fields: [transactions.accountId],
     references: [accounts.id],
   }),
-  goals: many(transactionToGoals),
 }));

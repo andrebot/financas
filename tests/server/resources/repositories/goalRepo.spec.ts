@@ -4,7 +4,7 @@ import sinonChai from 'sinon-chai';
 import goalRepo from '../../../../src/server/resources/repositories/goalRepo';
 import * as databaseConnection from '../../../../src/server/utils/databaseConnection';
 import { goals } from '../../../../src/server/resources/models/goalModel';
-import { transactionToGoals } from '../../../../src/server/resources/models/transactionModel';
+import { investmentToGoals } from '../../../../src/server/resources/models/investmentModel';
 import type { ITransaction } from '../../../../src/server/types';
 import { requestContext } from '../../../../src/server/utils/authorization';
 
@@ -23,6 +23,8 @@ describe('Goal Repository', () => {
   let fromStub: SinonStub;
   let whereStub: SinonStub;
   let selectStub: SinonStub;
+  let selectFromStub: SinonStub;
+  let selectWhereStub: SinonStub;
 
   before(() => {
     originalDb = dbHolder.db;
@@ -33,7 +35,11 @@ describe('Goal Repository', () => {
     fromStub = sinon.stub().returns({ where: whereStub });
     setStub = sinon.stub().returns({ from: fromStub });
     updateStub = sinon.stub().returns({ set: setStub });
-    selectStub = sinon.stub();
+
+    selectWhereStub = sinon.stub().resolves([]);
+    selectFromStub = sinon.stub().returns({ where: selectWhereStub });
+    selectStub = sinon.stub().returns({ from: selectFromStub });
+
     dbHolder.db = { update: updateStub, select: selectStub };
   });
 
@@ -59,23 +65,30 @@ describe('Goal Repository', () => {
   }
 
   describe('updateGoalFromTransaction', () => {
-    it('should call update on the goals table with the correct chain', async () => {
-      const transaction = buildTransaction();
+    it('should do nothing when the transaction has no linked investments', async () => {
+      selectWhereStub.resolves([]);
 
-      await runWithContext(() => goalRepo.updateGoalFromTransaction(transaction));
+      await runWithContext(() => goalRepo.updateGoalFromTransaction(buildTransaction()));
+
+      updateStub.should.not.have.been.called;
+    });
+
+    it('should update goals when linked investments exist', async () => {
+      selectWhereStub.resolves([{ investmentId: 7 }]);
+
+      await runWithContext(() => goalRepo.updateGoalFromTransaction(buildTransaction()));
 
       updateStub.should.have.been.calledOnceWithExactly(goals);
       setStub.should.have.been.calledOnce;
       setStub.firstCall.args[0].should.have.keys('savedValue');
-      fromStub.should.have.been.calledOnceWithExactly(transactionToGoals);
+      fromStub.should.have.been.calledOnceWithExactly(investmentToGoals);
       whereStub.should.have.been.calledOnce;
-      chai.assert.exists(whereStub.firstCall.args[0]);
     });
 
     it('should call update when shouldInvertValue is true', async () => {
-      const transaction = buildTransaction({ value: '200.00' });
+      selectWhereStub.resolves([{ investmentId: 7 }]);
 
-      await runWithContext(() => goalRepo.updateGoalFromTransaction(transaction, true));
+      await runWithContext(() => goalRepo.updateGoalFromTransaction(buildTransaction({ value: '200.00' }), true));
 
       updateStub.should.have.been.calledOnceWithExactly(goals);
       setStub.should.have.been.calledOnce;
@@ -83,6 +96,7 @@ describe('Goal Repository', () => {
     });
 
     it('should apply negative typeSign for outflow transaction types', async () => {
+      selectWhereStub.resolves([{ investmentId: 7 }]);
       const outflowTransaction = buildTransaction({ type: 'cardPurchase', value: '50.00' });
 
       await runWithContext(() => goalRepo.updateGoalFromTransaction(outflowTransaction));
@@ -91,18 +105,10 @@ describe('Goal Repository', () => {
       setStub.should.have.been.calledOnce;
       whereStub.should.have.been.calledOnce;
     });
-
-    it('should call update when shouldInvertValue defaults to false', async () => {
-      const transaction = buildTransaction();
-
-      await runWithContext(() => goalRepo.updateGoalFromTransaction(transaction));
-
-      updateStub.should.have.been.calledOnce;
-    });
   });
 
   describe('listGoalsWithSavedValueUpTo', () => {
-    it('should query goals joined with transactions up to the end of the given month', async () => {
+    it('should query goals joined with investments and transactions up to the end of the given month', async () => {
       const mockGoals = [{ id: 1, name: 'Emergency Fund', savedValue: '500.00' }];
       const groupByStub = sinon.stub().resolves(mockGoals);
       const goalWhereStub = sinon.stub().returns({ groupBy: groupByStub });
@@ -115,7 +121,7 @@ describe('Goal Repository', () => {
 
       selectStub.should.have.been.calledOnce;
       goalFromStub.should.have.been.calledOnceWithExactly(goals);
-      leftJoinStub.should.have.been.calledTwice;
+      leftJoinStub.should.have.been.calledThrice;
       goalWhereStub.should.have.been.calledOnce;
       groupByStub.should.have.been.calledOnce;
       (result as typeof mockGoals).should.deep.equal(mockGoals);

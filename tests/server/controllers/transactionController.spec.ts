@@ -7,7 +7,6 @@ import {
   TRANSACTION_TYPES,
   INVESTMENT_TYPES,
   RequestWithUser,
-  ITransactionGoalEntry,
 } from '../../../src/server/types';
 
 chai.use(sinonChai);
@@ -153,26 +152,7 @@ describe('Accountant controller', () => {
   });
 
   describe('createContent', () => {
-    it('should create a transaction splitting goals from body', async () => {
-      const goals: ITransactionGoalEntry[] = [{ goalId: 1, percentage: 1 }];
-      request.body = { name: 'Test', accountId: 1, goals };
-      const mockTransaction = { id: 1, name: 'Test', accountId: 1 };
-      accountantManagerInstance.createTransaction.resolves(mockTransaction);
-
-      await controller.createContent(
-        request as RequestWithUser,
-        response as unknown as Response,
-      );
-
-      accountantManagerInstance.createTransaction.should.have.been.calledOnce;
-      accountantManagerInstance.createTransaction.should.have.been.calledWith(
-        { name: 'Test', accountId: 1 },
-        goals,
-      );
-      response.send.should.have.been.calledWith(mockTransaction);
-    });
-
-    it('should create a transaction with undefined goals when none provided', async () => {
+    it('should create a transaction from request body', async () => {
       const mockTransaction = { id: 1, ...request.body };
       accountantManagerInstance.createTransaction.resolves(mockTransaction);
 
@@ -182,10 +162,8 @@ describe('Accountant controller', () => {
       );
 
       accountantManagerInstance.createTransaction.should.have.been.calledOnce;
-      accountantManagerInstance.createTransaction.should.have.been.calledWith(
-        request.body,
-        undefined,
-      );
+      accountantManagerInstance.createTransaction.should.have.been.calledWith(request.body);
+      response.send.should.have.been.calledWith(mockTransaction);
     });
 
     it('should reject when user is not authenticated', async () => {
@@ -215,10 +193,8 @@ describe('Accountant controller', () => {
   });
 
   describe('updateContent', () => {
-    it('should update a transaction splitting goals from body', async () => {
-      const goals: ITransactionGoalEntry[] = [{ goalId: 2, percentage: 0.5 }];
-      request.body = { name: 'Updated', goals };
-      const mockTransaction = { id: 5, name: 'Updated' };
+    it('should update a transaction from request body', async () => {
+      const mockTransaction = { id: 5, ...request.body };
       accountantManagerInstance.updateTransaction.resolves(mockTransaction);
 
       await controller.updateContent(
@@ -229,26 +205,9 @@ describe('Accountant controller', () => {
       accountantManagerInstance.updateTransaction.should.have.been.calledOnce;
       accountantManagerInstance.updateTransaction.should.have.been.calledWith(
         5,
-        { name: 'Updated' },
-        goals,
+        request.body,
       );
       response.send.should.have.been.calledWith(mockTransaction);
-    });
-
-    it('should update a transaction with undefined goals when none provided', async () => {
-      const mockTransaction = { id: 5, ...request.body };
-      accountantManagerInstance.updateTransaction.resolves(mockTransaction);
-
-      await controller.updateContent(
-        request as RequestWithUser,
-        response as unknown as Response,
-      );
-
-      accountantManagerInstance.updateTransaction.should.have.been.calledWith(
-        5,
-        request.body,
-        undefined,
-      );
     });
 
     it('should reject when user is not authenticated', async () => {

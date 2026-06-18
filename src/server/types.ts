@@ -5,6 +5,7 @@ import {
 import { PgColumn, PgTable } from 'drizzle-orm/pg-core';
 import { InferSelectModel } from 'drizzle-orm';
 import { transactions, investmentTypes, transactionTypes } from './resources/models/transactionModel';
+import { investments } from './resources/models/investmentModel';
 import { categories } from './resources/models/categoryModel';
 import { budgets, budgetTypes } from './resources/models/budgetModel';
 import { goals } from './resources/models/goalModel';
@@ -247,20 +248,46 @@ export interface IBudget extends InferSelectModel<typeof budgets> {
 /** Domain entity representing a monthly balance snapshot for an account. */
 export interface IMonthlyBalance extends InferSelectModel<typeof monthlyBalances> { }
 
+/** Domain entity representing an investment position. */
+export interface IInvestment extends InferSelectModel<typeof investments> { }
+
+/** A goal allocation entry linking an investment to a goal with a percentage. */
+export type IInvestmentGoalEntry = {
+  /** The goal id. */
+  goalId: number;
+  /** The percentage of the investment directed to this goal (0–100). */
+  percentage: number;
+};
+
+/**
+ * Payload carried alongside an investment transaction request.
+ * Provides either a reference to an existing investment or the full data to create one inline.
+ */
+export type IInvestmentTransactionEntry = {
+  /** Reference to an existing investment ({ id }) or full data for inline creation. */
+  investment: { id: number } | Partial<IInvestment>;
+  /** Number of units bought/sold (variable income only). */
+  quantity?: number;
+  /** Price per unit (variable income only). */
+  unitPrice?: number;
+  /** Goal allocations to upsert for this investment (0–100 percentage each). */
+  goals?: IInvestmentGoalEntry[];
+};
+
+/** Raw row from the transactionToInvestments junction table. */
+export type IInvestmentTransactionLink = {
+  transactionId: number;
+  investmentId: number;
+  quantity: string | null;
+  unitPrice: string | null;
+};
+
 /** Payload used to bulk-update a goal's saved value by a fixed amount. */
 export type BulkGoalsUpdate = {
   /** The id of the goal to update. */
   goalId: number;
   /** The absolute amount to add or subtract from the goal's saved value. */
   amount: number;
-};
-
-/** A single goal allocation entry within a transaction, defined by fraction. */
-export type ITransactionGoalEntry = {
-  /** The id of the goal receiving this allocation. */
-  goalId: number;
-  /** Fraction of the transaction amount directed to this goal (0–1). */
-  percentage: number;
 };
 
 /**
@@ -323,13 +350,6 @@ export interface IRepository<T extends Table, K> {
 /** Repository contract for the transactions table, extending base CRUD with domain-specific queries. */
 export interface ITransactionRepo extends IRepository<typeof transactions, ITransaction> {
   /**
-   * Returns the count of transaction-goal links for a goal, scoped to the authorization context.
-   *
-   * @param goalId - The goal to check.
-   * @returns Count of linked transaction rows.
-   */
-  deleteGoalFromTransactions(goalId: number): Promise<number>;
-  /**
    * Sets categoryId to null on all transactions belonging to the given categories.
    *
    * @param categoryIds - The category ids to disassociate.
@@ -359,20 +379,6 @@ export interface ITransactionRepo extends IRepository<typeof transactions, ITran
    * @returns Matching transactions.
    */
   findByMonthAndYear(year: number, month: number): Promise<ITransaction[]>;
-  /**
-   * Removes all goal junction rows for the given transaction.
-   *
-   * @param transactionId - The transaction whose goal links should be removed.
-   * @returns Number of rows deleted.
-   */
-  deleteTransactionFromGoals(transactionId: number): Promise<number>;
-  /**
-   * Inserts goal allocation rows linking a transaction to a set of goals.
-   *
-   * @param transactionId - The transaction to link.
-   * @param goals - The goal entries with goalId and percentage.
-   */
-  saveTransactionGoals(transactionId: number, goals: ITransactionGoalEntry[]): Promise<void>;
   /**
    * Lists all transactions for the current authorization context, joined with
    * their related account name and category name.
@@ -489,6 +495,79 @@ export interface IMonthlyBalanceRepo extends IRepository<typeof monthlyBalances,
   findByYearAndMonth(year: number, month: number): Promise<IMonthlyBalance[]>;
 }
 
+/** Repository contract for the investments table, extending base CRUD with position management. */
+export interface IInvestmentRepo extends IRepository<typeof investments, IInvestment> {
+  /**
+   * Inserts a junction row linking a transaction to an investment.
+   *
+   * @param transactionId - The transaction id.
+   * @param investmentId - The investment id.
+   * @param quantity - Units bought/sold (variable income only).
+   * @param unitPrice - Price per unit (variable income only).
+   */
+  saveTransactionLink(
+    transactionId: number,
+    investmentId: number,
+    quantity?: number,
+    unitPrice?: number,
+  ): Promise<void>;
+  /**
+   * Finds the junction row for a given transaction id.
+   *
+   * @param transactionId - The transaction id to look up.
+   * @returns The link row or null if not found.
+   */
+  findTransactionLink(transactionId: number): Promise<IInvestmentTransactionLink | null>;
+  /**
+   * Deletes the junction row for a given transaction id (used before cascade on revert).
+   *
+   * @param transactionId - The transaction id whose link should be removed.
+   */
+  deleteTransactionLink(transactionId: number): Promise<void>;
+  /**
+   * Replaces all goal allocations for an investment (DELETE + INSERT).
+   *
+   * @param investmentId - The investment id.
+   * @param goals - The new goal allocation list.
+   */
+  saveGoalAllocations(investmentId: number, goals: IInvestmentGoalEntry[]): Promise<void>;
+  /**
+   * Returns all goal allocations for an investment.
+   *
+   * @param investmentId - The investment id.
+   * @returns The current goal allocation list.
+   */
+  findGoalAllocations(investmentId: number): Promise<IInvestmentGoalEntry[]>;
+  /**
+   * Incrementally updates the investment position for a buy or sell transaction.
+   * Income types (dividend, interest, dueDate) are no-ops.
+   *
+   * @param investmentId - The investment id.
+   * @param transaction - The transaction being applied.
+   * @param quantity - Units (variable income only).
+   * @param unitPrice - Price per unit (variable income only).
+   */
+  applyTransactionToPosition(
+    investmentId: number,
+    transaction: ITransaction,
+    quantity?: number,
+    unitPrice?: number,
+  ): Promise<void>;
+  /**
+   * Reads all linked transaction rows and recomputes quantity, averagePrice,
+   * totalInvested, and archived from scratch.
+   *
+   * @param investmentId - The investment id to recalculate.
+   */
+  recalculatePosition(investmentId: number): Promise<void>;
+  /**
+   * Sets the investment's archived flag to true.
+   *
+   * @param investmentId - The investment id to archive.
+   */
+  archiveInvestment(investmentId: number): Promise<void>;
+}
+
 /** Repository contract for the users table, extending base CRUD with email lookup. */
 export interface IUserRepo extends IRepository<typeof users, IUser> {
   /**
@@ -544,13 +623,30 @@ export type RouteOverrides = {
   deleteContent?: (req: RequestWithUser, res: Response) => Promise<Response>;
 };
 
+/** Manager contract for investment positions, CRUD, and transaction lifecycle hooks. */
+export interface IInvestmentManager {
+  createInvestment(investment: Partial<IInvestment>): Promise<IInvestment>;
+  updateInvestment(id: number, payload: Partial<IInvestment>): Promise<IInvestment | null>;
+  deleteInvestment(id: number): Promise<IInvestment | null>;
+  getInvestment(id: number): Promise<IInvestment | null>;
+  listInvestments(): Promise<IInvestment[]>;
+  applyInvestmentTransaction(
+    transaction: ITransaction,
+    entry: IInvestmentTransactionEntry,
+  ): Promise<Partial<ITransaction> | null>;
+  revertInvestmentTransaction(transaction: ITransaction): Promise<void>;
+}
+
 export interface IAccountantManager {
-  createTransaction: (content: ITransaction, goals?: ITransactionGoalEntry[]) => Promise<ITransaction>;
+  createTransaction: (
+    content: ITransaction,
+    investmentEntry?: IInvestmentTransactionEntry,
+  ) => Promise<ITransaction>;
   deleteTransaction: (id: number) => Promise<ITransaction | null>;
   updateTransaction: (
     id: number,
     payload: Partial<ITransaction>,
-    goals: ITransactionGoalEntry[] | undefined,
+    investmentEntry?: IInvestmentTransactionEntry,
   ) => Promise<ITransaction | null>;
   getTransaction: (id: number) => Promise<ITransaction | null>;
   listTransactions: () => Promise<ITransactionWithRelations[]>;

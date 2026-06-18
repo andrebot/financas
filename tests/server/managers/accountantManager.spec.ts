@@ -6,7 +6,6 @@ import {
   IMonthlyBalance,
   TRANSACTION_TYPES,
   INVESTMENT_TYPES,
-  ITransactionGoalEntry,
 } from '../../../src/server/types';
 
 const transactionRepoStub = {
@@ -15,8 +14,6 @@ const transactionRepoStub = {
   deleteById: sinon.stub(),
   update: sinon.stub(),
   listAll: sinon.stub(),
-  deleteTransactionFromGoals: sinon.stub(),
-  saveTransactionGoals: sinon.stub(),
   listAllWithRelations: sinon.stub(),
 };
 
@@ -34,6 +31,14 @@ const goalRepoStub = {
 const budgetRepoStub = {
   updateBudgetsByNewTransaction: sinon.stub(),
   revertBudgetsByTransaction: sinon.stub(),
+};
+
+const applyInvestmentTransactionStub = sinon.stub();
+const revertInvestmentTransactionStub = sinon.stub();
+
+const investmentManagerStub = {
+  applyInvestmentTransaction: applyInvestmentTransactionStub,
+  revertInvestmentTransaction: revertInvestmentTransactionStub,
 };
 
 let transactionDepth = 0;
@@ -60,6 +65,7 @@ const { AccountantManager: AccountantManagerFactory, default: accountantManager 
     '../resources/repositories/monthlyBalanceRepo': { default: monthlyBalanceRepoStub },
     '../resources/repositories/goalRepo': { default: goalRepoStub },
     '../resources/repositories/budgetRepo': { default: budgetRepoStub },
+    './investmentManager': { default: investmentManagerStub },
     '../utils/transaction': { withTransaction: withTransactionStub },
   },
 );
@@ -108,8 +114,6 @@ describe('AccountantManager', () => {
     transactionRepoStub.update.reset();
     transactionRepoStub.listAll.reset();
     transactionRepoStub.listAllWithRelations.reset();
-    transactionRepoStub.deleteTransactionFromGoals.reset();
-    transactionRepoStub.saveTransactionGoals.reset();
 
     monthlyBalanceRepoStub.findMonthlyBalance.reset();
     monthlyBalanceRepoStub.save.reset();
@@ -119,6 +123,10 @@ describe('AccountantManager', () => {
     goalRepoStub.updateGoalFromTransaction.reset();
     budgetRepoStub.updateBudgetsByNewTransaction.reset();
     budgetRepoStub.revertBudgetsByTransaction.reset();
+    applyInvestmentTransactionStub.reset();
+    revertInvestmentTransactionStub.reset();
+    revertInvestmentTransactionStub.resolves();
+    applyInvestmentTransactionStub.resolves(null);
     transactionDepth = 0;
   });
 
@@ -136,7 +144,6 @@ describe('AccountantManager', () => {
   describe('createTransaction', () => {
     beforeEach(() => {
       transactionRepoStub.save.resolves(mockTransaction);
-      transactionRepoStub.saveTransactionGoals.resolves();
       monthlyBalanceRepoStub.findMonthlyBalance.resolves(mockMonthlyBalance);
       monthlyBalanceRepoStub.updateMonthlyBalanceWithTransaction.resolves();
       goalRepoStub.updateGoalFromTransaction.resolves();
@@ -149,26 +156,9 @@ describe('AccountantManager', () => {
       const result = await accountantManager.createTransaction(content);
 
       transactionRepoStub.save.should.have.been.calledOnce;
-      transactionRepoStub.saveTransactionGoals.should.have.been.calledOnce;
       monthlyBalanceRepoStub.findMonthlyBalance.should.have.been.called;
       budgetRepoStub.updateBudgetsByNewTransaction.should.have.been.calledOnce;
       result.should.deep.equal(mockTransaction);
-    });
-
-    it('should save goal junction rows when goals are provided', async () => {
-      const goals: ITransactionGoalEntry[] = [
-        { goalId: 10, percentage: 0.5 },
-        { goalId: 11, percentage: 0.5 },
-      ];
-      const content = buildTransaction({ id: undefined as unknown as number });
-
-      await accountantManager.createTransaction(content, goals);
-
-      transactionRepoStub.saveTransactionGoals.should.have.been.calledOnce;
-      transactionRepoStub.saveTransactionGoals.should.have.been.calledWith(
-        mockTransaction.id,
-        goals,
-      );
     });
 
     it('should throw when payload is void', async () => {
@@ -269,7 +259,6 @@ describe('AccountantManager', () => {
     beforeEach(() => {
       transactionRepoStub.findById.resolves(mockTransaction);
       transactionRepoStub.deleteById.resolves(mockTransaction);
-      transactionRepoStub.deleteTransactionFromGoals.resolves(0);
       monthlyBalanceRepoStub.updateMonthlyBalanceWithTransaction.resolves();
       goalRepoStub.updateGoalFromTransaction.resolves();
       budgetRepoStub.revertBudgetsByTransaction.resolves();
@@ -284,7 +273,6 @@ describe('AccountantManager', () => {
       );
       goalRepoStub.updateGoalFromTransaction.should.have.been.calledOnceWith(mockTransaction, true);
       budgetRepoStub.revertBudgetsByTransaction.should.have.been.calledOnceWith(mockTransaction);
-      transactionRepoStub.deleteTransactionFromGoals.should.have.been.calledOnceWith(1);
       transactionRepoStub.deleteById.should.have.been.calledOnceWith(1);
       result.should.deep.equal(mockTransaction);
     });
@@ -308,8 +296,6 @@ describe('AccountantManager', () => {
     beforeEach(() => {
       transactionRepoStub.findById.resolves(mockTransaction);
       transactionRepoStub.update.resolves({ ...mockTransaction, name: 'Updated' });
-      transactionRepoStub.deleteTransactionFromGoals.resolves(0);
-      transactionRepoStub.saveTransactionGoals.resolves();
       monthlyBalanceRepoStub.updateMonthlyBalanceWithTransaction.resolves();
       goalRepoStub.updateGoalFromTransaction.resolves();
       budgetRepoStub.updateBudgetsByNewTransaction.resolves();
@@ -318,7 +304,7 @@ describe('AccountantManager', () => {
 
     it('should throw when payload is void', async () => {
       try {
-        await accountantManager.updateTransaction(1, {}, undefined);
+        await accountantManager.updateTransaction(1, {});
         should().fail('Should have thrown');
       } catch (error) {
         (error as Error).message.should.equal('No information provided to update Transaction');
@@ -330,7 +316,7 @@ describe('AccountantManager', () => {
       transactionRepoStub.findById.resolves(null);
 
       try {
-        await accountantManager.updateTransaction(999, { name: 'X' }, undefined);
+        await accountantManager.updateTransaction(999, { name: 'X' });
         should().fail('Should have thrown');
       } catch (error) {
         (error as Error).message.should.equal(
@@ -340,7 +326,7 @@ describe('AccountantManager', () => {
     });
 
     it('should update without recalculation when payload has no trigger fields', async () => {
-      const result = await accountantManager.updateTransaction(1, { name: 'Updated' }, undefined);
+      const result = await accountantManager.updateTransaction(1, { name: 'Updated' });
 
       transactionRepoStub.update.should.have.been.calledOnceWith(1, { name: 'Updated' });
       monthlyBalanceRepoStub.updateMonthlyBalanceWithTransaction.should.not.have.been.called;
@@ -350,9 +336,7 @@ describe('AccountantManager', () => {
     it('should trigger recalculation when a recalculation field changes', async () => {
       monthlyBalanceRepoStub.findMonthlyBalance.resolves(mockMonthlyBalance);
 
-      const result = await accountantManager.updateTransaction(
-        1, { value: '200.00' }, undefined,
-      );
+      const result = await accountantManager.updateTransaction(1, { value: '200.00' });
 
       monthlyBalanceRepoStub.updateMonthlyBalanceWithTransaction.should.have.been.calledWith(
         mockTransaction, true,
@@ -371,40 +355,9 @@ describe('AccountantManager', () => {
         return { ...mockTransaction, value: '200.00' };
       });
 
-      await accountantManager.updateTransaction(1, { value: '200.00' }, undefined);
+      await accountantManager.updateTransaction(1, { value: '200.00' });
 
       transactionRepoStub.update.should.have.been.calledOnceWith(1, { value: '200.00' });
-    });
-
-    it('should replace goal associations when recalculating with goals provided', async () => {
-      monthlyBalanceRepoStub.findMonthlyBalance.resolves(mockMonthlyBalance);
-      const goals: ITransactionGoalEntry[] = [{ goalId: 5, percentage: 1 }];
-
-      await accountantManager.updateTransaction(1, { value: '200.00' }, goals);
-
-      transactionRepoStub.deleteTransactionFromGoals.should.have.been.calledOnceWith(1);
-      transactionRepoStub.saveTransactionGoals.should.have.been.calledOnceWith(1, goals);
-    });
-
-    it('should not touch goal junction rows when recalculating without goals', async () => {
-      monthlyBalanceRepoStub.findMonthlyBalance.resolves(mockMonthlyBalance);
-
-      await accountantManager.updateTransaction(1, { value: '200.00' }, undefined);
-
-      transactionRepoStub.deleteTransactionFromGoals.should.not.have.been.called;
-      transactionRepoStub.saveTransactionGoals.should.not.have.been.called;
-    });
-
-    it('should update only goal associations when no recalculation fields change', async () => {
-      const goals: ITransactionGoalEntry[] = [{ goalId: 7, percentage: 1 }];
-
-      await accountantManager.updateTransaction(1, { name: 'Updated' }, goals);
-
-      goalRepoStub.updateGoalFromTransaction.should.have.been.calledWith(mockTransaction, true);
-      transactionRepoStub.deleteTransactionFromGoals.should.have.been.calledOnceWith(1);
-      transactionRepoStub.saveTransactionGoals.should.have.been.calledOnceWith(1, goals);
-      goalRepoStub.updateGoalFromTransaction.should.have.been.calledTwice;
-      monthlyBalanceRepoStub.updateMonthlyBalanceWithTransaction.should.not.have.been.called;
     });
   });
 
@@ -459,8 +412,6 @@ describe('AccountantManager', () => {
         deleteById: sinon.stub(),
         update: sinon.stub(),
         listAll: sinon.stub(),
-        deleteTransactionFromGoals: sinon.stub().resolves(0),
-        saveTransactionGoals: sinon.stub().resolves(),
       };
 
       const customManager = AccountantManagerFactory(
@@ -479,6 +430,81 @@ describe('AccountantManager', () => {
       await customManager.createTransaction(content);
 
       customTransactionRepo.save.should.have.been.calledOnce;
+    });
+  });
+
+  describe('investment transaction support', () => {
+    const mockInvestmentEntry = { investment: { id: 5 } };
+
+    beforeEach(() => {
+      transactionRepoStub.save.resolves(mockTransaction);
+      monthlyBalanceRepoStub.findMonthlyBalance.resolves(mockMonthlyBalance);
+      monthlyBalanceRepoStub.updateMonthlyBalanceWithTransaction.resolves();
+      goalRepoStub.updateGoalFromTransaction.resolves();
+      budgetRepoStub.updateBudgetsByNewTransaction.resolves();
+    });
+
+    it('should call applyInvestmentTransaction when investmentEntry is provided on create', async () => {
+      const content = buildTransaction({ id: undefined as unknown as number });
+
+      await accountantManager.createTransaction(content, mockInvestmentEntry as any);
+
+      applyInvestmentTransactionStub.should.have.been.calledOnce;
+      const [savedTx, entry] = applyInvestmentTransactionStub.firstCall.args;
+      savedTx.should.deep.equal(mockTransaction);
+      entry.should.deep.equal(mockInvestmentEntry);
+    });
+
+    it('should save and update monthly balance for tax transaction when applyInvestmentTransaction returns one', async () => {
+      const taxPayload = {
+        name: 'IR - CDB',
+        type: 'investmentTax',
+        value: '150',
+        accountId: 3,
+        date: new Date(2024, 0, 15),
+      };
+      const savedTaxTx = { ...taxPayload, id: 99 };
+      applyInvestmentTransactionStub.resolves(taxPayload);
+      transactionRepoStub.save.onSecondCall().resolves(savedTaxTx);
+      monthlyBalanceRepoStub.findMonthlyBalance.resolves(mockMonthlyBalance);
+
+      const content = buildTransaction({ id: undefined as unknown as number });
+      await accountantManager.createTransaction(content, mockInvestmentEntry as any);
+
+      transactionRepoStub.save.should.have.been.calledTwice;
+      monthlyBalanceRepoStub.updateMonthlyBalanceWithTransaction.should.have.been.calledWith(
+        savedTaxTx,
+        false,
+      );
+    });
+
+    it('should not call applyInvestmentTransaction when no investmentEntry on create', async () => {
+      const content = buildTransaction({ id: undefined as unknown as number });
+
+      await accountantManager.createTransaction(content);
+
+      applyInvestmentTransactionStub.should.not.have.been.called;
+    });
+
+    it('should call revertInvestmentTransaction on delete', async () => {
+      transactionRepoStub.findById.resolves(mockTransaction);
+      transactionRepoStub.deleteById.resolves(mockTransaction);
+      budgetRepoStub.revertBudgetsByTransaction.resolves();
+
+      await accountantManager.deleteTransaction(1);
+
+      revertInvestmentTransactionStub.should.have.been.calledOnceWith(mockTransaction);
+    });
+
+    it('should call revertInvestmentTransaction on update with recalculation', async () => {
+      transactionRepoStub.findById.resolves(mockTransaction);
+      transactionRepoStub.update.resolves({ ...mockTransaction, value: '200.00' });
+      monthlyBalanceRepoStub.findMonthlyBalance.resolves(mockMonthlyBalance);
+      budgetRepoStub.revertBudgetsByTransaction.resolves();
+
+      await accountantManager.updateTransaction(1, { value: '200.00' });
+
+      revertInvestmentTransactionStub.should.have.been.calledOnce;
     });
   });
 });

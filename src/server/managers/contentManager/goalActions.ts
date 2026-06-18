@@ -3,24 +3,13 @@ import commonActions from './commonActions';
 import { checkVoidInstance } from '../../utils/misc';
 import type {
   IGoalRepo,
-  ITransactionRepo,
   IGoal,
   IGoalActions,
 } from '../../types';
 
-/**
- * Creates the goal actions. Deleting a goal is different from the
- * standard delete
- *
- * @param goalRepo - The goal repository to use.
- * @param transactionRepo - The transaction repository to use.
- * @param logger - The logger to use.
- * @returns The goal actions.
- */
 async function deleteGoal(
   id: number,
   goalRepo: IGoalRepo,
-  transactionRepo: ITransactionRepo,
   logger: Logger,
 ): Promise<IGoal | null> {
   if (!id) {
@@ -32,10 +21,6 @@ async function deleteGoal(
   const goal = await goalRepo.deleteById(id);
 
   checkVoidInstance(goal, goalRepo.modelName, id);
-
-  logger.info('Removing goal from transactions');
-
-  await transactionRepo.deleteGoalFromTransactions(id);
 
   return goal;
 }
@@ -51,17 +36,8 @@ async function listGoalsForMonth(
   return goalRepo.listGoalsWithSavedValueUpTo(year, month);
 }
 
-/**
- * Creates the goal actions.
- *
- * @param goalRepo - The goal repository to use.
- * @param transactionRepo - The transaction repository to use.
- * @param logger - The logger to use.
- * @returns The goal actions.
- */
 export default function createGoalActions(
   goalRepo: IGoalRepo,
-  transactionRepo: ITransactionRepo,
   logger: Logger,
 ): IGoalActions {
   const commonGoalActions = commonActions(goalRepo, 'Goal');
@@ -71,7 +47,6 @@ export default function createGoalActions(
     deleteContent: async (id: number): Promise<IGoal | null> => deleteGoal(
       id,
       goalRepo,
-      transactionRepo,
       logger,
     ),
     listGoalsForMonth: async (year: number, month: number): Promise<IGoal[]> => listGoalsForMonth(

@@ -5,7 +5,7 @@ import { checkVoidUser, checkVoidPayload } from '../utils/misc';
 import { createLogger } from '../utils/logger';
 import { handleError } from '../utils/responseHandlers';
 import type {
-  IAccountantManager, ITransaction, ITransactionGoalEntry, IMonthlyBalance, RequestWithUser,
+  IAccountantManager, ITransaction, IMonthlyBalance, RequestWithUser,
 } from '../types';
 
 const logger = createLogger('AccountantController');
@@ -73,10 +73,7 @@ export function AccountantController(
       checkVoidUser(req.user, 'Transaction', 'create');
       checkVoidPayload(req.body, 'Transaction', 'create');
 
-      const { goals, ...transactionPayload } = req.body as ITransaction & {
-        goals: ITransactionGoalEntry[];
-      };
-      const content = await AccountantManager.createTransaction(transactionPayload, goals);
+      const content = await AccountantManager.createTransaction(req.body as ITransaction);
 
       logger.info('Transaction created');
 
@@ -104,13 +101,9 @@ export function AccountantController(
       checkVoidUser(req.user, 'Transaction', 'update');
       checkVoidPayload(req.body, 'Transaction', 'update');
 
-      const { goals, ...transactionPayload } = req.body as Partial<ITransaction> & {
-        goals?: ITransactionGoalEntry[];
-      };
       const content = await AccountantManager.updateTransaction(
         Number(contentId),
-        transactionPayload,
-        goals,
+        req.body as Partial<ITransaction>,
       );
 
       logger.info('Transaction updated');

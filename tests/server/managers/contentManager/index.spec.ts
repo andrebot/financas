@@ -49,7 +49,6 @@ describe('ContentManager', () => {
     listGoalsWithSavedValueUpTo: sinon.stub(),
   };
   const transactionRepoStub = {
-    deleteGoalFromTransactions: sinon.stub(),
     removeCategoriesFromTransactions: sinon.stub(),
     findByCategoryWithDateRange: sinon.stub().resolves([]),
   };
@@ -150,7 +149,6 @@ describe('ContentManager', () => {
     goalRepoStub.listAll.resetHistory();
     goalRepoStub.listGoalsWithSavedValueUpTo.resetHistory();
 
-    transactionRepoStub.deleteGoalFromTransactions.resetHistory();
     transactionRepoStub.removeCategoriesFromTransactions.resetHistory();
     transactionRepoStub.findByCategoryWithDateRange.resetHistory();
     transactionRepoStub.findByCategoryWithDateRange.resolves([]);
@@ -504,14 +502,12 @@ describe('ContentManager', () => {
       }
     });
 
-    it('should delete goal and remove from transactions', async () => {
+    it('should delete goal', async () => {
       goalRepoStub.deleteById.resolves(mockGoal);
-      transactionRepoStub.deleteGoalFromTransactions.resolves(2);
 
       const result = await contentManager.goalActions.deleteContent(1);
 
       goalRepoStub.deleteById.should.have.been.calledWith(1);
-      transactionRepoStub.deleteGoalFromTransactions.should.have.been.calledWith(1);
       chai.expect(result).to.not.be.null;
       result!.should.deep.equal(mockGoal);
     });
