@@ -791,3 +791,5 @@ export type ContentManagerActions = {
 };
 
 /* eslint-enable no-unused-vars */
+
+export type EventHandler<T = unknown> = (data: T) => void | Promise<void>;

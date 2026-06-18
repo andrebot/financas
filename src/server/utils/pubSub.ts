@@ -1,52 +1,71 @@
-type EventHandler<T = unknown> = (data: T) => void | Promise<void>;
+import type { EventHandler, ITransaction, IInvestment } from '../types';
 
-/** Typed publish-subscribe bus. E maps event names to their payload types. */
-export interface IPubSub<E extends Record<string, unknown> = Record<string, unknown>> {
-  /**
-   * Registers a handler for an event.
-   * Returns an unsubscribe function that removes only this handler.
-   *
-   * @param event - The event name to listen for.
-   * @param handler - The callback invoked when the event is published.
-   * @returns A zero-argument function that unregisters the handler.
-   */
-  subscribe<K extends keyof E>(event: K, handler: EventHandler<E[K]>): () => void;
-  /**
-   * Publishes an event, invoking all registered handlers in parallel.
-   * Rejects if any handler rejects.
-   *
-   * @param event - The event name to emit.
-   * @param data - The payload delivered to every handler.
-   */
-  publish<K extends keyof E>(event: K, data: E[K]): Promise<void>;
+export const EVENTS = {
+  TRANSACTION_CREATED: 'transaction:created',
+  TRANSACTION_UPDATED: 'transaction:updated',
+  TRANSACTION_DELETED: 'transaction:deleted',
+  INVESTMENT_CREATED: 'investment:created',
+  INVESTMENT_UPDATED: 'investment:updated',
+  INVESTMENT_DELETED: 'investment:deleted',
+  INVESTMENT_ARCHIVED: 'investment:archived',
+} as const;
+
+export type AppEvents = {
+  [EVENTS.TRANSACTION_CREATED]: ITransaction;
+  [EVENTS.TRANSACTION_UPDATED]: ITransaction;
+  [EVENTS.TRANSACTION_DELETED]: ITransaction;
+  [EVENTS.INVESTMENT_CREATED]: IInvestment;
+  [EVENTS.INVESTMENT_UPDATED]: IInvestment;
+  [EVENTS.INVESTMENT_DELETED]: IInvestment;
+  [EVENTS.INVESTMENT_ARCHIVED]: IInvestment;
+};
+
+const channels = new Map<keyof AppEvents, Set<EventHandler>>();
+
+/**
+ * Registers a handler for an event. Returns an unsubscribe function that
+ * removes only this handler when called.
+ *
+ * @param event - The event name to listen for.
+ * @param handler - The callback invoked with the event payload.
+ * @returns A zero-argument function that unregisters the handler.
+ */
+export function subscribe<K extends keyof AppEvents>(
+  event: K,
+  handler: EventHandler<AppEvents[K]>,
+): () => void {
+  const existing = channels.get(event) ?? new Set<EventHandler>();
+  existing.add(handler as EventHandler);
+  channels.set(event, existing);
+
+  return () => {
+    channels.get(event)?.delete(handler as EventHandler);
+  };
 }
 
 /**
- * Creates a typed publish-subscribe bus.
- * Handlers for the same event run in parallel via Promise.all.
+ * Publishes an event, invoking all registered handlers in parallel.
+ * Rejects if any handler rejects.
  *
- * @returns An {@link IPubSub} instance.
+ * @param event - The event name to emit.
+ * @param data - The payload delivered to every handler.
  */
-export default function PubSub<
-  E extends Record<string, unknown>,
->(): IPubSub<E> {
-  const channels = new Map<keyof E, Set<EventHandler>>();
+export async function publish<K extends keyof AppEvents>(
+  event: K,
+  data: AppEvents[K],
+): Promise<void> {
+  const handlers = channels.get(event);
 
-  function subscribe<K extends keyof E>(event: K, handler: EventHandler<E[K]>): () => void {
-    const existing = channels.get(event) ?? new Set<EventHandler>();
-    existing.add(handler as EventHandler);
-    channels.set(event, existing);
-
-    return () => {
-      channels.get(event)?.delete(handler as EventHandler);
-    };
+  if (!handlers || handlers.size === 0) {
+    return;
   }
 
-  async function publish<K extends keyof E>(event: K, data: E[K]): Promise<void> {
-    const handlers = channels.get(event);
-    if (!handlers || handlers.size === 0) return;
-    await Promise.all(Array.from(handlers).map((h) => h(data)));
-  }
+  await Promise.all(Array.from(handlers).map((h) => h(data)));
+}
 
-  return { subscribe, publish };
+/**
+ * Removes all subscribers from every channel. Intended for use in tests.
+ */
+export function clear(): void {
+  channels.clear();
 }
