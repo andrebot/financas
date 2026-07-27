@@ -153,6 +153,29 @@ describe('TransactionRepo', () => {
     });
   });
 
+  describe('findChildTransactions', () => {
+    it('should return child transactions for the given parent id', async () => {
+      const mockChild = {
+        id: 99, name: 'IR - CDB', parentTransactionId: 1, type: 'investmentTax',
+      };
+      selectWhereStub.resolves([mockChild]);
+
+      const result = await transactionRepo.findChildTransactions(1);
+
+      selectStub.should.have.been.calledOnce;
+      selectWhereStub.should.have.been.calledOnce;
+      (result as typeof mockChild[]).should.deep.equal([mockChild]);
+    });
+
+    it('should return an empty array when no children exist', async () => {
+      selectWhereStub.resolves([]);
+
+      const result = await transactionRepo.findChildTransactions(42);
+
+      (result as unknown[]).should.be.an('array').that.is.empty;
+    });
+  });
+
   describe('listAllWithRelations', () => {
     it('should return transactions joined with account and category names', async () => {
       const mockRow = {

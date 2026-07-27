@@ -3,12 +3,18 @@ import { withTransaction } from '../utils/transaction';
 import {
   calculateLastMonth, checkVoidPayload,
 } from '../utils/misc';
-import { isInflowType } from '../utils/transactionTypeUtils';
+import {
+  isInflowType,
+  isInvestmentType,
+  isInvestmentCapitalIn,
+  isInvestmentCapitalOut,
+} from '../utils/transactionTypeUtils';
+import calculateTax from '../engine/taxEngine';
 import MonthlyBalanceRepo from '../resources/repositories/monthlyBalanceRepo';
 import GoalRepo from '../resources/repositories/goalRepo';
 import BudgetRepo from '../resources/repositories/budgetRepo';
 import TransactionRepo from '../resources/repositories/transactionRepo';
-import InvestmentManager from './investmentManager';
+import InvestmentRepo from '../resources/repositories/investmentRepo';
 import {
   ITransaction,
   ITransactionWithRelations,
@@ -19,30 +25,12 @@ import {
   IMonthlyBalanceRepo,
   IGoalRepo,
   IBudgetRepo,
-  IInvestmentManager,
+  IInvestmentRepo,
+  IInvestment,
   IInvestmentTransactionEntry,
 } from '../types';
 
 const logger = createLogger('AccountantManager');
-
-/**
- * Fields in Transaction model that trigger recalculation in the system.
- *
- * - value: Impacts balances and budgets
- * - category: Affects budget categorization
- * - parentCategory: Affects budget categorization
- * - account: Impacts account-specific balances
- * - date: Determines monthly balance assignment
- * - goalsList: Affects goal percentages or allocations
- * - type: Determines how the transaction is treated (income, expense, etc.)
- */
-const recalculationFields: Array<keyof ITransaction> = [
-  'value',
-  'categoryId',
-  'accountId',
-  'date',
-  'type',
-];
 
 /**
  * Returns the closing balance of the previous month for a given transaction's account.
@@ -75,12 +63,20 @@ async function getLastMonthClosingBalance(
  *
  * @param content - The transaction to add to the monthly balance.
  * @param monthlyBalanceRepo - The monthly balance repository to use.
+ * @param revert - When true, reverses the transaction's effect on the balance.
  */
-async function addTransactionToMonthlyBalance(
+async function updateMonthlyBalance(
   content: ITransaction,
   monthlyBalanceRepo: IMonthlyBalanceRepo,
+  revert = false,
 ): Promise<void> {
   const { date } = content;
+
+  if (revert) {
+    await monthlyBalanceRepo.updateMonthlyBalanceWithTransaction(content, true);
+    return;
+  }
+
   const value = Number(content.value);
   const inflow = isInflowType(content.type);
   const closingDelta = inflow ? value : -value;
@@ -111,86 +107,215 @@ async function addTransactionToMonthlyBalance(
 }
 
 /**
- * Checks if the payload contains any of the fields that trigger recalculation.
+ * Applies or reverts the full accounting effects of an investment transaction.
+ * Investment transactions affect monthly balance and goals (capital moves only).
+ * They never affect budgets.
  *
- * @param payload - The payload to check.
- * @returns True if the payload contains any of the fields that trigger recalculation,
- * false otherwise.
+ * @param transaction - The investment transaction.
+ * @param monthlyBalanceRepo - The monthly balance repository to use.
+ * @param goalRepo - The goal repository to use.
+ * @param revert - When true, reverses all effects.
  */
-function shouldTriggerRecalculation(payload: Partial<ITransaction>): boolean {
-  return Object.keys(payload).some(
-    (key) => recalculationFields.includes(key as keyof ITransaction),
+async function applyInvestmentEffects(
+  transaction: ITransaction,
+  monthlyBalanceRepo: IMonthlyBalanceRepo,
+  goalRepo: IGoalRepo,
+  revert = false,
+): Promise<void> {
+  await updateMonthlyBalance(transaction, monthlyBalanceRepo, revert);
+
+  if (isInvestmentCapitalIn(transaction.type) || isInvestmentCapitalOut(transaction.type)) {
+    await goalRepo.updateGoalFromTransaction(transaction, revert);
+  }
+}
+
+/**
+ * Applies or reverts the full accounting effects of a regular (non-investment) transaction.
+ * Regular transactions affect monthly balance and budgets (outflows only, filtered by category).
+ * They never affect goals.
+ *
+ * @param transaction - The regular transaction.
+ * @param monthlyBalanceRepo - The monthly balance repository to use.
+ * @param budgetRepo - The budget repository to use.
+ * @param revert - When true, reverses all effects.
+ */
+async function applyRegularEffects(
+  transaction: ITransaction,
+  monthlyBalanceRepo: IMonthlyBalanceRepo,
+  budgetRepo: IBudgetRepo,
+  revert = false,
+): Promise<void> {
+  await updateMonthlyBalance(transaction, monthlyBalanceRepo, revert);
+
+  if (!isInflowType(transaction.type)) {
+    if (revert) {
+      await budgetRepo.revertBudgetsByTransaction(transaction);
+    } else {
+      await budgetRepo.updateBudgetsByNewTransaction(transaction);
+    }
+  }
+}
+
+/**
+ * Applies or reverts the accounting effects of a transaction, routing to the
+ * correct handler based on whether it is an investment or regular transaction.
+ *
+ * @param transaction - The transaction to process.
+ * @param monthlyBalanceRepo - The monthly balance repository to use.
+ * @param goalRepo - The goal repository to use.
+ * @param budgetRepo - The budget repository to use.
+ * @param revert - When true, reverses all effects.
+ */
+async function applyTransactionEffects(
+  transaction: ITransaction,
+  monthlyBalanceRepo: IMonthlyBalanceRepo,
+  goalRepo: IGoalRepo,
+  budgetRepo: IBudgetRepo,
+  revert = false,
+): Promise<void> {
+  if (isInvestmentType(transaction.type)) {
+    await applyInvestmentEffects(transaction, monthlyBalanceRepo, goalRepo, revert);
+  } else {
+    await applyRegularEffects(transaction, monthlyBalanceRepo, budgetRepo, revert);
+  }
+}
+
+/**
+ * Applies an investment transaction entry to the position and goal tables.
+ * Creates the investment inline if no id is provided in the entry.
+ * Returns a tax transaction payload when the transaction is an investmentDueDate
+ * with positive gross income. The caller is responsible for saving that transaction.
+ *
+ * @param transaction - The saved transaction being applied.
+ * @param entry - The investment-specific data carried alongside the transaction.
+ * @param investmentRepo - The investment repository to use.
+ * @returns A partial tax transaction payload, or null when no tax applies.
+ */
+async function applyInvestmentTransaction(
+  transaction: ITransaction,
+  entry: IInvestmentTransactionEntry,
+  investmentRepo: IInvestmentRepo,
+): Promise<Partial<ITransaction> | null> {
+  const entryRef = entry.investment as { id?: number };
+  let investmentId: number;
+
+  if (entryRef.id) {
+    investmentId = entryRef.id;
+  } else {
+    logger.info('Creating investment inline from transaction entry');
+
+    const created = await investmentRepo.save({
+      ...(entry.investment as Partial<IInvestment>),
+      totalInvested: '0',
+      archived: false,
+    });
+
+    investmentId = created.id!;
+  }
+
+  await investmentRepo.saveTransactionLink(
+    transaction.id!,
+    investmentId,
+    entry.quantity,
+    entry.unitPrice,
   );
+
+  await investmentRepo.applyTransactionToPosition(
+    investmentId,
+    transaction,
+    entry.quantity,
+    entry.unitPrice,
+  );
+
+  if (entry.goals && entry.goals.length > 0) {
+    await investmentRepo.saveGoalAllocations(investmentId, entry.goals);
+  }
+
+  if (transaction.type === 'investmentDueDate') {
+    const investment = await investmentRepo.findById(investmentId);
+
+    if (investment) {
+      const grossIncome = Number(transaction.value) - Number(investment.totalInvested);
+      const holdingMs = transaction.date.getTime() - new Date(investment.createdAt).getTime();
+      const holdingDays = Math.floor(holdingMs / (1000 * 60 * 60 * 24));
+      const taxAmount = calculateTax(investment.investmentType, grossIncome, holdingDays);
+
+      await investmentRepo.archiveInvestment(investmentId);
+
+      if (taxAmount > 0) {
+        return {
+          name: `IR - ${investment.name}`,
+          type: 'investmentTax' as const,
+          value: String(taxAmount),
+          accountId: transaction.accountId,
+          date: transaction.date,
+          userId: transaction.userId,
+          investmentType: investment.investmentType,
+          parentTransactionId: transaction.id,
+        };
+      }
+    }
+  }
+
+  return null;
 }
 
 /**
- * Reverts a transaction's impact on monthly balance, goal amounts, and budgets.
- * Does NOT delete goal junction rows — callers are responsible for that when needed.
+ * Reverts the investment position impact of a transaction.
+ * Pre-deletes the junction row before recalculating so the replay sees the
+ * correct remaining state. The cascade delete from deleteById becomes a no-op.
  *
- * @param transaction - The transaction to revert.
+ * @param transaction - The transaction being reverted.
+ * @param investmentRepo - The investment repository to use.
+ */
+async function revertInvestmentTransaction(
+  transaction: ITransaction,
+  investmentRepo: IInvestmentRepo,
+): Promise<void> {
+  const link = await investmentRepo.findTransactionLink(transaction.id!);
+  if (!link) return;
+
+  await investmentRepo.deleteTransactionLink(transaction.id!);
+  await investmentRepo.recalculatePosition(link.investmentId);
+}
+
+/**
+ * Returns true when only the name field is being changed, meaning no financial
+ * recalculation is needed.
+ *
+ * @param payload - The update payload to inspect.
+ * @returns True when the payload contains only a name change.
+ */
+function isNameOnlyChange(payload: Partial<ITransaction>): boolean {
+  const keys = Object.keys(payload);
+  return keys.length === 1 && keys[0] === 'name';
+}
+
+/**
+ * Creates a new transaction and updates accounting state accordingly.
+ * Investment transactions update monthly balance and goals (capital moves).
+ * Regular transactions update monthly balance and budgets (outflows only).
+ * On investmentDueDate a tax transaction is auto-created with parentTransactionId set.
+ *
+ * @throws {Error} - If the payload is void.
+ *
+ * @param content - The transaction to create.
+ * @param transactionRepo - The transaction repository to use.
  * @param monthlyBalanceRepo - The monthly balance repository to use.
  * @param goalRepo - The goal repository to use.
  * @param budgetRepo - The budget repository to use.
+ * @param investmentRepo - The investment repository to use.
+ * @param investmentEntry - Optional investment-specific data.
+ * @returns The created transaction.
  */
-async function deleteTransactionFromOtherModels(
-  transaction: ITransaction,
-  monthlyBalanceRepo: IMonthlyBalanceRepo,
-  goalRepo: IGoalRepo,
-  budgetRepo: IBudgetRepo,
-): Promise<void> {
-  logger.info(`Reverting impact of transaction: ${transaction.id}`);
-
-  await monthlyBalanceRepo.updateMonthlyBalanceWithTransaction(transaction, true);
-  await goalRepo.updateGoalFromTransaction(transaction, true);
-  await budgetRepo.revertBudgetsByTransaction(transaction);
-}
-
-/**
- * Adds a transaction to the monthly balance, goals, and budgets.
- * Goal junction rows must already exist before calling this function.
- *
- * @param transaction - The transaction to add.
- * @param monthlyBalanceRepo - The monthly balance repository to use.
- * @param goalRepo - The goal repository to use.
- * @param budgetRepo - The budget repository to use.
- */
-async function addTransactionToOtherModels(
-  transaction: ITransaction,
-  monthlyBalanceRepo: IMonthlyBalanceRepo,
-  goalRepo: IGoalRepo,
-  budgetRepo: IBudgetRepo,
-): Promise<void> {
-  logger.info(`Adding transaction: ${transaction.id}`);
-
-  await addTransactionToMonthlyBalance(transaction, monthlyBalanceRepo);
-  await goalRepo.updateGoalFromTransaction(transaction);
-  await budgetRepo.updateBudgetsByNewTransaction(transaction);
-}
-
-/**
-   * Creates a new transaction and updates the monthly balance, goals and budgets.
-   * When an investmentEntry is provided along with an investmentManager, the investment
-   * position is updated atomically and a tax transaction is auto-created for due dates.
-   *
-   * @throws {Error} - If the payload is void.
-   *
-   * @param content - The transaction to create.
-   * @param transactionRepo - The transaction repository to use.
-   * @param monthlyBalanceRepo - The monthly balance repository to use.
-   * @param goalRepo - The goal repository to use.
-   * @param budgetRepo - The budget repository to use.
-   * @param investmentEntry - Optional investment-specific data.
-   * @param investmentManager - Optional investment manager.
-   * @returns The created transaction.
-   */
 async function createTransaction(
   content: ITransaction,
   transactionRepo: ITransactionRepo,
   monthlyBalanceRepo: IMonthlyBalanceRepo,
   goalRepo: IGoalRepo,
   budgetRepo: IBudgetRepo,
+  investmentRepo: IInvestmentRepo,
   investmentEntry?: IInvestmentTransactionEntry,
-  investmentManager?: IInvestmentManager,
 ): Promise<ITransaction> {
   logger.info(`Creating new transaction for user: ${content.userId}`);
 
@@ -199,16 +324,16 @@ async function createTransaction(
   const savedTransaction = await withTransaction(async () => {
     const saved = await transactionRepo.save(content);
 
-    if (investmentEntry && investmentManager) {
-      const taxPayload = await investmentManager.applyInvestmentTransaction(saved, investmentEntry);
+    if (investmentEntry) {
+      const taxPayload = await applyInvestmentTransaction(saved, investmentEntry, investmentRepo);
 
       if (taxPayload) {
         const savedTax = await transactionRepo.save(taxPayload as ITransaction);
-        await addTransactionToMonthlyBalance(savedTax, monthlyBalanceRepo);
+        await updateMonthlyBalance(savedTax, monthlyBalanceRepo);
       }
     }
 
-    await addTransactionToOtherModels(saved, monthlyBalanceRepo, goalRepo, budgetRepo);
+    await applyTransactionEffects(saved, monthlyBalanceRepo, goalRepo, budgetRepo);
     return saved;
   });
 
@@ -218,9 +343,9 @@ async function createTransaction(
 }
 
 /**
- * Deletes a transaction and updates the monthly balance, goals and budgets.
- * Reverts the investment position before deletion when an investmentManager is provided.
- * Authorization is enforced at the database level via the request context.
+ * Deletes a transaction and reverses all its accounting effects.
+ * Auto-generated children (e.g. investmentTax) are found via parentTransactionId
+ * and deleted first. Investment position is recalculated before the cascade delete.
  *
  * @throws {Error} - If the transaction is not found.
  *
@@ -229,7 +354,7 @@ async function createTransaction(
  * @param monthlyBalanceRepo - The monthly balance repository to use.
  * @param goalRepo - The goal repository to use.
  * @param budgetRepo - The budget repository to use.
- * @param investmentManager - Optional investment manager.
+ * @param investmentRepo - The investment repository to use.
  * @returns The deleted transaction.
  */
 async function deleteTransaction(
@@ -238,7 +363,7 @@ async function deleteTransaction(
   monthlyBalanceRepo: IMonthlyBalanceRepo,
   goalRepo: IGoalRepo,
   budgetRepo: IBudgetRepo,
-  investmentManager?: IInvestmentManager,
+  investmentRepo: IInvestmentRepo,
 ): Promise<ITransaction | null> {
   logger.info(`Deleting transaction: ${id}`);
 
@@ -249,11 +374,15 @@ async function deleteTransaction(
   }
 
   return withTransaction(async () => {
-    await deleteTransactionFromOtherModels(transaction, monthlyBalanceRepo, goalRepo, budgetRepo);
+    const children = await transactionRepo.findChildTransactions(id);
 
-    if (investmentManager) {
-      await investmentManager.revertInvestmentTransaction(transaction);
-    }
+    await Promise.all(children.map(async (child) => {
+      await updateMonthlyBalance(child, monthlyBalanceRepo, true);
+      await transactionRepo.deleteById(child.id!);
+    }));
+
+    await applyTransactionEffects(transaction, monthlyBalanceRepo, goalRepo, budgetRepo, true);
+    await revertInvestmentTransaction(transaction, investmentRepo);
 
     logger.info('Removed transaction from other models');
 
@@ -262,12 +391,14 @@ async function deleteTransaction(
 }
 
 /**
- * Updates a transaction and updates the monthly balance, goals and budgets.
- * On recalculation, reverts the investment position and reapplies it when
- * investmentEntry and investmentManager are provided.
+ * Updates a transaction and recalculates all accounting effects when needed.
+ * Name-only changes skip recalculation entirely.
+ * Investment transactions cannot change type — throw if attempted.
+ * All other field changes trigger a full revert of old effects and apply of new effects.
  *
  * @throws {Error} - If the transaction is not found.
  * @throws {Error} - If the payload is void.
+ * @throws {Error} - If an investment transaction's type is changed.
  *
  * @param id - The id of the transaction to update.
  * @param payload - The payload to update the transaction with.
@@ -275,8 +406,8 @@ async function deleteTransaction(
  * @param monthlyBalanceRepo - The monthly balance repository to use.
  * @param goalRepo - The goal repository to use.
  * @param budgetRepo - The budget repository to use.
+ * @param investmentRepo - The investment repository to use.
  * @param investmentEntry - Optional updated investment-specific data.
- * @param investmentManager - Optional investment manager.
  * @returns The updated transaction.
  */
 async function updateTransaction(
@@ -286,8 +417,8 @@ async function updateTransaction(
   monthlyBalanceRepo: IMonthlyBalanceRepo,
   goalRepo: IGoalRepo,
   budgetRepo: IBudgetRepo,
+  investmentRepo: IInvestmentRepo,
   investmentEntry?: IInvestmentTransactionEntry,
-  investmentManager?: IInvestmentManager,
 ): Promise<ITransaction | null> {
   logger.info(`Updating transaction: ${id}`);
 
@@ -299,40 +430,41 @@ async function updateTransaction(
     throw new Error(`Transaction with id ${id} not found. Cannot execute update action.`);
   }
 
-  if (shouldTriggerRecalculation(payload)) {
-    logger.info('Triggering recalculation');
-
-    return withTransaction(async () => {
-      await deleteTransactionFromOtherModels(transaction, monthlyBalanceRepo, goalRepo, budgetRepo);
-
-      if (investmentManager) {
-        await investmentManager.revertInvestmentTransaction(transaction);
-      }
-
-      const updatedTransaction = await transactionRepo.update(id, payload);
-
-      if (investmentEntry && investmentManager) {
-        // eslint-disable-next-line max-len
-        const taxPayload = await investmentManager.applyInvestmentTransaction(updatedTransaction, investmentEntry);
-
-        if (taxPayload) {
-          const savedTax = await transactionRepo.save(taxPayload as ITransaction);
-          await addTransactionToMonthlyBalance(savedTax, monthlyBalanceRepo);
-        }
-      }
-
-      await addTransactionToOtherModels(
-        updatedTransaction,
-        monthlyBalanceRepo,
-        goalRepo,
-        budgetRepo,
-      );
-
-      return updatedTransaction;
-    });
+  if (isNameOnlyChange(payload)) {
+    return transactionRepo.update(id, payload);
   }
 
-  return transactionRepo.update(id, payload);
+  if (payload.type && payload.type !== transaction.type && isInvestmentType(transaction.type)) {
+    throw new Error(
+      `Cannot change the type of an investment transaction (id: ${id}). Delete and recreate it instead.`,
+    );
+  }
+
+  logger.info('Triggering recalculation');
+
+  return withTransaction(async () => {
+    await applyTransactionEffects(transaction, monthlyBalanceRepo, goalRepo, budgetRepo, true);
+    await revertInvestmentTransaction(transaction, investmentRepo);
+
+    const updatedTransaction = await transactionRepo.update(id, payload);
+
+    if (investmentEntry) {
+      const taxPayload = await applyInvestmentTransaction(
+        updatedTransaction,
+        investmentEntry,
+        investmentRepo,
+      );
+
+      if (taxPayload) {
+        const savedTax = await transactionRepo.save(taxPayload as ITransaction);
+        await updateMonthlyBalance(savedTax, monthlyBalanceRepo);
+      }
+    }
+
+    await applyTransactionEffects(updatedTransaction, monthlyBalanceRepo, goalRepo, budgetRepo);
+
+    return updatedTransaction;
+  });
 }
 
 /**
@@ -353,13 +485,8 @@ function getTransactionTypes(): {
 /**
  * Gets a transaction by id.
  *
- * @throws {Error} - If the transaction is not found.
- * @throws {Error} - If the user is not authorized to get the transaction.
- *
  * @param id - The id of the transaction to get.
  * @param transactionRepo - The transaction repository to use.
- * @param userId - The id of the user getting the transaction.
- * @param isAdmin - Whether the user getting the transaction is an admin.
  * @returns The transaction.
  */
 async function getTransaction(
@@ -368,15 +495,12 @@ async function getTransaction(
 ): Promise<ITransaction | null> {
   logger.info(`Getting transaction: ${id}`);
 
-  const transaction = await transactionRepo.findById(id);
-
-  return transaction;
+  return transactionRepo.findById(id);
 }
 
 /**
  * Lists all transactions for a user.
  *
- * @param userId - The id of the user listing the transactions.
  * @param transactionRepo - The transaction repository to use.
  * @returns The transactions.
  */
@@ -408,20 +532,21 @@ async function listMonthlyBalances(
 
 /**
  * Creates an accountant manager using the provided repositories.
+ * Owns all transaction accounting and investment position management.
  *
  * @param transactionRepo - Repository for transaction persistence.
  * @param monthlyBalanceRepo - Repository for monthly balance updates.
  * @param goalRepo - Repository for goal aggregate updates.
  * @param budgetRepo - Repository for budget usage updates.
- * @param investmentManager - Optional investment manager for position management.
- * @returns Transaction orchestration actions with accounting side effects.
+ * @param investmentRepo - Repository for investment position management.
+ * @returns Transaction and investment orchestration actions with accounting side effects.
  */
 export function AccountantManager(
   transactionRepo: ITransactionRepo,
   monthlyBalanceRepo: IMonthlyBalanceRepo,
   goalRepo: IGoalRepo,
   budgetRepo: IBudgetRepo,
-  investmentManager?: IInvestmentManager,
+  investmentRepo: IInvestmentRepo,
 ) {
   return {
     createTransaction: (
@@ -433,8 +558,8 @@ export function AccountantManager(
       monthlyBalanceRepo,
       goalRepo,
       budgetRepo,
+      investmentRepo,
       investmentEntry,
-      investmentManager,
     ),
     deleteTransaction: (id: number) => deleteTransaction(
       id,
@@ -442,7 +567,7 @@ export function AccountantManager(
       monthlyBalanceRepo,
       goalRepo,
       budgetRepo,
-      investmentManager,
+      investmentRepo,
     ),
     updateTransaction: (
       id: number,
@@ -455,13 +580,10 @@ export function AccountantManager(
       monthlyBalanceRepo,
       goalRepo,
       budgetRepo,
+      investmentRepo,
       investmentEntry,
-      investmentManager,
     ),
-    getTransaction: (id: number) => getTransaction(
-      id,
-      transactionRepo,
-    ),
+    getTransaction: (id: number) => getTransaction(id, transactionRepo),
     listTransactions: () => listTransactions(transactionRepo),
     listMonthlyBalances: (year: number, month: number) => listMonthlyBalances(
       year,
@@ -469,6 +591,13 @@ export function AccountantManager(
       monthlyBalanceRepo,
     ),
     getTransactionTypes: () => getTransactionTypes(),
+    createInvestment: (investment: Partial<IInvestment>) => investmentRepo.save(investment),
+    updateInvestment: (id: number, payload: Partial<IInvestment>) => (
+      investmentRepo.update(id, payload)
+    ),
+    deleteInvestment: (id: number) => investmentRepo.deleteById(id),
+    getInvestment: (id: number) => investmentRepo.findById(id),
+    listInvestments: () => investmentRepo.listAll(),
   };
 }
 
@@ -477,5 +606,5 @@ export default AccountantManager(
   MonthlyBalanceRepo,
   GoalRepo,
   BudgetRepo,
-  InvestmentManager,
+  InvestmentRepo,
 );

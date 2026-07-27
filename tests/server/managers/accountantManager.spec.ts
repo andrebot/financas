@@ -15,6 +15,7 @@ const transactionRepoStub = {
   update: sinon.stub(),
   listAll: sinon.stub(),
   listAllWithRelations: sinon.stub(),
+  findChildTransactions: sinon.stub(),
 };
 
 const monthlyBalanceRepoStub = {
@@ -33,13 +34,23 @@ const budgetRepoStub = {
   revertBudgetsByTransaction: sinon.stub(),
 };
 
-const applyInvestmentTransactionStub = sinon.stub();
-const revertInvestmentTransactionStub = sinon.stub();
-
-const investmentManagerStub = {
-  applyInvestmentTransaction: applyInvestmentTransactionStub,
-  revertInvestmentTransaction: revertInvestmentTransactionStub,
+const investmentRepoStub = {
+  save: sinon.stub(),
+  findById: sinon.stub(),
+  update: sinon.stub(),
+  deleteById: sinon.stub(),
+  listAll: sinon.stub(),
+  saveTransactionLink: sinon.stub(),
+  findTransactionLink: sinon.stub(),
+  deleteTransactionLink: sinon.stub(),
+  saveGoalAllocations: sinon.stub(),
+  findGoalAllocations: sinon.stub(),
+  applyTransactionToPosition: sinon.stub(),
+  recalculatePosition: sinon.stub(),
+  archiveInvestment: sinon.stub(),
 };
+
+const calculateTaxStub = sinon.stub();
 
 let transactionDepth = 0;
 
@@ -65,7 +76,8 @@ const { AccountantManager: AccountantManagerFactory, default: accountantManager 
     '../resources/repositories/monthlyBalanceRepo': { default: monthlyBalanceRepoStub },
     '../resources/repositories/goalRepo': { default: goalRepoStub },
     '../resources/repositories/budgetRepo': { default: budgetRepoStub },
-    './investmentManager': { default: investmentManagerStub },
+    '../resources/repositories/investmentRepo': { default: investmentRepoStub },
+    '../engine/taxEngine': { default: calculateTaxStub },
     '../utils/transaction': { withTransaction: withTransactionStub },
   },
 );
@@ -114,6 +126,7 @@ describe('AccountantManager', () => {
     transactionRepoStub.update.reset();
     transactionRepoStub.listAll.reset();
     transactionRepoStub.listAllWithRelations.reset();
+    transactionRepoStub.findChildTransactions.reset();
 
     monthlyBalanceRepoStub.findMonthlyBalance.reset();
     monthlyBalanceRepoStub.save.reset();
@@ -123,10 +136,30 @@ describe('AccountantManager', () => {
     goalRepoStub.updateGoalFromTransaction.reset();
     budgetRepoStub.updateBudgetsByNewTransaction.reset();
     budgetRepoStub.revertBudgetsByTransaction.reset();
-    applyInvestmentTransactionStub.reset();
-    revertInvestmentTransactionStub.reset();
-    revertInvestmentTransactionStub.resolves();
-    applyInvestmentTransactionStub.resolves(null);
+
+    investmentRepoStub.save.reset();
+    investmentRepoStub.findById.reset();
+    investmentRepoStub.update.reset();
+    investmentRepoStub.deleteById.reset();
+    investmentRepoStub.listAll.reset();
+    investmentRepoStub.saveTransactionLink.reset();
+    investmentRepoStub.findTransactionLink.reset();
+    investmentRepoStub.deleteTransactionLink.reset();
+    investmentRepoStub.saveGoalAllocations.reset();
+    investmentRepoStub.applyTransactionToPosition.reset();
+    investmentRepoStub.recalculatePosition.reset();
+    investmentRepoStub.archiveInvestment.reset();
+
+    calculateTaxStub.reset();
+    calculateTaxStub.returns(0);
+
+    investmentRepoStub.saveTransactionLink.resolves();
+    investmentRepoStub.applyTransactionToPosition.resolves();
+    investmentRepoStub.findTransactionLink.resolves(null);
+    investmentRepoStub.deleteTransactionLink.resolves();
+    investmentRepoStub.recalculatePosition.resolves();
+    investmentRepoStub.archiveInvestment.resolves();
+
     transactionDepth = 0;
   });
 
@@ -150,15 +183,28 @@ describe('AccountantManager', () => {
       budgetRepoStub.updateBudgetsByNewTransaction.resolves();
     });
 
-    it('should save the transaction and update related models', async () => {
+    it('should save the transaction and update monthly balance for inflow types', async () => {
       const content = buildTransaction({ id: undefined as unknown as number });
 
       const result = await accountantManager.createTransaction(content);
 
       transactionRepoStub.save.should.have.been.calledOnce;
       monthlyBalanceRepoStub.findMonthlyBalance.should.have.been.called;
-      budgetRepoStub.updateBudgetsByNewTransaction.should.have.been.calledOnce;
+      monthlyBalanceRepoStub.updateMonthlyBalanceWithTransaction.should.have.been.calledOnce;
+      budgetRepoStub.updateBudgetsByNewTransaction.should.not.have.been.called;
       result.should.deep.equal(mockTransaction);
+    });
+
+    it('should update budget for outflow types', async () => {
+      const outflowContent = buildTransaction({
+        id: undefined as unknown as number, type: 'cardPurchase',
+      });
+      const savedOutflow = { ...outflowContent, id: 2 };
+      transactionRepoStub.save.resolves(savedOutflow);
+
+      await accountantManager.createTransaction(outflowContent);
+
+      budgetRepoStub.updateBudgetsByNewTransaction.should.have.been.calledOnce;
     });
 
     it('should throw when payload is void', async () => {
@@ -259,22 +305,43 @@ describe('AccountantManager', () => {
     beforeEach(() => {
       transactionRepoStub.findById.resolves(mockTransaction);
       transactionRepoStub.deleteById.resolves(mockTransaction);
+      transactionRepoStub.findChildTransactions.resolves([]);
       monthlyBalanceRepoStub.updateMonthlyBalanceWithTransaction.resolves();
       goalRepoStub.updateGoalFromTransaction.resolves();
       budgetRepoStub.revertBudgetsByTransaction.resolves();
     });
 
-    it('should revert related models and delete the transaction', async () => {
+    it('should revert monthly balance and delete the transaction', async () => {
       const result = await accountantManager.deleteTransaction(1);
 
       transactionRepoStub.findById.should.have.been.calledOnceWith(1);
+      transactionRepoStub.findChildTransactions.should.have.been.calledOnceWith(1);
       monthlyBalanceRepoStub.updateMonthlyBalanceWithTransaction.should.have.been.calledOnceWith(
         mockTransaction, true,
       );
-      goalRepoStub.updateGoalFromTransaction.should.have.been.calledOnceWith(mockTransaction, true);
-      budgetRepoStub.revertBudgetsByTransaction.should.have.been.calledOnceWith(mockTransaction);
       transactionRepoStub.deleteById.should.have.been.calledOnceWith(1);
       result.should.deep.equal(mockTransaction);
+    });
+
+    it('should revert budget for outflow types on delete', async () => {
+      const outflowTx = buildTransaction({ type: 'cardPurchase' });
+      transactionRepoStub.findById.resolves(outflowTx);
+      transactionRepoStub.deleteById.resolves(outflowTx);
+
+      await accountantManager.deleteTransaction(1);
+
+      budgetRepoStub.revertBudgetsByTransaction.should.have.been.calledOnceWith(outflowTx);
+    });
+
+    it('should delete child transactions before deleting the parent', async () => {
+      const childTx = buildTransaction({ id: 99, type: 'investmentTax' });
+      transactionRepoStub.findChildTransactions.resolves([childTx]);
+      transactionRepoStub.deleteById.resolves(mockTransaction);
+
+      await accountantManager.deleteTransaction(1);
+
+      transactionRepoStub.deleteById.should.have.been.calledWith(99);
+      transactionRepoStub.deleteById.should.have.been.calledWith(1);
     });
 
     it('should throw when transaction is not found', async () => {
@@ -341,10 +408,33 @@ describe('AccountantManager', () => {
       monthlyBalanceRepoStub.updateMonthlyBalanceWithTransaction.should.have.been.calledWith(
         mockTransaction, true,
       );
-      budgetRepoStub.revertBudgetsByTransaction.should.have.been.calledOnce;
-      budgetRepoStub.updateBudgetsByNewTransaction.should.have.been.calledOnce;
       transactionRepoStub.update.should.have.been.calledOnce;
       (result as ITransaction).should.have.property('name', 'Updated');
+    });
+
+    it('should revert and update budget for outflow type on recalculation', async () => {
+      const outflowTx = buildTransaction({ type: 'cardPurchase' });
+      const updatedOutflow = { ...outflowTx, value: '200.00' };
+      transactionRepoStub.findById.resolves(outflowTx);
+      transactionRepoStub.update.resolves(updatedOutflow);
+      monthlyBalanceRepoStub.findMonthlyBalance.resolves(mockMonthlyBalance);
+
+      await accountantManager.updateTransaction(1, { value: '200.00' });
+
+      budgetRepoStub.revertBudgetsByTransaction.should.have.been.calledOnce;
+      budgetRepoStub.updateBudgetsByNewTransaction.should.have.been.calledOnce;
+    });
+
+    it('should throw when trying to change an investment transaction type', async () => {
+      const investmentTx = buildTransaction({ type: 'investmentBuy' });
+      transactionRepoStub.findById.resolves(investmentTx);
+
+      try {
+        await accountantManager.updateTransaction(1, { type: 'investmentSell' });
+        should().fail('Should have thrown');
+      } catch (error) {
+        (error as Error).message.should.include('Cannot change the type of an investment transaction');
+      }
     });
 
     it('should update recalculated transaction content inside the same transaction', async () => {
@@ -419,6 +509,7 @@ describe('AccountantManager', () => {
         monthlyBalanceRepoStub as any,
         goalRepoStub as any,
         budgetRepoStub as any,
+        investmentRepoStub as any,
       );
 
       monthlyBalanceRepoStub.findMonthlyBalance.resolves(mockMonthlyBalance);
@@ -438,73 +529,179 @@ describe('AccountantManager', () => {
 
     beforeEach(() => {
       transactionRepoStub.save.resolves(mockTransaction);
+      transactionRepoStub.findChildTransactions.resolves([]);
       monthlyBalanceRepoStub.findMonthlyBalance.resolves(mockMonthlyBalance);
       monthlyBalanceRepoStub.updateMonthlyBalanceWithTransaction.resolves();
       goalRepoStub.updateGoalFromTransaction.resolves();
       budgetRepoStub.updateBudgetsByNewTransaction.resolves();
+      budgetRepoStub.revertBudgetsByTransaction.resolves();
     });
 
-    it('should call applyInvestmentTransaction when investmentEntry is provided on create', async () => {
+    it('should link and position-update the investment when investmentEntry is provided on create', async () => {
       const content = buildTransaction({ id: undefined as unknown as number });
 
       await accountantManager.createTransaction(content, mockInvestmentEntry as any);
 
-      applyInvestmentTransactionStub.should.have.been.calledOnce;
-      const [savedTx, entry] = applyInvestmentTransactionStub.firstCall.args;
-      savedTx.should.deep.equal(mockTransaction);
-      entry.should.deep.equal(mockInvestmentEntry);
+      investmentRepoStub.saveTransactionLink.should.have.been.calledOnceWith(
+        mockTransaction.id, 5, undefined, undefined,
+      );
+      investmentRepoStub.applyTransactionToPosition.should.have.been.calledOnce;
     });
 
-    it('should save and update monthly balance for tax transaction when applyInvestmentTransaction returns one', async () => {
-      const taxPayload = {
-        name: 'IR - CDB',
-        type: 'investmentTax',
-        value: '150',
-        accountId: 3,
-        date: new Date(2024, 0, 15),
+    it('should create a tax transaction when investmentDueDate yields taxable income', async () => {
+      const investment = {
+        id: 5,
+        name: 'CDB',
+        investmentType: 'cdb',
+        totalInvested: '1000.00',
+        createdAt: new Date(2023, 0, 1),
       };
-      const savedTaxTx = { ...taxPayload, id: 99 };
-      applyInvestmentTransactionStub.resolves(taxPayload);
-      transactionRepoStub.save.onSecondCall().resolves(savedTaxTx);
-      monthlyBalanceRepoStub.findMonthlyBalance.resolves(mockMonthlyBalance);
+      const dueDate = buildTransaction({
+        type: 'investmentDueDate', value: '1100.00', date: new Date(2024, 0, 1),
+      });
+      const taxTx = { ...dueDate, id: 99, type: 'investmentTax', value: '150' };
+
+      transactionRepoStub.save.onFirstCall().resolves(dueDate);
+      transactionRepoStub.save.onSecondCall().resolves(taxTx);
+      investmentRepoStub.findById.resolves(investment);
+      calculateTaxStub.returns(150);
 
       const content = buildTransaction({ id: undefined as unknown as number });
       await accountantManager.createTransaction(content, mockInvestmentEntry as any);
 
       transactionRepoStub.save.should.have.been.calledTwice;
       monthlyBalanceRepoStub.updateMonthlyBalanceWithTransaction.should.have.been.calledWith(
-        savedTaxTx,
-        false,
+        taxTx, false,
       );
     });
 
-    it('should not call applyInvestmentTransaction when no investmentEntry on create', async () => {
+    it('should set parentTransactionId on the tax transaction', async () => {
+      const investment = {
+        id: 5,
+        name: 'CDB',
+        investmentType: 'cdb',
+        totalInvested: '1000.00',
+        createdAt: new Date(2023, 0, 1),
+      };
+      const dueDate = buildTransaction({
+        id: 10,
+        type: 'investmentDueDate', value: '1100.00', date: new Date(2024, 0, 1),
+      });
+      transactionRepoStub.save.onFirstCall().resolves(dueDate);
+      transactionRepoStub.save.onSecondCall().resolves({ ...dueDate, id: 99, type: 'investmentTax' });
+      investmentRepoStub.findById.resolves(investment);
+      calculateTaxStub.returns(150);
+
+      const content = buildTransaction({ id: undefined as unknown as number });
+      await accountantManager.createTransaction(content, mockInvestmentEntry as any);
+
+      const taxPayload = transactionRepoStub.save.secondCall.args[0];
+      taxPayload.should.have.property('parentTransactionId', 10);
+    });
+
+    it('should not touch investment repo when no investmentEntry on create', async () => {
       const content = buildTransaction({ id: undefined as unknown as number });
 
       await accountantManager.createTransaction(content);
 
-      applyInvestmentTransactionStub.should.not.have.been.called;
+      investmentRepoStub.saveTransactionLink.should.not.have.been.called;
+      investmentRepoStub.applyTransactionToPosition.should.not.have.been.called;
     });
 
-    it('should call revertInvestmentTransaction on delete', async () => {
+    it('should find, pre-delete and recalculate position on delete when link exists', async () => {
+      const link = { transactionId: 1, investmentId: 5, quantity: null, unitPrice: null };
+      investmentRepoStub.findTransactionLink.resolves(link);
       transactionRepoStub.findById.resolves(mockTransaction);
       transactionRepoStub.deleteById.resolves(mockTransaction);
-      budgetRepoStub.revertBudgetsByTransaction.resolves();
 
       await accountantManager.deleteTransaction(1);
 
-      revertInvestmentTransactionStub.should.have.been.calledOnceWith(mockTransaction);
+      investmentRepoStub.findTransactionLink.should.have.been.calledOnceWith(mockTransaction.id);
+      investmentRepoStub.deleteTransactionLink.should.have.been.calledOnceWith(mockTransaction.id);
+      investmentRepoStub.recalculatePosition.should.have.been.calledOnceWith(5);
     });
 
-    it('should call revertInvestmentTransaction on update with recalculation', async () => {
+    it('should skip investment revert on delete when no link exists', async () => {
+      investmentRepoStub.findTransactionLink.resolves(null);
+      transactionRepoStub.findById.resolves(mockTransaction);
+      transactionRepoStub.deleteById.resolves(mockTransaction);
+
+      await accountantManager.deleteTransaction(1);
+
+      investmentRepoStub.deleteTransactionLink.should.not.have.been.called;
+      investmentRepoStub.recalculatePosition.should.not.have.been.called;
+    });
+
+    it('should revert and reapply investment position on update with recalculation', async () => {
+      const link = { transactionId: 1, investmentId: 5, quantity: null, unitPrice: null };
+      investmentRepoStub.findTransactionLink.resolves(link);
       transactionRepoStub.findById.resolves(mockTransaction);
       transactionRepoStub.update.resolves({ ...mockTransaction, value: '200.00' });
       monthlyBalanceRepoStub.findMonthlyBalance.resolves(mockMonthlyBalance);
-      budgetRepoStub.revertBudgetsByTransaction.resolves();
 
-      await accountantManager.updateTransaction(1, { value: '200.00' });
+      await accountantManager.updateTransaction(1, { value: '200.00' }, mockInvestmentEntry as any);
 
-      revertInvestmentTransactionStub.should.have.been.calledOnce;
+      investmentRepoStub.deleteTransactionLink.should.have.been.calledOnce;
+      investmentRepoStub.recalculatePosition.should.have.been.calledOnceWith(5);
+      investmentRepoStub.saveTransactionLink.should.have.been.calledOnce;
+      investmentRepoStub.applyTransactionToPosition.should.have.been.calledOnce;
+    });
+
+    it('should update monthly balance for investment types using goal rules', async () => {
+      const buyTx = buildTransaction({ type: 'investmentBuy', value: '500.00' });
+      transactionRepoStub.save.resolves(buyTx);
+
+      const content = buildTransaction({ id: undefined as unknown as number, type: 'investmentBuy' });
+      await accountantManager.createTransaction(content, mockInvestmentEntry as any);
+
+      goalRepoStub.updateGoalFromTransaction.should.have.been.calledOnceWith(buyTx, false);
+      budgetRepoStub.updateBudgetsByNewTransaction.should.not.have.been.called;
+    });
+  });
+
+  describe('investment CRUD', () => {
+    const mockInvestment = {
+      id: 1, name: 'CDB Nubank', investmentType: 'cdb', totalInvested: '1000.00', archived: false,
+    };
+
+    it('createInvestment should delegate to investmentRepo.save', async () => {
+      investmentRepoStub.save.resolves(mockInvestment);
+
+      await accountantManager.createInvestment({ name: 'CDB Nubank' } as any);
+
+      investmentRepoStub.save.should.have.been.calledOnce;
+    });
+
+    it('getInvestment should delegate to investmentRepo.findById', async () => {
+      investmentRepoStub.findById.resolves(mockInvestment);
+
+      await accountantManager.getInvestment(1);
+
+      investmentRepoStub.findById.should.have.been.calledOnceWith(1);
+    });
+
+    it('updateInvestment should delegate to investmentRepo.update', async () => {
+      investmentRepoStub.update.resolves(mockInvestment);
+
+      await accountantManager.updateInvestment(1, { name: 'Updated' } as any);
+
+      investmentRepoStub.update.should.have.been.calledOnceWith(1, { name: 'Updated' });
+    });
+
+    it('deleteInvestment should delegate to investmentRepo.deleteById', async () => {
+      investmentRepoStub.deleteById.resolves(mockInvestment);
+
+      await accountantManager.deleteInvestment(1);
+
+      investmentRepoStub.deleteById.should.have.been.calledOnceWith(1);
+    });
+
+    it('listInvestments should delegate to investmentRepo.listAll', async () => {
+      investmentRepoStub.listAll.resolves([mockInvestment]);
+
+      await accountantManager.listInvestments();
+
+      investmentRepoStub.listAll.should.have.been.calledOnce;
     });
   });
 });

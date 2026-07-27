@@ -386,6 +386,14 @@ export interface ITransactionRepo extends IRepository<typeof transactions, ITran
    * @returns Transactions enriched with `accountName` and `categoryName`.
    */
   listAllWithRelations(): Promise<ITransactionWithRelations[]>;
+  /**
+   * Finds all transactions whose parentTransactionId matches the given id.
+   * Used to locate auto-generated children (e.g. investmentTax) before deletion.
+   *
+   * @param parentId - The parent transaction id to query by.
+   * @returns All child transactions.
+   */
+  findChildTransactions(parentId: number): Promise<ITransaction[]>;
 }
 
 /** Repository contract for the categories table, extending base CRUD with hierarchy queries. */
@@ -624,19 +632,6 @@ export type RouteOverrides = {
 };
 
 /** Manager contract for investment positions, CRUD, and transaction lifecycle hooks. */
-export interface IInvestmentManager {
-  createInvestment(investment: Partial<IInvestment>): Promise<IInvestment>;
-  updateInvestment(id: number, payload: Partial<IInvestment>): Promise<IInvestment | null>;
-  deleteInvestment(id: number): Promise<IInvestment | null>;
-  getInvestment(id: number): Promise<IInvestment | null>;
-  listInvestments(): Promise<IInvestment[]>;
-  applyInvestmentTransaction(
-    transaction: ITransaction,
-    entry: IInvestmentTransactionEntry,
-  ): Promise<Partial<ITransaction> | null>;
-  revertInvestmentTransaction(transaction: ITransaction): Promise<void>;
-}
-
 export interface IAccountantManager {
   createTransaction: (
     content: ITransaction,
@@ -652,6 +647,11 @@ export interface IAccountantManager {
   listTransactions: () => Promise<ITransactionWithRelations[]>;
   listMonthlyBalances: (year: number, month: number) => Promise<IMonthlyBalance[]>;
   getTransactionTypes: () => { transactionTypes: string[]; investmentTypes: string[] };
+  createInvestment: (investment: Partial<IInvestment>) => Promise<IInvestment>;
+  updateInvestment: (id: number, payload: Partial<IInvestment>) => Promise<IInvestment | null>;
+  deleteInvestment: (id: number) => Promise<IInvestment | null>;
+  getInvestment: (id: number) => Promise<IInvestment | null>;
+  listInvestments: () => Promise<IInvestment[]>;
 }
 
 export interface ICommonController<T extends Content> {

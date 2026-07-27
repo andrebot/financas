@@ -86,6 +86,22 @@ async function findByMonthAndYear(year: number, month: number): Promise<ITransac
 }
 
 /**
+ * Finds all transactions whose parentTransactionId matches the given id.
+ * Used to locate auto-generated children (e.g. investmentTax) before deletion.
+ *
+ * @param parentId - The parent transaction id to query by.
+ * @returns All child transactions.
+ */
+async function findChildTransactions(parentId: number): Promise<ITransaction[]> {
+  logger.info(`Finding child transactions for parent: ${parentId}`);
+
+  return getDb()
+    .select()
+    .from(transactions)
+    .where(eq(transactions.parentTransactionId, parentId));
+}
+
+/**
  * Lists all transactions for the current authorization context, joined with
  * their related account name and category name.
  *
@@ -103,6 +119,7 @@ async function listAllWithRelations(): Promise<ITransactionWithRelations[]> {
       date: transactions.date,
       value: transactions.value,
       investmentType: transactions.investmentType,
+      parentTransactionId: transactions.parentTransactionId,
       userId: transactions.userId,
       createdAt: transactions.createdAt,
       updatedAt: transactions.updatedAt,
@@ -120,5 +137,6 @@ export default {
   findByCategoryWithDateRange,
   removeCategoriesFromTransactions,
   findByMonthAndYear,
+  findChildTransactions,
   listAllWithRelations,
 };

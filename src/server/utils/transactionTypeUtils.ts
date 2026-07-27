@@ -17,6 +17,24 @@ const INFLOW_TYPES = new Set<TransactionType>([
   'investmentDueDate',
 ]);
 
+const INVESTMENT_TYPES = new Set<TransactionType>([
+  'investmentBuy',
+  'investmentSell',
+  'investmentDividend',
+  'investmentInterest',
+  'investmentDueDate',
+  'investmentTax',
+]);
+
+/** investmentBuy deploys capital — goal progress increases. */
+const INVESTMENT_CAPITAL_IN_TYPES = new Set<TransactionType>(['investmentBuy']);
+
+/** investmentDueDate and investmentSell return capital — goal progress decreases. */
+const INVESTMENT_CAPITAL_OUT_TYPES = new Set<TransactionType>([
+  'investmentDueDate',
+  'investmentSell',
+]);
+
 /**
  * Returns true when the transaction type represents money entering the account.
  * Outflow types (withdraw, bankSlip, pixOut, cardPurchase, transferOut, investmentBuy)
@@ -27,6 +45,38 @@ const INFLOW_TYPES = new Set<TransactionType>([
  */
 export function isInflowType(type: TransactionType): boolean {
   return INFLOW_TYPES.has(type);
+}
+
+/**
+ * Returns true when the transaction type belongs to the investment family.
+ *
+ * @param type - The transaction type to classify.
+ * @returns True for investment types, false otherwise.
+ */
+export function isInvestmentType(type: TransactionType): boolean {
+  return INVESTMENT_TYPES.has(type);
+}
+
+/**
+ * Returns true when the transaction deploys capital into an investment,
+ * increasing goal progress (investmentBuy).
+ *
+ * @param type - The transaction type to classify.
+ * @returns True when the type represents capital going in.
+ */
+export function isInvestmentCapitalIn(type: TransactionType): boolean {
+  return INVESTMENT_CAPITAL_IN_TYPES.has(type);
+}
+
+/**
+ * Returns true when the transaction returns capital from an investment,
+ * decreasing goal progress (investmentDueDate, investmentSell).
+ *
+ * @param type - The transaction type to classify.
+ * @returns True when the type represents capital coming out.
+ */
+export function isInvestmentCapitalOut(type: TransactionType): boolean {
+  return INVESTMENT_CAPITAL_OUT_TYPES.has(type);
 }
 
 /**

@@ -55,6 +55,7 @@ export const transactions = pgTable('transactions', {
   date: timestamp().notNull(),
   value: numeric({ precision: 14, scale: 2 }).notNull(),
   investmentType: investmentTypes(),
+  parentTransactionId: integer().references((): any => transactions.id, { onDelete: 'cascade' }),
   userId: integer().notNull().references(() => users.id),
   ...timestampColumns,
 });
