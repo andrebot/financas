@@ -261,6 +261,35 @@ async function applyInvestmentTransaction(
 }
 
 /**
+ * Applies the investment-specific side effects of a transaction when an
+ * investmentEntry is provided: links/positions the investment and, when a tax
+ * transaction results (investmentDueDate), saves it and reflects it in the
+ * monthly balance. No-op when no investmentEntry is provided.
+ *
+ * @param transaction - The saved transaction the entry belongs to.
+ * @param investmentEntry - Optional investment-specific data.
+ * @param investmentRepo - The investment repository to use.
+ * @param transactionRepo - The transaction repository to use.
+ * @param monthlyBalanceRepo - The monthly balance repository to use.
+ */
+async function applyInvestmentEntryEffects(
+  transaction: ITransaction,
+  investmentEntry: IInvestmentTransactionEntry | undefined,
+  investmentRepo: IInvestmentRepo,
+  transactionRepo: ITransactionRepo,
+  monthlyBalanceRepo: IMonthlyBalanceRepo,
+): Promise<void> {
+  if (!investmentEntry) return;
+
+  const taxPayload = await applyInvestmentTransaction(transaction, investmentEntry, investmentRepo);
+
+  if (taxPayload) {
+    const savedTax = await transactionRepo.save(taxPayload as ITransaction);
+    await updateMonthlyBalance(savedTax, monthlyBalanceRepo);
+  }
+}
+
+/**
  * Reverts the investment position impact of a transaction.
  * Pre-deletes the junction row before recalculating so the replay sees the
  * correct remaining state. The cascade delete from deleteById becomes a no-op.
@@ -280,6 +309,27 @@ async function revertInvestmentTransaction(
 }
 
 /**
+ * Fully reverts a transaction's accounting and investment effects — the inverse
+ * of applying it. Used before recalculation (update) and before deletion.
+ *
+ * @param transaction - The transaction to revert.
+ * @param monthlyBalanceRepo - The monthly balance repository to use.
+ * @param goalRepo - The goal repository to use.
+ * @param budgetRepo - The budget repository to use.
+ * @param investmentRepo - The investment repository to use.
+ */
+async function revertTransactionEffects(
+  transaction: ITransaction,
+  monthlyBalanceRepo: IMonthlyBalanceRepo,
+  goalRepo: IGoalRepo,
+  budgetRepo: IBudgetRepo,
+  investmentRepo: IInvestmentRepo,
+): Promise<void> {
+  await applyTransactionEffects(transaction, monthlyBalanceRepo, goalRepo, budgetRepo, true);
+  await revertInvestmentTransaction(transaction, investmentRepo);
+}
+
+/**
  * Returns true when only the name field is being changed, meaning no financial
  * recalculation is needed.
  *
@@ -289,6 +339,23 @@ async function revertInvestmentTransaction(
 function isNameOnlyChange(payload: Partial<ITransaction>): boolean {
   const keys = Object.keys(payload);
   return keys.length === 1 && keys[0] === 'name';
+}
+
+/**
+ * Returns true when the payload attempts to change the type of an investment
+ * transaction — a disallowed operation (delete and recreate instead).
+ *
+ * @param transaction - The existing transaction being updated.
+ * @param payload - The update payload.
+ * @returns True when the payload changes the type of an investment transaction.
+ */
+function isInvestmentTypeChange(
+  transaction: ITransaction,
+  payload: Partial<ITransaction>,
+): boolean {
+  return !!payload.type
+    && payload.type !== transaction.type
+    && isInvestmentType(transaction.type);
 }
 
 /**
@@ -324,14 +391,13 @@ async function createTransaction(
   const savedTransaction = await withTransaction(async () => {
     const saved = await transactionRepo.save(content);
 
-    if (investmentEntry) {
-      const taxPayload = await applyInvestmentTransaction(saved, investmentEntry, investmentRepo);
-
-      if (taxPayload) {
-        const savedTax = await transactionRepo.save(taxPayload as ITransaction);
-        await updateMonthlyBalance(savedTax, monthlyBalanceRepo);
-      }
-    }
+    await applyInvestmentEntryEffects(
+      saved,
+      investmentEntry,
+      investmentRepo,
+      transactionRepo,
+      monthlyBalanceRepo,
+    );
 
     await applyTransactionEffects(saved, monthlyBalanceRepo, goalRepo, budgetRepo);
     return saved;
@@ -381,13 +447,101 @@ async function deleteTransaction(
       await transactionRepo.deleteById(child.id!);
     }));
 
-    await applyTransactionEffects(transaction, monthlyBalanceRepo, goalRepo, budgetRepo, true);
-    await revertInvestmentTransaction(transaction, investmentRepo);
+    await revertTransactionEffects(
+      transaction,
+      monthlyBalanceRepo,
+      goalRepo,
+      budgetRepo,
+      investmentRepo,
+    );
 
     logger.info('Removed transaction from other models');
 
     return transactionRepo.deleteById(id);
   });
+}
+
+/**
+ * Reverts a transaction's old effects, persists the payload, then reapplies the
+ * investment entry and accounting effects for the recalculated transaction.
+ * Runs inside its own db transaction so the whole recalculation is atomic.
+ *
+ * @param id - The id of the transaction to update.
+ * @param payload - The payload to update the transaction with.
+ * @param transaction - The existing (pre-update) transaction being recalculated.
+ * @param transactionRepo - The transaction repository to use.
+ * @param monthlyBalanceRepo - The monthly balance repository to use.
+ * @param goalRepo - The goal repository to use.
+ * @param budgetRepo - The budget repository to use.
+ * @param investmentRepo - The investment repository to use.
+ * @param investmentEntry - Optional updated investment-specific data.
+ * @returns The updated transaction.
+ */
+async function recalculateTransaction(
+  id: number,
+  payload: Partial<ITransaction>,
+  transaction: ITransaction,
+  transactionRepo: ITransactionRepo,
+  monthlyBalanceRepo: IMonthlyBalanceRepo,
+  goalRepo: IGoalRepo,
+  budgetRepo: IBudgetRepo,
+  investmentRepo: IInvestmentRepo,
+  investmentEntry?: IInvestmentTransactionEntry,
+): Promise<ITransaction> {
+  return withTransaction(async () => {
+    await revertTransactionEffects(
+      transaction,
+      monthlyBalanceRepo,
+      goalRepo,
+      budgetRepo,
+      investmentRepo,
+    );
+
+    const updatedTransaction = await transactionRepo.update(id, payload);
+
+    await applyInvestmentEntryEffects(
+      updatedTransaction,
+      investmentEntry,
+      investmentRepo,
+      transactionRepo,
+      monthlyBalanceRepo,
+    );
+
+    await applyTransactionEffects(updatedTransaction, monthlyBalanceRepo, goalRepo, budgetRepo);
+
+    return updatedTransaction;
+  });
+}
+
+/**
+ * Validates a transaction update before any recalculation is attempted.
+ * Throws when the payload is void, the transaction doesn't exist, or the
+ * update attempts to change the type of an investment transaction.
+ *
+ * @throws {Error} - If the payload is void.
+ * @throws {Error} - If the transaction is not found.
+ * @throws {Error} - If an investment transaction's type is changed.
+ *
+ * @param id - The id of the transaction being updated.
+ * @param payload - The payload to update the transaction with.
+ * @param transaction - The existing transaction, or null when not found.
+ */
+function checkTransaction(
+  id: number,
+  payload: Partial<ITransaction>,
+  transaction: ITransaction | null,
+): void {
+  checkVoidPayload(payload, 'Transaction', 'update');
+
+  if (!transaction) {
+    throw new Error(`Transaction with id ${id} not found. Cannot execute update action.`);
+  }
+
+  if (isInvestmentTypeChange(transaction, payload)) {
+    throw new Error(
+      `Cannot change the type of an investment transaction (id: ${id}). Delete and recreate it instead.`,
+    );
+  }
 }
 
 /**
@@ -422,49 +576,27 @@ async function updateTransaction(
 ): Promise<ITransaction | null> {
   logger.info(`Updating transaction: ${id}`);
 
-  checkVoidPayload(payload, 'Transaction', 'update');
-
   const transaction = await transactionRepo.findById(id);
 
-  if (!transaction) {
-    throw new Error(`Transaction with id ${id} not found. Cannot execute update action.`);
-  }
+  checkTransaction(id, payload, transaction);
 
   if (isNameOnlyChange(payload)) {
     return transactionRepo.update(id, payload);
   }
 
-  if (payload.type && payload.type !== transaction.type && isInvestmentType(transaction.type)) {
-    throw new Error(
-      `Cannot change the type of an investment transaction (id: ${id}). Delete and recreate it instead.`,
-    );
-  }
-
   logger.info('Triggering recalculation');
 
-  return withTransaction(async () => {
-    await applyTransactionEffects(transaction, monthlyBalanceRepo, goalRepo, budgetRepo, true);
-    await revertInvestmentTransaction(transaction, investmentRepo);
-
-    const updatedTransaction = await transactionRepo.update(id, payload);
-
-    if (investmentEntry) {
-      const taxPayload = await applyInvestmentTransaction(
-        updatedTransaction,
-        investmentEntry,
-        investmentRepo,
-      );
-
-      if (taxPayload) {
-        const savedTax = await transactionRepo.save(taxPayload as ITransaction);
-        await updateMonthlyBalance(savedTax, monthlyBalanceRepo);
-      }
-    }
-
-    await applyTransactionEffects(updatedTransaction, monthlyBalanceRepo, goalRepo, budgetRepo);
-
-    return updatedTransaction;
-  });
+  return recalculateTransaction(
+    id,
+    payload,
+    transaction!,
+    transactionRepo,
+    monthlyBalanceRepo,
+    goalRepo,
+    budgetRepo,
+    investmentRepo,
+    investmentEntry,
+  );
 }
 
 /**
