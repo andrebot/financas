@@ -247,6 +247,34 @@ describe('Investment Repository', () => {
 
         updateStub.should.not.have.been.called;
       });
+
+      it('should default quantity and averagePrice to 0 when the investment has no prior position', async () => {
+        selectLimitStub.resolves([{
+          quantity: null, averagePrice: null, totalInvested: '0',
+        }]);
+
+        const tx = buildTransaction({ type: 'investmentBuy', value: '500.00' });
+
+        await runWithContext(() => investmentRepo.applyTransactionToPosition(5, tx, 10, 50));
+
+        const setArgs = updateSetStub.firstCall.args[0];
+        Number(setArgs.quantity).should.equal(10);
+        Number(setArgs.averagePrice).should.equal(50);
+      });
+
+      it('should use unitPrice as averagePrice when the resulting quantity is not positive', async () => {
+        selectLimitStub.resolves([{
+          quantity: '0', averagePrice: '0', totalInvested: '0',
+        }]);
+
+        const tx = buildTransaction({ type: 'investmentBuy', value: '0.00' });
+
+        await runWithContext(() => investmentRepo.applyTransactionToPosition(5, tx, 0, 50));
+
+        const setArgs = updateSetStub.firstCall.args[0];
+        Number(setArgs.quantity).should.equal(0);
+        Number(setArgs.averagePrice).should.equal(50);
+      });
     });
 
     describe('investmentSell', () => {
@@ -294,6 +322,20 @@ describe('Investment Repository', () => {
         await runWithContext(() => investmentRepo.applyTransactionToPosition(5, tx, 5, 50));
 
         updateStub.should.not.have.been.called;
+      });
+
+      it('should default quantity and averagePrice to 0 when the investment has no prior position', async () => {
+        selectLimitStub.resolves([{
+          quantity: null, averagePrice: null, totalInvested: '0',
+        }]);
+
+        const tx = buildTransaction({ type: 'investmentSell', value: '0.00' });
+
+        await runWithContext(() => investmentRepo.applyTransactionToPosition(5, tx, 5, 20));
+
+        const setArgs = updateSetStub.firstCall.args[0];
+        Number(setArgs.quantity).should.equal(-5);
+        Number(setArgs.totalInvested).should.equal(0);
       });
     });
 
@@ -388,6 +430,38 @@ describe('Investment Repository', () => {
 
       const setArgs = updateSetStub.firstCall.args[0];
       (setArgs.quantity === null).should.be.true;
+    });
+
+    it('should use the link price as averagePrice when the running quantity is not positive', async () => {
+      selectOrderByStub.resolves([
+        {
+          quantity: '0', unitPrice: '80', txType: 'investmentBuy', txValue: '0',
+        },
+      ]);
+
+      await runWithContext(() => investmentRepo.recalculatePosition(5));
+
+      updateSetStub.should.have.been.calledOnce;
+    });
+
+    it('should ignore income-type links (dividend/interest) when recomputing position', async () => {
+      selectOrderByStub.resolves([
+        {
+          quantity: '10', unitPrice: '50', txType: 'investmentBuy', txValue: '500',
+        },
+        {
+          quantity: null, unitPrice: null, txType: 'investmentDividend', txValue: '30',
+        },
+        {
+          quantity: null, unitPrice: null, txType: 'investmentInterest', txValue: '20',
+        },
+      ]);
+
+      await runWithContext(() => investmentRepo.recalculatePosition(5));
+
+      const setArgs = updateSetStub.firstCall.args[0];
+      setArgs.should.have.property('archived', false);
+      setArgs.should.have.property('totalInvested', '500');
     });
   });
 

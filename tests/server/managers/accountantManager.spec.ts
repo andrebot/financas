@@ -504,13 +504,13 @@ describe('AccountantManager', () => {
         listAll: sinon.stub(),
       };
 
-      const customManager = AccountantManagerFactory(
-        customTransactionRepo as any,
-        monthlyBalanceRepoStub as any,
-        goalRepoStub as any,
-        budgetRepoStub as any,
-        investmentRepoStub as any,
-      );
+      const customManager = AccountantManagerFactory({
+        transactionRepo: customTransactionRepo as any,
+        monthlyBalanceRepo: monthlyBalanceRepoStub as any,
+        goalRepo: goalRepoStub as any,
+        budgetRepo: budgetRepoStub as any,
+        investmentRepo: investmentRepoStub as any,
+      });
 
       monthlyBalanceRepoStub.findMonthlyBalance.resolves(mockMonthlyBalance);
       monthlyBalanceRepoStub.updateMonthlyBalanceWithTransaction.resolves();
@@ -656,6 +656,40 @@ describe('AccountantManager', () => {
 
       goalRepoStub.updateGoalFromTransaction.should.have.been.calledOnceWith(buyTx, false);
       budgetRepoStub.updateBudgetsByNewTransaction.should.not.have.been.called;
+    });
+
+    it('should create the investment inline when no id is provided in the entry', async () => {
+      const createdInvestment = { id: 42, name: 'New CDB', investmentType: 'cdb' };
+      investmentRepoStub.save.resolves(createdInvestment);
+
+      const inlineEntry = { investment: { name: 'New CDB', investmentType: 'cdb' } };
+      const content = buildTransaction({ id: undefined as unknown as number });
+
+      await accountantManager.createTransaction(content, inlineEntry as any);
+
+      investmentRepoStub.save.should.have.been.calledOnceWith({
+        name: 'New CDB',
+        investmentType: 'cdb',
+        totalInvested: '0',
+        archived: false,
+      });
+      investmentRepoStub.saveTransactionLink.should.have.been.calledOnceWith(
+        mockTransaction.id, 42, undefined, undefined,
+      );
+    });
+
+    it('should save goal allocations when goals are provided in the entry', async () => {
+      const entryWithGoals = {
+        investment: { id: 5 },
+        goals: [{ goalId: 1, percentage: 50 }],
+      };
+
+      const content = buildTransaction({ id: undefined as unknown as number });
+      await accountantManager.createTransaction(content, entryWithGoals as any);
+
+      investmentRepoStub.saveGoalAllocations.should.have.been.calledOnceWith(
+        5, entryWithGoals.goals,
+      );
     });
   });
 

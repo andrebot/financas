@@ -21,11 +21,7 @@ import {
   IMonthlyBalance,
   TRANSACTION_TYPES,
   INVESTMENT_TYPES,
-  ITransactionRepo,
-  IMonthlyBalanceRepo,
-  IGoalRepo,
-  IBudgetRepo,
-  IInvestmentRepo,
+  IAccountantRepos,
   IInvestment,
   IInvestmentTransactionEntry,
 } from '../types';
@@ -37,18 +33,18 @@ const logger = createLogger('AccountantManager');
  * Defaults to 0 if no prior monthly balance exists.
  *
  * @param content - The transaction used to determine account and month.
- * @param monthlyBalanceRepo - The monthly balance repository to use.
+ * @param repos - The repositories to use.
  * @returns The closing balance of the previous month as a number.
  */
 async function getLastMonthClosingBalance(
   content: ITransaction,
-  monthlyBalanceRepo: IMonthlyBalanceRepo,
+  repos: IAccountantRepos,
 ): Promise<number> {
   const lastMonth = calculateLastMonth(content.date.getFullYear(), content.date.getMonth() + 1);
 
   logger.info(`Getting last month balance for ${lastMonth.year}-${lastMonth.month}`);
 
-  const lastMonthBalance = await monthlyBalanceRepo.findMonthlyBalance(
+  const lastMonthBalance = await repos.monthlyBalanceRepo.findMonthlyBalance(
     content,
     new Date(lastMonth.year, lastMonth.month - 1),
   );
@@ -62,15 +58,16 @@ async function getLastMonthClosingBalance(
  * closing balance as the opening balance.
  *
  * @param content - The transaction to add to the monthly balance.
- * @param monthlyBalanceRepo - The monthly balance repository to use.
+ * @param repos - The repositories to use.
  * @param revert - When true, reverses the transaction's effect on the balance.
  */
 async function updateMonthlyBalance(
   content: ITransaction,
-  monthlyBalanceRepo: IMonthlyBalanceRepo,
+  repos: IAccountantRepos,
   revert = false,
 ): Promise<void> {
   const { date } = content;
+  const { monthlyBalanceRepo } = repos;
 
   if (revert) {
     await monthlyBalanceRepo.updateMonthlyBalanceWithTransaction(content, true);
@@ -88,7 +85,7 @@ async function updateMonthlyBalance(
   if (!monthlyBalance) {
     logger.info('Monthly balance not found, creating new one');
 
-    const openingBalance = await getLastMonthClosingBalance(content, monthlyBalanceRepo);
+    const openingBalance = await getLastMonthClosingBalance(content, repos);
 
     await monthlyBalanceRepo.save({
       accountId: content.accountId,
@@ -112,20 +109,18 @@ async function updateMonthlyBalance(
  * They never affect budgets.
  *
  * @param transaction - The investment transaction.
- * @param monthlyBalanceRepo - The monthly balance repository to use.
- * @param goalRepo - The goal repository to use.
+ * @param repos - The repositories to use.
  * @param revert - When true, reverses all effects.
  */
 async function applyInvestmentEffects(
   transaction: ITransaction,
-  monthlyBalanceRepo: IMonthlyBalanceRepo,
-  goalRepo: IGoalRepo,
-  revert = false,
+  repos: IAccountantRepos,
+  revert: boolean,
 ): Promise<void> {
-  await updateMonthlyBalance(transaction, monthlyBalanceRepo, revert);
+  await updateMonthlyBalance(transaction, repos, revert);
 
   if (isInvestmentCapitalIn(transaction.type) || isInvestmentCapitalOut(transaction.type)) {
-    await goalRepo.updateGoalFromTransaction(transaction, revert);
+    await repos.goalRepo.updateGoalFromTransaction(transaction, revert);
   }
 }
 
@@ -135,23 +130,21 @@ async function applyInvestmentEffects(
  * They never affect goals.
  *
  * @param transaction - The regular transaction.
- * @param monthlyBalanceRepo - The monthly balance repository to use.
- * @param budgetRepo - The budget repository to use.
+ * @param repos - The repositories to use.
  * @param revert - When true, reverses all effects.
  */
 async function applyRegularEffects(
   transaction: ITransaction,
-  monthlyBalanceRepo: IMonthlyBalanceRepo,
-  budgetRepo: IBudgetRepo,
-  revert = false,
+  repos: IAccountantRepos,
+  revert: boolean,
 ): Promise<void> {
-  await updateMonthlyBalance(transaction, monthlyBalanceRepo, revert);
+  await updateMonthlyBalance(transaction, repos, revert);
 
   if (!isInflowType(transaction.type)) {
     if (revert) {
-      await budgetRepo.revertBudgetsByTransaction(transaction);
+      await repos.budgetRepo.revertBudgetsByTransaction(transaction);
     } else {
-      await budgetRepo.updateBudgetsByNewTransaction(transaction);
+      await repos.budgetRepo.updateBudgetsByNewTransaction(transaction);
     }
   }
 }
@@ -161,22 +154,18 @@ async function applyRegularEffects(
  * correct handler based on whether it is an investment or regular transaction.
  *
  * @param transaction - The transaction to process.
- * @param monthlyBalanceRepo - The monthly balance repository to use.
- * @param goalRepo - The goal repository to use.
- * @param budgetRepo - The budget repository to use.
+ * @param repos - The repositories to use.
  * @param revert - When true, reverses all effects.
  */
 async function applyTransactionEffects(
   transaction: ITransaction,
-  monthlyBalanceRepo: IMonthlyBalanceRepo,
-  goalRepo: IGoalRepo,
-  budgetRepo: IBudgetRepo,
+  repos: IAccountantRepos,
   revert = false,
 ): Promise<void> {
   if (isInvestmentType(transaction.type)) {
-    await applyInvestmentEffects(transaction, monthlyBalanceRepo, goalRepo, revert);
+    await applyInvestmentEffects(transaction, repos, revert);
   } else {
-    await applyRegularEffects(transaction, monthlyBalanceRepo, budgetRepo, revert);
+    await applyRegularEffects(transaction, repos, revert);
   }
 }
 
@@ -188,14 +177,15 @@ async function applyTransactionEffects(
  *
  * @param transaction - The saved transaction being applied.
  * @param entry - The investment-specific data carried alongside the transaction.
- * @param investmentRepo - The investment repository to use.
+ * @param repos - The repositories to use.
  * @returns A partial tax transaction payload, or null when no tax applies.
  */
 async function applyInvestmentTransaction(
   transaction: ITransaction,
   entry: IInvestmentTransactionEntry,
-  investmentRepo: IInvestmentRepo,
+  repos: IAccountantRepos,
 ): Promise<Partial<ITransaction> | null> {
+  const { investmentRepo } = repos;
   const entryRef = entry.investment as { id?: number };
   let investmentId: number;
 
@@ -268,24 +258,20 @@ async function applyInvestmentTransaction(
  *
  * @param transaction - The saved transaction the entry belongs to.
  * @param investmentEntry - Optional investment-specific data.
- * @param investmentRepo - The investment repository to use.
- * @param transactionRepo - The transaction repository to use.
- * @param monthlyBalanceRepo - The monthly balance repository to use.
+ * @param repos - The repositories to use.
  */
 async function applyInvestmentEntryEffects(
   transaction: ITransaction,
   investmentEntry: IInvestmentTransactionEntry | undefined,
-  investmentRepo: IInvestmentRepo,
-  transactionRepo: ITransactionRepo,
-  monthlyBalanceRepo: IMonthlyBalanceRepo,
+  repos: IAccountantRepos,
 ): Promise<void> {
   if (!investmentEntry) return;
 
-  const taxPayload = await applyInvestmentTransaction(transaction, investmentEntry, investmentRepo);
+  const taxPayload = await applyInvestmentTransaction(transaction, investmentEntry, repos);
 
   if (taxPayload) {
-    const savedTax = await transactionRepo.save(taxPayload as ITransaction);
-    await updateMonthlyBalance(savedTax, monthlyBalanceRepo);
+    const savedTax = await repos.transactionRepo.save(taxPayload as ITransaction);
+    await updateMonthlyBalance(savedTax, repos);
   }
 }
 
@@ -295,12 +281,13 @@ async function applyInvestmentEntryEffects(
  * correct remaining state. The cascade delete from deleteById becomes a no-op.
  *
  * @param transaction - The transaction being reverted.
- * @param investmentRepo - The investment repository to use.
+ * @param repos - The repositories to use.
  */
 async function revertInvestmentTransaction(
   transaction: ITransaction,
-  investmentRepo: IInvestmentRepo,
+  repos: IAccountantRepos,
 ): Promise<void> {
+  const { investmentRepo } = repos;
   const link = await investmentRepo.findTransactionLink(transaction.id!);
   if (!link) return;
 
@@ -313,20 +300,14 @@ async function revertInvestmentTransaction(
  * of applying it. Used before recalculation (update) and before deletion.
  *
  * @param transaction - The transaction to revert.
- * @param monthlyBalanceRepo - The monthly balance repository to use.
- * @param goalRepo - The goal repository to use.
- * @param budgetRepo - The budget repository to use.
- * @param investmentRepo - The investment repository to use.
+ * @param repos - The repositories to use.
  */
 async function revertTransactionEffects(
   transaction: ITransaction,
-  monthlyBalanceRepo: IMonthlyBalanceRepo,
-  goalRepo: IGoalRepo,
-  budgetRepo: IBudgetRepo,
-  investmentRepo: IInvestmentRepo,
+  repos: IAccountantRepos,
 ): Promise<void> {
-  await applyTransactionEffects(transaction, monthlyBalanceRepo, goalRepo, budgetRepo, true);
-  await revertInvestmentTransaction(transaction, investmentRepo);
+  await applyTransactionEffects(transaction, repos, true);
+  await revertInvestmentTransaction(transaction, repos);
 }
 
 /**
@@ -367,21 +348,13 @@ function isInvestmentTypeChange(
  * @throws {Error} - If the payload is void.
  *
  * @param content - The transaction to create.
- * @param transactionRepo - The transaction repository to use.
- * @param monthlyBalanceRepo - The monthly balance repository to use.
- * @param goalRepo - The goal repository to use.
- * @param budgetRepo - The budget repository to use.
- * @param investmentRepo - The investment repository to use.
+ * @param repos - The repositories to use.
  * @param investmentEntry - Optional investment-specific data.
  * @returns The created transaction.
  */
 async function createTransaction(
   content: ITransaction,
-  transactionRepo: ITransactionRepo,
-  monthlyBalanceRepo: IMonthlyBalanceRepo,
-  goalRepo: IGoalRepo,
-  budgetRepo: IBudgetRepo,
-  investmentRepo: IInvestmentRepo,
+  repos: IAccountantRepos,
   investmentEntry?: IInvestmentTransactionEntry,
 ): Promise<ITransaction> {
   logger.info(`Creating new transaction for user: ${content.userId}`);
@@ -389,17 +362,11 @@ async function createTransaction(
   checkVoidPayload(content, 'Transaction', 'create');
 
   const savedTransaction = await withTransaction(async () => {
-    const saved = await transactionRepo.save(content);
+    const saved = await repos.transactionRepo.save(content);
 
-    await applyInvestmentEntryEffects(
-      saved,
-      investmentEntry,
-      investmentRepo,
-      transactionRepo,
-      monthlyBalanceRepo,
-    );
+    await applyInvestmentEntryEffects(saved, investmentEntry, repos);
+    await applyTransactionEffects(saved, repos);
 
-    await applyTransactionEffects(saved, monthlyBalanceRepo, goalRepo, budgetRepo);
     return saved;
   });
 
@@ -416,23 +383,16 @@ async function createTransaction(
  * @throws {Error} - If the transaction is not found.
  *
  * @param id - The id of the transaction to delete.
- * @param transactionRepo - The transaction repository to use.
- * @param monthlyBalanceRepo - The monthly balance repository to use.
- * @param goalRepo - The goal repository to use.
- * @param budgetRepo - The budget repository to use.
- * @param investmentRepo - The investment repository to use.
+ * @param repos - The repositories to use.
  * @returns The deleted transaction.
  */
 async function deleteTransaction(
   id: number,
-  transactionRepo: ITransactionRepo,
-  monthlyBalanceRepo: IMonthlyBalanceRepo,
-  goalRepo: IGoalRepo,
-  budgetRepo: IBudgetRepo,
-  investmentRepo: IInvestmentRepo,
+  repos: IAccountantRepos,
 ): Promise<ITransaction | null> {
   logger.info(`Deleting transaction: ${id}`);
 
+  const { transactionRepo } = repos;
   const transaction = await transactionRepo.findById(id);
 
   if (!transaction) {
@@ -443,17 +403,11 @@ async function deleteTransaction(
     const children = await transactionRepo.findChildTransactions(id);
 
     await Promise.all(children.map(async (child) => {
-      await updateMonthlyBalance(child, monthlyBalanceRepo, true);
+      await updateMonthlyBalance(child, repos, true);
       await transactionRepo.deleteById(child.id!);
     }));
 
-    await revertTransactionEffects(
-      transaction,
-      monthlyBalanceRepo,
-      goalRepo,
-      budgetRepo,
-      investmentRepo,
-    );
+    await revertTransactionEffects(transaction, repos);
 
     logger.info('Removed transaction from other models');
 
@@ -469,11 +423,7 @@ async function deleteTransaction(
  * @param id - The id of the transaction to update.
  * @param payload - The payload to update the transaction with.
  * @param transaction - The existing (pre-update) transaction being recalculated.
- * @param transactionRepo - The transaction repository to use.
- * @param monthlyBalanceRepo - The monthly balance repository to use.
- * @param goalRepo - The goal repository to use.
- * @param budgetRepo - The budget repository to use.
- * @param investmentRepo - The investment repository to use.
+ * @param repos - The repositories to use.
  * @param investmentEntry - Optional updated investment-specific data.
  * @returns The updated transaction.
  */
@@ -481,33 +431,16 @@ async function recalculateTransaction(
   id: number,
   payload: Partial<ITransaction>,
   transaction: ITransaction,
-  transactionRepo: ITransactionRepo,
-  monthlyBalanceRepo: IMonthlyBalanceRepo,
-  goalRepo: IGoalRepo,
-  budgetRepo: IBudgetRepo,
-  investmentRepo: IInvestmentRepo,
+  repos: IAccountantRepos,
   investmentEntry?: IInvestmentTransactionEntry,
 ): Promise<ITransaction> {
   return withTransaction(async () => {
-    await revertTransactionEffects(
-      transaction,
-      monthlyBalanceRepo,
-      goalRepo,
-      budgetRepo,
-      investmentRepo,
-    );
+    await revertTransactionEffects(transaction, repos);
 
-    const updatedTransaction = await transactionRepo.update(id, payload);
+    const updatedTransaction = await repos.transactionRepo.update(id, payload);
 
-    await applyInvestmentEntryEffects(
-      updatedTransaction,
-      investmentEntry,
-      investmentRepo,
-      transactionRepo,
-      monthlyBalanceRepo,
-    );
-
-    await applyTransactionEffects(updatedTransaction, monthlyBalanceRepo, goalRepo, budgetRepo);
+    await applyInvestmentEntryEffects(updatedTransaction, investmentEntry, repos);
+    await applyTransactionEffects(updatedTransaction, repos);
 
     return updatedTransaction;
   });
@@ -556,47 +489,29 @@ function checkTransaction(
  *
  * @param id - The id of the transaction to update.
  * @param payload - The payload to update the transaction with.
- * @param transactionRepo - The transaction repository to use.
- * @param monthlyBalanceRepo - The monthly balance repository to use.
- * @param goalRepo - The goal repository to use.
- * @param budgetRepo - The budget repository to use.
- * @param investmentRepo - The investment repository to use.
+ * @param repos - The repositories to use.
  * @param investmentEntry - Optional updated investment-specific data.
  * @returns The updated transaction.
  */
 async function updateTransaction(
   id: number,
   payload: Partial<ITransaction>,
-  transactionRepo: ITransactionRepo,
-  monthlyBalanceRepo: IMonthlyBalanceRepo,
-  goalRepo: IGoalRepo,
-  budgetRepo: IBudgetRepo,
-  investmentRepo: IInvestmentRepo,
+  repos: IAccountantRepos,
   investmentEntry?: IInvestmentTransactionEntry,
 ): Promise<ITransaction | null> {
   logger.info(`Updating transaction: ${id}`);
 
-  const transaction = await transactionRepo.findById(id);
+  const transaction = await repos.transactionRepo.findById(id);
 
   checkTransaction(id, payload, transaction);
 
   if (isNameOnlyChange(payload)) {
-    return transactionRepo.update(id, payload);
+    return repos.transactionRepo.update(id, payload);
   }
 
   logger.info('Triggering recalculation');
 
-  return recalculateTransaction(
-    id,
-    payload,
-    transaction!,
-    transactionRepo,
-    monthlyBalanceRepo,
-    goalRepo,
-    budgetRepo,
-    investmentRepo,
-    investmentEntry,
-  );
+  return recalculateTransaction(id, payload, transaction!, repos, investmentEntry);
 }
 
 /**
@@ -618,30 +533,30 @@ function getTransactionTypes(): {
  * Gets a transaction by id.
  *
  * @param id - The id of the transaction to get.
- * @param transactionRepo - The transaction repository to use.
+ * @param repos - The repositories to use.
  * @returns The transaction.
  */
 async function getTransaction(
   id: number,
-  transactionRepo: ITransactionRepo,
+  repos: IAccountantRepos,
 ): Promise<ITransaction | null> {
   logger.info(`Getting transaction: ${id}`);
 
-  return transactionRepo.findById(id);
+  return repos.transactionRepo.findById(id);
 }
 
 /**
  * Lists all transactions for a user.
  *
- * @param transactionRepo - The transaction repository to use.
+ * @param repos - The repositories to use.
  * @returns The transactions.
  */
 async function listTransactions(
-  transactionRepo: ITransactionRepo,
+  repos: IAccountantRepos,
 ): Promise<ITransactionWithRelations[]> {
   logger.info('Listing transactions');
 
-  return transactionRepo.listAllWithRelations();
+  return repos.transactionRepo.listAllWithRelations();
 }
 
 /**
@@ -649,78 +564,48 @@ async function listTransactions(
  *
  * @param year - The four-digit year.
  * @param month - The month (1-indexed).
- * @param monthlyBalanceRepo - The monthly balance repository to use.
+ * @param repos - The repositories to use.
  * @returns The monthly balance records for the period.
  */
 async function listMonthlyBalances(
   year: number,
   month: number,
-  monthlyBalanceRepo: IMonthlyBalanceRepo,
+  repos: IAccountantRepos,
 ): Promise<IMonthlyBalance[]> {
   logger.info(`Listing monthly balances for ${year}/${month}`);
 
-  return monthlyBalanceRepo.findByYearAndMonth(year, month);
+  return repos.monthlyBalanceRepo.findByYearAndMonth(year, month);
 }
 
 /**
  * Creates an accountant manager using the provided repositories.
  * Owns all transaction accounting and investment position management.
  *
- * @param transactionRepo - Repository for transaction persistence.
- * @param monthlyBalanceRepo - Repository for monthly balance updates.
- * @param goalRepo - Repository for goal aggregate updates.
- * @param budgetRepo - Repository for budget usage updates.
- * @param investmentRepo - Repository for investment position management.
+ * @param repos - The repositories to use, grouped into a single value and
+ * threaded down through every internal function instead of being drilled
+ * through individually.
  * @returns Transaction and investment orchestration actions with accounting side effects.
  */
-export function AccountantManager(
-  transactionRepo: ITransactionRepo,
-  monthlyBalanceRepo: IMonthlyBalanceRepo,
-  goalRepo: IGoalRepo,
-  budgetRepo: IBudgetRepo,
-  investmentRepo: IInvestmentRepo,
-) {
+export function AccountantManager(repos: IAccountantRepos) {
+  const { investmentRepo } = repos;
+
   return {
     createTransaction: (
       content: ITransaction,
       investmentEntry?: IInvestmentTransactionEntry,
-    ) => createTransaction(
-      content,
-      transactionRepo,
-      monthlyBalanceRepo,
-      goalRepo,
-      budgetRepo,
-      investmentRepo,
-      investmentEntry,
-    ),
-    deleteTransaction: (id: number) => deleteTransaction(
-      id,
-      transactionRepo,
-      monthlyBalanceRepo,
-      goalRepo,
-      budgetRepo,
-      investmentRepo,
-    ),
+    ) => createTransaction(content, repos, investmentEntry),
+    deleteTransaction: (id: number) => deleteTransaction(id, repos),
     updateTransaction: (
       id: number,
       payload: Partial<ITransaction>,
       investmentEntry?: IInvestmentTransactionEntry,
-    ) => updateTransaction(
-      id,
-      payload,
-      transactionRepo,
-      monthlyBalanceRepo,
-      goalRepo,
-      budgetRepo,
-      investmentRepo,
-      investmentEntry,
-    ),
-    getTransaction: (id: number) => getTransaction(id, transactionRepo),
-    listTransactions: () => listTransactions(transactionRepo),
+    ) => updateTransaction(id, payload, repos, investmentEntry),
+    getTransaction: (id: number) => getTransaction(id, repos),
+    listTransactions: () => listTransactions(repos),
     listMonthlyBalances: (year: number, month: number) => listMonthlyBalances(
       year,
       month,
-      monthlyBalanceRepo,
+      repos,
     ),
     getTransactionTypes: () => getTransactionTypes(),
     createInvestment: (investment: Partial<IInvestment>) => investmentRepo.save(investment),
@@ -733,10 +618,10 @@ export function AccountantManager(
   };
 }
 
-export default AccountantManager(
-  TransactionRepo,
-  MonthlyBalanceRepo,
-  GoalRepo,
-  BudgetRepo,
-  InvestmentRepo,
-);
+export default AccountantManager({
+  transactionRepo: TransactionRepo,
+  monthlyBalanceRepo: MonthlyBalanceRepo,
+  goalRepo: GoalRepo,
+  budgetRepo: BudgetRepo,
+  investmentRepo: InvestmentRepo,
+});

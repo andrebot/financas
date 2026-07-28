@@ -72,5 +72,9 @@ describe('taxEngine', () => {
       calculateTax('cdb', 100, 90).should.equal(22.5);
       calculateTax('cdb', 333.33, 90).should.equal(75);
     });
+
+    it('should return 0 when no bracket matches holdingDays', () => {
+      calculateTax('cdb', 1000, NaN).should.equal(0);
+    });
   });
 });

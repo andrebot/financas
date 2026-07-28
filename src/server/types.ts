@@ -631,6 +631,19 @@ export type RouteOverrides = {
   deleteContent?: (req: RequestWithUser, res: Response) => Promise<Response>;
 };
 
+/**
+ * The repositories AccountantManager's internal functions depend on, grouped
+ * into a single value so it can be threaded through the call graph as one
+ * parameter instead of drilling each repo down individually.
+ */
+export type IAccountantRepos = {
+  transactionRepo: ITransactionRepo;
+  monthlyBalanceRepo: IMonthlyBalanceRepo;
+  goalRepo: IGoalRepo;
+  budgetRepo: IBudgetRepo;
+  investmentRepo: IInvestmentRepo;
+};
+
 /** Manager contract for investment positions, CRUD, and transaction lifecycle hooks. */
 export interface IAccountantManager {
   createTransaction: (
