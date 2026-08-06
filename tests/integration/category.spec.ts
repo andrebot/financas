@@ -2,7 +2,7 @@ import request from 'supertest';
 import server from '../../src/server/server';
 import {
   category1, category2, category3, adminUser, userToDelete, otherUser,
-  createCategory, account1,
+  createCategory, account1, createTransaction,
 } from './connectDB';
 import { createAccessToken } from '../../src/server/managers/authenticationManager';
 
@@ -245,6 +245,34 @@ describe('Category', () => {
         .set('Authorization', `Bearer ${accessToken}`);
 
       getSubCategoryResponse.body.should.be.empty;
+    });
+
+    it('should remove the category reference from its transactions when deleted', async () => {
+      const categoryToDelete = { id: 0, name: 'Category Linked To Transaction' };
+      await createCategory(categoryToDelete, adminUser.id);
+
+      const linkedTransaction = {
+        id: 0,
+        name: 'Transaction Linked To Category',
+        type: 'withdraw' as const,
+        date: new Date('2026-03-01'),
+        value: '10.00',
+        investmentType: null as null,
+      };
+      await createTransaction(linkedTransaction, adminUser.id, account1.id, categoryToDelete.id);
+
+      const deleteResponse = await request(server)
+        .delete(`${resourceUrl}/${categoryToDelete.id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      deleteResponse.status.should.be.eq(200);
+
+      const transactionResponse = await request(server)
+        .get(`/api/v1/accountant/${linkedTransaction.id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      transactionResponse.status.should.be.eq(200);
+      transactionResponse.body.should.have.property('categoryId', null);
     });
   });
 });

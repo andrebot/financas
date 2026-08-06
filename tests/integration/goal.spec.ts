@@ -136,6 +136,23 @@ describe('Goal', () => {
 
       response.status.should.be.eq(401);
     });
+
+    it('should return 500 if userId does not exist', async () => {
+      const newGoal = {
+        name: 'Test Goal',
+        value: 400,
+        savedValue: '0',
+        dueDate: new Date(),
+        userId: 999999,
+      };
+
+      const response = await request(server)
+        .post(resourceUrl)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(newGoal);
+
+      response.status.should.be.eq(500);
+    });
   });
 
   describe('Update Goal - PUT /api/v1/goal/:id', () => {
