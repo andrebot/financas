@@ -95,11 +95,22 @@ describe('Goal Repository', () => {
       whereStub.should.have.been.calledOnce;
     });
 
-    it('should apply negative typeSign for outflow transaction types', async () => {
+    it('should apply negative typeSign for non-capital-in transaction types', async () => {
       selectWhereStub.resolves([{ investmentId: 7 }]);
       const outflowTransaction = buildTransaction({ type: 'cardPurchase', value: '50.00' });
 
       await runWithContext(() => goalRepo.updateGoalFromTransaction(outflowTransaction));
+
+      updateStub.should.have.been.calledOnceWithExactly(goals);
+      setStub.should.have.been.calledOnce;
+      whereStub.should.have.been.calledOnce;
+    });
+
+    it('should apply positive typeSign for investmentBuy transactions', async () => {
+      selectWhereStub.resolves([{ investmentId: 7 }]);
+      const investmentBuyTransaction = buildTransaction({ type: 'investmentBuy', value: '50.00' });
+
+      await runWithContext(() => goalRepo.updateGoalFromTransaction(investmentBuyTransaction));
 
       updateStub.should.have.been.calledOnceWithExactly(goals);
       setStub.should.have.been.calledOnce;

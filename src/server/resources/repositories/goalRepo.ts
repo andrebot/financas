@@ -1,7 +1,7 @@
 import {
   eq, and, lte, sql, inArray,
 } from 'drizzle-orm';
-import { isInflowType } from '../../utils/transactionTypeUtils';
+import { isInvestmentCapitalIn } from '../../utils/transactionTypeUtils';
 import Repository from './repository';
 import { getAutorizationDatabaseContext } from '../../utils/authorization';
 import { goals } from '../models/goalModel';
@@ -29,7 +29,7 @@ async function updateGoalFromTransaction(
   logger.info(`Updating goal from transaction: ${transaction.id}`);
 
   const transactionValue = Number(transaction.value);
-  const typeSign = isInflowType(transaction.type) ? 1 : -1;
+  const typeSign = isInvestmentCapitalIn(transaction.type) ? 1 : -1;
   const invertSign = shouldInvertValue ? -1 : 1;
   const signedTransactionValue = typeSign * invertSign * transactionValue;
 
@@ -70,7 +70,7 @@ async function listGoalsWithSavedValueUpTo(year: number, month: number): Promise
       value: goals.value,
       savedValue: sql<string>`COALESCE(SUM(
         CASE WHEN ${transactions.type}::text = ANY(ARRAY[
-          'investmentSell','investmentDividend','investmentInterest','investmentDueDate'
+          'investmentBuy','investmentDividend','investmentInterest'
         ])
              THEN ${transactions.value}::numeric * ${investmentToGoals.percentage}::numeric / 100
              ELSE -${transactions.value}::numeric * ${investmentToGoals.percentage}::numeric / 100

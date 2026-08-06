@@ -282,6 +282,10 @@ describe('Transactions', () => {
         .get(`/api/v1/goal/${goal1.id}`)
         .set('Authorization', `Bearer ${accessToken}`);
       const savedValueBefore = Number(beforeCreateResponse.body.savedValue);
+      const investmentEntry = {
+        investment: { id: investment1.id },
+        goals: [{ goalId: goal1.id, percentage: 50 }],
+      };
 
       const createResponse = await request(server)
         .post(resourceUrl)
@@ -290,10 +294,10 @@ describe('Transactions', () => {
           name: 'Recalculation Transaction',
           accountId: account1.id,
           userId: adminUser.id,
-          type: 'deposit',
-          date: new Date(),
+          type: 'investmentBuy',
+          date: new Date('2026-02-01'),
           value: '100.00',
-          goals: [{ goalId: goal1.id, percentage: 0.5 }],
+          investmentEntry,
         });
 
       const afterCreateResponse = await request(server)
@@ -304,7 +308,7 @@ describe('Transactions', () => {
       await request(server)
         .put(`${resourceUrl}/${createResponse.body.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
-        .send({ value: '200.00' });
+        .send({ value: '200.00', investmentEntry });
 
       const afterUpdateResponse = await request(server)
         .get(`/api/v1/goal/${goal1.id}`)
@@ -382,10 +386,13 @@ describe('Transactions', () => {
           name: 'Delete Reversal Transaction',
           accountId: account1.id,
           userId: adminUser.id,
-          type: 'deposit',
-          date: new Date(),
+          type: 'investmentBuy',
+          date: new Date('2026-02-01'),
           value: '100.00',
-          goals: [{ goalId: goal1.id, percentage: 0.5 }],
+          investmentEntry: {
+            investment: { id: investment1.id },
+            goals: [{ goalId: goal1.id, percentage: 50 }],
+          },
         });
 
       const afterCreateResponse = await request(server)
