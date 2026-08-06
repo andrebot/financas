@@ -474,4 +474,118 @@ describe('Investment Repository', () => {
       setArgs.should.have.property('archived', true);
     });
   });
+
+  describe('listPaginated', () => {
+    type ListPage = {
+      data: unknown[]; page: number; pageSize: number; total: number; totalPages: number;
+    };
+
+    /**
+     * Wires the shared selectStub to answer the two queries listPaginated
+     * issues in parallel: the data page (from -> where -> orderBy -> limit
+     * -> offset) and the count (from -> where, resolving directly).
+     *
+     * @param data - Rows to resolve for the data page query.
+     * @param total - Row count to resolve for the count query.
+     * @returns The where-stubs for each query, for assertions on filter args.
+     */
+    function mockListPaginatedQueries(data: unknown[], total: number) {
+      const offsetStub = sinon.stub().resolves(data);
+      const limitStub = sinon.stub().returns({ offset: offsetStub });
+      const orderByStub = sinon.stub().returns({ limit: limitStub });
+      const dataWhereStub = sinon.stub().returns({ orderBy: orderByStub });
+      const dataFromStub = sinon.stub().returns({ where: dataWhereStub });
+
+      const countWhereStub = sinon.stub().resolves([{ total }]);
+      const countFromStub = sinon.stub().returns({ where: countWhereStub });
+
+      selectStub.onCall(0).returns({ from: dataFromStub });
+      selectStub.onCall(1).returns({ from: countFromStub });
+
+      return {
+        dataWhereStub, countWhereStub, orderByStub, limitStub, offsetStub,
+      };
+    }
+
+    it('should return the first page with default page size when no filters are given', async () => {
+      const rows = [{ id: 1, name: 'CDB Itaú' }];
+      mockListPaginatedQueries(rows, 1);
+
+      const result = await runWithContext(() => investmentRepo.listPaginated({})) as ListPage;
+
+      result.should.deep.equal({
+        data: rows, page: 1, pageSize: 20, total: 1, totalPages: 1,
+      });
+    });
+
+    it('should apply the requested page and pageSize to limit/offset', async () => {
+      const { limitStub, offsetStub } = mockListPaginatedQueries([], 0);
+
+      await runWithContext(() => investmentRepo.listPaginated({ page: 3, pageSize: 10 }));
+
+      limitStub.should.have.been.calledOnceWith(10);
+      offsetStub.should.have.been.calledOnceWith(20);
+    });
+
+    it('should floor page below 1 up to 1', async () => {
+      mockListPaginatedQueries([], 0);
+
+      const result = await runWithContext(() => investmentRepo.listPaginated({ page: 0 })) as ListPage;
+
+      result.page.should.equal(1);
+    });
+
+    it('should cap pageSize at 100', async () => {
+      const { limitStub } = mockListPaginatedQueries([], 0);
+
+      const result = await runWithContext(
+        () => investmentRepo.listPaginated({ pageSize: 500 }),
+      ) as ListPage;
+
+      result.pageSize.should.equal(100);
+      limitStub.should.have.been.calledOnceWith(100);
+    });
+
+    it('should compute totalPages via ceiling division', async () => {
+      mockListPaginatedQueries([], 45);
+
+      const result = await runWithContext(
+        () => investmentRepo.listPaginated({ pageSize: 20 }),
+      ) as ListPage;
+
+      result.totalPages.should.equal(3);
+    });
+
+    it('should return 0 totalPages when there are no results', async () => {
+      mockListPaginatedQueries([], 0);
+
+      const result = await runWithContext(() => investmentRepo.listPaginated({})) as ListPage;
+
+      result.totalPages.should.equal(0);
+    });
+
+    it('should filter by investmentTypes, archived, and both date ranges', async () => {
+      const { dataWhereStub, countWhereStub } = mockListPaginatedQueries([], 0);
+
+      await runWithContext(() => investmentRepo.listPaginated({
+        investmentTypes: ['cdb', 'lci'],
+        archived: false,
+        createdAtStart: new Date(2026, 0, 1),
+        createdAtEnd: new Date(2026, 11, 31),
+        dueDateStart: new Date(2027, 0, 1),
+        dueDateEnd: new Date(2027, 11, 31),
+      }));
+
+      dataWhereStub.should.have.been.calledOnce;
+      countWhereStub.should.have.been.calledOnce;
+    });
+
+    it('should work with no type/archived/date filters at all', async () => {
+      const { dataWhereStub } = mockListPaginatedQueries([], 0);
+
+      await runWithContext(() => investmentRepo.listPaginated({}));
+
+      dataWhereStub.should.have.been.calledOnce;
+    });
+  });
 });

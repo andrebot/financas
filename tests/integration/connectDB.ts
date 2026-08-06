@@ -32,6 +32,16 @@ export const transaction1 = { id: 0, name: 'Test Transaction 1', type: 'withdraw
 export const transaction2 = { id: 0, name: 'Test Transaction 2', type: 'investmentBuy' as const, date: new Date('2026-01-15'), value: '200.00', investmentType: 'lci' as const };
 export const transaction3 = { id: 0, name: 'Test Transaction 3', type: 'investmentBuy' as const, date: new Date('2026-01-15'), value: '300.00', investmentType: 'lca' as const };
 
+export const investment1 = {
+  id: 0, name: 'Test Investment 1 (CDB)', investmentType: 'cdb' as const, archived: false,
+};
+export const investment2 = {
+  id: 0, name: 'Test Investment 2 (LCI, archived)', investmentType: 'lci' as const, archived: true,
+};
+export const investment3 = {
+  id: 0, name: 'Test Investment 3 (Stock, other user)', investmentType: 'stock' as const, archived: false,
+};
+
 let pglite: PGlite;
 let db: ReturnType<typeof drizzle<typeof schema>>;
 
@@ -254,4 +264,26 @@ export const createTransaction = async (
     categoryId: categoryId ?? null,
   }).returning();
   transaction.id = saved.id;
+};
+
+/**
+ * Seeds an investment for the given userId and accountId, and stores its generated id.
+ *
+ * @param investment - The investment fixture to seed.
+ * @param userId - The id of the user who owns the investment.
+ * @param accountId - The id of the account the investment belongs to.
+ */
+export const createInvestment = async (
+  investment: typeof investment1 | typeof investment2 | typeof investment3,
+  userId: number,
+  accountId: number,
+): Promise<void> => {
+  const [saved] = await db.insert(schema.investments).values({
+    name: investment.name,
+    investmentType: investment.investmentType,
+    archived: investment.archived,
+    userId,
+    accountId,
+  }).returning();
+  investment.id = saved.id;
 };

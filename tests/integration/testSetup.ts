@@ -11,6 +11,7 @@ import {
   createGoal,
   createTransaction,
   createBudget,
+  createInvestment,
   adminUser,
   otherUser,
   account1,
@@ -28,6 +29,9 @@ import {
   transaction1,
   transaction2,
   transaction3,
+  investment1,
+  investment2,
+  investment3,
 } from './connectDB';
 
 use(sinonChai);
@@ -66,6 +70,11 @@ before(async () => {
   await createBudget(budget2, adminUser.id, [category1.id]);
   await createBudget(budget3, otherUser.id, []);
   console.log('Budgets created');
+
+  await createInvestment(investment1, adminUser.id, account1.id);
+  await createInvestment(investment2, adminUser.id, account1.id);
+  await createInvestment(investment3, otherUser.id, account3.id);
+  console.log('Investments created');
 });
 
 after(async () => {

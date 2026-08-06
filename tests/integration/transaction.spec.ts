@@ -1,7 +1,7 @@
 import request from 'supertest';
 import server from '../../src/server/server';
 import {
-  transaction1, transaction2, transaction3, account1, adminUser, userToDelete, goal1,
+  transaction1, transaction2, transaction3, account1, adminUser, userToDelete, goal1, investment1,
   findMonthlyBalancesByAccountId,
 } from './connectDB';
 import { createAccessToken } from '../../src/server/managers/authenticationManager';
@@ -155,6 +155,61 @@ describe('Transactions', () => {
         .send(transaction2);
 
       response.status.should.be.eq(401);
+    });
+  });
+
+  describe('Create Transaction with investmentEntry - POST /api/v1/accountant/', () => {
+    it('should link a new transaction to an existing investment via investmentEntry', async () => {
+      const response = await request(server)
+        .post(resourceUrl)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          name: 'Buy more CDB',
+          type: 'investmentBuy',
+          date: new Date('2026-02-01'),
+          value: '500.00',
+          accountId: account1.id,
+          userId: adminUser.id,
+          investmentEntry: { investment: { id: investment1.id } },
+        });
+
+      response.status.should.be.eq(200);
+      response.body.should.have.property('type', 'investmentBuy');
+
+      const investmentResponse = await request(server)
+        .get(`/api/v1/investment/${investment1.id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      Number(investmentResponse.body.totalInvested).should.be.greaterThan(0);
+    });
+
+    it('should create a new investment inline when investmentEntry has no id', async () => {
+      const response = await request(server)
+        .post(resourceUrl)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          name: 'Buy new LCA',
+          type: 'investmentBuy',
+          date: new Date('2026-02-01'),
+          value: '1000.00',
+          accountId: account1.id,
+          userId: adminUser.id,
+          investmentEntry: {
+            investment: {
+              name: 'Inline LCA', investmentType: 'lca', accountId: account1.id, userId: adminUser.id,
+            },
+          },
+        });
+
+      response.status.should.be.eq(200);
+
+      const listResponse = await request(server)
+        .get('/api/v1/investment?investmentType=lca')
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      listResponse.body.data.some(
+        (investment: { name: string }) => investment.name === 'Inline LCA',
+      ).should.be.true;
     });
   });
 

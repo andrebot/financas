@@ -24,6 +24,7 @@ import {
   IAccountantRepos,
   IInvestment,
   IInvestmentTransactionEntry,
+  IInvestmentListFilters,
 } from '../types';
 
 const logger = createLogger('AccountantManager');
@@ -614,7 +615,9 @@ export function AccountantManager(repos: IAccountantRepos) {
     ),
     deleteInvestment: (id: number) => investmentRepo.deleteById(id),
     getInvestment: (id: number) => investmentRepo.findById(id),
-    listInvestments: () => investmentRepo.listAll(),
+    listInvestments: (filters?: IInvestmentListFilters) => (
+      investmentRepo.listPaginated(filters ?? {})
+    ),
   };
 }
 

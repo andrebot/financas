@@ -5,7 +5,7 @@ import { checkVoidUser, checkVoidPayload } from '../utils/misc';
 import { createLogger } from '../utils/logger';
 import { handleError } from '../utils/responseHandlers';
 import type {
-  IAccountantManager, ITransaction, IMonthlyBalance, RequestWithUser,
+  IAccountantManager, ITransaction, IMonthlyBalance, IInvestmentTransactionEntry, RequestWithUser,
 } from '../types';
 
 const logger = createLogger('AccountantController');
@@ -60,11 +60,11 @@ export function AccountantController(
   }, 'Transaction');
 
   /**
-   * Handles POST requests to create a new transaction with optional goal allocations.
-   * Splits the `goals` array out of the request body before passing the remainder
-   * to the accountant manager.
+   * Handles POST requests to create a new transaction with an optional investment entry.
+   * Splits `investmentEntry` out of the request body before passing the remainder
+   * to the accountant manager — see {@link IInvestmentTransactionEntry} for its shape.
    *
-   * @param req - The request object containing the transaction payload and optional goals.
+   * @param req - The request object with the transaction payload and optional investmentEntry.
    * @param res - The response object.
    * @returns The created transaction.
    */
@@ -73,11 +73,15 @@ export function AccountantController(
       checkVoidUser(req.user, 'Transaction', 'create');
       checkVoidPayload(req.body, 'Transaction', 'create');
 
-      const content = await AccountantManager.createTransaction(req.body as ITransaction);
+      const { investmentEntry, ...content } = req.body as (
+        ITransaction & { investmentEntry?: IInvestmentTransactionEntry }
+      );
+
+      const savedContent = await AccountantManager.createTransaction(content, investmentEntry);
 
       logger.info('Transaction created');
 
-      return res.send(content);
+      return res.send(savedContent);
     } catch (error) {
       logger.error(error);
 
@@ -86,9 +90,9 @@ export function AccountantController(
   };
 
   /**
-   * Handles PUT/PATCH requests to update an existing transaction with optional goal allocations.
-   * Splits the optional `goals` array out of the request body before passing the remainder
-   * to the accountant manager.
+   * Handles PUT/PATCH requests to update an existing transaction with an optional investment entry.
+   * Splits `investmentEntry` out of the request body before passing the remainder
+   * to the accountant manager — see {@link IInvestmentTransactionEntry} for its shape.
    *
    * @param req - The request object containing the transaction id and update payload.
    * @param res - The response object.
@@ -101,9 +105,14 @@ export function AccountantController(
       checkVoidUser(req.user, 'Transaction', 'update');
       checkVoidPayload(req.body, 'Transaction', 'update');
 
+      const { investmentEntry, ...payload } = req.body as (
+        Partial<ITransaction> & { investmentEntry?: IInvestmentTransactionEntry }
+      );
+
       const content = await AccountantManager.updateTransaction(
         Number(contentId),
-        req.body as Partial<ITransaction>,
+        payload,
+        investmentEntry,
       );
 
       logger.info('Transaction updated');

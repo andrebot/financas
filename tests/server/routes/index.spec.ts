@@ -17,9 +17,11 @@ const contentManagerStub = {
 };
 
 const commonControllerStub = sinon.stub().returns({});
+const investmentControllerStub = sinon.stub().returns({});
 const routeFactoryStub = sinon.stub().returns({});
 const userRouteStub = {};
 const accountantRouteStub = {};
+const accountantManagerStub = {};
 
 const setRoutes = proxyquire('../../../src/server/routes/index', {
   '../utils/logger': {
@@ -28,8 +30,14 @@ const setRoutes = proxyquire('../../../src/server/routes/index', {
   '../managers/contentManager': {
     default: contentManagerStub,
   },
+  '../managers/accountantManager': {
+    default: accountantManagerStub,
+  },
   '../controllers/commonController': {
     default: commonControllerStub,
+  },
+  '../controllers/investmentController': {
+    default: investmentControllerStub,
   },
   './routeFactory': {
     default: routeFactoryStub,
@@ -55,11 +63,11 @@ describe('setRoutes', () => {
     loggerStub.info.resetHistory();
   });
 
-  it('should register all 6 routes with correct paths', () => {
+  it('should register all 7 routes with correct paths', () => {
     setRoutes(appMock);
 
     appUseStub.should.have.been.called;
-    appUseStub.should.have.callCount(6);
+    appUseStub.should.have.callCount(7);
 
     const paths = appUseStub.getCalls().map((call) => call.args[0]);
     paths.should.include(`${API_PREFIX}/user`);
@@ -68,6 +76,7 @@ describe('setRoutes', () => {
     paths.should.include(`${API_PREFIX}/account`);
     paths.should.include(`${API_PREFIX}/goal`);
     paths.should.include(`${API_PREFIX}/budget`);
+    paths.should.include(`${API_PREFIX}/investment`);
   });
 
   it('should pass router to app.use for each route', () => {
@@ -83,12 +92,13 @@ describe('setRoutes', () => {
   it('should log each route when added', () => {
     setRoutes(appMock);
 
-    loggerStub.info.should.have.callCount(6);
+    loggerStub.info.should.have.callCount(7);
     loggerStub.info.should.have.been.calledWith(`Route added: ${API_PREFIX}/user`);
     loggerStub.info.should.have.been.calledWith(`Route added: ${API_PREFIX}/accountant`);
     loggerStub.info.should.have.been.calledWith(`Route added: ${API_PREFIX}/category`);
     loggerStub.info.should.have.been.calledWith(`Route added: ${API_PREFIX}/account`);
     loggerStub.info.should.have.been.calledWith(`Route added: ${API_PREFIX}/goal`);
     loggerStub.info.should.have.been.calledWith(`Route added: ${API_PREFIX}/budget`);
+    loggerStub.info.should.have.been.calledWith(`Route added: ${API_PREFIX}/investment`);
   });
 });

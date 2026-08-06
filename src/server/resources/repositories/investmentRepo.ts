@@ -1,4 +1,6 @@
-import { and, eq, sql } from 'drizzle-orm';
+import {
+  and, eq, sql, inArray, gte, lte, desc, count,
+} from 'drizzle-orm';
 import Repository from './repository';
 import { getDb } from '../../utils/transaction';
 import { getAutorizationDatabaseContext } from '../../utils/authorization';
@@ -6,8 +8,16 @@ import { createLogger } from '../../utils/logger';
 import { investments, transactionToInvestments, investmentToGoals } from '../models/investmentModel';
 import { transactions } from '../models/transactionModel';
 import type {
-  IInvestment, IInvestmentGoalEntry, IInvestmentTransactionLink, ITransaction,
+  IInvestment,
+  IInvestmentGoalEntry,
+  IInvestmentTransactionLink,
+  IInvestmentListFilters,
+  IPaginatedResult,
+  ITransaction,
 } from '../../types';
+
+const MAX_PAGE_SIZE = 100;
+const DEFAULT_PAGE_SIZE = 20;
 
 const logger = createLogger('Repository:Investment');
 const investmentRepo = Repository<typeof investments, IInvestment>(investments, 'Investment', logger);
@@ -251,6 +261,68 @@ async function archiveInvestment(investmentId: number): Promise<void> {
     ));
 }
 
+/**
+ * Returns a filtered, paginated page of investments, scoped to the current
+ * authorization context. pageSize is capped at {@link MAX_PAGE_SIZE}.
+ *
+ * @param filters - The page/pageSize and filter criteria to apply.
+ * @returns The matching page of investments plus pagination metadata.
+ */
+async function listPaginated(
+  filters: IInvestmentListFilters,
+): Promise<IPaginatedResult<IInvestment>> {
+  const {
+    page = 1,
+    pageSize = DEFAULT_PAGE_SIZE,
+    investmentTypes,
+    archived,
+    createdAtStart,
+    createdAtEnd,
+    dueDateStart,
+    dueDateEnd,
+  } = filters;
+
+  const cappedPageSize = Math.min(Math.max(pageSize, 1), MAX_PAGE_SIZE);
+  const safePage = Math.max(page, 1);
+  const offset = (safePage - 1) * cappedPageSize;
+
+  logger.info(`Listing investments, page ${safePage} (size ${cappedPageSize})`);
+
+  const whereClause = and(
+    getAutorizationDatabaseContext(investments),
+    investmentTypes && investmentTypes.length > 0
+      ? inArray(investments.investmentType, investmentTypes as IInvestment['investmentType'][])
+      : undefined,
+    archived === undefined ? undefined : eq(investments.archived, archived),
+    createdAtStart ? gte(investments.createdAt, createdAtStart) : undefined,
+    createdAtEnd ? lte(investments.createdAt, createdAtEnd) : undefined,
+    dueDateStart ? gte(investments.dueDate, dueDateStart) : undefined,
+    dueDateEnd ? lte(investments.dueDate, dueDateEnd) : undefined,
+  );
+
+  const [data, [{ total }]] = await Promise.all([
+    getDb()
+      .select()
+      .from(investments)
+      .where(whereClause)
+      .orderBy(desc(investments.createdAt))
+      .limit(cappedPageSize)
+      .offset(offset),
+    getDb()
+      .select({ total: count() })
+      .from(investments)
+      .where(whereClause),
+  ]);
+
+  return {
+    data,
+    page: safePage,
+    pageSize: cappedPageSize,
+    total,
+    totalPages: total === 0 ? 0 : Math.ceil(total / cappedPageSize),
+  };
+}
+
 export default {
   ...investmentRepo,
   saveTransactionLink,
@@ -261,4 +333,5 @@ export default {
   applyTransactionToPosition,
   recalculatePosition,
   archiveInvestment,
+  listPaginated,
 };

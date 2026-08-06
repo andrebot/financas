@@ -503,6 +503,44 @@ export interface IMonthlyBalanceRepo extends IRepository<typeof monthlyBalances,
   findByYearAndMonth(year: number, month: number): Promise<IMonthlyBalance[]>;
 }
 
+/**
+ * A page of results plus the metadata needed to render pagination controls.
+ *
+ * @template T - The type of the items in the page.
+ */
+export type IPaginatedResult<T> = {
+  /** The items in the current page. */
+  data: T[];
+  /** The current page (1-indexed). */
+  page: number;
+  /** The number of items per page. */
+  pageSize: number;
+  /** The total number of items matching the filters, across all pages. */
+  total: number;
+  /** The total number of pages. */
+  totalPages: number;
+};
+
+/** Filters accepted by the investment list endpoint. */
+export type IInvestmentListFilters = {
+  /** The page to return (1-indexed). Defaults to 1. */
+  page?: number;
+  /** The number of items per page. Defaults to 20, capped at 100. */
+  pageSize?: number;
+  /** Restricts results to these investment types (OR'd together). */
+  investmentTypes?: string[];
+  /** Restricts results by archived state. Omitted returns both archived and active. */
+  archived?: boolean;
+  /** Lower bound (inclusive) on createdAt — when the position was opened. */
+  createdAtStart?: Date;
+  /** Upper bound (inclusive) on createdAt. */
+  createdAtEnd?: Date;
+  /** Lower bound (inclusive) on dueDate — maturity, fixed income only. */
+  dueDateStart?: Date;
+  /** Upper bound (inclusive) on dueDate. */
+  dueDateEnd?: Date;
+};
+
 /** Repository contract for the investments table, extending base CRUD with position management. */
 export interface IInvestmentRepo extends IRepository<typeof investments, IInvestment> {
   /**
@@ -574,6 +612,14 @@ export interface IInvestmentRepo extends IRepository<typeof investments, IInvest
    * @param investmentId - The investment id to archive.
    */
   archiveInvestment(investmentId: number): Promise<void>;
+  /**
+   * Returns a filtered, paginated page of investments, scoped to the current
+   * authorization context.
+   *
+   * @param filters - The page/pageSize and filter criteria to apply.
+   * @returns The matching page of investments plus pagination metadata.
+   */
+  listPaginated(filters: IInvestmentListFilters): Promise<IPaginatedResult<IInvestment>>;
 }
 
 /** Repository contract for the users table, extending base CRUD with email lookup. */
@@ -664,7 +710,7 @@ export interface IAccountantManager {
   updateInvestment: (id: number, payload: Partial<IInvestment>) => Promise<IInvestment | null>;
   deleteInvestment: (id: number) => Promise<IInvestment | null>;
   getInvestment: (id: number) => Promise<IInvestment | null>;
-  listInvestments: () => Promise<IInvestment[]>;
+  listInvestments: (filters?: IInvestmentListFilters) => Promise<IPaginatedResult<IInvestment>>;
 }
 
 export interface ICommonController<T extends Content> {

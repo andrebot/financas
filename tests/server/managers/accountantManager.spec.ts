@@ -40,6 +40,7 @@ const investmentRepoStub = {
   update: sinon.stub(),
   deleteById: sinon.stub(),
   listAll: sinon.stub(),
+  listPaginated: sinon.stub(),
   saveTransactionLink: sinon.stub(),
   findTransactionLink: sinon.stub(),
   deleteTransactionLink: sinon.stub(),
@@ -142,6 +143,7 @@ describe('AccountantManager', () => {
     investmentRepoStub.update.reset();
     investmentRepoStub.deleteById.reset();
     investmentRepoStub.listAll.reset();
+    investmentRepoStub.listPaginated.reset();
     investmentRepoStub.saveTransactionLink.reset();
     investmentRepoStub.findTransactionLink.reset();
     investmentRepoStub.deleteTransactionLink.reset();
@@ -730,12 +732,29 @@ describe('AccountantManager', () => {
       investmentRepoStub.deleteById.should.have.been.calledOnceWith(1);
     });
 
-    it('listInvestments should delegate to investmentRepo.listAll', async () => {
-      investmentRepoStub.listAll.resolves([mockInvestment]);
+    it('listInvestments should delegate to investmentRepo.listPaginated with an empty filter object by default', async () => {
+      const page = {
+        data: [mockInvestment], page: 1, pageSize: 20, total: 1, totalPages: 1,
+      };
+      investmentRepoStub.listPaginated.resolves(page);
 
-      await accountantManager.listInvestments();
+      const result = await accountantManager.listInvestments();
 
-      investmentRepoStub.listAll.should.have.been.calledOnce;
+      investmentRepoStub.listPaginated.should.have.been.calledOnceWith({});
+      result.should.deep.equal(page);
+    });
+
+    it('listInvestments should forward provided filters to investmentRepo.listPaginated', async () => {
+      const page = {
+        data: [], page: 2, pageSize: 10, total: 0, totalPages: 0,
+      };
+      investmentRepoStub.listPaginated.resolves(page);
+      const filters = { page: 2, pageSize: 10, investmentTypes: ['cdb'] };
+
+      const result = await accountantManager.listInvestments(filters);
+
+      investmentRepoStub.listPaginated.should.have.been.calledOnceWith(filters);
+      result.should.deep.equal(page);
     });
   });
 });

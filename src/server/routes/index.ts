@@ -5,9 +5,11 @@ import accountantRouter from './accountant';
 import userRouter from './authentication';
 import CommonController from '../controllers/commonController';
 import GoalController from '../controllers/goalController';
+import InvestmentController from '../controllers/investmentController';
+import AccountantManager from '../managers/accountantManager';
 import ContentManager from '../managers/contentManager';
 import type {
-  IAccountPayload, IBudget, IGoal,
+  IAccountPayload, IBudget, IGoal, IInvestment,
   ICategory,
 } from '../types';
 import routeFactory from './routeFactory';
@@ -41,6 +43,10 @@ const routes: { prefix: string; router: Router }[] = [
   {
     prefix: 'budget',
     router: routeFactory<IBudget>(CommonController(ContentManager.budgetActions, 'Budget')),
+  },
+  {
+    prefix: 'investment',
+    router: routeFactory<IInvestment>(InvestmentController(AccountantManager)),
   },
 ];
 
