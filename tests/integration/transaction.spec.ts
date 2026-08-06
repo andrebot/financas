@@ -156,6 +156,24 @@ describe('Transactions', () => {
 
       response.status.should.be.eq(401);
     });
+
+    it('should return 500 if the transaction has a wrong type value', async () => {
+      const newTransaction = {
+        name: 'New Transaction',
+        accountId: account1.id,
+        type: 'wrong',
+        date: new Date(),
+        value: '100.00',
+        userId: adminUser.id,
+      };
+
+      const response = await request(server)
+        .post(resourceUrl)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(newTransaction);
+
+      response.status.should.be.eq(500);
+    });
   });
 
   describe('Create Transaction with investmentEntry - POST /api/v1/accountant/', () => {
@@ -210,6 +228,169 @@ describe('Transactions', () => {
       listResponse.body.data.some(
         (investment: { name: string }) => investment.name === 'Inline LCA',
       ).should.be.true;
+    });
+  });
+
+  describe('Investment Maturity (investmentDueDate) - Tax Flow', () => {
+    it('should calculate and auto-create a tax transaction when a taxable investment matures with gains', async () => {
+      const investmentResponse = await request(server)
+        .post('/api/v1/investment')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          name: 'Maturity Test CDB', investmentType: 'cdb', accountId: account1.id, userId: adminUser.id,
+        });
+      const taxableInvestmentId = investmentResponse.body.id;
+
+      await request(server)
+        .post(resourceUrl)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          name: 'Buy CDB For Maturity Test',
+          type: 'investmentBuy',
+          date: new Date(),
+          value: '1000.00',
+          accountId: account1.id,
+          userId: adminUser.id,
+          investmentEntry: { investment: { id: taxableInvestmentId } },
+        });
+
+      const dueDateResponse = await request(server)
+        .post(resourceUrl)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          name: 'CDB Matured',
+          type: 'investmentDueDate',
+          date: new Date(),
+          value: '1100.00',
+          accountId: account1.id,
+          userId: adminUser.id,
+          investmentEntry: { investment: { id: taxableInvestmentId } },
+        });
+
+      dueDateResponse.status.should.be.eq(200);
+
+      const investmentAfterMaturity = await request(server)
+        .get(`/api/v1/investment/${taxableInvestmentId}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+      investmentAfterMaturity.body.should.have.property('archived', true);
+
+      const transactionsResponse = await request(server)
+        .get(resourceUrl)
+        .set('Authorization', `Bearer ${accessToken}`);
+      const taxTransaction = transactionsResponse.body.find(
+        (t: any) => t.parentTransactionId === dueDateResponse.body.id,
+      );
+
+      taxTransaction.should.exist;
+      taxTransaction.should.have.property('type', 'investmentTax');
+      taxTransaction.name.should.include('IR -');
+      Number(taxTransaction.value).should.be.eq(22.5);
+    });
+
+    it('should not create a tax transaction when an exempt investment matures', async () => {
+      const investmentResponse = await request(server)
+        .post('/api/v1/investment')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          name: 'Maturity Test LCI', investmentType: 'lci', accountId: account1.id, userId: adminUser.id,
+        });
+      const exemptInvestmentId = investmentResponse.body.id;
+
+      await request(server)
+        .post(resourceUrl)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          name: 'Buy LCI For Maturity Test',
+          type: 'investmentBuy',
+          date: new Date(),
+          value: '1000.00',
+          accountId: account1.id,
+          userId: adminUser.id,
+          investmentEntry: { investment: { id: exemptInvestmentId } },
+        });
+
+      const dueDateResponse = await request(server)
+        .post(resourceUrl)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          name: 'LCI Matured',
+          type: 'investmentDueDate',
+          date: new Date(),
+          value: '1100.00',
+          accountId: account1.id,
+          userId: adminUser.id,
+          investmentEntry: { investment: { id: exemptInvestmentId } },
+        });
+
+      dueDateResponse.status.should.be.eq(200);
+
+      const investmentAfterMaturity = await request(server)
+        .get(`/api/v1/investment/${exemptInvestmentId}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+      investmentAfterMaturity.body.should.have.property('archived', true);
+
+      const transactionsResponse = await request(server)
+        .get(resourceUrl)
+        .set('Authorization', `Bearer ${accessToken}`);
+      const taxTransaction = transactionsResponse.body.find(
+        (t: any) => t.parentTransactionId === dueDateResponse.body.id,
+      );
+
+      (taxTransaction === undefined).should.be.true;
+    });
+
+    it('should delete the auto-created tax transaction when the maturity transaction is deleted', async () => {
+      const investmentResponse = await request(server)
+        .post('/api/v1/investment')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          name: 'Cascade Delete Test CDB', investmentType: 'cdb', accountId: account1.id, userId: adminUser.id,
+        });
+      const cascadeInvestmentId = investmentResponse.body.id;
+
+      await request(server)
+        .post(resourceUrl)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          name: 'Buy CDB For Cascade Test',
+          type: 'investmentBuy',
+          date: new Date(),
+          value: '1000.00',
+          accountId: account1.id,
+          userId: adminUser.id,
+          investmentEntry: { investment: { id: cascadeInvestmentId } },
+        });
+
+      const dueDateResponse = await request(server)
+        .post(resourceUrl)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          name: 'CDB Matured For Cascade Test',
+          type: 'investmentDueDate',
+          date: new Date(),
+          value: '1100.00',
+          accountId: account1.id,
+          userId: adminUser.id,
+          investmentEntry: { investment: { id: cascadeInvestmentId } },
+        });
+
+      const transactionsBeforeDelete = await request(server)
+        .get(resourceUrl)
+        .set('Authorization', `Bearer ${accessToken}`);
+      const taxTransaction = transactionsBeforeDelete.body.find(
+        (t: any) => t.parentTransactionId === dueDateResponse.body.id,
+      );
+      taxTransaction.should.exist;
+
+      await request(server)
+        .delete(`${resourceUrl}/${dueDateResponse.body.id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      const taxTransactionAfterDelete = await request(server)
+        .get(`${resourceUrl}/${taxTransaction.id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      taxTransactionAfterDelete.body.should.be.empty;
     });
   });
 

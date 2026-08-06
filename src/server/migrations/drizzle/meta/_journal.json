@@ -43,6 +43,13 @@
       "when": 1750200000000,
       "tag": "0005_add_investment_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1750300000000,
+      "tag": "0006_add_investment_tax_transaction_type",
+      "breakpoints": true
     }
   ]
 }
