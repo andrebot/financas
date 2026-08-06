@@ -30,7 +30,7 @@ describe('Transactions', () => {
 
       response.status.should.be.eq(200);
       response.body.should.be.an('array');
-      response.body.should.have.lengthOf(3);
+      response.body.should.have.lengthOf(5);
     });
 
     it('should include accountName and categoryName in each transaction', async () => {
@@ -221,6 +221,41 @@ describe('Transactions', () => {
       response.status.should.be.eq(404);
       response.body.should.have.property('error').that.includes('not found');
     });
+
+    it('should correctly recalculate a linked goal\'s saved value when the transaction value changes', async () => {
+      const beforeCreateResponse = await request(server)
+        .get(`/api/v1/goal/${goal1.id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+      const savedValueBefore = Number(beforeCreateResponse.body.savedValue);
+
+      const createResponse = await request(server)
+        .post(resourceUrl)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          name: 'Recalculation Transaction',
+          accountId: account1.id,
+          userId: adminUser.id,
+          type: 'deposit',
+          date: new Date(),
+          value: '100.00',
+          goals: [{ goalId: goal1.id, percentage: 0.5 }],
+        });
+
+      const afterCreateResponse = await request(server)
+        .get(`/api/v1/goal/${goal1.id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+      Number(afterCreateResponse.body.savedValue).should.be.eq(savedValueBefore + 50);
+
+      await request(server)
+        .put(`${resourceUrl}/${createResponse.body.id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ value: '200.00' });
+
+      const afterUpdateResponse = await request(server)
+        .get(`/api/v1/goal/${goal1.id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+      Number(afterUpdateResponse.body.savedValue).should.be.eq(savedValueBefore + 100);
+    });
   });
 
   describe('Delete Transaction - DELETE /api/v1/accountant/:id', () => {
@@ -277,6 +312,40 @@ describe('Transactions', () => {
 
       response.status.should.be.eq(404);
       response.body.should.have.property('error').that.includes('not found');
+    });
+
+    it('should revert a linked goal\'s saved value when the transaction is deleted', async () => {
+      const beforeCreateResponse = await request(server)
+        .get(`/api/v1/goal/${goal1.id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+      const savedValueBefore = Number(beforeCreateResponse.body.savedValue);
+
+      const createResponse = await request(server)
+        .post(resourceUrl)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          name: 'Delete Reversal Transaction',
+          accountId: account1.id,
+          userId: adminUser.id,
+          type: 'deposit',
+          date: new Date(),
+          value: '100.00',
+          goals: [{ goalId: goal1.id, percentage: 0.5 }],
+        });
+
+      const afterCreateResponse = await request(server)
+        .get(`/api/v1/goal/${goal1.id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+      Number(afterCreateResponse.body.savedValue).should.be.eq(savedValueBefore + 50);
+
+      await request(server)
+        .delete(`${resourceUrl}/${createResponse.body.id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      const afterDeleteResponse = await request(server)
+        .get(`/api/v1/goal/${goal1.id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+      Number(afterDeleteResponse.body.savedValue).should.be.eq(savedValueBefore);
     });
   });
 
