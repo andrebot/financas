@@ -8,6 +8,7 @@ import {
   otherUser,
   category1,
   category3,
+  account1,
 } from './connectDB';
 import { createAccessToken } from '../../src/server/managers/authenticationManager';
 
@@ -66,6 +67,29 @@ describe('Budget', () => {
       response.body.forEach((budget: any) => {
         budget.should.have.property('spent');
       });
+    });
+
+    it('should reflect the spent value from transactions in its category and date range', async () => {
+      await request(server)
+        .post('/api/v1/accountant')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          name: 'Budget Spending Transaction',
+          accountId: account1.id,
+          categoryId: category1.id,
+          type: 'withdraw',
+          date: new Date('2026-02-01'),
+          value: '75.00',
+          userId: adminUser.id,
+        });
+
+      const response = await request(server)
+        .get(resourceUrl)
+        .set('Authorization', `Bearer ${accessToken}`);
+      const firstBudget = response.body.find((budget: typeof budget1) => budget.id === budget1.id);
+
+      response.status.should.be.eq(200);
+      firstBudget.should.have.property('spent', 75);
     });
 
     it('should return nothing when user has no budgets', async () => {

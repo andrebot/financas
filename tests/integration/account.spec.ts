@@ -171,6 +171,24 @@ describe('Account', () => {
 
       response.status.should.be.eq(401);
     });
+
+    it('should return 500 if userId does not exist', async () => {
+      const newAccount = {
+        name: 'Test Account',
+        agency: '1234',
+        accountNumber: '123',
+        currency: 'BRL',
+        initialBalance: 0,
+        userId: 999999,
+      };
+
+      const response = await request(server)
+        .post('/api/v1/account')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(newAccount);
+
+      response.status.should.be.eq(500);
+    });
   });
 
   describe('Update Account - PUT /api/v1/account/:id', () => {

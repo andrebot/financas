@@ -260,5 +260,75 @@ Another good take was that, after the refactor **all integration tests passed** 
 
 This lays a strong foundation for future service composition, containerization, and eventual microservice extraction.
 
+---
+
+## Tests
+
+### Strategy
+
+The suite is split into three layers, each answering a different question:
+
+- **Unit tests** — does this one function do what it claims, in isolation from its collaborators?
+- **Integration tests** — does the real wiring (route → auth middleware → controller → manager → repository → database) actually produce the right behaviour end-to-end?
+- **E2E tests** — does a real user journey work, driving the real UI against a real running app?
+
+Unit tests isolate their collaborators by stubbing them out (Sinon, `proxyquire`). Integration and E2E tests deliberately do the opposite — nothing is mocked, so they can catch the class of bug a mocked unit test structurally cannot: wrong route prefixes, schema/migration drift, authorization wired to the wrong layer, cross-resource side effects that never fire.
+
+---
+
+### Unit Tests
+
+**Backend**
+- **Stack**: Mocha, Chai (`should` style, per project convention), Sinon, `proxyquire`, coverage via `nyc`/Istanbul.
+- **Location**: `tests/server/**`, mirroring `src/server/**` (controllers, managers, resources/repositories, routes, utils).
+- **Approach**: each layer is tested with its collaborators replaced — repos are injected as plain stub objects or swapped in via `proxyquire` — so a manager test never touches a real database.
+- **Coverage**: 100% (badge at the top of this file).
+- **Command**: `npm run test:server`
+
+**Frontend**
+- **Stack**: Jest + `ts-jest`, `jsdom` test environment, React Testing Library + `jest-dom` matchers.
+- **Location**: `tests/client/**`, mirroring `src/client/**` (components, pages, Redux slices/RTK Query endpoints, hooks, i18n, utils).
+- **Coverage**: 100% (badge at the top of this file), configured in `jest.config.js`.
+- **Command**: `npm run test:client`
+
+---
+
+### Integration Tests
+
+**What and why**: these tests exercise the full request path — Express route, auth middleware, controller, manager, repository, database — as one unit. They run against a real database (`@electric-sql/pglite`, an in-memory Postgres, migrated fresh at the start of the run) and hit the actual Express app through Supertest, not a mocked layer. The rule for this layer is deliberate: **no stubbing internals**. Error paths are triggered with real bad input (an invalid enum value, a foreign key that doesn't exist) instead of sinon-stubbing a repository method to throw — the point is to prove the real code returns the right status, not to rehearse a mock. Side effects that only fire through real business logic (e.g. budget usage, monthly balances) are triggered by posting through the actual API, not by seeding the database directly.
+
+- **Stack**: Mocha, Chai (`should` style), Supertest, `@electric-sql/pglite`, `drizzle-orm`.
+- **Location**: `tests/integration/**` — one spec file per resource, plus `connectDB.ts` (schema access + shared fixtures/seed helpers) and `testSetup.ts` (the single global `before`/`after` that connects, migrates, and seeds the database for the whole run).
+- **Command**: `npm run test:server:integration`
+
+**Paths covered**, per resource — list, get, create, update, delete, plus the authorization boundary (admin sees/touches everything, owners see/touch only their own, strangers are rejected) and payload validation (empty body, invalid enum, missing FK):
+- **Account** — full CRUD + authorization boundary, plus cards submitted/synced with an account and cascade deletion of an account's cards, transactions, and monthly balances.
+- **Category** — full CRUD + authorization boundary, subcategory cascade delete, and clearing `categoryId` off transactions when their category is deleted.
+- **Goal** — full CRUD + authorization boundary, plus month-scoped listing with a `savedValue` field.
+- **Budget** — full CRUD + authorization boundary, category-link validation on create (requires at least one visible category), hydrated `categories` on list, and a `spent` field aggregated from real `budgetUsage` rows.
+- **Transaction** (served under `/api/v1/accountant`, not `/api/v1/transaction`) — full CRUD + authorization boundary, the transaction-types endpoint, and the monthly-balance endpoint/side effects.
+- **Authentication** — login, register, refresh/logout tokens, password change/reset, user management (list/create/update/delete) and its admin-only boundary.
+- **Cross-resource workflows** — the parts that only a real end-to-end call can prove:
+  - creating a transaction with a `goals` allocation raises the linked goal's `savedValue`, and updating the transaction's `value` afterward correctly reverts the old contribution before applying the new one (rather than double-counting);
+  - deleting a transaction reverts its goal contribution back to baseline, and separately reverts the account's monthly balance;
+  - a budget's `spent` field correctly reflects real transactions posted against its linked categories;
+  - deleting a category nulls out `categoryId` on transactions that referenced it, instead of leaving a dangling reference.
+
+**Known fragility — shared database state across spec files**: all integration spec files run against **one** PGlite instance for the entire `mocha` invocation (connected once via the `--file ./tests/integration/testSetup.ts` global hook), executing in alphabetical file order. Any test that seeds extra rows into shared tables (e.g. creating a transaction, whether via a `connectDB.ts` helper or through the real API) is visible to every spec file that runs afterward. Count-based assertions (`should have lengthOf(n)`) are therefore implicitly coupled to *everything upstream in file order*, not just their own file. When adding a test that creates shared-table data, check whether a later file's list/count assertion needs updating.
+
+---
+
+### E2E Tests
+
+**What and why**: drives the real UI in a real browser against the real app (started via `npm run dev`), the only layer that proves an actual user journey works through the full stack, styling and all.
+
+- **Stack**: Playwright, run across three browser projects (Chromium, Firefox, WebKit), with global setup/teardown that boots the app once for the run.
+- **Location**: `tests/end2end/**` — one spec file per page, each paired with a `*Utils.ts` helper file of reusable page interactions.
+- **Command**: `npm run test:e2e` (or `npm run test:e2e:ci` for the Chromium-only CI run)
+
+**Paths covered**: authentication (login, register, session handling, and the refresh-token reauth flow), bank accounts, categories, goals, budget, transactions, and settings (profile, password change, account deletion) — each as a full CRUD-through-the-UI journey.
+
+**Not yet covered**: investments, FII portfolio building, and the dashboard have no E2E coverage, but that's because those pages aren't built yet (see the Features to-dos above), not a testing gap.
+
 # Author
 André Almeida
